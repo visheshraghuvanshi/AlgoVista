@@ -13,8 +13,6 @@ import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 
-// Specific line number mappings for Bubble Sort (JS version based)
-// These conceptual line numbers guide the step generation logic.
 const BUBBLE_SORT_LINE_MAP = {
   functionDeclaration: 1,
   getN: 2,
@@ -22,9 +20,9 @@ const BUBBLE_SORT_LINE_MAP = {
   doWhileStart: 4,
   setSwappedFalse: 5,
   forLoopStart: 6,
-  compareComment: 7,
+  compareComment: 7, 
   ifCondition: 8,
-  swapComment: 9,
+  swapComment: 9, 
   tempAssignment: 10,
   firstSwapAssign: 11,
   secondSwapAssign: 12,
@@ -37,12 +35,30 @@ const BUBBLE_SORT_LINE_MAP = {
   functionEnd: 19,
 };
 
+const INSERTION_SORT_LINE_MAP = {
+  functionDeclaration: 1,
+  getN: 2,
+  outerLoopStart: 3,        
+  keyAssignment: 4,         
+  jAssignment: 5,           
+  whileLoopComment1: 6,
+  whileLoopComment2: 7, 
+  whileCondition: 8,        
+  shiftElement: 9,          
+  decrementJ: 10,            
+  whileLoopEnd: 11,
+  placeKey: 12,             
+  outerLoopEnd: 13,
+  returnArr: 14,
+  functionEnd: 15,
+};
+
 
 type AlgorithmStep = {
   array: number[];
-  activeIndices: number[];
-  swappingIndices: number[];
-  sortedIndices: number[];
+  activeIndices: number[]; // e.g. comparing, or element 'key'
+  swappingIndices: number[]; // e.g. elements being swapped, or element being shifted/placed
+  sortedIndices: number[]; // elements confirmed in final sorted position
   currentLine: number | null;
   message?: string; 
 };
@@ -76,16 +92,20 @@ export default function AlgorithmVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const isAlgoImplemented = useMemo(() => {
+    return algorithm?.slug === 'bubble-sort' || algorithm?.slug === 'insertion-sort';
+  }, [algorithm]);
+
+
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === algorithmSlug);
     if (foundAlgorithm) {
       setAlgorithm(foundAlgorithm);
-      if (foundAlgorithm.slug !== 'bubble-sort') {
+      if (foundAlgorithm.slug !== 'bubble-sort' && foundAlgorithm.slug !== 'insertion-sort') {
         toast({ title: "Visualizer Not Implemented", description: `The visualizer for ${foundAlgorithm.title} is coming soon!`, variant: "default" });
       }
     } else {
       console.error("Algorithm not found:", algorithmSlug);
-      // Potentially redirect or show a more permanent error message
     }
   }, [algorithmSlug, toast]);
 
@@ -117,11 +137,12 @@ export default function AlgorithmVisualizerPage() {
 
   const generateBubbleSortSteps = useCallback((arrToSort: number[]): AlgorithmStep[] => {
     const localSteps: AlgorithmStep[] = [];
+    if (!arrToSort || arrToSort.length === 0) return localSteps;
     const arr = [...arrToSort];
     let n = arr.length;
     let swapped;
     const localSortedIndices: number[] = [];
-    const lm = BUBBLE_SORT_LINE_MAP; // Use line map
+    const lm = BUBBLE_SORT_LINE_MAP;
 
     const addStep = (line: number, active: number[] = [], swapping: number[] = []) => {
       localSteps.push({
@@ -134,7 +155,7 @@ export default function AlgorithmVisualizerPage() {
     };
 
     addStep(lm.functionDeclaration); 
-    if (n === 0) {
+    if (n === 0) { // Should be caught by arrToSort.length check but good for safety
       addStep(lm.returnArr); 
       addStep(lm.functionEnd); 
       return localSteps;
@@ -171,32 +192,91 @@ export default function AlgorithmVisualizerPage() {
       }
       addStep(lm.forLoopEnd); 
 
-      if (n - 1 >= 0 && n -1 < arr.length) { // Ensure index is valid
+      if (n - 1 >= 0 && n -1 < arr.length) { 
         localSortedIndices.push(n - 1);
       }
       
       n--;
       addStep(lm.decrementN); 
-    } while (swapped && n > 0);
+    } while (swapped && n > 0); // Condition fixed
     addStep(lm.doWhileEndCondition); 
 
     const remainingUnsortedCount = arr.length - localSortedIndices.length;
-    for(let k = 0; k < remainingUnsortedCount; k++) { // Use k to avoid conflict with outer i if it existed
+    for(let k = 0; k < remainingUnsortedCount; k++) { 
         if(!localSortedIndices.includes(k)) localSortedIndices.push(k);
     }
     localSortedIndices.sort((a,b) => a-b);
 
-
-    addStep(lm.returnArr); 
-    addStep(lm.functionEnd); 
+    addStep(lm.returnArr, [], [], [...arr.map((_,idx) => idx)]); 
+    addStep(lm.functionEnd, [], [], [...arr.map((_,idx) => idx)]); 
     
-     localSteps.push({ // Final sorted state
+    return localSteps;
+  }, []);
+
+  const generateInsertionSortSteps = useCallback((arrToSort: number[]): AlgorithmStep[] => {
+    const localSteps: AlgorithmStep[] = [];
+    if (!arrToSort || arrToSort.length === 0) return localSteps;
+    const arr = [...arrToSort];
+    const n = arr.length;
+    const lm = INSERTION_SORT_LINE_MAP;
+    let localSortedIndices: number[] = [];
+
+    const addStep = (line: number, active: number[] = [], swapping: number[] = [], message?: string) => {
+      localSteps.push({
         array: [...arr],
-        activeIndices: [],
-        swappingIndices: [],
-        sortedIndices: [...arr.map((_,idx) => idx)],
-        currentLine: lm.returnArr, 
+        activeIndices: [...active],
+        swappingIndices: [...swapping],
+        sortedIndices: [...localSortedIndices].sort((a,b)=>a-b),
+        currentLine: line,
+        message,
       });
+    };
+    
+    addStep(lm.functionDeclaration);
+    if (n === 0) {
+      addStep(lm.returnArr);
+      addStep(lm.functionEnd);
+      return localSteps;
+    }
+    
+    addStep(lm.getN);
+    if (n > 0) localSortedIndices.push(0); // First element is trivially sorted initially. Or wait till loop.
+
+    for (let i = 1; i < n; i++) {
+      addStep(lm.outerLoopStart, [i], [], `Starting iteration for element at index ${i}`);
+      
+      let key = arr[i];
+      addStep(lm.keyAssignment, [i], [i], `key = arr[${i}] (value: ${key})`); // Highlight key
+      
+      let j = i - 1;
+      addStep(lm.jAssignment, [i, j], [i], `j = ${j}`);
+      
+      addStep(lm.whileLoopComment1, [i,j], [i]);
+      addStep(lm.whileLoopComment2, [i,j], [i]);
+
+      while (j >= 0 && arr[j] > key) {
+        addStep(lm.whileCondition, [j, i], [i], `Comparing arr[${j}] (${arr[j]}) > key (${key})`);
+        
+        arr[j + 1] = arr[j];
+        addStep(lm.shiftElement, [j, i], [j, j + 1], `Shift arr[${j}] (${arr[j]}) to arr[${j + 1}]`);
+        
+        j = j - 1;
+        addStep(lm.decrementJ, [j, i], [i], `Decrement j to ${j}`);
+      }
+      addStep(lm.whileLoopEnd, [j+1, i], [i], `End of while loop. Insertion position for key (${key}) is index ${j+1}`);
+      
+      arr[j + 1] = key;
+      addStep(lm.placeKey, [], [i, j + 1], `Place key (${key}) at arr[${j + 1}]`);
+      
+      // Update sorted indices after placing the key
+      localSortedIndices = Array.from({length: i + 1}, (_, k) => k);
+      addStep(lm.outerLoopEnd, [], [], `Element at index ${i} sorted. Sorted part: 0-${i}`);
+    }
+    
+    // Final sorted state
+    localSortedIndices = arr.map((_, idx) => idx);
+    addStep(lm.returnArr, [], [], "Array is sorted");
+    addStep(lm.functionEnd, [], [], "Algorithm finished");
 
     return localSteps;
   }, []);
@@ -216,40 +296,49 @@ export default function AlgorithmVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
+      let newSteps: AlgorithmStep[] = [];
+
       if (algorithm?.slug === 'bubble-sort') {
-        const newSteps = generateBubbleSortSteps(parsedData);
-        setSteps(newSteps);
-        setCurrentStepIndex(0);
-        setIsPlaying(false);
-        setIsFinished(false);
-        if (newSteps.length > 0) {
-          updateStateFromStep(0);
-        } else {
-          setDisplayedData(parsedData); 
-          setActiveIndices([]);
-          setSwappingIndices([]);
-          setSortedIndices([]);
-          setCurrentLine(null);
-        }
+        newSteps = generateBubbleSortSteps(parsedData);
+      } else if (algorithm?.slug === 'insertion-sort') {
+        newSteps = generateInsertionSortSteps(parsedData);
       } else {
+        // For algorithms not yet implemented for visualization
         setDisplayedData(parsedData);
         setActiveIndices([]);
         setSwappingIndices([]);
         setSortedIndices([]);
         setCurrentLine(null);
-        setSteps([]);
+        setSteps([]); // Clear steps for unimplemented algos
       }
+      
+      if (isAlgoImplemented && newSteps.length > 0) {
+        setSteps(newSteps);
+        setCurrentStepIndex(0);
+        updateStateFromStep(0);
+      } else if (!isAlgoImplemented) {
+         setDisplayedData(parsedData); // Show initial input for non-interactive algos
+      } else { // Algo is implemented but newSteps is empty (e.g. empty input)
+        setSteps([]);
+        setDisplayedData(parsedData);
+        setActiveIndices([]);
+        setSwappingIndices([]);
+        setSortedIndices([]);
+        setCurrentLine(null);
+      }
+      setIsPlaying(false);
+      setIsFinished(false);
     }
      if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, generateBubbleSortSteps, algorithm]); 
+  }, [inputValue, parseInput, generateBubbleSortSteps, generateInsertionSortSteps, algorithm, isAlgoImplemented]); 
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1 && algorithm?.slug === 'bubble-sort') {
+    if (isPlaying && currentStepIndex < steps.length -1 && isAlgoImplemented) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -268,7 +357,7 @@ export default function AlgorithmVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, algorithm]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, isAlgoImplemented]);
 
 
   const handleInputChange = (value: string) => {
@@ -281,7 +370,7 @@ export default function AlgorithmVisualizerPage() {
       setIsPlaying(false);
       return;
     }
-    if (algorithm?.slug !== 'bubble-sort') {
+    if (!isAlgoImplemented) {
       toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
@@ -302,7 +391,7 @@ export default function AlgorithmVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
-     if (algorithm?.slug !== 'bubble-sort') {
+     if (!isAlgoImplemented) {
       toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
@@ -332,20 +421,26 @@ export default function AlgorithmVisualizerPage() {
     }
 
     const parsedData = parseInput(inputValue) || initialData; 
+    let newSteps: AlgorithmStep[] = [];
+
     if (algorithm?.slug === 'bubble-sort') {
-        const newSteps = generateBubbleSortSteps(parsedData);
+        newSteps = generateBubbleSortSteps(parsedData);
+    } else if (algorithm?.slug === 'insertion-sort') {
+        newSteps = generateInsertionSortSteps(parsedData);
+    }
+    
+    if (isAlgoImplemented && newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
-        if (newSteps.length > 0) {
-            updateStateFromStep(0);
-        } else {
-             setDisplayedData(parsedData);
-             setActiveIndices([]);
-             setSwappingIndices([]);
-             setSortedIndices([]);
-             setCurrentLine(null);
-        }
-    } else {
+        updateStateFromStep(0);
+    } else if (!isAlgoImplemented) {
+        setDisplayedData(parsedData);
+        setActiveIndices([]);
+        setSwappingIndices([]);
+        setSortedIndices([]);
+        setCurrentLine(null);
+        setSteps([]);
+    } else { // Algo is implemented but newSteps is empty
         setDisplayedData(parsedData);
         setActiveIndices([]);
         setSwappingIndices([]);
@@ -380,8 +475,6 @@ export default function AlgorithmVisualizerPage() {
   }
 
   const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
-  const isAlgoImplemented = algorithm.slug === 'bubble-sort';
-
 
   return (
     <div className="flex flex-col min-h-screen">

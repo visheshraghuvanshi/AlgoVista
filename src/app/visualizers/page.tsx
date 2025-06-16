@@ -51,9 +51,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
         "            # Compare arr[j] and arr[j+1]",
         "            if arr[j] > arr[j+1]:",
         "                # Swap arr[j] and arr[j+1]",
-        "                temp = arr[j]",
-        "                arr[j] = arr[j+1]",
-        "                arr[j+1] = temp",
+        "                arr[j], arr[j+1] = arr[j+1], arr[j]",
         "                swapped_in_pass = True",
         "            # End if",
         "        # End inner loop",
@@ -86,7 +84,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
       ],
       "C++": [
         "#include <vector>",
-        "#include <algorithm> // For std::swap (optional)",
+        "#include <algorithm> // For std::swap",
         "void bubbleSort(std::vector<int>& arr) {",
         "  int n = arr.size();",
         "  bool swapped;",
@@ -96,10 +94,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
         "      // Compare arr[i] and arr[i+1]",
         "      if (arr[i] > arr[i+1]) {",
         "        // Swap arr[i] and arr[i+1]",
-        "        int temp = arr[i];",
-        "        arr[i] = arr[i+1];",
-        "        arr[i+1] = temp;",
-        "        // Or: std::swap(arr[i], arr[i+1]);",
+        "        std::swap(arr[i], arr[i+1]);",
         "        swapped = true;",
         "      }",
         "    }",
@@ -109,7 +104,81 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
       ],
     }
   },
-  { slug: 'insertion-sort', title: 'Insertion Sort', category: 'Sorting', difficulty: 'Easy', description: 'Builds the final sorted array one item at a time by repeatedly taking the next item and inserting it into the sorted portion.' },
+  { 
+    slug: 'insertion-sort', 
+    title: 'Insertion Sort', 
+    category: 'Sorting', 
+    difficulty: 'Easy', 
+    description: 'Builds the final sorted array one item at a time by repeatedly taking the next item and inserting it into its correct position within the sorted portion.',
+    codeSnippets: {
+      JavaScript: [
+        "function insertionSort(arr) {",           // 1
+        "  let n = arr.length;",                   // 2
+        "  for (let i = 1; i < n; i++) {",         // 3
+        "    let key = arr[i];",                  // 4
+        "    let j = i - 1;",                      // 5
+        "    // Move elements of arr[0..i-1] that are", // 6
+        "    // greater than key, to one position ahead",
+        "    while (j >= 0 && arr[j] > key) {",    // 7
+        "      arr[j + 1] = arr[j];",             // 8
+        "      j = j - 1;",                        // 9
+        "    }",                                   // 10
+        "    arr[j + 1] = key;",                   // 11
+        "  }",                                     // 12
+        "  return arr;",                          // 13
+        "}",                                       // 14
+      ],
+      Python: [
+        "def insertion_sort(arr):",
+        "    n = len(arr)",
+        "    for i in range(1, n):",
+        "        key = arr[i]",
+        "        j = i - 1",
+        "        # Move elements of arr[0..i-1] that are",
+        "        # greater than key, to one position ahead",
+        "        while j >= 0 and arr[j] > key:",
+        "            arr[j + 1] = arr[j]",
+        "            j -= 1",
+        "        arr[j + 1] = key",
+        "    return arr",
+      ],
+      Java: [
+        "public class InsertionSort {",
+        "    public static void sort(int[] arr) {",
+        "        int n = arr.length;",
+        "        for (int i = 1; i < n; ++i) {",
+        "            int key = arr[i];",
+        "            int j = i - 1;",
+        "            // Move elements of arr[0..i-1], that are",
+        "            // greater than key, to one position ahead",
+        "            while (j >= 0 && arr[j] > key) {",
+        "                arr[j + 1] = arr[j];",
+        "                j = j - 1;",
+        "            }",
+        "            arr[j + 1] = key;",
+        "        }",
+        "    }",
+        "}",
+      ],
+      "C++": [
+        "#include <vector>",
+        "void insertionSort(std::vector<int>& arr) {",
+        "    int n = arr.size();",
+        "    for (int i = 1; i < n; i++) {",
+        "        int key = arr[i];",
+        "        int j = i - 1;",
+        "        // Move elements of arr[0..i-1], that are",
+        "        // greater than key, to one position ahead",
+        "        while (j >= 0 && arr[j] > key) {",
+        "            arr[j + 1] = arr[j];",
+        "            j = j - 1;",
+        "        }",
+        "        arr[j + 1] = key;",
+        "    }",
+        "}",
+      ],
+    }
+  },
   { slug: 'merge-sort', title: 'Merge Sort', category: 'Sorting', difficulty: 'Medium', description: 'A divide-and-conquer algorithm that divides the array into halves, sorts them, and then merges them back together.' },
   { slug: 'quick-sort', title: 'Quick Sort', category: 'Sorting', difficulty: 'Medium', description: 'A highly efficient divide-and-conquer sorting algorithm that picks an element as a pivot and partitions the array around the pivot.' },
   { slug: 'heap-sort', title: 'Heap Sort', category: 'Sorting', difficulty: 'Hard', description: 'A comparison-based sorting technique based on a Binary Heap data structure.' },

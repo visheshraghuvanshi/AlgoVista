@@ -20,7 +20,7 @@ interface ControlsPanelProps {
   isFinished: boolean;
   currentSpeed: number; 
   onSpeedChange: (speed: number) => void;
-  isAlgoImplemented: boolean;
+  isAlgoImplemented: boolean; // This will now be true for Bubble and Insertion Sort
   minSpeed: number;
   maxSpeed: number;
 }
@@ -48,11 +48,6 @@ export function ControlsPanel({
     onSpeedChange(value[0]);
   };
 
-  // Convert speed (delay ms) to a slider value (e.g. 0-100 or a descriptive range)
-  // Higher slider value means slower animation (longer delay)
-  // Let's make slider value directly represent the delay in ms for simplicity with Shadcn slider
-  // The Shadcn slider gives an array, so we take value[0]
-
   return (
     <Card className="shadow-xl rounded-xl">
       <CardHeader>
@@ -72,10 +67,15 @@ export function ControlsPanel({
               placeholder="e.g., 5,2,8,1,9"
               className="w-full text-base"
               aria-label="Custom input for algorithm data"
-              disabled={isPlaying || !isAlgoImplemented}
+              disabled={isPlaying || !isAlgoImplemented} 
             />
           </div>
-          <Button onClick={onReset} variant="outline" disabled={isPlaying && isAlgoImplemented} aria-label="Reset algorithm and input">
+          <Button 
+            onClick={onReset} 
+            variant="outline" 
+            disabled={isPlaying && isAlgoImplemented} 
+            aria-label="Reset algorithm and input"
+          >
             <RotateCcw className="mr-2 h-4 w-4" /> Reset
           </Button>
         </div>
@@ -124,7 +124,7 @@ export function ControlsPanel({
                         id="speedControl"
                         min={minSpeed}
                         max={maxSpeed}
-                        step={50} // Adjust step for finer control if needed
+                        step={50} 
                         value={[currentSpeed]}
                         onValueChange={handleSpeedSliderChange}
                         disabled={isPlaying || !isAlgoImplemented}
