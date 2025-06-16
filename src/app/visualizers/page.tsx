@@ -29,6 +29,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
 
 const ALL_CATEGORIES = Array.from(new Set(MOCK_ALGORITHMS.map(algo => algo.category))).sort();
 const ALL_DIFFICULTIES: Array<AlgorithmMetadata['difficulty']> = ['Easy', 'Medium', 'Hard'];
+const ALL_FILTER_SENTINEL_VALUE = "__all__";
 
 
 export default function VisualizersPage() {
@@ -124,13 +125,18 @@ export default function VisualizersPage() {
                 />
               </div>
               <div>
-                <Select value={selectedCategory || ''} onValueChange={(value) => setSelectedCategory(value || null)}>
+                <Select
+                  value={selectedCategory || ALL_FILTER_SENTINEL_VALUE}
+                  onValueChange={(value) => {
+                    setSelectedCategory(value === ALL_FILTER_SENTINEL_VALUE ? null : value);
+                  }}
+                >
                   <SelectTrigger className="w-full" aria-label="Filter by category">
                     <ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value={ALL_FILTER_SENTINEL_VALUE}>All Categories</SelectItem>
                     {ALL_CATEGORIES.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -138,13 +144,18 @@ export default function VisualizersPage() {
                 </Select>
               </div>
               <div>
-                <Select value={selectedDifficulty || ''} onValueChange={(value) => setSelectedDifficulty(value as AlgorithmMetadata['difficulty'] || null)}>
+                <Select
+                  value={selectedDifficulty || ALL_FILTER_SENTINEL_VALUE}
+                  onValueChange={(value) => {
+                    setSelectedDifficulty(value === ALL_FILTER_SENTINEL_VALUE ? null : value as AlgorithmMetadata['difficulty'] | null);
+                  }}
+                >
                   <SelectTrigger className="w-full" aria-label="Filter by difficulty">
                     <ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />
                     <SelectValue placeholder="All Difficulties" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Difficulties</SelectItem>
+                    <SelectItem value={ALL_FILTER_SENTINEL_VALUE}>All Difficulties</SelectItem>
                     {ALL_DIFFICULTIES.map(difficulty => (
                       <SelectItem key={difficulty} value={difficulty}>{difficulty}</SelectItem>
                     ))}
@@ -184,3 +195,4 @@ export default function VisualizersPage() {
     </div>
   );
 }
+
