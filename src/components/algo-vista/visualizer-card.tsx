@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { AlgorithmMetadata } from '@/types';
@@ -22,7 +21,7 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-primary text-accent dark:bg-accent dark:text-accent-foreground border-border rounded-xl overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="font-headline text-2xl text-accent dark:text-accent-foreground">{algorithm.title}</CardTitle>
+        <CardTitle className="font-headline text-2xl text-primary-foreground dark:text-accent-foreground">{algorithm.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="flex flex-wrap gap-2">
@@ -33,7 +32,8 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
             {algorithm.difficulty}
           </Badge>
         </div>
-        <CardDescription className="line-clamp-3 text-accent dark:text-accent-foreground">{algorithm.description}</CardDescription>
+        {/* Description inherits text color from Card component: text-accent in light, dark:text-accent-foreground in dark */}
+        <CardDescription className="line-clamp-3">{algorithm.description}</CardDescription>
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90">
