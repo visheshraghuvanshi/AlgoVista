@@ -6,6 +6,8 @@ import { Menu } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 
@@ -39,12 +41,18 @@ export function Header() {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Open menu">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[240px] p-6">
+              <SheetContent side="right" className="w-[240px] p-6 pt-10"> {/* Adjusted padding-top for visual spacing */}
+                <SheetHeader className="mb-4"> {/* Added margin-bottom for spacing */}
+                  <SheetTitle>
+                    <span className="sr-only">Navigation Menu</span>
+                  </SheetTitle>
+                  {/* You could add a SheetDescription here if needed, also sr-only */}
+                </SheetHeader>
                 <nav className="flex flex-col space-y-4">
                   {navLinks.map(link => (
                     <Link key={link.label} href={link.href} className="text-lg font-medium transition-colors hover:text-primary dark:hover:text-accent">
@@ -60,3 +68,4 @@ export function Header() {
     </header>
   );
 }
+
