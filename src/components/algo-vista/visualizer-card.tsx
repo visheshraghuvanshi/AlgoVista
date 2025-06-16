@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AlgorithmMetadata } from '@/types';
@@ -12,31 +13,38 @@ interface VisualizerCardProps {
 }
 
 export function VisualizerCard({ algorithm }: VisualizerCardProps) {
+  // Updated difficultyColors to avoid yellow in light mode for "Medium"
   const difficultyColors: Record<AlgorithmMetadata['difficulty'], string> = {
     Easy: "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/50",
-    Medium: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/50",
+    Medium: "bg-blue-500/20 text-blue-700 dark:bg-yellow-500/20 dark:text-yellow-400 border-blue-500/50 dark:border-yellow-500/50", // Blue for light, Yellow for dark
     Hard: "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/50",
   };
 
   return (
-    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-primary text-accent dark:bg-accent dark:text-accent-foreground border-border rounded-xl overflow-hidden">
+    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-card text-card-foreground border-border rounded-xl overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="font-headline text-2xl text-primary-foreground dark:text-accent-foreground">{algorithm.title}</CardTitle>
+        {/* Light: Burgundy Title. Dark: Yellow Title. */}
+        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">{algorithm.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="border-accent/50 text-accent dark:border-primary/50 dark:text-primary">
+          {/* Category Badge */}
+          {/* Light: Burgundy. Dark: Yellow. */}
+          <Badge variant="outline" className="border-primary/50 text-primary dark:border-accent/50 dark:text-accent">
             {algorithm.category}
           </Badge>
+          {/* Difficulty Badge - uses updated color scheme */}
           <Badge variant="outline" className={`${difficultyColors[algorithm.difficulty]}`}>
             {algorithm.difficulty}
           </Badge>
         </div>
-        {/* Description inherits text color from Card component: text-accent in light, dark:text-accent-foreground in dark */}
+        {/* Description: Inherits card-foreground (Dark text in Light Mode, Light text in Dark Mode) */}
         <CardDescription className="line-clamp-3">{algorithm.description}</CardDescription>
       </CardContent>
       <CardFooter>
-        <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90">
+        {/* Button */}
+        {/* Light: Burgundy button. Dark: Yellow button. */}
+        <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90">
           <Link href={`/visualizers/${algorithm.slug}`}>
             Start Visualizing <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
