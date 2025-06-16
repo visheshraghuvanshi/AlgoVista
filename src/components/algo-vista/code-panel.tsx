@@ -22,7 +22,6 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
 
   useEffect(() => {
-    // Reset to default/first language if the current one is no longer available (e.g. algo change)
     if (!languages.includes(selectedLanguage)) {
       setSelectedLanguage(initialLang);
     }
@@ -49,7 +48,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
 
   return (
     <Card className="shadow-lg rounded-lg h-[300px] md:h-[400px] flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
         </CardTitle>
@@ -60,25 +59,25 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         {languages.length > 1 ? (
-          <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow">
-            <TabsList className="mx-4 mb-1 self-start">
+          <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
+            <TabsList className="mx-4 mb-1 self-start shrink-0">
               {languages.map((lang) => (
                 <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
                   {lang}
                 </TabsTrigger>
               ))}
             </TabsList>
-            <ScrollArea className="h-full w-full rounded-b-md border-t flex-grow">
-              {languages.map((lang) => (
-                <TabsContent key={lang} value={lang} className="m-0 h-full">
-                  <pre className="font-code text-sm p-4 bg-muted/20 dark:bg-muted/5 h-full">
+            {languages.map((lang) => (
+              <TabsContent key={lang} value={lang} className="m-0 flex-grow relative overflow-hidden">
+                <ScrollArea className="absolute inset-0 border-t bg-muted/20 dark:bg-muted/5">
+                  <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-${index}`}
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                          index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
+                          index + 1 === currentLine && lang === selectedLanguage ? "bg-accent text-accent-foreground" : "text-foreground"
                         }`}
-                        aria-current={index + 1 === currentLine ? "step" : undefined}
+                        aria-current={index + 1 === currentLine && lang === selectedLanguage ? "step" : undefined}
                       >
                         <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                           {index + 1}
@@ -87,29 +86,31 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
                       </div>
                     ))}
                   </pre>
-                </TabsContent>
-              ))}
-            </ScrollArea>
+                </ScrollArea>
+              </TabsContent>
+            ))}
           </Tabs>
         ) : (
-          <ScrollArea className="h-full w-full rounded-b-md border-t flex-grow">
-            <pre className="font-code text-sm p-4 bg-muted/20 dark:bg-muted/5 h-full">
-              {currentCodeLines.map((line, index) => (
-                <div
-                  key={`single-${index}`}
-                  className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                    index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
-                  }`}
-                  aria-current={index + 1 === currentLine ? "step" : undefined}
-                >
-                  <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                    {index + 1}
-                  </span>
-                  {line}
-                </div>
-              ))}
-            </pre>
-          </ScrollArea>
+          <div className="flex-grow relative border-t overflow-hidden">
+            <ScrollArea className="absolute inset-0 bg-muted/20 dark:bg-muted/5">
+              <pre className="font-code text-sm p-4">
+                {currentCodeLines.map((line, index) => (
+                  <div
+                    key={`single-${index}`}
+                    className={`px-2 py-0.5 rounded transition-colors duration-150 ${
+                      index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
+                    }`}
+                    aria-current={index + 1 === currentLine ? "step" : undefined}
+                  >
+                    <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                      {index + 1}
+                    </span>
+                    {line}
+                  </div>
+                ))}
+              </pre>
+            </ScrollArea>
+          </div>
         )}
       </CardContent>
     </Card>

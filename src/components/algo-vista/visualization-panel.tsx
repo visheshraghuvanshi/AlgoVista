@@ -18,13 +18,17 @@ const MIN_NON_ZERO_BAR_HEIGHT = 8; // Min height for non-zero bars in px
 
 export function VisualizationPanel({ data, activeIndices = [], swappingIndices = [], sortedIndices = [] }: VisualizationPanelProps) {
   const [maxVal, setMaxVal] = useState(1);
+  const [sqrtMaxVal, setSqrtMaxVal] = useState(1);
 
   useEffect(() => {
     if (data.length > 0) {
       const absoluteData = data.map(val => Math.abs(val));
-      setMaxVal(Math.max(...absoluteData, 1)); // Ensure maxVal is at least 1 to avoid division by zero or negative
+      const currentMaxVal = Math.max(...absoluteData, 1); // Ensure maxVal is at least 1
+      setMaxVal(currentMaxVal);
+      setSqrtMaxVal(Math.sqrt(currentMaxVal));
     } else {
       setMaxVal(1); // Default for empty data
+      setSqrtMaxVal(1);
     }
   }, [data]);
 
@@ -39,7 +43,12 @@ export function VisualizationPanel({ data, activeIndices = [], swappingIndices =
     if (value === 0) {
       return '0px'; // Explicitly 0 height for 0 value
     }
-    const scaledHeight = (Math.abs(value) / maxVal) * BAR_MAX_HEIGHT;
+    
+    // Square root scaling
+    const scaledHeight = sqrtMaxVal > 0 
+      ? (Math.sqrt(Math.abs(value)) / sqrtMaxVal) * BAR_MAX_HEIGHT 
+      : BAR_MAX_HEIGHT; // Avoid division by zero if sqrtMaxVal is somehow 0 (though maxVal is at least 1)
+
     // Ensure a minimum height for non-zero values, but not exceeding BAR_MAX_HEIGHT
     return `${Math.min(BAR_MAX_HEIGHT, Math.max(MIN_NON_ZERO_BAR_HEIGHT, scaledHeight))}px`;
   };
