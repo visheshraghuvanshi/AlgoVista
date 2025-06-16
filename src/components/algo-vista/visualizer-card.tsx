@@ -20,7 +20,7 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
   };
 
   return (
-    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl dark:hover:shadow-primary/20 transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-card text-card-foreground border-border rounded-xl overflow-hidden">
+    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-accent text-accent-foreground dark:bg-primary dark:text-accent border-border rounded-xl overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="font-headline text-2xl text-primary dark:text-accent">{algorithm.title}</CardTitle>
       </CardHeader>
@@ -33,7 +33,7 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
             {algorithm.difficulty}
           </Badge>
         </div>
-        <CardDescription className="text-muted-foreground line-clamp-3">{algorithm.description}</CardDescription>
+        <CardDescription className="line-clamp-3">{algorithm.description}</CardDescription>
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90">
@@ -45,3 +45,4 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
     </Card>
   );
 }
+
