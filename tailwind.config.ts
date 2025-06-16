@@ -65,6 +65,14 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // Direct color mapping from PRD for Tailwind utilities if needed
+        // These are examples, primary/secondary/accent via HSL vars are preferred
+        'prd-primary': '#C5172E',
+        'prd-secondary': '#85193C',
+        'prd-accent': '#FCF259',
+        'prd-bg-dark': '#1a1a1a',
+        'prd-bg-light': '#ffffff',
+        'prd-text-primary-light': '#4A102A', // Example text color from PRD
       },
       borderRadius: {
         lg: 'var(--radius)',
