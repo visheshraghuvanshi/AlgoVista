@@ -20,13 +20,13 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
   };
 
   return (
-    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-accent text-accent-foreground dark:bg-primary dark:text-accent border-border rounded-xl overflow-hidden">
+    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.03] bg-primary text-accent dark:bg-accent dark:text-accent-foreground border-border rounded-xl overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">{algorithm.title}</CardTitle>
+        <CardTitle className="font-headline text-2xl text-primary-foreground dark:text-primary">{algorithm.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="border-primary/50 text-primary dark:border-accent/50 dark:text-accent">
+          <Badge variant="outline" className="border-accent/50 text-accent dark:border-primary/50 dark:text-primary">
             {algorithm.category}
           </Badge>
           <Badge variant="outline" className={`${difficultyColors[algorithm.difficulty]}`}>
@@ -36,7 +36,7 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
         <CardDescription className="line-clamp-3">{algorithm.description}</CardDescription>
       </CardContent>
       <CardFooter>
-        <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90">
+        <Button asChild className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90">
           <Link href={`/visualizers/${algorithm.slug}`}>
             Start Visualizing <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
@@ -45,4 +45,3 @@ export function VisualizerCard({ algorithm }: VisualizerCardProps) {
     </Card>
   );
 }
-
