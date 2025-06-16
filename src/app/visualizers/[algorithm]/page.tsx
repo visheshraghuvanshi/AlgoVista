@@ -396,8 +396,8 @@ export default function AlgorithmVisualizerPage() {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="lg:w-3/5">
+        <div className="space-y-6">
+          <div className="w-full">
             <VisualizationPanel 
               data={displayedData} 
               activeIndices={activeIndices}
@@ -406,31 +406,31 @@ export default function AlgorithmVisualizerPage() {
             />
           </div>
 
-          <div className="lg:w-2/5">
+          <div className="w-full">
+            <ControlsPanel
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onStep={handleStep}
+              onReset={handleReset}
+              onInputChange={handleInputChange}
+              inputValue={inputValue}
+              isPlaying={isPlaying}
+              isFinished={isFinished}
+              currentSpeed={animationSpeed}
+              onSpeedChange={handleSpeedChange}
+              isAlgoImplemented={isAlgoImplemented}
+              minSpeed={MIN_SPEED}
+              maxSpeed={MAX_SPEED}
+            />
+          </div>
+          
+          <div className="w-full">
             <CodePanel 
               codeSnippets={codeSnippetsToDisplay} 
               currentLine={currentLine}
               defaultLanguage={isAlgoImplemented ? "JavaScript" : undefined}
             />
           </div>
-        </div>
-
-        <div className="mt-6">
-          <ControlsPanel
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onStep={handleStep}
-            onReset={handleReset}
-            onInputChange={handleInputChange}
-            inputValue={inputValue}
-            isPlaying={isPlaying}
-            isFinished={isFinished}
-            currentSpeed={animationSpeed}
-            onSpeedChange={handleSpeedChange}
-            isAlgoImplemented={isAlgoImplemented}
-            minSpeed={MIN_SPEED}
-            maxSpeed={MAX_SPEED}
-          />
         </div>
       </main>
       <Footer />

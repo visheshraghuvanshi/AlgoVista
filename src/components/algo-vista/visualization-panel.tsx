@@ -11,14 +11,17 @@ interface VisualizationPanelProps {
   sortedIndices?: number[];
 }
 
-const BAR_MAX_HEIGHT = 200; // Max height for bars in px
+const BAR_MAX_HEIGHT_BASE = 200; // Base max height for bars in px
 const BAR_WIDTH = 20; // Width of each bar in px
 const BAR_MARGIN = 2; // Margin between bars
-const MIN_NON_ZERO_BAR_HEIGHT = 10; // Min height for non-zero bars in px (Increased from 8 to 10)
+const MIN_NON_ZERO_BAR_HEIGHT = 10; // Min height for non-zero bars in px
 
 export function VisualizationPanel({ data, activeIndices = [], swappingIndices = [], sortedIndices = [] }: VisualizationPanelProps) {
   const [maxVal, setMaxVal] = useState(1);
   const [sqrtMaxVal, setSqrtMaxVal] = useState(1);
+
+  // Adjusted BAR_MAX_HEIGHT for the taller panel
+  const BAR_MAX_HEIGHT = BAR_MAX_HEIGHT_BASE * 2; // Example: double the base for a 500px panel from 250px base
 
   useEffect(() => {
     if (data.length > 0) {
@@ -54,7 +57,7 @@ export function VisualizationPanel({ data, activeIndices = [], swappingIndices =
   };
 
   return (
-    <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-[300px] md:h-[400px]">
+    <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-[400px] md:h-[500px] lg:h-[550px]">
       <CardHeader>
         <CardTitle className="font-headline text-xl text-primary dark:text-accent">Visualization</CardTitle>
       </CardHeader>
