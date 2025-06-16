@@ -14,7 +14,7 @@ interface VisualizationPanelProps {
 const BAR_MAX_HEIGHT = 200; // Max height for bars in px
 const BAR_WIDTH = 20; // Width of each bar in px
 const BAR_MARGIN = 2; // Margin between bars
-const MIN_NON_ZERO_BAR_HEIGHT = 8; // Min height for non-zero bars in px
+const MIN_NON_ZERO_BAR_HEIGHT = 10; // Min height for non-zero bars in px (Increased from 8 to 10)
 
 export function VisualizationPanel({ data, activeIndices = [], swappingIndices = [], sortedIndices = [] }: VisualizationPanelProps) {
   const [maxVal, setMaxVal] = useState(1);

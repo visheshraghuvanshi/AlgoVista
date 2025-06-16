@@ -22,6 +22,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
 
   useEffect(() => {
+    // If the available languages change and the selected one is no longer valid, reset to initial.
     if (!languages.includes(selectedLanguage)) {
       setSelectedLanguage(initialLang);
     }
@@ -68,8 +69,8 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
               ))}
             </TabsList>
             {languages.map((lang) => (
-              <TabsContent key={lang} value={lang} className="m-0 flex-grow relative overflow-hidden">
-                <ScrollArea className="absolute inset-0 border-t bg-muted/20 dark:bg-muted/5">
+              <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
+                <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
@@ -91,8 +92,9 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
             ))}
           </Tabs>
         ) : (
-          <div className="flex-grow relative border-t overflow-hidden">
-            <ScrollArea className="absolute inset-0 bg-muted/20 dark:bg-muted/5">
+          // Fallback for single "language" (e.g. Info panel)
+          <div className="flex-grow overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4">
                 {currentCodeLines.map((line, index) => (
                   <div
@@ -108,6 +110,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
                     {line}
                   </div>
                 ))}
+                {currentCodeLines.length === 0 && <p className="text-muted-foreground p-4">No code available.</p>}
               </pre>
             </ScrollArea>
           </div>
