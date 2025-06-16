@@ -48,12 +48,10 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[240px] p-6 pt-10"> {/* Adjusted padding-top for visual spacing */}
                 <SheetHeader className="mb-4"> {/* Added margin-bottom for spacing */}
-                  <SheetTitle>
-                    <span className="sr-only">Navigation Menu</span>
-                  </SheetTitle>
+                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                   {/* You could add a SheetDescription here if needed, also sr-only */}
                 </SheetHeader>
-                <nav className="flex flex-col space-y-4">
+                <nav className="flex flex-col space-y-4"> {/* Increased space-y */}
                   {navLinks.map(link => (
                     <Link key={link.label} href={link.href} className="text-lg font-medium transition-colors hover:text-primary dark:hover:text-accent">
                       {link.label}
