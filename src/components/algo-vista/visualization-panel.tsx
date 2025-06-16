@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -19,7 +20,8 @@ export function VisualizationPanel({ data, activeIndices = [], swappingIndices =
 
   useEffect(() => {
     if (data.length > 0) {
-      setMaxVal(Math.max(...data, 1));
+      const positiveData = data.map(val => Math.abs(val));
+      setMaxVal(Math.max(...positiveData, 1));
     } else {
       setMaxVal(1);
     }
@@ -33,25 +35,30 @@ export function VisualizationPanel({ data, activeIndices = [], swappingIndices =
   };
 
   return (
-    <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-[300px] md:h-auto">
+    <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-[300px] md:h-[400px]">
       <CardHeader>
-        <CardTitle className="font-headline text-xl">Visualization</CardTitle>
+        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Visualization</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-end justify-center h-full pb-10 space-x-1 overflow-x-auto">
+      <CardContent className="flex items-end justify-center h-full pb-10 space-x-1 overflow-x-auto bg-muted/10 dark:bg-muted/5 p-4 rounded-b-lg">
         {data.length === 0 ? (
-          <p className="text-muted-foreground">Enter data to visualize.</p>
+          <p className="text-muted-foreground self-center">Enter data to visualize.</p>
         ) : (
           data.map((value, index) => (
             <div
               key={index}
-              className={`transition-all duration-300 ease-in-out ${getBarColor(index)}`}
+              className={`transition-all duration-300 ease-in-out ${getBarColor(index)} rounded-t-sm`}
               style={{
-                height: `${Math.max(5, (value / maxVal) * BAR_MAX_HEIGHT)}px`,
+                height: `${Math.max(5, (Math.abs(value) / maxVal) * BAR_MAX_HEIGHT)}px`,
                 width: `${BAR_WIDTH}px`,
+                marginLeft: `${BAR_MARGIN}px`,
+                marginRight: `${BAR_MARGIN}px`,
               }}
               title={`Value: ${value}`}
               aria-label={`Bar representing value ${value} at index ${index}`}
-            />
+            >
+              {/* Optional: Display value inside or above bar if space allows and design requires */}
+              {/* <span className="text-xs text-center block text-white">{value}</span> */}
+            </div>
           ))
         )}
       </CardContent>

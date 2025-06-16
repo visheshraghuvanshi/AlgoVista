@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { AlgorithmMetadata } from '@/types';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ListFilter, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
+export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
   { slug: 'bubble-sort', title: 'Bubble Sort', category: 'Sorting', difficulty: 'Easy', description: 'A simple comparison-based sorting algorithm where adjacent elements are repeatedly compared and swapped if they are in the wrong order.' },
   { slug: 'insertion-sort', title: 'Insertion Sort', category: 'Sorting', difficulty: 'Easy', description: 'Builds the final sorted array one item at a time by repeatedly taking the next item and inserting it into the sorted portion.' },
   { slug: 'merge-sort', title: 'Merge Sort', category: 'Sorting', difficulty: 'Medium', description: 'A divide-and-conquer algorithm that divides the array into halves, sorts them, and then merges them back together.' },
@@ -22,18 +22,24 @@ const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
   { slug: 'bfs', title: 'Breadth-First Search (BFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing or searching tree or graph data structures, exploring neighbors first.' },
   { slug: 'dfs', title: 'Depth-First Search (DFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing or searching tree or graph data structures, exploring as far as possible along each branch.' },
   { slug: 'dijkstra', title: 'Dijkstra\'s Algorithm', category: 'Graph', difficulty: 'Hard', description: 'Finds the shortest paths between nodes in a graph, which may represent, for example, road networks.' },
-  { slug: 'binary-tree', title: 'Binary Tree Traversal', category: 'Tree', difficulty: 'Medium', description: 'Covers Inorder, Preorder, and Postorder traversals for binary trees.' },
-  { slug: 'linked-list', title: 'Linked List Operations', category: 'Data Structures', difficulty: 'Easy', description: 'Visualize insertion, deletion, and search in singly linked lists.'},
+  { slug: 'binary-tree-traversal', title: 'Binary Tree Traversal', category: 'Tree', difficulty: 'Medium', description: 'Covers Inorder, Preorder, and Postorder traversals for binary trees.' },
+  { slug: 'linked-list-operations', title: 'Linked List Operations', category: 'Data Structures', difficulty: 'Easy', description: 'Visualize insertion, deletion, and search in singly linked lists.'},
   { slug: 'stack-queue', title: 'Stack & Queue', category: 'Data Structures', difficulty: 'Easy', description: 'Illustrates LIFO (Stack) and FIFO (Queue) principles with basic operations.'},
 ];
 
 const ALL_CATEGORIES = Array.from(new Set(MOCK_ALGORITHMS.map(algo => algo.category))).sort();
-const ALL_DIFFICULTIES: AlgorithmMetadata['difficulty'][] = ['Easy', 'Medium', 'Hard'];
+const ALL_DIFFICULTIES: Array<AlgorithmMetadata['difficulty']> = ['Easy', 'Medium', 'Hard'];
+
 
 export default function VisualizersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<AlgorithmMetadata['difficulty'] | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredAlgorithms = useMemo(() => {
     return MOCK_ALGORITHMS.filter(algo => {
@@ -54,6 +60,41 @@ export default function VisualizersPage() {
   
   const hasActiveFilters = searchTerm || selectedCategory || selectedDifficulty;
 
+  // Render an empty state or skeleton during SSR/hydration phase for Select components
+  if (!isClient) {
+    return (
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mb-12 text-center">
+                    <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
+                        Explore Visualizers
+                    </h1>
+                    <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                        Loading interactive visualizations...
+                    </p>
+                </div>
+                {/* Skeleton for filters and cards */}
+                 <div className="sticky top-16 bg-background/90 dark:bg-background/80 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                            <div className="h-10 bg-muted rounded-md lg:col-span-2"></div>
+                            <div className="h-10 bg-muted rounded-md"></div>
+                            <div className="h-10 bg-muted rounded-md"></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                    {[1,2,3].map(i => (
+                        <div key={i} className="h-64 bg-card rounded-xl shadow-lg"></div>
+                    ))}
+                </div>
+            </main>
+            <Footer />
+        </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -68,14 +109,14 @@ export default function VisualizersPage() {
         </div>
 
         {/* Filters Bar */}
-        <div className="sticky top-16 bg-background/90 dark:bg-background/80 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow">
+        <div className="sticky top-[calc(theme(spacing.16)+1px)] bg-background/95 dark:bg-background/90 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow-md border">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
               <div className="relative lg:col-span-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search algorithms..."
+                  placeholder="Search algorithms (e.g., Merge Sort, BFS)"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-full"
@@ -121,13 +162,14 @@ export default function VisualizersPage() {
 
         {/* Visualizer Cards Grid */}
         {filteredAlgorithms.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
             {filteredAlgorithms.map(algo => (
               <VisualizerCard key={algo.slug} algorithm={algo} />
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
+            <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-xl text-muted-foreground font-semibold">No visualizers match your criteria.</p>
             <p className="mt-2 text-muted-foreground">Try adjusting your search or filters.</p>
              {hasActiveFilters && (
