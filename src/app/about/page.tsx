@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Code, Users, Brain } from 'lucide-react';
+import { Zap, Code, Users, Brain, Layers, Palette, Github } from 'lucide-react';
 
 export default function AboutPage() {
   return (
@@ -28,7 +28,7 @@ export default function AboutPage() {
               AlgoVista ("Algorithm" + "Vista") is a next-generation interactive learning platform designed to demystify complex computer science concepts. We believe that seeing algorithms in action is the key to truly understanding them.
             </p>
             <p className="text-lg text-foreground/80">
-              Instead of just reading static code or abstract theories, learners can watch logic unfold step-by-step through dynamic visualizations, synchronized code highlighting, and the ability to test with custom inputs.
+              Instead of just reading static code or abstract theories, learners can watch logic unfold step-by-step through dynamic visualizations, synchronized code highlighting, and the ability to test with custom inputs. Our goal is to provide a clear, panoramic view of how data structures and algorithms work internally.
             </p>
           </div>
           <div className="flex justify-center">
@@ -56,12 +56,27 @@ export default function AboutPage() {
             <InfoCard
               icon={Zap}
               title="Interactive Engagement"
-              description="Passive learning is outdated. AlgoVista encourages active participation through custom inputs and real-time feedback."
+              description="Passive learning is outdated. AlgoVista encourages active participation through custom inputs, real-time feedback, and animation controls."
             />
             <InfoCard
               icon={Users}
               title="For Everyone"
-              description="Whether you're a student, a self-taught developer, or preparing for interviews, AlgoVista caters to all learning levels."
+              description="Whether you're a student preparing for exams, a self-taught developer, or an engineer prepping for technical interviews, AlgoVista caters to all learning levels."
+            />
+             <InfoCard
+              icon={Code}
+              title="Code Syncing"
+              description="Understand the direct link between visual steps and the underlying code, with synchronized highlighting of executing lines."
+            />
+             <InfoCard
+              icon={Palette}
+              title="Modern Experience"
+              description="Enjoy a clean, intuitive interface with dark mode, responsive design, and no mandatory sign-ups to get started."
+            />
+            <InfoCard
+              icon={Layers}
+              title="Comprehensive Coverage"
+              description="Explore a wide range of data structures and algorithms, from fundamental sorting techniques to complex graph traversals."
             />
           </div>
         </section>
@@ -76,7 +91,8 @@ export default function AboutPage() {
               <TechListItem name="TypeScript" description="To ensure code quality, maintainability, and a better developer experience." />
               <TechListItem name="Tailwind CSS" description="For rapid, utility-first UI development." />
               <TechListItem name="Shadcn/UI" description="Beautifully designed, accessible, and customizable React components." />
-              <TechListItem name="Framer Motion" description="To create smooth and engaging animations for algorithm visualizations (planned)." />
+              <TechListItem name="Framer Motion" description="Planned for creating smooth and engaging animations for algorithm visualizations." />
+              <TechListItem name="Zustand / Context API" description="Considered for efficient state management across complex visualizer components." />
             </ul>
           </div>
         </section>
@@ -86,9 +102,17 @@ export default function AboutPage() {
             Get Involved
           </h2>
           <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto">
-            AlgoVista is an open-source project. We welcome contributions and feedback from the community!
+            AlgoVista is envisioned as an open-source project. We believe in the power of community collaboration to build the best learning tools. We welcome contributions, feedback, and suggestions!
           </p>
-          {/* Add GitHub link or contact form/info here eventually */}
+           <a
+            href="https://github.com" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-accent-foreground bg-accent hover:bg-accent/90 dark:text-accent-foreground dark:bg-primary dark:hover:bg-primary/90"
+          >
+            <Github className="h-5 w-5 mr-2" />
+            View on GitHub (Soon!)
+          </a>
         </section>
       </main>
       <Footer />
@@ -98,14 +122,14 @@ export default function AboutPage() {
 
 function InfoCard({ icon: Icon, title, description }: { icon: React.ElementType, title: string, description: string }) {
   return (
-    <Card className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader>
-        <div className="mx-auto bg-primary/10 dark:bg-accent/10 p-3 rounded-full w-fit mb-4">
+    <Card className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+      <CardHeader className="items-center">
+        <div className="bg-primary/10 dark:bg-accent/10 p-3 rounded-full w-fit mb-4">
           <Icon className="h-8 w-8 text-primary dark:text-accent" />
         </div>
         <CardTitle className="font-headline text-xl text-primary dark:text-accent">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <p className="text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
@@ -115,8 +139,8 @@ function InfoCard({ icon: Icon, title, description }: { icon: React.ElementType,
 function TechListItem({ name, description }: { name: string, description: string }) {
   return (
     <li className="flex flex-col sm:flex-row">
-      <span className="font-semibold text-primary dark:text-accent w-full sm:w-1/3 mb-1 sm:mb-0">{name}:</span>
-      <span className="text-muted-foreground w-full sm:w-2/3">{description}</span>
+      <span className="font-semibold text-foreground w-full sm:w-2/5 md:w-1/3 mb-1 sm:mb-0">{name}:</span>
+      <span className="text-muted-foreground w-full sm:w-3/5 md:w-2/3">{description}</span>
     </li>
   );
 }

@@ -1,60 +1,108 @@
 
+"use client"; // Required for useState and useEffect
+
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { ShieldCheck } from 'lucide-react';
 
 export default function PrivacyPage() {
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    // Set the date only on the client-side to avoid hydration mismatch
+    setLastUpdated(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-3xl mx-auto">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent mb-8 text-center">
-            Privacy Policy
-          </h1>
-          <div className="space-y-6 text-muted-foreground">
-            <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
+          <div className="text-center mb-10">
+            <ShieldCheck className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+            <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
+              Privacy Policy
+            </h1>
+          </div>
+          
+          <div className="space-y-6 text-foreground/80 text-lg">
+            {lastUpdated && (
+              <p className="text-muted-foreground"><strong>Last Updated:</strong> {lastUpdated}</p>
+            )}
             
-            <p>AlgoVista ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our website and services (collectively, the "Service").</p>
+            <p>AlgoVista ("we", "us", "our") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our website and services (collectively, the "Service"). Our core principle is to collect as little user data as possible.</p>
             
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Information We Don't Collect</h2>
-            <p>AlgoVista is designed with user privacy at its core. We do not require user accounts, and therefore, we do not collect any Personally Identifiable Information (PII) such as your name, email address, phone number, or physical address.</p>
+            <PrivacySection title="Information We Do Not Collect">
+              <p>AlgoVista is designed with user privacy at its core. We do not require user accounts, and therefore, **we do not collect any Personally Identifiable Information (PII)** such as your name, email address, phone number, or physical address.</p>
+            </PrivacySection>
             
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Information Collected Automatically</h2>
-            <p>Like most websites, we may collect non-personally identifiable information that your browser sends whenever you visit our Service. This may include:</p>
-            <ul className="list-disc list-inside space-y-1 pl-4">
-              <li>Your device's Internet Protocol (IP) address (anonymized where possible)</li>
-              <li>Browser type and version</li>
-              <li>The pages of our Service that you visit</li>
-              <li>The time and date of your visit</li>
-              <li>The time spent on those pages</li>
-              <li>Other standard web log information</li>
-            </ul>
-            <p>This data is used in an aggregated form for analytical purposes, such as understanding how users interact with AlgoVista, improving our Service, and ensuring its stability and security. This information does not identify you personally.</p>
+            <PrivacySection title="Information Collected Automatically (Non-Personal)">
+              <p>Like most websites, we may collect non-personally identifiable information that your browser sends whenever you visit our Service. This data is used in an aggregated form for analytical purposes, such as understanding how users interact with AlgoVista, improving our Service, and ensuring its stability and security. This information does not identify you personally. This may include:</p>
+              <ul className="list-disc list-inside space-y-1 pl-6 mt-2">
+                <li>Your device's Internet Protocol (IP) address (anonymized or truncated where feasible).</li>
+                <li>Browser type and version.</li>
+                <li>The pages of our Service that you visit.</li>
+                <li>The time and date of your visit.</li>
+                <li>The time spent on those pages.</li>
+                <li>Other standard web log information for diagnostics and traffic analysis.</li>
+              </ul>
+            </PrivacySection>
 
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Theme Preferences</h2>
-            <p>AlgoVista allows you to toggle between light and dark themes. This preference is stored locally in your browser's <code>localStorage</code>. This information is not transmitted to our servers and is used solely to remember your theme choice for subsequent visits from the same browser.</p>
+            <PrivacySection title="Theme Preferences & Local Storage">
+              <p>AlgoVista allows you to toggle between light and dark themes. This preference, along with potentially other non-sensitive UI preferences (like animation speed if implemented), is stored locally in your browser's <code>localStorage</code>. This information is not transmitted to our servers and is used solely to remember your choices for subsequent visits from the same browser.</p>
+            </PrivacySection>
 
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Cookies</h2>
-            <p>We do not use cookies for tracking or advertising purposes. Essential cookies may be used by Next.js or other underlying framework functionalities to ensure the proper operation of the website. Your theme preference is stored in <code>localStorage</code>, not cookies.</p>
+            <PrivacySection title="Cookies">
+              <p>We do not use cookies for tracking or advertising purposes. Essential cookies may be used by the Next.js framework or underlying functionalities (like theme persistence if `next-themes` uses them) to ensure the proper operation of the website. These are functional and not used to track your activity across other sites.</p>
+            </PrivacySection>
 
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Third-Party Services</h2>
-            <p>We may use third-party services for hosting (e.g., Firebase App Hosting) or analytics (e.g., a privacy-focused analytics tool in the future). These services have their own privacy policies, and we encourage you to review them.</p>
+            <PrivacySection title="Third-Party Services">
+              <p>We may use third-party services for:</p>
+              <ul className="list-disc list-inside space-y-1 pl-6 mt-2">
+                <li>**Hosting:** Firebase App Hosting (or similar) hosts our application.</li>
+                <li>**Analytics (Future):** We may use a privacy-focused analytics tool in the future to understand service usage without collecting PII.</li>
+              </ul>
+              <p className="mt-2">These services have their own privacy policies, and we encourage you to review them. We select third-party services with a strong commitment to data privacy.</p>
+            </PrivacySection>
 
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Data Security</h2>
-            <p>While we do not collect PII, we are committed to ensuring the security of any data that is processed. We implement reasonable administrative, technical, and physical safeguards to protect any non-personal information from loss, misuse, unauthorized access, disclosure, alteration, or destruction.</p>
+            <PrivacySection title="Data Security">
+              <p>While we do not collect PII, we are committed to ensuring the security of any data that is processed (like aggregated analytics or locally stored preferences). We implement reasonable administrative, technical, and physical safeguards to protect any non-personal information from loss, misuse, unauthorized access, disclosure, alteration, or destruction.</p>
+            </PrivacySection>
 
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Children's Privacy</h2>
-            <p>AlgoVista is not intended for children under the age of 13. We do not knowingly collect any information from children under 13. If you believe we might have any information from or about a child under 13, please contact us.</p>
+            <PrivacySection title="Children's Privacy">
+              <p>AlgoVista is an educational tool suitable for a wide audience, including students. It is not specifically directed at children under the age of 13 (or the relevant age in your jurisdiction). We do not knowingly collect any personal information from children. If you believe we might have inadvertently collected any information from or about a child, please contact us so we can take appropriate action.</p>
+            </PrivacySection>
             
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Changes to This Privacy Policy</h2>
-            <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
+            <PrivacySection title="Changes to This Privacy Policy">
+              <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
+            </PrivacySection>
             
-            <h2 className="font-headline text-2xl font-semibold text-foreground pt-4">Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy, please refer to our Contact page or the project's GitHub repository (link in the footer).</p>
+            <PrivacySection title="Contact Us">
+              <p>If you have any questions about this Privacy Policy or our privacy practices, please refer to our <a href="/contact" className="text-primary dark:text-accent hover:underline">Contact page</a> or the project's GitHub repository (link in the footer).</p>
+            </PrivacySection>
           </div>
         </div>
       </main>
       <Footer />
     </div>
+  );
+}
+
+interface PrivacySectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function PrivacySection({ title, children }: PrivacySectionProps) {
+  return (
+    <section>
+      <h2 className="font-headline text-2xl sm:text-3xl font-semibold text-foreground pt-4 pb-2 mb-2 border-b border-border/70">
+        {title}
+      </h2>
+      <div className="space-y-3 text-muted-foreground">
+        {children}
+      </div>
+    </section>
   );
 }
