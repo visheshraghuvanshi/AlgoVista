@@ -14,24 +14,34 @@ interface VisualizationPanelProps {
 const BAR_MAX_HEIGHT = 200; // Max height for bars in px
 const BAR_WIDTH = 20; // Width of each bar in px
 const BAR_MARGIN = 2; // Margin between bars
+const MIN_NON_ZERO_BAR_HEIGHT = 8; // Min height for non-zero bars in px
 
 export function VisualizationPanel({ data, activeIndices = [], swappingIndices = [], sortedIndices = [] }: VisualizationPanelProps) {
   const [maxVal, setMaxVal] = useState(1);
 
   useEffect(() => {
     if (data.length > 0) {
-      const positiveData = data.map(val => Math.abs(val));
-      setMaxVal(Math.max(...positiveData, 1));
+      const absoluteData = data.map(val => Math.abs(val));
+      setMaxVal(Math.max(...absoluteData, 1)); // Ensure maxVal is at least 1 to avoid division by zero or negative
     } else {
-      setMaxVal(1);
+      setMaxVal(1); // Default for empty data
     }
   }, [data]);
 
   const getBarColor = (index: number) => {
-    if (sortedIndices.includes(index)) return "bg-green-500"; // Sorted elements
-    if (swappingIndices.includes(index)) return "bg-accent"; // Elements being swapped (yellow)
-    if (activeIndices.includes(index)) return "bg-primary"; // Active elements being compared (burgundy)
-    return "bg-secondary"; // Default bar color
+    if (sortedIndices.includes(index)) return "bg-green-500"; 
+    if (swappingIndices.includes(index)) return "bg-accent"; 
+    if (activeIndices.includes(index)) return "bg-primary"; 
+    return "bg-secondary"; 
+  };
+
+  const getBarHeight = (value: number) => {
+    if (value === 0) {
+      return '0px'; // Explicitly 0 height for 0 value
+    }
+    const scaledHeight = (Math.abs(value) / maxVal) * BAR_MAX_HEIGHT;
+    // Ensure a minimum height for non-zero values, but not exceeding BAR_MAX_HEIGHT
+    return `${Math.min(BAR_MAX_HEIGHT, Math.max(MIN_NON_ZERO_BAR_HEIGHT, scaledHeight))}px`;
   };
 
   return (
@@ -48,7 +58,7 @@ export function VisualizationPanel({ data, activeIndices = [], swappingIndices =
               key={index}
               className={`transition-all duration-300 ease-in-out ${getBarColor(index)} rounded-t-sm`}
               style={{
-                height: `${Math.max(5, (Math.abs(value) / maxVal) * BAR_MAX_HEIGHT)}px`,
+                height: getBarHeight(value),
                 width: `${BAR_WIDTH}px`,
                 marginLeft: `${BAR_MARGIN}px`,
                 marginRight: `${BAR_MARGIN}px`,
@@ -56,8 +66,6 @@ export function VisualizationPanel({ data, activeIndices = [], swappingIndices =
               title={`Value: ${value}`}
               aria-label={`Bar representing value ${value} at index ${index}`}
             >
-              {/* Optional: Display value inside or above bar if space allows and design requires */}
-              {/* <span className="text-xs text-center block text-white">{value}</span> */}
             </div>
           ))
         )}

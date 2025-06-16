@@ -12,7 +12,103 @@ import { Search, ListFilter, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
-  { slug: 'bubble-sort', title: 'Bubble Sort', category: 'Sorting', difficulty: 'Easy', description: 'A simple comparison-based sorting algorithm where adjacent elements are repeatedly compared and swapped if they are in the wrong order.' },
+  { 
+    slug: 'bubble-sort', 
+    title: 'Bubble Sort', 
+    category: 'Sorting', 
+    difficulty: 'Easy', 
+    description: 'A simple comparison-based sorting algorithm where adjacent elements are repeatedly compared and swapped if they are in the wrong order.',
+    codeSnippets: {
+      JavaScript: [
+        "function bubbleSort(arr) {",        // 1
+        "  let n = arr.length;",              // 2
+        "  let swapped;",                     // 3
+        "  do {",                             // 4
+        "    swapped = false;",               // 5
+        "    for (let i = 0; i < n - 1; i++) {",// 6
+        "      // Compare arr[i] and arr[i+1]", // 7 
+        "      if (arr[i] > arr[i + 1]) {",   // 8
+        "        // Swap arr[i] and arr[i+1]", // 9 
+        "        let temp = arr[i];",          // 10
+        "        arr[i] = arr[i + 1];",        // 11
+        "        arr[i + 1] = temp;",         // 12
+        "        swapped = true;",            // 13
+        "      }",                            // 14
+        "    }",                              // 15
+        "    n--; // Optimization",            // 16
+        "  } while (swapped && n > 0);",      // 17
+        "  return arr;",                     // 18
+        "}",                                  // 19
+      ],
+      Python: [
+        "def bubble_sort(arr):",
+        "    n = len(arr)",
+        "    # Outer loop for passes",
+        "    for i in range(n - 1):",
+        "        swapped_in_pass = False",
+        "        # Inner loop for comparisons",
+        "        for j in range(n - 1 - i):",
+        "            # Compare arr[j] and arr[j+1]",
+        "            if arr[j] > arr[j+1]:",
+        "                # Swap arr[j] and arr[j+1]",
+        "                temp = arr[j]",
+        "                arr[j] = arr[j+1]",
+        "                arr[j+1] = temp",
+        "                swapped_in_pass = True",
+        "            # End if",
+        "        # End inner loop",
+        "        # Optimization: if no swaps, array is sorted",
+        "        if not swapped_in_pass:",
+        "            break",
+        "    return arr",
+      ],
+      Java: [
+        "public class BubbleSort {",
+        "  public static void bubbleSort(int[] arr) {",
+        "    int n = arr.length;",
+        "    boolean swapped;",
+        "    do {",
+        "      swapped = false;",
+        "      for (int i = 0; i < n - 1; i++) {",
+        "        // Compare arr[i] and arr[i+1]",
+        "        if (arr[i] > arr[i + 1]) {",
+        "          // Swap arr[i] and arr[i+1]",
+        "          int temp = arr[i];",
+        "          arr[i] = arr[i + 1];",
+        "          arr[i + 1] = temp;",
+        "          swapped = true;",
+        "        }",
+        "      }",
+        "      n--; // Optimization",
+        "    } while (swapped && n > 0);",
+        "  }",
+        "}",
+      ],
+      "C++": [
+        "#include <vector>",
+        "#include <algorithm> // For std::swap (optional)",
+        "void bubbleSort(std::vector<int>& arr) {",
+        "  int n = arr.size();",
+        "  bool swapped;",
+        "  do {",
+        "    swapped = false;",
+        "    for (int i = 0; i < n - 1; ++i) {",
+        "      // Compare arr[i] and arr[i+1]",
+        "      if (arr[i] > arr[i+1]) {",
+        "        // Swap arr[i] and arr[i+1]",
+        "        int temp = arr[i];",
+        "        arr[i] = arr[i+1];",
+        "        arr[i+1] = temp;",
+        "        // Or: std::swap(arr[i], arr[i+1]);",
+        "        swapped = true;",
+        "      }",
+        "    }",
+        "    n--; // Optimization",
+        "  } while (swapped && n > 0);",
+        "}",
+      ],
+    }
+  },
   { slug: 'insertion-sort', title: 'Insertion Sort', category: 'Sorting', difficulty: 'Easy', description: 'Builds the final sorted array one item at a time by repeatedly taking the next item and inserting it into the sorted portion.' },
   { slug: 'merge-sort', title: 'Merge Sort', category: 'Sorting', difficulty: 'Medium', description: 'A divide-and-conquer algorithm that divides the array into halves, sorts them, and then merges them back together.' },
   { slug: 'quick-sort', title: 'Quick Sort', category: 'Sorting', difficulty: 'Medium', description: 'A highly efficient divide-and-conquer sorting algorithm that picks an element as a pivot and partitions the array around the pivot.' },
@@ -61,7 +157,6 @@ export default function VisualizersPage() {
   
   const hasActiveFilters = searchTerm || selectedCategory || selectedDifficulty;
 
-  // Render an empty state or skeleton during SSR/hydration phase for Select components
   if (!isClient) {
     return (
         <div className="flex flex-col min-h-screen">
@@ -75,7 +170,6 @@ export default function VisualizersPage() {
                         Loading interactive visualizations...
                     </p>
                 </div>
-                {/* Skeleton for filters and cards */}
                  <div className="sticky top-16 bg-background/90 dark:bg-background/80 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -109,7 +203,6 @@ export default function VisualizersPage() {
           </p>
         </div>
 
-        {/* Filters Bar */}
         <div className="sticky top-[calc(theme(spacing.16)+1px)] bg-background/95 dark:bg-background/90 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow-md border">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -171,7 +264,6 @@ export default function VisualizersPage() {
           </div>
         </div>
 
-        {/* Visualizer Cards Grid */}
         {filteredAlgorithms.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
             {filteredAlgorithms.map(algo => (

@@ -1,60 +1,116 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
-import { ClipboardCopy } from 'lucide-react';
+import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CodePanelProps {
-  codeLines: string[];
+  codeSnippets: { [language: string]: string[] };
   currentLine: number | null;
+  defaultLanguage?: string;
 }
 
-export function CodePanel({ codeLines, currentLine }: CodePanelProps) {
+export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePanelProps) {
   const { toast } = useToast();
+  const languages = Object.keys(codeSnippets);
+  const initialLang = defaultLanguage && languages.includes(defaultLanguage) ? defaultLanguage : languages[0] || 'Info';
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
+
+  useEffect(() => {
+    // Reset to default/first language if the current one is no longer available (e.g. algo change)
+    if (!languages.includes(selectedLanguage)) {
+      setSelectedLanguage(initialLang);
+    }
+  }, [codeSnippets, selectedLanguage, languages, initialLang]);
+
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(codeLines.join('\n'))
-      .then(() => {
-        toast({ title: "Code Copied!", description: "The code has been copied to your clipboard." });
-      })
-      .catch(err => {
-        toast({ title: "Copy Failed", description: "Could not copy code to clipboard.", variant: "destructive" });
-        console.error('Failed to copy code: ', err);
-      });
+    const codeToCopy = codeSnippets[selectedLanguage]?.join('\n') || '';
+    if (codeToCopy) {
+      navigator.clipboard.writeText(codeToCopy)
+        .then(() => {
+          toast({ title: `${selectedLanguage} Code Copied!`, description: "The code has been copied to your clipboard." });
+        })
+        .catch(err => {
+          toast({ title: "Copy Failed", description: "Could not copy code to clipboard.", variant: "destructive" });
+          console.error('Failed to copy code: ', err);
+        });
+    } else {
+        toast({ title: "No Code to Copy", description: "No code available for the selected language.", variant: "default" });
+    }
   };
+
+  const currentCodeLines = codeSnippets[selectedLanguage] || [];
 
   return (
     <Card className="shadow-lg rounded-lg h-[300px] md:h-[400px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Code</CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
+        <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
+            <Code2 className="mr-2 h-5 w-5" /> Code
+        </CardTitle>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
           Copy
         </Button>
       </CardHeader>
-      <CardContent className="flex-grow overflow-hidden p-0">
-        <ScrollArea className="h-full w-full rounded-b-md border-t">
-          <pre className="font-code text-sm p-4 bg-muted/20 dark:bg-muted/5">
-            {codeLines.map((line, index) => (
-              <div
-                key={index}
-                className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                  index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
-                }`}
-                aria-current={index + 1 === currentLine ? "step" : undefined}
-              >
-                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                  {index + 1}
-                </span>
-                {line}
-              </div>
-            ))}
-          </pre>
-        </ScrollArea>
+      <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
+        {languages.length > 1 ? (
+          <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow">
+            <TabsList className="mx-4 mb-1 self-start">
+              {languages.map((lang) => (
+                <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
+                  {lang}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <ScrollArea className="h-full w-full rounded-b-md border-t flex-grow">
+              {languages.map((lang) => (
+                <TabsContent key={lang} value={lang} className="m-0 h-full">
+                  <pre className="font-code text-sm p-4 bg-muted/20 dark:bg-muted/5 h-full">
+                    {(codeSnippets[lang] || []).map((line, index) => (
+                      <div
+                        key={`${lang}-${index}`}
+                        className={`px-2 py-0.5 rounded transition-colors duration-150 ${
+                          index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
+                        }`}
+                        aria-current={index + 1 === currentLine ? "step" : undefined}
+                      >
+                        <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                          {index + 1}
+                        </span>
+                        {line}
+                      </div>
+                    ))}
+                  </pre>
+                </TabsContent>
+              ))}
+            </ScrollArea>
+          </Tabs>
+        ) : (
+          <ScrollArea className="h-full w-full rounded-b-md border-t flex-grow">
+            <pre className="font-code text-sm p-4 bg-muted/20 dark:bg-muted/5 h-full">
+              {currentCodeLines.map((line, index) => (
+                <div
+                  key={`single-${index}`}
+                  className={`px-2 py-0.5 rounded transition-colors duration-150 ${
+                    index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
+                  }`}
+                  aria-current={index + 1 === currentLine ? "step" : undefined}
+                >
+                  <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                    {index + 1}
+                  </span>
+                  {line}
+                </div>
+              ))}
+            </pre>
+          </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );

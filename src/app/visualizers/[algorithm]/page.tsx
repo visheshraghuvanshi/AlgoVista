@@ -13,28 +13,30 @@ import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 
-// Mock code for Bubble Sort - ensure line numbers match generation logic
-const BUBBLE_SORT_CODE = [
-  "function bubbleSort(arr) {",        // 1
-  "  let n = arr.length;",              // 2
-  "  let swapped;",                     // 3
-  "  do {",                             // 4
-  "    swapped = false;",               // 5
-  "    for (let i = 0; i < n - 1; i++) {",// 6
-  "      // Compare arr[i] and arr[i+1]", // 7 (Conceptual line for comparison)
-  "      if (arr[i] > arr[i + 1]) {",   // 8
-  "        // Swap arr[i] and arr[i+1]", // 9 (Conceptual line for start of swap)
-  "        let temp = arr[i];",          // 10
-  "        arr[i] = arr[i + 1];",        // 11
-  "        arr[i + 1] = temp;",         // 12
-  "        swapped = true;",            // 13
-  "      }",                            // 14
-  "    }",                              // 15
-  "    n--; // Optimization",            // 16
-  "  } while (swapped && n > 0);",      // 17
-  "  return arr;",                     // 18
-  "}",                                  // 19
-];
+// Specific line number mappings for Bubble Sort (JS version based)
+// These conceptual line numbers guide the step generation logic.
+const BUBBLE_SORT_LINE_MAP = {
+  functionDeclaration: 1,
+  getN: 2,
+  declareSwappedVar: 3,
+  doWhileStart: 4,
+  setSwappedFalse: 5,
+  forLoopStart: 6,
+  compareComment: 7,
+  ifCondition: 8,
+  swapComment: 9,
+  tempAssignment: 10,
+  firstSwapAssign: 11,
+  secondSwapAssign: 12,
+  setSwappedTrue: 13,
+  ifEnd: 14,
+  forLoopEnd: 15,
+  decrementN: 16,
+  doWhileEndCondition: 17,
+  returnArr: 18,
+  functionEnd: 19,
+};
+
 
 type AlgorithmStep = {
   array: number[];
@@ -42,12 +44,12 @@ type AlgorithmStep = {
   swappingIndices: number[];
   sortedIndices: number[];
   currentLine: number | null;
-  message?: string; // Optional: for explanations
+  message?: string; 
 };
 
-const DEFAULT_ANIMATION_SPEED = 700; // ms
-const MIN_SPEED = 100; // ms
-const MAX_SPEED = 2000; // ms
+const DEFAULT_ANIMATION_SPEED = 700; 
+const MIN_SPEED = 100; 
+const MAX_SPEED = 2000; 
 
 export default function AlgorithmVisualizerPage() {
   const params = useParams();
@@ -56,11 +58,9 @@ export default function AlgorithmVisualizerPage() {
   
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   
-  // Input and initial data
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
   const [initialData, setInitialData] = useState<number[]>([]);
 
-  // Visualization state
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
@@ -70,7 +70,6 @@ export default function AlgorithmVisualizerPage() {
   const [sortedIndices, setSortedIndices] = useState<number[]>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
 
-  // Controls state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
@@ -82,11 +81,11 @@ export default function AlgorithmVisualizerPage() {
     if (foundAlgorithm) {
       setAlgorithm(foundAlgorithm);
       if (foundAlgorithm.slug !== 'bubble-sort') {
-        // For now, only Bubble Sort is implemented
         toast({ title: "Visualizer Not Implemented", description: `The visualizer for ${foundAlgorithm.title} is coming soon!`, variant: "default" });
       }
     } else {
       console.error("Algorithm not found:", algorithmSlug);
+      // Potentially redirect or show a more permanent error message
     }
   }, [algorithmSlug, toast]);
 
@@ -122,6 +121,7 @@ export default function AlgorithmVisualizerPage() {
     let n = arr.length;
     let swapped;
     const localSortedIndices: number[] = [];
+    const lm = BUBBLE_SORT_LINE_MAP; // Use line map
 
     const addStep = (line: number, active: number[] = [], swapping: number[] = []) => {
       localSteps.push({
@@ -133,72 +133,69 @@ export default function AlgorithmVisualizerPage() {
       });
     };
 
-    addStep(1); // function bubbleSort(arr) {
+    addStep(lm.functionDeclaration); 
     if (n === 0) {
-      addStep(18); // return arr;
-      addStep(19); // }
+      addStep(lm.returnArr); 
+      addStep(lm.functionEnd); 
       return localSteps;
     }
     
-    addStep(2); // let n = arr.length;
-    addStep(3); // let swapped;
+    addStep(lm.getN); 
+    addStep(lm.declareSwappedVar);
 
     do {
-      addStep(4); // do {
+      addStep(lm.doWhileStart); 
       swapped = false;
-      addStep(5); // swapped = false;
+      addStep(lm.setSwappedFalse); 
 
       for (let i = 0; i < n - 1; i++) {
-        addStep(6, [i, i + 1]); // for loop with active comparison
-        addStep(7, [i, i + 1]); // Conceptual: Compare arr[i] and arr[i+1]
-        addStep(8, [i, i + 1]); // if (arr[i] > arr[i + 1]) {
+        addStep(lm.forLoopStart, [i, i + 1]); 
+        addStep(lm.compareComment, [i, i + 1]); 
+        addStep(lm.ifCondition, [i, i + 1]); 
         if (arr[i] > arr[i + 1]) {
-          addStep(9, [i, i + 1], [i, i + 1]); // Conceptual: Start of swap
+          addStep(lm.swapComment, [i, i + 1], [i, i + 1]); 
           
-          addStep(10, [i, i + 1], [i, i + 1]); // let temp = arr[i];
+          addStep(lm.tempAssignment, [i, i + 1], [i, i + 1]); 
           let temp = arr[i];
           
           arr[i] = arr[i + 1];
-          addStep(11, [i, i + 1], [i, i + 1]); // arr[i] = arr[i + 1];
+          addStep(lm.firstSwapAssign, [i, i + 1], [i, i + 1]); 
           
           arr[i + 1] = temp;
-          addStep(12, [i, i + 1], [i, i + 1]); // arr[i + 1] = temp; (array is now swapped)
+          addStep(lm.secondSwapAssign, [i, i + 1], [i, i + 1]); 
           
           swapped = true;
-          addStep(13); // swapped = true;
+          addStep(lm.setSwappedTrue); 
         }
-        addStep(14); // } (end of if)
+        addStep(lm.ifEnd); 
       }
-      addStep(15); // } (end of for)
+      addStep(lm.forLoopEnd); 
 
-      // Element at n-1 is now sorted
-      if (n - 1 >= 0) {
+      if (n - 1 >= 0 && n -1 < arr.length) { // Ensure index is valid
         localSortedIndices.push(n - 1);
       }
       
       n--;
-      addStep(16); // n--;
+      addStep(lm.decrementN); 
     } while (swapped && n > 0);
-    addStep(17); // } while (swapped && n > 0);
+    addStep(lm.doWhileEndCondition); 
 
-    // All remaining elements are sorted if swapped is false or n is 0
     const remainingUnsortedCount = arr.length - localSortedIndices.length;
-    for(let i = 0; i < remainingUnsortedCount; i++) {
-        if(!localSortedIndices.includes(i)) localSortedIndices.push(i);
+    for(let k = 0; k < remainingUnsortedCount; k++) { // Use k to avoid conflict with outer i if it existed
+        if(!localSortedIndices.includes(k)) localSortedIndices.push(k);
     }
     localSortedIndices.sort((a,b) => a-b);
 
 
-    addStep(18); // return arr;
-    addStep(19); // } (end of function)
+    addStep(lm.returnArr); 
+    addStep(lm.functionEnd); 
     
-    // Final state with all sorted
-     localSteps.push({
+     localSteps.push({ // Final sorted state
         array: [...arr],
         activeIndices: [],
         swappingIndices: [],
         sortedIndices: [...arr.map((_,idx) => idx)],
-        currentLine: 18, // return arr;
+        currentLine: lm.returnArr, 
       });
 
     return localSteps;
@@ -215,7 +212,6 @@ export default function AlgorithmVisualizerPage() {
     }
   }, [steps]);
 
-  // Effect to initialize or update steps when inputValue changes
   useEffect(() => {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
@@ -229,14 +225,13 @@ export default function AlgorithmVisualizerPage() {
         if (newSteps.length > 0) {
           updateStateFromStep(0);
         } else {
-          setDisplayedData(parsedData); // Show initial array if no steps (e.g. empty input)
+          setDisplayedData(parsedData); 
           setActiveIndices([]);
           setSwappingIndices([]);
           setSortedIndices([]);
           setCurrentLine(null);
         }
       } else {
-        // For other algorithms, just display initial data for now
         setDisplayedData(parsedData);
         setActiveIndices([]);
         setSwappingIndices([]);
@@ -250,10 +245,9 @@ export default function AlgorithmVisualizerPage() {
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, generateBubbleSortSteps, algorithm]); // animationTimeoutRef not needed
+  }, [inputValue, parseInput, generateBubbleSortSteps, algorithm]); 
 
 
-  // Effect for playing animation
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length -1 && algorithm?.slug === 'bubble-sort') {
       animationTimeoutRef.current = setTimeout(() => {
@@ -279,7 +273,6 @@ export default function AlgorithmVisualizerPage() {
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    // Validation and step generation happens in useEffect
   };
 
   const handlePlay = () => {
@@ -293,7 +286,7 @@ export default function AlgorithmVisualizerPage() {
       return;
     }
     setIsPlaying(true);
-    setIsFinished(false); // Reset finished if replaying from middle
+    setIsFinished(false); 
   };
 
   const handlePause = () => {
@@ -314,7 +307,7 @@ export default function AlgorithmVisualizerPage() {
       return;
     }
 
-    setIsPlaying(false); // Pause if was playing
+    setIsPlaying(false); 
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
       animationTimeoutRef.current = null;
@@ -338,7 +331,7 @@ export default function AlgorithmVisualizerPage() {
         animationTimeoutRef.current = null;
     }
 
-    const parsedData = parseInput(inputValue) || initialData; // Use current input or last valid initial data
+    const parsedData = parseInput(inputValue) || initialData; 
     if (algorithm?.slug === 'bubble-sort') {
         const newSteps = generateBubbleSortSteps(parsedData);
         setSteps(newSteps);
@@ -363,23 +356,7 @@ export default function AlgorithmVisualizerPage() {
   };
   
   const handleSpeedChange = (speedValue: number) => {
-    // Map slider value (e.g. 0-100) to actual speed (e.g. MAX_SPEED to MIN_SPEED)
-    // For a slider from 0 to 100:
-    // speed = MAX_SPEED - (speedValue / 100) * (MAX_SPEED - MIN_SPEED)
-    // For shadcn Slider, value is typically an array like [50]
-    const val = speedValue; // Assuming slider passes single value like 0.5, 1, 1.5, 2
-    // Let's assume slider passes values that can be mapped to speed, e.g. 1x, 0.5x, 2x
-    // If slider passes 1, speed is DEFAULT_ANIMATION_SPEED. If 0.5, speed is *2. If 2, speed is /2.
-    // So, newSpeed = DEFAULT_ANIMATION_SPEED / val;
-    // For this example, let's map slider value [0.5, 1, 1.5, 2, 2.5, 3] to animation delay
-    // This assumes the slider is configured to output values like 0.5, 1, 1.5, ...
-    // Lower slider value = faster animation (less delay)
-    // Higher slider value = slower animation (more delay)
-    // Let's use a simple direct mapping where slider value is inverted for speed.
-    // Slider output: 0.5 (fast) to 3 (slow). We want delay from MIN_SPEED to MAX_SPEED.
-    // If slider is 100 to 2000:
     setAnimationSpeed(speedValue);
-
   };
 
 
@@ -402,7 +379,7 @@ export default function AlgorithmVisualizerPage() {
     );
   }
 
-  const codeToDisplay = algorithm.slug === 'bubble-sort' ? BUBBLE_SORT_CODE : ["// Code not available for this algorithm yet."];
+  const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
   const isAlgoImplemented = algorithm.slug === 'bubble-sort';
 
 
@@ -431,8 +408,9 @@ export default function AlgorithmVisualizerPage() {
 
           <div className="lg:w-2/5">
             <CodePanel 
-              codeLines={codeToDisplay} 
-              currentLine={currentLine} 
+              codeSnippets={codeSnippetsToDisplay} 
+              currentLine={currentLine}
+              defaultLanguage={isAlgoImplemented ? "JavaScript" : undefined}
             />
           </div>
         </div>
