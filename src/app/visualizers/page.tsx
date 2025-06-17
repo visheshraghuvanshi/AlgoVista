@@ -52,7 +52,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
   { slug: 'bfs', title: 'Breadth-First Search (BFS)', category: 'Graph', difficulty: 'Medium', description: 'Traverses graph level by level, exploring all neighbors at the present depth before moving to the next.' },
   { slug: 'dfs', title: 'Depth-First Search (DFS)', category: 'Graph', difficulty: 'Medium', description: 'Explores as far as possible along each branch before backtracking in a graph traversal.' },
   { slug: 'dijkstra', title: 'Dijkstra\'s Algorithm', category: 'Graph', difficulty: 'Hard', description: 'Finds the shortest paths from a single source node to all other nodes in a weighted graph with non-negative edge weights.' },
-  { slug: 'binary-tree-traversal', title: 'Binary Tree Traversal', category: 'Tree', difficulty: 'Medium', description: 'Covers Inorder, Preorder, and Postorder traversals for binary trees.' },
+  { slug: 'binary-tree-traversal', title: 'Binary Tree Traversal', category: 'Tree', difficulty: 'Medium', description: 'Visualize Inorder, Preorder, and Postorder traversals for binary trees. Input tree as comma-separated values (use "null" for empty nodes).' },
   { slug: 'linked-list-operations', title: 'Linked List Operations', category: 'Data Structures', difficulty: 'Easy', description: 'Visualize insertion, deletion, and search in singly linked lists.'},
   { slug: 'stack-queue', title: 'Stack & Queue', category: 'Data Structures', difficulty: 'Easy', description: 'Illustrates LIFO (Stack) and FIFO (Queue) principles with basic operations.'},
 ];
