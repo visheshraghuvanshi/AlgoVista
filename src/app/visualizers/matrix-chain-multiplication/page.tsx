@@ -8,21 +8,21 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, SquareFunction } from 'lucide-react'; // Icon for MCM
+import { Play, Pause, SkipForward, RotateCcw, SquareFunction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { MCMVisualizationPanel } from './MCMVisualizationPanel';
-import { MCMCodePanel } from './MCMCodePanel';
+import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; // Import snippets
 import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic';
 
 const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 50;
 const MAX_SPEED = 1500;
-const DEFAULT_DIMENSIONS_INPUT = "10,30,5,60"; // For 3 matrices: A1(10x30), A2(30x5), A3(5x60)
-const MAX_MATRICES = 10; // p.length - 1, so p.length max is 11
+const DEFAULT_DIMENSIONS_INPUT = "10,30,5,60"; 
+const MAX_MATRICES = 10; 
 
 export default function MCMVisualizerPage() {
   const { toast } = useToast();
@@ -79,7 +79,7 @@ export default function MCMVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [dimensionsInput, parseDimensionsInput, updateStateFromStep]);
+  }, [dimensionsInput, parseDimensionsInput, updateVisualStateFromStep]);
   
   useEffect(() => { handleGenerateSteps(); }, [dimensionsInput, handleGenerateSteps]);
 
@@ -92,7 +92,7 @@ export default function MCMVisualizerPage() {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
@@ -104,7 +104,6 @@ export default function MCMVisualizerPage() {
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
     setDimensionsInput(DEFAULT_DIMENSIONS_INPUT);
-    // handleGenerateSteps will be called by useEffect on input change
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -116,7 +115,7 @@ export default function MCMVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <SquareFunction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Icon for MCM */}
+          <SquareFunction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> 
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
@@ -135,11 +134,10 @@ export default function MCMVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-1 md:col-span-2">
-                <Label htmlFor="dimensionsInputMCM">Matrix Dimensions (p array, comma-sep, e.g., 10,30,5,60 for 3 matrices A<sub>1</sub>(10x30), A<sub>2</sub>(30x5), A<sub>3</sub>(5x60))</Label>
+                <Label htmlFor="dimensionsInputMCM">Matrix Dimensions (p array, comma-sep, e.g., 10,30,5,60 for A<sub>1</sub>(10x30), A<sub>2</sub>(30x5), A<sub>3</sub>(5x60)). Max {MAX_MATRICES} matrices.</Label>
                 <Input id="dimensionsInputMCM" value={dimensionsInput} onChange={e => setDimensionsInput(e.target.value)} disabled={isPlaying}/>
               </div>
             </div>
-            {/* Removed explicit "Calculate" button, steps generate on input change */}
             
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Input & Simulation</Button>

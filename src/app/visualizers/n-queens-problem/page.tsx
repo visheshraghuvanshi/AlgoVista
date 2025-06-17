@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata, SudokuStep } from '@/types'; 
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, SquareAsterisk } from 'lucide-react';
@@ -15,10 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { NQueensVisualizationPanel } from './NQueensVisualizationPanel';
-import { NQueensCodePanel } from './NQueensCodePanel';
-import { generateNQueensSteps, type NQueensStep, N_QUEENS_LINE_MAP } from './n-queens-logic';
+import { NQueensCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; // Import snippets
+import { generateNQueensSteps, type NQueensStep as NQStepLogic, N_QUEENS_LINE_MAP } from './n-queens-logic'; // Use aliased type
 
-const DEFAULT_ANIMATION_SPEED = 300; // Faster for N-Queens due to many steps
+const DEFAULT_ANIMATION_SPEED = 300; 
 const MIN_SPEED = 20;
 const MAX_SPEED = 1000;
 const DEFAULT_N_VALUE = 4;
@@ -30,8 +30,8 @@ export default function NQueensProblemVisualizerPage() {
 
   const [boardSizeN, setBoardSizeN] = useState(DEFAULT_N_VALUE);
   
-  const [steps, setSteps] = useState<NQueensStep[]>([]);
-  const [currentStep, setCurrentStep] = useState<NQueensStep | null>(null);
+  const [steps, setSteps] = useState<NQStepLogic[]>([]);
+  const [currentStep, setCurrentStep] = useState<NQStepLogic | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -44,14 +44,13 @@ export default function NQueensProblemVisualizerPage() {
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
-      // If this step has solutions and it's the final step, show the first solution by default
-      if (stepIndex === steps.length - 1 && steps[stepIndex].foundSolutions && steps[stepIndex].foundSolutions!.length > 0) {
+      const currentS = steps[stepIndex];
+      setCurrentStep(currentS);
+      if (stepIndex === steps.length - 1 && currentS.foundSolutions && currentS.foundSolutions!.length > 0) {
         setDisplayedSolutionIndex(0); 
-        // Update currentStep's board to the first solution for immediate display
          setCurrentStep(prevStep => ({
             ...prevStep!,
-            board: steps[stepIndex].foundSolutions![0]
+            board: currentS.foundSolutions![0]
         }));
       }
     }
@@ -68,7 +67,6 @@ export default function NQueensProblemVisualizerPage() {
     if (boardSizeN > 6) {
         toast({ title: "Large N Warning", description: `N=${boardSizeN} may result in a very long animation. Consider N <= 6 for quicker visualization.`, variant: "default", duration: 5000});
     }
-
 
     const newSteps = generateNQueensSteps(boardSizeN);
     setSteps(newSteps);
@@ -111,7 +109,7 @@ export default function NQueensProblemVisualizerPage() {
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(true); 
-    setBoardSizeN(DEFAULT_N_VALUE); // This will trigger useEffect for boardSizeN
+    setBoardSizeN(DEFAULT_N_VALUE); 
   };
 
   const showNextSolution = () => {
@@ -140,7 +138,7 @@ export default function NQueensProblemVisualizerPage() {
         <div className="mb-8 text-center">
           <SquareAsterisk className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -195,3 +193,5 @@ export default function NQueensProblemVisualizerPage() {
     </div>
   );
 }
+
+    

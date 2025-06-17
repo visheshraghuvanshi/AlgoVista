@@ -15,8 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { LISVisualizationPanel } from './LISVisualizationPanel';
-import { LISCodePanel } from './LISCodePanel';
-import { generateLIS_N2_Steps, LIS_LINE_MAP_N2 } from './lis-logic'; // Using N2 version for visualization
+import { LISCodePanel, LIS_CODE_SNIPPETS_N2 } from './LISCodePanel'; // Import snippets
+import { generateLIS_N2_Steps, LIS_LINE_MAP_N2 } from './lis-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 50;
@@ -97,7 +97,6 @@ export default function LISVisualizerPage() {
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
     setInputValue(DEFAULT_LIS_INPUT);
-    // handleGenerateSteps will be called by useEffect on input change
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -132,7 +131,6 @@ export default function LISVisualizerPage() {
                 <Input id="arrayInputLIS" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying}/>
               </div>
             </div>
-            {/* Removed explicit "Calculate" button, steps generate on input change */}
             
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Input & Simulation</Button>

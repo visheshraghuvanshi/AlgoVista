@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { EditDistanceVisualizationPanel } from './EditDistanceVisualizationPanel';
-import { EditDistanceCodePanel } from './EditDistanceCodePanel';
+import { EditDistanceCodePanel, EDIT_DISTANCE_CODE_SNIPPETS } from './EditDistanceCodePanel'; // Import snippets
 import { generateEditDistanceSteps } from './edit-distance-logic';
 
 const DEFAULT_ANIMATION_SPEED = 400;
@@ -58,12 +58,11 @@ export default function EditDistanceVisualizerPage() {
         setSteps([]); setCurrentStep(null); setIsFinished(true);
         return;
     }
-     if (s1 === "" && s2 === "") { // Both empty
+     if (s1 === "" && s2 === "") { 
         toast({ title: "Input Empty", description: "Enter at least one string.", variant: "default"});
         setSteps([]); setCurrentStep(null); setIsFinished(true);
         return;
     }
-
 
     const newSteps = generateEditDistanceSteps(s1, s2);
     setSteps(newSteps);
@@ -91,14 +90,13 @@ export default function EditDistanceVisualizerPage() {
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
     setString1Input(DEFAULT_STRING1);
     setString2Input(DEFAULT_STRING2);
-    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };

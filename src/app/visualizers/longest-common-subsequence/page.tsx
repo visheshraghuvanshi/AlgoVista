@@ -8,14 +8,14 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, Rows3 } from 'lucide-react'; // Icon for LCS
+import { Play, Pause, SkipForward, RotateCcw, Rows3 } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { LCSVisualizationPanel } from './LCSVisualizationPanel';
-import { LCSCodePanel } from './LCSCodePanel';
+import { LCSCodePanel, LCS_CODE_SNIPPETS } from './LCSCodePanel'; // Import snippets
 import { generateLCSSteps } from './lcs-logic';
 
 const DEFAULT_ANIMATION_SPEED = 400;
@@ -108,7 +108,7 @@ export default function LCSVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <Rows3 className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Using Rows3 as a placeholder */}
+          <Rows3 className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> 
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>

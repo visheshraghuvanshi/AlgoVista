@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { CoinChangeVisualizationPanel } from './CoinChangeVisualizationPanel';
-import { CoinChangeCodePanel } from './CoinChangeCodePanel';
+import { CoinChangeCodePanel, COIN_CHANGE_CODE_SNIPPETS } from './CoinChangeCodePanel'; // Import snippets
 import { generateCoinChangeSteps } from './coin-change-logic';
 import type { CoinChangeProblemType } from './coin-change-logic';
 
@@ -52,7 +52,7 @@ export default function CoinChangeVisualizerPage() {
         throw new Error("Coins must be positive integers.");
       }
       if (coins.length === 0 && input.trim() !== "") throw new Error("No valid coins provided.");
-      return coins.sort((a,b) => a - b); // Sort for consistent processing order
+      return coins.sort((a,b) => a - b); 
     } catch (e: any) {
       toast({ title: "Invalid Coins Format", description: e.message || "Use comma-separated positive integers.", variant: "destructive" });
       return null;
@@ -70,12 +70,12 @@ export default function CoinChangeVisualizerPage() {
     const amount = parseInt(amountInput, 10);
 
     if (!coins || isNaN(amount) || amount < 0) {
-      if (!coins) {} // parseCoinsInput already toasting
+      if (!coins) {} 
       else toast({ title: "Invalid Amount", description: "Amount must be a non-negative integer.", variant: "destructive" });
       setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
-    if (coins.length > 15 || amount > 100) { // Limits for visualization performance
+    if (coins.length > 15 || amount > 100) { 
         toast({title:"Input too large", description: "Max 15 coins and amount 100 for smooth viz.", variant:"default"});
     }
 
@@ -113,7 +113,6 @@ export default function CoinChangeVisualizerPage() {
     setCoinsInput(DEFAULT_COINS_INPUT);
     setAmountInput(DEFAULT_AMOUNT_INPUT);
     setProblemType('minCoins');
-    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };

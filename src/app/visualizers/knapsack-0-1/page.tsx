@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from "@/components/ui/slider";
 import { KnapsackVisualizationPanel } from './KnapsackVisualizationPanel';
-import { KnapsackCodePanel } from './KnapsackCodePanel';
+import { KnapsackCodePanel, KNAPSACK_01_CODE_SNIPPETS } from './KnapsackCodePanel'; // Import snippets
 import { generateKnapsack01Steps } from './knapsack-0-1-logic';
 
 const DEFAULT_ANIMATION_SPEED = 500;
@@ -58,7 +58,7 @@ export default function KnapsackVisualizerPage() {
           throw new Error("Weights must be positive, values non-negative.");
         }
         return { weight, value };
-      }).filter(item => item !== null);
+      }).filter(item => item !== null && item !== undefined); // Ensure no undefined items if parsing fails for one part
       if (items.length === 0 && input.trim() !== "") throw new Error("No valid items found.");
       return items;
     } catch (e: any) {
@@ -78,12 +78,12 @@ export default function KnapsackVisualizerPage() {
     const capacity = parseInt(capacityInput, 10);
 
     if (!items || isNaN(capacity) || capacity <= 0) {
-      if (!items) {} // parseItemsInput already toasting
+      if (!items) {} 
       else toast({ title: "Invalid Capacity", description: "Capacity must be a positive integer.", variant: "destructive" });
       setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
-    if (items.length > 10 || capacity > 50) { // Limits for visualization performance
+    if (items.length > 10 || capacity > 50) { 
         toast({title:"Input too large", description: "Max 10 items and capacity 50 for smooth viz.", variant:"default"});
     }
 
@@ -120,7 +120,6 @@ export default function KnapsackVisualizerPage() {
     setIsPlaying(false); setIsFinished(false); 
     setItemInput(DEFAULT_ITEMS_INPUT);
     setCapacityInput(DEFAULT_CAPACITY);
-    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };

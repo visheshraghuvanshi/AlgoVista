@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, RatInAMazeStep } from '@/types'; // Use RatInAMazeStep
+import type { AlgorithmMetadata, RatInAMazeStep } from '@/types'; 
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, MousePointerSquare } from 'lucide-react';
@@ -15,10 +15,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel';
-import { RatInAMazeCodePanel } from './RatInAMazeCodePanel';
-import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic';
+import { RatInAMazeCodePanel, RAT_IN_MAZE_CODE_SNIPPETS } from './RatInAMazeCodePanel'; // Import snippets
+import { generateRatInAMazeSteps, type RatInAMazeStep as RatStepLogic, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; // Use aliased type
 
-const DEFAULT_ANIMATION_SPEED = 200; // Faster for maze
+const DEFAULT_ANIMATION_SPEED = 200; 
 const MIN_SPEED = 20;
 const MAX_SPEED = 1000;
 const DEFAULT_MAZE_INPUT = 
@@ -26,9 +26,9 @@ const DEFAULT_MAZE_INPUT =
 1,1,1,0,1
 0,0,0,1,1
 1,1,1,1,0
-1,0,0,1,1`; // 5x5 example
+1,0,0,1,1`; 
 
-const MAX_MAZE_DIM = 15; // Limit maze size for performance
+const MAX_MAZE_DIM = 15; 
 
 export default function RatInAMazeVisualizerPage() {
   const { toast } = useToast();
@@ -36,8 +36,8 @@ export default function RatInAMazeVisualizerPage() {
 
   const [mazeInput, setMazeInput] = useState(DEFAULT_MAZE_INPUT);
   
-  const [steps, setSteps] = useState<RatInAMazeStep[]>([]);
-  const [currentStep, setCurrentStep] = useState<RatInAMazeStep | null>(null);
+  const [steps, setSteps] = useState<RatStepLogic[]>([]);
+  const [currentStep, setCurrentStep] = useState<RatStepLogic | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -129,7 +129,7 @@ export default function RatInAMazeVisualizerPage() {
     setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
-  const handleReset = () => { setIsPlaying(false); setIsFinished(false); setMazeInput(DEFAULT_MAZE_INPUT); /* useEffect will handleGenerateSteps */ };
+  const handleReset = () => { setIsPlaying(false); setIsFinished(false); setMazeInput(DEFAULT_MAZE_INPUT); };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
@@ -157,7 +157,7 @@ export default function RatInAMazeVisualizerPage() {
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; Maze Setup</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> {/* items-start for textarea alignment */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> 
               <div className="space-y-1">
                 <Label htmlFor="mazeConfigInput">Maze Configuration (0=wall, 1=path)</Label>
                 <Textarea 
@@ -166,11 +166,11 @@ export default function RatInAMazeVisualizerPage() {
                     onChange={e => setMazeInput(e.target.value)} 
                     disabled={isPlaying}
                     rows={5}
-                    className="font-mono text-sm"
-                    placeholder="1,0,1&#10;1,1,1&#10;0,0,1" 
+                    className="font-mono text-sm !leading-tight tracking-wider"
+                    placeholder={"Enter comma-separated numbers, new line for each row.\nExample:\n1,0,1\n1,1,1\n0,0,1"} 
                 />
               </div>
-              <div className="flex flex-col justify-end h-full">
+              <div className="flex flex-col justify-end h-full pt-6"> 
                  <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full mt-auto">Solve Maze / Reset Steps</Button>
               </div>
             </div>
@@ -204,3 +204,5 @@ export default function RatInAMazeVisualizerPage() {
     </div>
   );
 }
+
+    

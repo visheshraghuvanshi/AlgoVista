@@ -89,7 +89,7 @@ export function LISCodePanel({ currentLine }: LISCodePanelProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
 
   const handleCopyCode = () => {
-    const codeToCopy = LIS_CODE_SNIPPETS_N2[selectedLanguage]?.join('\n') || '';
+    const codeToCopy = LIS_CODE_SNIPPETS_N2[selectedLanguage as keyof typeof LIS_CODE_SNIPPETS_N2]?.join('\n') || '';
     if (codeToCopy) {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => toast({ title: `${selectedLanguage} LIS (O(N^2)) Code Copied!` }))
@@ -118,7 +118,7 @@ export function LISCodePanel({ currentLine }: LISCodePanelProps) {
           </TabsList>
           <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
             <pre className="font-code text-sm p-4 whitespace-pre-wrap">
-              {LIS_CODE_SNIPPETS_N2[selectedLanguage]?.map((line, index) => (
+              {LIS_CODE_SNIPPETS_N2[selectedLanguage as keyof typeof LIS_CODE_SNIPPETS_N2]?.map((line, index) => (
                 <div
                   key={`lis-${selectedLanguage}-line-${index}`}
                   className={`px-2 py-0.5 rounded ${ index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground" }`}
