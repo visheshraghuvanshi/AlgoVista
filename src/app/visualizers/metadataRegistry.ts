@@ -1,3 +1,4 @@
+
 import type { AlgorithmMetadata } from '@/types';
 
 // Fundamentals
@@ -126,7 +127,7 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
   // Trees
   binaryTreeTraversalMeta,
   binarySearchTreeMeta,
-  avlTreeMeta,
+  avlTreeMeta, // Added AVL Tree
   redBlackTreeMeta,
   heapOperationsMeta,
   segmentTreeMeta,

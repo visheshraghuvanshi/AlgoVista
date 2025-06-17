@@ -4,25 +4,25 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
-import { RBT_NODE_COLORS, RBT_TEXT_COLORS } from '@/app/visualizers/red-black-tree/rbt-node-colors'; // Import RBT specific colors
+import { RBT_NODE_COLORS, RBT_TEXT_COLORS } from '@/app/visualizers/red-black-tree/rbt-node-colors'; 
 
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[]; // Can be node IDs or values
+  traversalPath: (string | number)[]; 
   currentProcessingNodeId?: string | null;
 }
 
 const SVG_WIDTH = 600; 
 const SVG_HEIGHT_BASE = 250; 
 const NODE_RADIUS = 18; 
-const ACCENT_COLOR_COMPARISON = "hsl(var(--primary))"; // General active node
-const PATH_COLOR_TRAVERSAL = "hsl(var(--primary)/0.6)"; // Color for nodes in traversal path
+const ACCENT_COLOR_COMPARISON = "hsl(var(--primary))"; 
+const PATH_COLOR_TRAVERSAL = "hsl(var(--primary)/0.6)"; 
 
 export function BinaryTreeVisualizationPanel({
   nodes,
   edges,
-  traversalPath, // Expecting node IDs or values that are part of the current traversal path
+  traversalPath, 
   currentProcessingNodeId,
 }: BinaryTreeVisualizationPanelProps) {
   
@@ -31,11 +31,14 @@ export function BinaryTreeVisualizationPanel({
 
   const viewBox = `0 0 ${SVG_WIDTH} ${svgHeight}`;
 
-  // Helper to check if a node is part of the current traversal path
-  // This assumes traversalPath contains node values. If it contains IDs, adjust accordingly.
-  const isNodeInTraversalPath = (nodeValue: string | number | null) => {
-    if (nodeValue === null) return false;
-    return traversalPath.includes(nodeValue);
+  const isNodeInTraversalPath = (nodeId: string | null) => {
+    if (!nodeId) return false;
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return false;
+    // If traversalPath contains values, we need to check against node.value
+    // If it contains IDs, we check against node.id
+    // Assuming traversalPath contains node *values* as per TreeAlgorithmStep type
+    return traversalPath.includes(node.value!); 
   };
 
 
@@ -57,12 +60,7 @@ export function BinaryTreeVisualizationPanel({
                   if (!sourceNode || !targetNode) return null;
                   
                   let strokeColor = edge.color || "hsl(var(--muted-foreground))";
-                  // If both source and target are in traversal path, color edge differently
-                  if (isNodeInTraversalPath(sourceNode.value) && isNodeInTraversalPath(targetNode.value) && (sourceNode.id === currentProcessingNodeId || targetNode.id === currentProcessingNodeId )) {
-                     // This condition might need refinement based on exact path logic
-                  }
-
-
+                  
                   return (
                     <line
                       key={edge.id}
@@ -89,13 +87,16 @@ export function BinaryTreeVisualizationPanel({
                   
                   if (node.id === currentProcessingNodeId && fill !== RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
                      fill = ACCENT_COLOR_COMPARISON; 
+                     // Ensure text color is readable on primary accent
                      textColor = "hsl(var(--primary-foreground))";
                   } else if (fill === RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
                      textColor = RBT_TEXT_COLORS.FOUND_HIGHLIGHT_TEXT;
-                  } else if (isNodeInTraversalPath(node.value) && node.id !== currentProcessingNodeId && !node.nodeColor && !node.color?.includes("accent")) {
-                     // Don't override RBT/found colors with path color unless explicitly active
+                  } else if (isNodeInTraversalPath(node.id) && node.id !== currentProcessingNodeId && !node.nodeColor && node.color !== ACCENT_COLOR_COMPARISON && !node.color?.includes("accent")) {
+                     // Using a specific path color for nodes in traversalPath, but don't override active/RBT/found colors
                      // fill = PATH_COLOR_TRAVERSAL;
                      // textColor = "hsl(var(--primary-foreground))";
+                     // This part is tricky, as node.color might already be set by the logic
+                     // If logic sets a path color explicitly, it will be used.
                   }
 
                   return (
@@ -116,10 +117,11 @@ export function BinaryTreeVisualizationPanel({
                         fontSize="10"
                         fill={textColor}
                         fontWeight="bold"
+                        className="select-none"
                       >
                         {node.value}
                       </text>
-                       {node.nodeColor && (
+                       {node.nodeColor && ( // RBT specific color text
                         <text
                           x="0"
                           y={NODE_RADIUS + 10} 

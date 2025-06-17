@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -7,14 +8,14 @@ import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-trav
 import { AVLTreeCodePanel } from './AVLTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
-import { algorithmMetadata } from './metadata'; // Corrected import
+import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
   generateAVLSteps,
   getFinalAVLTreeState,
   resetAVLTreeState,
-  type AVL_TREE_LINE_MAP 
+  type AVLNodeInternal 
 } from './avl-tree-logic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,15 +27,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const DEFAULT_ANIMATION_SPEED = 1200; 
 const MIN_SPEED = 200;
 const MAX_SPEED = 3000;
-
-interface AVLNodeState {
-  id: string;
-  value: number;
-  height: number;
-  leftId: string | null;
-  rightId: string | null;
-  parentId: string | null;
-}
 
 export default function AVLTreeVisualizerPage() {
   const { toast } = useToast();
@@ -58,10 +50,10 @@ export default function AVLTreeVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const avlTreeRef = useRef<{ rootId: string | null, nodes: Map<string, AVLNodeState> }>({ rootId: null, nodes: new Map() });
+  const avlTreeRef = useRef<{ rootId: string | null, nodes: Map<string, AVLNodeInternal> }>({ rootId: null, nodes: new Map() });
 
   useEffect(() => {
-    handleBuildTree();
+    handleBuildTree(); // Initial build
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
@@ -87,6 +79,9 @@ export default function AVLTreeVisualizerPage() {
             toast({ title: "Invalid Input", description: "Please enter comma-separated numbers for build.", variant: "destructive" });
             return;
         }
+        if (valuesToProcess.length > 15) {
+             toast({ title: "Input Too Large", description: "Max 15 nodes for build for smoother visualization.", variant: "default" });
+        }
         resetAVLTreeState(); 
         avlTreeRef.current = { rootId: null, nodes: new Map() }; 
     } else if (operation === 'insert') {
@@ -94,6 +89,10 @@ export default function AVLTreeVisualizerPage() {
         if (isNaN(val)) {
             toast({ title: "Invalid Value", description: "Please enter a numeric value to insert.", variant: "destructive" });
             return;
+        }
+        if (avlTreeRef.current.nodes.size >= 20) { // Limit total nodes
+             toast({ title: "Tree Too Large", description: "Max 20 nodes in tree for smoother visualization.", variant: "default" });
+             return;
         }
         valuesToProcess = [val];
     }
@@ -128,13 +127,13 @@ export default function AVLTreeVisualizerPage() {
   const handleInsertValue = () => processOperation('insert');
 
   useEffect(() => {
-    if (isPlaying &amp;&amp; currentStepIndex < steps.length - 1) {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
       }, animationSpeed);
-    } else if (isPlaying &amp;&amp; currentStepIndex >= steps.length - 1) {
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
       setIsFinished(true);
     }
@@ -167,6 +166,8 @@ export default function AVLTreeVisualizerPage() {
     setSteps([]);
     setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
     setCurrentMessage("AVL Tree reset. Build a new tree or insert values.");
+    // Optionally, immediately build the default tree again
+    // handleBuildTree(); 
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -176,7 +177,7 @@ export default function AVLTreeVisualizerPage() {
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata || !algoDetails) {
+  if (!algoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -209,7 +210,7 @@ export default function AVLTreeVisualizerPage() {
               <div className="space-y-2">
                 <Label htmlFor="operationValueInput">Value to Insert</Label>
                 <Input id="operationValueInput" value={operationValueInput} onChange={(e) => setOperationValueInput(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying} />
-                 <Button onClick={handleInsertValue} disabled={isPlaying || !avlTreeRef.current.rootId} className="w-full md:w-auto"><PlusCircle className="mr-2 h-4 w-4"/>Insert Value</Button>
+                 <Button onClick={handleInsertValue} disabled={isPlaying || avlTreeRef.current.nodes.size === 0} className="w-full md:w-auto"><PlusCircle className="mr-2 h-4 w-4"/>Insert Value</Button>
               </div>
             </div>
             
@@ -240,4 +241,3 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
-

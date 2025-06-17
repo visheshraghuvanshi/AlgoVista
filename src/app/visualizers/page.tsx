@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { AlgorithmMetadata, AlgorithmCategory, AlgorithmDifficulty } from '@/types'; // Adjusted imports
+import type { AlgorithmMetadata, AlgorithmCategory, AlgorithmDifficulty } from '@/types'; 
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizerCard } from '@/components/algo-vista/visualizer-card';
@@ -10,11 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ListFilter, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { allAlgorithmMetadata } from './metadataRegistry'; // Import from the new registry
+import { allAlgorithmMetadata } from './metadataRegistry'; 
 
-// ALL_CATEGORIES and ALL_DIFFICULTIES can be derived from allAlgorithmMetadata
 const ALL_CATEGORIES = Array.from(new Set(allAlgorithmMetadata.map(algo => algo.category))).sort();
-const ALL_DIFFICULTIES: Array<AlgorithmDifficulty> = ['Easy', 'Medium', 'Hard']; // Assuming these are the only possible values
+const ALL_DIFFICULTIES: Array<AlgorithmDifficulty> = ['Easy', 'Medium', 'Hard']; 
 const ALL_FILTER_SENTINEL_VALUE = "__all__";
 
 

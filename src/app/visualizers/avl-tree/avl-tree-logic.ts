@@ -52,13 +52,13 @@ const EDGE_COLORS = {
   path: "hsl(var(--primary))",
 };
 
-interface AVLNodeInternal {
+export interface AVLNodeInternal { // Renamed to export
   id: string;
   value: number;
   height: number;
   leftId: string | null;
   rightId: string | null;
-  parentId: string | null; // For easier path reconstruction during visualization
+  parentId: string | null; 
 }
 
 let avlNodeIdCounter = 0;
@@ -152,7 +152,6 @@ function addStep(line: number | null, message: string, activeNodeIds: string[] =
   });
 }
 
-// Rotations update parent pointers and return new root of the subtree
 function rotateRight(yId: string): string {
   const y = getNode(yId)!;
   const xId = y.leftId!;
@@ -163,11 +162,9 @@ function rotateRight(yId: string): string {
   addStep(AVL_TREE_LINE_MAP.rotateRightFunc, `Rotate Right around ${y.value}`, [yId, xId]);
   addStep(AVL_TREE_LINE_MAP.rotateRightSetup, `x=${x.value}, y=${y.value}, T2=${T2Id ? getNode(T2Id)!.value : 'NIL'}`, [yId, xId]);
 
-  // Perform rotation
   x.rightId = yId; y.parentId = xId;
   y.leftId = T2Id; if (T2Id) getNode(T2Id)!.parentId = yId;
   
-  // Update parent of x
   x.parentId = parentOfYId;
   if (parentOfYId) {
     const parentOfY = getNode(parentOfYId)!;
@@ -175,14 +172,12 @@ function rotateRight(yId: string): string {
     else parentOfY.rightId = xId;
     nodesMap.set(parentOfYId, parentOfY);
   } else {
-    rootId = xId; // x becomes the new root of the entire tree
+    rootId = xId; 
   }
   nodesMap.set(xId, x);
   nodesMap.set(yId, y);
 
-
   addStep(AVL_TREE_LINE_MAP.rotateRightPerform, `Rotation complete. ${x.value} is new root of this subtree.`, [xId, yId], {[xId]:NODE_COLORS.rotated, [yId]:NODE_COLORS.rotated});
-
   updateHeight(yId); addStep(AVL_TREE_LINE_MAP.rotateRightUpdateHeights, `Updated height of ${y.value}`, [yId]);
   updateHeight(xId); addStep(AVL_TREE_LINE_MAP.rotateRightUpdateHeights, `Updated height of ${x.value}`, [xId]);
   addStep(AVL_TREE_LINE_MAP.rotateRightReturn, `Return ${x.value} as new root of subtree.`, [xId]);
@@ -199,11 +194,9 @@ function rotateLeft(xId: string): string {
   addStep(AVL_TREE_LINE_MAP.rotateLeftFunc, `Rotate Left around ${x.value}`, [xId, yId]);
   addStep(AVL_TREE_LINE_MAP.rotateLeftSetup, `x=${x.value}, y=${y.value}, T2=${T2Id ? getNode(T2Id)!.value : 'NIL'}`, [xId, yId]);
   
-  // Perform rotation
   y.leftId = xId; x.parentId = yId;
   x.rightId = T2Id; if (T2Id) getNode(T2Id)!.parentId = xId;
 
-  // Update parent of y
   y.parentId = parentOfXId;
   if (parentOfXId) {
     const parentOfX = getNode(parentOfXId)!;
@@ -211,133 +204,147 @@ function rotateLeft(xId: string): string {
     else parentOfX.rightId = yId;
     nodesMap.set(parentOfXId, parentOfX);
   } else {
-    rootId = yId; // y becomes new root of entire tree
+    rootId = yId; 
   }
   nodesMap.set(yId, y);
   nodesMap.set(xId, x);
 
-
   addStep(AVL_TREE_LINE_MAP.rotateLeftPerform, `Rotation complete. ${y.value} is new root of this subtree.`, [yId, xId], {[yId]:NODE_COLORS.rotated, [xId]:NODE_COLORS.rotated});
-
   updateHeight(xId); addStep(AVL_TREE_LINE_MAP.rotateLeftUpdateHeights, `Updated height of ${x.value}`, [xId]);
   updateHeight(yId); addStep(AVL_TREE_LINE_MAP.rotateLeftUpdateHeights, `Updated height of ${y.value}`, [yId]);
   addStep(AVL_TREE_LINE_MAP.rotateLeftReturn, `Return ${y.value} as new root of subtree.`, [yId]);
   return yId;
 }
 
-const path: string[] = [];
+const pathRec: string[] = []; // Renamed to avoid conflict with global 'path'
 
 function insertRec(nodeId: string | null, value: number, parentId: string | null): string {
-  path.push(nodeId!);
-  addStep(AVL_TREE_LINE_MAP.insertRecFunc, `InsertRec(${value}) at node ${formatNodeLabel(getNode(nodeId))}`, nodeId ? [nodeId] : [], {}, [...path]);
+  if(nodeId) pathRec.push(nodeId);
+  addStep(AVL_TREE_LINE_MAP.insertRecFunc, `InsertRec(${value}) at node ${formatNodeLabel(getNode(nodeId))}`, nodeId ? [nodeId] : [], {}, [...pathRec]);
 
   if (!nodeId) {
     const newNodeId = generateAVLNodeId(value);
     nodesMap.set(newNodeId, { id: newNodeId, value, height: 1, leftId: null, rightId: null, parentId });
-    addStep(AVL_TREE_LINE_MAP.insertBaseCaseNull, `Created new node ${value}`, [newNodeId], {[newNodeId]: NODE_COLORS.inserted}, [...path]);
-    path.pop();
+    addStep(AVL_TREE_LINE_MAP.insertBaseCaseNull, `Created new node ${value}`, [newNodeId], {[newNodeId]: NODE_COLORS.inserted}, [...pathRec]);
+    if(pathRec.length > 0) pathRec.pop();
     return newNodeId;
   }
 
   const node = getNode(nodeId)!;
   if (value < node.value) {
-    addStep(AVL_TREE_LINE_MAP.insertGoLeft, `Value ${value} < node ${node.value}. Go left.`, [nodeId], {}, [...path]);
-    node.leftId = insertRec(node.leftId, value, nodeId);
-    nodesMap.set(nodeId, node); // Update parent link in child
-    addStep(AVL_TREE_LINE_MAP.insertAssignLeft, `Link left child of ${node.value}.`, [nodeId], {}, [...path]);
+    addStep(AVL_TREE_LINE_MAP.insertGoLeft, `Value ${value} < node ${node.value}. Go left.`, [nodeId], {}, [...pathRec]);
+    const newLeftId = insertRec(node.leftId, value, nodeId);
+    if (node.leftId !== newLeftId && newLeftId) { // If left child changed (rotation happened below)
+      node.leftId = newLeftId;
+      const newLeftNode = getNode(newLeftId);
+      if(newLeftNode) newLeftNode.parentId = nodeId; // Ensure parent is correctly set after potential rotation
+    }
+    nodesMap.set(nodeId, node); 
+    addStep(AVL_TREE_LINE_MAP.insertAssignLeft, `Link/update left child of ${node.value}.`, [nodeId], {}, [...pathRec]);
   } else if (value > node.value) {
-    addStep(AVL_TREE_LINE_MAP.insertGoRight, `Value ${value} > node ${node.value}. Go right.`, [nodeId], {}, [...path]);
-    node.rightId = insertRec(node.rightId, value, nodeId);
-    nodesMap.set(nodeId, node); // Update parent link in child
-    addStep(AVL_TREE_LINE_MAP.insertAssignRight, `Link right child of ${node.value}.`, [nodeId], {}, [...path]);
+    addStep(AVL_TREE_LINE_MAP.insertGoRight, `Value ${value} > node ${node.value}. Go right.`, [nodeId], {}, [...pathRec]);
+    const newRightId = insertRec(node.rightId, value, nodeId);
+     if (node.rightId !== newRightId && newRightId) {
+      node.rightId = newRightId;
+       const newRightNode = getNode(newRightId);
+      if(newRightNode) newRightNode.parentId = nodeId;
+    }
+    nodesMap.set(nodeId, node); 
+    addStep(AVL_TREE_LINE_MAP.insertAssignRight, `Link/update right child of ${node.value}.`, [nodeId], {}, [...pathRec]);
   } else {
-    addStep(AVL_TREE_LINE_MAP.insertDuplicateReturn, `Value ${value} already exists. No insertion.`, [nodeId], {}, [...path]);
-    path.pop();
-    return nodeId; // Duplicate values not allowed
+    addStep(AVL_TREE_LINE_MAP.insertDuplicateReturn, `Value ${value} already exists. No insertion.`, [nodeId], {}, [...pathRec]);
+    if(pathRec.length > 0) pathRec.pop();
+    return nodeId; 
   }
 
-  addStep(AVL_TREE_LINE_MAP.insertUpdateHeight, `Updating height of node ${node.value}`, [nodeId], {}, [...path]);
+  addStep(AVL_TREE_LINE_MAP.insertUpdateHeight, `Updating height of node ${node.value}`, [nodeId], {}, [...pathRec]);
   updateHeight(nodeId);
   
   const balance = getBalanceFactor(nodeId);
-  addStep(AVL_TREE_LINE_MAP.insertGetBalance, `Balance factor of ${node.value} is ${balance}`, [nodeId], {}, [...path]);
+  addStep(AVL_TREE_LINE_MAP.insertGetBalance, `Balance factor of ${node.value} is ${balance}`, [nodeId], {}, [...pathRec]);
 
   let newSubtreeRootId = nodeId;
   // Left Left Case
-  if (balance > 1 && value < getNode(node.leftId!)!.value) {
-    addStep(AVL_TREE_LINE_MAP.llCaseCondition, `LL Case for ${node.value}. Rotating right.`, [nodeId], {}, [...path]);
+  if (balance > 1 && node.leftId && value < getNode(node.leftId!)!.value) {
+    addStep(AVL_TREE_LINE_MAP.llCaseCondition, `LL Case for ${node.value}. Rotating right.`, [nodeId], {}, [...pathRec]);
     newSubtreeRootId = rotateRight(nodeId);
   }
   // Right Right Case
-  else if (balance < -1 && value > getNode(node.rightId!)!.value) {
-    addStep(AVL_TREE_LINE_MAP.rrCaseCondition, `RR Case for ${node.value}. Rotating left.`, [nodeId], {}, [...path]);
+  else if (balance < -1 && node.rightId && value > getNode(node.rightId!)!.value) {
+    addStep(AVL_TREE_LINE_MAP.rrCaseCondition, `RR Case for ${node.value}. Rotating left.`, [nodeId], {}, [...pathRec]);
     newSubtreeRootId = rotateLeft(nodeId);
   }
   // Left Right Case
-  else if (balance > 1 && value > getNode(node.leftId!)!.value) {
-    addStep(AVL_TREE_LINE_MAP.lrCaseCondition, `LR Case for ${node.value}. Rotate left on left child, then right on current.`, [nodeId], {}, [...path]);
-    node.leftId = rotateLeft(node.leftId!);
-    nodesMap.set(nodeId,node); // Update node's left child reference
-    addStep(AVL_TREE_LINE_MAP.lrCaseAction1, `After left rotation on left child of ${node.value}`, [nodeId], {}, [...path]);
+  else if (balance > 1 && node.leftId && value > getNode(node.leftId!)!.value) {
+    addStep(AVL_TREE_LINE_MAP.lrCaseCondition, `LR Case for ${node.value}. Rotate left on left child, then right on current.`, [nodeId], {}, [...pathRec]);
+    const currentLeftId = node.leftId!;
+    const newLeftSubtreeRootId = rotateLeft(currentLeftId);
+    node.leftId = newLeftSubtreeRootId; 
+    getNode(newLeftSubtreeRootId)!.parentId = nodeId; // Update parent of new left child
+    nodesMap.set(nodeId,node);
+    addStep(AVL_TREE_LINE_MAP.lrCaseAction1, `After left rotation on left child of ${node.value}`, [nodeId], {}, [...pathRec]);
     newSubtreeRootId = rotateRight(nodeId);
-    addStep(AVL_TREE_LINE_MAP.lrCaseAction2, `After right rotation on ${node.value}`, [newSubtreeRootId], {}, [...path]);
+    addStep(AVL_TREE_LINE_MAP.lrCaseAction2, `After right rotation on ${node.value}`, [newSubtreeRootId], {}, [...pathRec]);
   }
   // Right Left Case
-  else if (balance < -1 && value < getNode(node.rightId!)!.value) {
-    addStep(AVL_TREE_LINE_MAP.rlCaseCondition, `RL Case for ${node.value}. Rotate right on right child, then left on current.`, [nodeId], {}, [...path]);
-    node.rightId = rotateRight(node.rightId!);
-    nodesMap.set(nodeId,node); // Update node's right child reference
-    addStep(AVL_TREE_LINE_MAP.rlCaseAction1, `After right rotation on right child of ${node.value}`, [nodeId], {}, [...path]);
+  else if (balance < -1 && node.rightId && value < getNode(node.rightId!)!.value) {
+    addStep(AVL_TREE_LINE_MAP.rlCaseCondition, `RL Case for ${node.value}. Rotate right on right child, then left on current.`, [nodeId], {}, [...pathRec]);
+    const currentRightId = node.rightId!;
+    const newRightSubtreeRootId = rotateRight(currentRightId);
+    node.rightId = newRightSubtreeRootId; 
+    getNode(newRightSubtreeRootId)!.parentId = nodeId; // Update parent of new right child
+    nodesMap.set(nodeId,node);
+    addStep(AVL_TREE_LINE_MAP.rlCaseAction1, `After right rotation on right child of ${node.value}`, [nodeId], {}, [...pathRec]);
     newSubtreeRootId = rotateLeft(nodeId);
-    addStep(AVL_TREE_LINE_MAP.rlCaseAction2, `After left rotation on ${node.value}`, [newSubtreeRootId], {}, [...path]);
+    addStep(AVL_TREE_LINE_MAP.rlCaseAction2, `After left rotation on ${node.value}`, [newSubtreeRootId], {}, [...pathRec]);
   }
   
-  addStep(AVL_TREE_LINE_MAP.insertReturnNode, `Return from insertRec for node ${getNode(newSubtreeRootId)!.value}. Path pop.`, [newSubtreeRootId], {}, [...path]);
-  path.pop();
+  addStep(AVL_TREE_LINE_MAP.insertReturnNode, `Return from insertRec for node ${getNode(newSubtreeRootId)!.value}. Path pop.`, [newSubtreeRootId], {}, [...pathRec]);
+  if(pathRec.length > 0) pathRec.pop();
   return newSubtreeRootId;
 }
 
 export const generateAVLSteps = (
   operation: 'build' | 'insert',
-  values: number[], // For build, use the first value for insert if values array has one element
-  currentRootId: string | null, // Pass current root for insert
-  currentNodesMap: Map<string, AVLNodeInternal> // Pass current map for insert
+  values: number[], 
+  currentRootIdForInsert?: string | null, 
+  currentNodesMapForInsert?: Map<string, AVLNodeInternal> 
 ): TreeAlgorithmStep[] => {
-  localSteps.length = 0; // Clear previous steps
+  localSteps.length = 0; 
   nodesMap.clear();
-  currentNodesMap.forEach((val, key) => nodesMap.set(key, {...val})); // Clone existing map
-  rootId = currentRootId;
-  avlNodeIdCounter = Array.from(nodesMap.keys()).reduce((max, id) => Math.max(max, parseInt(id.split('-').pop() || '0')), 0) + 1;
+  
+  if (operation === 'insert' && currentRootIdForInsert !== undefined && currentNodesMapForInsert) {
+      currentNodesMapForInsert.forEach((val, key) => nodesMap.set(key, {...val})); 
+      rootId = currentRootIdForInsert;
+      avlNodeIdCounter = Array.from(nodesMap.keys()).reduce((max, id) => Math.max(max, parseInt(id.split('-').pop() || '0')), 0) + 1;
+  } else { // build operation or first insert
+      rootId = null;
+      avlNodeIdCounter = 0;
+  }
 
 
   if (operation === 'build') {
     addStep(null, `Building AVL Tree from values: [${values.join(', ')}]`);
-    rootId = null; // Reset root for build
-    nodesMap.clear(); // Clear existing nodes for build
+    rootId = null; 
+    nodesMap.clear(); 
     avlNodeIdCounter = 0;
     values.forEach(val => {
-      path.length = 0; // Clear path for each top-level insert
+      pathRec.length = 0; 
       addStep(AVL_TREE_LINE_MAP.insertFuncMain, `Main call: insert(${val})`, rootId ? [rootId] : []);
       rootId = insertRec(rootId, val, null);
     });
     addStep(null, "Build complete.");
   } else if (operation === 'insert' && values.length > 0) {
     const valueToInsert = values[0];
-    path.length = 0; // Clear path for insert operation
+    pathRec.length = 0; 
     addStep(AVL_TREE_LINE_MAP.insertFuncMain, `Main call: insert(${valueToInsert})`, rootId ? [rootId] : []);
     rootId = insertRec(rootId, valueToInsert, null);
     addStep(null, `Insertion of ${valueToInsert} complete.`);
   }
-
-  // Store final tree state for next operation
-  const finalTreeState = { rootId: rootId, nodes: new Map(nodesMap) };
-  // Add a final step that includes this state if needed, or rely on caller to get it.
-  // For now, the caller (page.tsx) will update its ref based on the last state of rootId and nodesMap.
   
   return [...localSteps];
 };
 
-// Helper to get the current tree state, for the page to update its ref
 export const getFinalAVLTreeState = (): { rootId: string | null, nodes: Map<string, AVLNodeInternal> } => {
   return { rootId: rootId, nodes: new Map(nodesMap) };
 };
@@ -347,6 +354,5 @@ export const resetAVLTreeState = () => {
     nodesMap.clear();
     localSteps.length = 0;
     avlNodeIdCounter = 0;
-    path.length = 0;
+    pathRec.length = 0;
 };
-
