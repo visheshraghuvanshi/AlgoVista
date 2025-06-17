@@ -16,8 +16,12 @@ interface GraphControlsPanelProps {
   onReset: () => void;
   onGraphInputChange: (value: string) => void;
   graphInputValue: string;
-  onStartNodeChange: (value: string) => void;
-  startNodeValue: string;
+  onStartNodeChange?: (value: string) => void; // Made optional
+  startNodeValue?: string; // Made optional
+  showStartNodeInput?: boolean; // New prop to control visibility
+  onNumVerticesChange?: (value: string) => void; // For algos needing num vertices separately
+  numVerticesValue?: string; // For algos needing num vertices separately
+  showNumVerticesInput?: boolean; // New prop
   isPlaying: boolean;
   isFinished: boolean;
   currentSpeed: number;
@@ -27,6 +31,9 @@ interface GraphControlsPanelProps {
   maxSpeed: number;
   graphInputPlaceholder?: string;
   startNodeInputPlaceholder?: string;
+  numVerticesInputPlaceholder?: string;
+  onExecute?: () => void; // Optional execute button for algos that don't run on input change
+  executeButtonText?: string; // Text for the execute button
 }
 
 export function GraphControlsPanel({
@@ -38,6 +45,10 @@ export function GraphControlsPanel({
   graphInputValue,
   onStartNodeChange,
   startNodeValue,
+  showStartNodeInput = true, // Default to true for backward compatibility
+  onNumVerticesChange,
+  numVerticesValue,
+  showNumVerticesInput = false,
   isPlaying,
   isFinished,
   currentSpeed,
@@ -47,6 +58,9 @@ export function GraphControlsPanel({
   maxSpeed,
   graphInputPlaceholder = "e.g., 0:1,2;1:0;2:0 (node:neighbors;...)",
   startNodeInputPlaceholder = "Enter node ID",
+  numVerticesInputPlaceholder = "Num Vertices",
+  onExecute,
+  executeButtonText = "Run Algorithm",
 }: GraphControlsPanelProps) {
   
   const handleGraphInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,26 +68,34 @@ export function GraphControlsPanel({
   };
 
   const handleStartNodeChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onStartNodeChange(event.target.value);
+    if (onStartNodeChange) onStartNodeChange(event.target.value);
+  };
+
+  const handleNumVerticesChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (onNumVerticesChange) onNumVerticesChange(event.target.value);
   };
 
   const handleSpeedSliderChange = (value: number[]) => {
     onSpeedChange(value[0]);
   };
 
-  const commonPlayDisabled = isFinished || graphInputValue.trim() === '' || startNodeValue.trim() === '' || !isAlgoImplemented;
-  const commonStepDisabled = isPlaying || isFinished || graphInputValue.trim() === '' || startNodeValue.trim() === '' || !isAlgoImplemented;
+  const isInputEmpty = graphInputValue.trim() === '';
+  const isStartNodeEmpty = showStartNodeInput && (!startNodeValue || startNodeValue.trim() === '');
+  const isNumVerticesEmpty = showNumVerticesInput && (!numVerticesValue || numVerticesValue.trim() === '');
+
+  const commonPlayDisabled = isFinished || isInputEmpty || isStartNodeEmpty || isNumVerticesEmpty || !isAlgoImplemented;
+  const commonStepDisabled = isPlaying || isFinished || isInputEmpty || isStartNodeEmpty || isNumVerticesEmpty || !isAlgoImplemented;
   
   return (
     <Card className="shadow-xl rounded-xl">
       <CardHeader>
-        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Graph Input</CardTitle>
+        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Input</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-          <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+          <div className={`space-y-2 ${showStartNodeInput || showNumVerticesInput ? 'lg:col-span-1' : 'md:col-span-2 lg:col-span-3'}`}>
             <Label htmlFor="graphInput" className="text-sm font-medium flex items-center">
-              <Network className="mr-2 h-4 w-4 text-muted-foreground" /> Graph (Adjacency List)
+              <Network className="mr-2 h-4 w-4 text-muted-foreground" /> Graph Data
             </Label>
             <Input
               id="graphInput"
@@ -82,28 +104,53 @@ export function GraphControlsPanel({
               onChange={handleGraphInputChangeEvent}
               placeholder={graphInputPlaceholder}
               className="w-full text-base"
-              aria-label="Graph input as adjacency list string"
+              aria-label="Graph input"
               disabled={isPlaying || !isAlgoImplemented}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="startNodeInput" className="text-sm font-medium flex items-center">
-              <MapPin className="mr-2 h-4 w-4 text-muted-foreground" /> Start Node ID
-            </Label>
-            <Input
-              id="startNodeInput"
-              type="text"
-              value={startNodeValue}
-              onChange={handleStartNodeChangeEvent}
-              placeholder={startNodeInputPlaceholder}
-              className="w-full text-base"
-              aria-label="Start node ID for traversal"
-              disabled={isPlaying || !isAlgoImplemented}
-            />
-          </div>
+          {showNumVerticesInput && onNumVerticesChange && (
+            <div className="space-y-2">
+              <Label htmlFor="numVerticesInput" className="text-sm font-medium">
+                Number of Vertices
+              </Label>
+              <Input
+                id="numVerticesInput"
+                type="number"
+                value={numVerticesValue}
+                onChange={handleNumVerticesChangeEvent}
+                placeholder={numVerticesInputPlaceholder}
+                className="w-full text-base"
+                aria-label="Number of vertices"
+                disabled={isPlaying || !isAlgoImplemented}
+              />
+            </div>
+          )}
+          {showStartNodeInput && onStartNodeChange && (
+            <div className="space-y-2">
+              <Label htmlFor="startNodeInput" className="text-sm font-medium flex items-center">
+                <MapPin className="mr-2 h-4 w-4 text-muted-foreground" /> Start Node ID
+              </Label>
+              <Input
+                id="startNodeInput"
+                type="text"
+                value={startNodeValue}
+                onChange={handleStartNodeChangeEvent}
+                placeholder={startNodeInputPlaceholder}
+                className="w-full text-base"
+                aria-label="Start node ID for traversal"
+                disabled={isPlaying || !isAlgoImplemented}
+              />
+            </div>
+          )}
         </div>
         
-        <div className="flex items-center justify-start">
+        {onExecute && (
+          <Button onClick={onExecute} disabled={isPlaying || isInputEmpty || isNumVerticesEmpty || !isAlgoImplemented} className="w-full md:w-auto mt-2">
+            {executeButtonText}
+          </Button>
+        )}
+
+        <div className="flex items-center justify-start pt-4 border-t">
             <Button
                 onClick={onReset}
                 variant="outline"
@@ -179,3 +226,4 @@ export function GraphControlsPanel({
     </Card>
   );
 }
+
