@@ -1,4 +1,5 @@
 
+
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -208,13 +209,36 @@ export interface PriorityQueueStep extends Omit<AlgorithmStep, 'array'> {
 export interface DPAlgorithmStep {
   dpTable: number[][] | number[]; // The DP table itself (1D or 2D)
   dpTableDimensions?: { rows: number; cols: number }; // For 2D tables
-  currentIndices?: { item?: number; capacity?: number; amount?: number; coin?: number; i?: number, j?: number, k?: number }; // Indices being processed
+  currentIndices?: { item?: number; capacity?: number; amount?: number; coin?: number; i?: number, j?: number, k?: number, L?:number }; // Indices being processed
   highlightedCells?: {row: number, col: number, type: 'current' | 'dependency' | 'result'}[]; // For DP table cell highlighting
   message: string;
   currentLine: number | null;
   auxiliaryData?: Record<string, any> | null; // General purpose aux data
   resultValue?: number; // Final result of the DP calculation
   selectedItems?: {weight: number, value: number}[]; // For Knapsack item reconstruction
+}
+
+// Specific step type for Sieve of Eratosthenes
+export interface SieveAlgorithmStep extends Omit<AlgorithmStep, 'swappingIndices' | 'sortedIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
+  array: number[]; // Represents the sieve: 0=composite, 1=prime, 2=current_p, 3=current_multiple
+  auxiliaryData?: {
+    limitN: number;
+    currentP?: number;
+    currentMultiple?: number;
+    primesFound?: number[];
+    message?: string;
+  };
+}
+
+// Specific step type for Modular Exponentiation
+export interface ModularExponentiationStep extends Omit<AlgorithmStep, 'array' | 'swappingIndices' | 'sortedIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
+  auxiliaryData: {
+    base: number;
+    exponent: number;
+    modulus: number;
+    result: number;
+    currentOperationDescription?: string;
+  };
 }
 
 

@@ -66,7 +66,7 @@ export default function SieveVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
   }, [limitNInput, toast]);
   
-  useEffect(() => { // Initial calculation on load
+  useEffect(() => { 
     handleGeneratePrimes();
   }, [handleGeneratePrimes]);
 
@@ -100,11 +100,11 @@ export default function SieveVisualizerPage() {
     setLimitNInput(DEFAULT_LIMIT_N.toString());
     // handleGeneratePrimes will be called due to limitNInput change if it's a dependency of its useEffect
     // For direct call:
-    const n = parseInt(DEFAULT_LIMIT_N.toString(), 10);
-    const newSteps = generateSieveSteps(n);
-    setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    // const n = parseInt(DEFAULT_LIMIT_N.toString(), 10);
+    // const newSteps = generateSieveSteps(n);
+    // setSteps(newSteps);
+    // setCurrentStepIndex(0);
+    // setCurrentStep(newSteps[0] || null);
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -180,3 +180,4 @@ export default function SieveVisualizerPage() {
     </div>
   );
 }
+

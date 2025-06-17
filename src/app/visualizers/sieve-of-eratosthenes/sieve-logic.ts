@@ -64,7 +64,7 @@ export const generateSieveSteps = (limitN: number): SieveAlgorithmStep[] => {
     addStep(null, [], "Limit must be at least 2 to find primes.", undefined, undefined, []);
     return localSteps;
   }
-
+  
   // Represents isPrime: 0 = false (not prime/marked), 1 = true (potentially prime)
   // For visualization, we'll use this array directly
   let SieveArrayRepresentation = new Array(limitN + 1).fill(1); 
@@ -111,3 +111,4 @@ export const generateSieveSteps = (limitN: number): SieveAlgorithmStep[] => {
   addStep(lm.returnPrimes, [...SieveArrayRepresentation], `Sieve complete. Primes found: ${primesFound.length}.`, undefined, undefined, primesFound);
   return localSteps;
 };
+
