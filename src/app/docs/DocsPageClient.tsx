@@ -6,41 +6,49 @@ import { DocsSidebar } from '@/components/docs/DocsSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Menu, Search, ZoomIn, ZoomOut, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { useRouter } from 'next/navigation'; // For redirecting to search page if needed
-import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
+import { Menu, Search, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { docsContentBySlug } from '@/lib/docs-content'; // Import actual content
+import Link from 'next/link';
 
-// Simple in-memory search (replace with actual search if needed)
-const searchDocs = (query: string) => {
-  if(!query.trim()) return [];
-  // This would be replaced by an actual search implementation
-  // For now, just return a placeholder
-  console.log("Searching for:", query);
-  return [{title: `Search results for "${query}"...`, href:"/docs"}];
+// Actual client-side search function
+const searchDocs = (query: string): { title: string, href: string, slug: string }[] => {
+  if (!query.trim()) return [];
+  const lowerCaseQuery = query.toLowerCase();
+  const results: { title: string, href: string, slug: string }[] = [];
+
+  for (const slug in docsContentBySlug) {
+    const doc = docsContentBySlug[slug];
+    if (doc.title.toLowerCase().includes(lowerCaseQuery) || doc.content.toLowerCase().includes(lowerCaseQuery)) {
+      results.push({ title: doc.title, href: `/docs/${slug}`, slug });
+    }
+  }
+  return results;
 };
-
 
 export default function DocsPageClient({ children }: { children: React.ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [fontSize, setFontSize] = useState(1); // 1 = normal, can be e.g., 0.9, 1.1
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<{title: string, href: string}[]>([]);
+  const [searchResults, setSearchResults] = useState<{ title: string, href: string, slug: string }[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const router = useRouter();
+  const [isDesktopSearchFocused, setIsDesktopSearchFocused] = useState(false);
 
   useEffect(() => {
-    // Client-side only effect for font size adjustment
-    document.documentElement.style.fontSize = `${fontSize * 16}px`; // Assuming base is 16px
-    return () => {
-      document.documentElement.style.fontSize = ''; // Reset on unmount
-    };
-  }, [fontSize]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
     if (searchQuery.trim()) {
       setSearchResults(searchDocs(searchQuery));
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // If search results contain only one item, could navigate directly, or just show list
+    if (searchResults.length > 0) {
+      // For now, just keeps results displayed. Navigation can be added if needed.
+      if(isSearchModalOpen) setIsSearchModalOpen(true); // Keep modal open on mobile after submit
+      else setIsDesktopSearchFocused(true); // Keep desktop dropdown open
     }
   };
   
@@ -52,98 +60,133 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
 
   const closeSearchModal = () => {
     setIsSearchModalOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
   }
   
   const onSidebarLinkClick = () => {
     setIsMobileSidebarOpen(false);
   }
 
-  return (
-    <div className="flex min-h-screen">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 xl:w-72 border-r border-border fixed top-16 left-0 h-[calc(100vh-4rem)] pt-0 overflow-y-auto">
-        <DocsSidebar onLinkClick={onSidebarLinkClick} />
-      </aside>
+  const onSearchResultClick = () => {
+    closeSearchModal(); // Close mobile modal
+    setIsDesktopSearchFocused(false); // Close desktop dropdown
+    setSearchQuery(''); // Clear search query
+    setSearchResults([]);
+  }
 
-      {/* Sheet for Mobile Sidebar Navigation and its Trigger */}
+  return (
+    <div className="flex min-h-screen bg-background">
       <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-        <div className="lg:pl-64 xl:pl-72 flex-1">
-          <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="fixed top-4 right-4 lg:top-6 lg:right-6 z-50 flex items-center space-x-2">
-              <Button variant="ghost" size="icon" onClick={openSearchModal} className="lg:hidden" aria-label="Open search"> <Search /> </Button>
-              <ThemeToggle />
-              {/* Font size adjusters - conceptual, can be enhanced */}
-              {/* <Button variant="outline" size="icon" onClick={() => setFontSize(prev => Math.max(0.8, prev - 0.1))} aria-label="Decrease font size"><ZoomOut className="h-4 w-4" /></Button> */}
-              {/* <Button variant="outline" size="icon" onClick={() => setFontSize(prev => Math.min(1.5, prev + 0.1))} aria-label="Increase font size"><ZoomIn className="h-4 w-4" /></Button> */}
-              <SheetTrigger asChild className="lg:hidden">
-                 <Button variant="outline" size="icon" aria-label="Open navigation menu"> <Menu /> </Button>
-              </SheetTrigger>
-            </div>
-            
-            <div className="hidden lg:block fixed top-4 right-24 xl:right-32 z-40 max-w-xs"> {/* Adjusted right positioning */}
-              <form onSubmit={handleSearch} className="relative">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:block w-64 xl:w-72 border-r border-border/70 fixed top-16 left-0 h-[calc(100vh-4rem)] pt-0 bg-card/30 dark:bg-card/50">
+          <ScrollArea className="h-full">
+            <DocsSidebar onLinkClick={onSidebarLinkClick} />
+          </ScrollArea>
+        </aside>
+
+        <div className="lg:pl-64 xl:pl-72 flex-1 flex flex-col">
+          {/* Top Bar with utilities - part of the main scrollable content flow now */}
+          <header className="sticky top-0 z-40 flex items-center justify-end h-16 px-4 sm:px-6 lg:px-8 border-b bg-background/80 backdrop-blur-sm">
+            <div className="flex items-center gap-x-3 md:gap-x-4">
+              {/* Desktop Search */}
+              <div className="hidden lg:block relative">
+                <form onSubmit={handleSearchSubmit}>
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                      type="search"
-                      placeholder="Search docs..."
-                      className="pl-9 h-9 text-sm"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                    type="search"
+                    placeholder="Search documentation..."
+                    className="h-9 pl-9 pr-3 text-sm w-64 xl:w-72"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsDesktopSearchFocused(true)}
+                    // onBlur={() => setTimeout(() => setIsDesktopSearchFocused(false), 100)} // Timeout to allow click on results
                   />
-              </form>
-              {searchQuery && searchResults.length > 0 && (
-                  <div className="absolute mt-1 w-full bg-popover border rounded-md shadow-lg p-2 text-sm max-h-60 overflow-y-auto">
-                      {searchResults.map(res => <a key={res.title} href={res.href} className="block p-1 hover:bg-accent">{res.title}</a>)}
+                </form>
+                {isDesktopSearchFocused && searchQuery && (
+                  <div className="absolute mt-1.5 w-full bg-popover border rounded-md shadow-xl p-2 text-sm max-h-80 overflow-y-auto z-50">
+                    {searchResults.length > 0 ? (
+                      searchResults.map(res => (
+                        <Link key={res.slug} href={res.href} onClick={onSearchResultClick}
+                              className="block p-2 hover:bg-muted rounded-sm transition-colors">
+                          {res.title}
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="p-2 text-muted-foreground">No results for "{searchQuery}".</p>
+                    )}
                   </div>
-              )}
+                )}
+              </div>
+              {/* Mobile Search Trigger */}
+              <Button variant="ghost" size="icon" onClick={openSearchModal} className="lg:hidden" aria-label="Open search">
+                <Search className="h-5 w-5" />
+              </Button>
+              <ThemeToggle />
+              {/* Mobile Menu Trigger */}
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="outline" size="icon" aria-label="Open navigation menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
             </div>
-            
-            <div className="prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none mt-12 lg:mt-4">
+          </header>
+          
+          <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="prose dark:prose-invert max-w-none text-foreground/90 dark:text-foreground/80">
               {children}
             </div>
           </main>
         </div>
 
-        <SheetContent side="left" className="w-72 p-0 flex flex-col lg:hidden bg-background z-[60]">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle className="font-headline text-xl text-primary dark:text-accent">AlgoVista Docs</SheetTitle>
+        {/* Mobile Sidebar Content */}
+        <SheetContent side="left" className="w-72 p-0 flex flex-col lg:hidden bg-card z-[60]">
+          <SheetHeader className="p-4 border-b border-border/70">
+            <SheetTitle className="font-headline text-xl tracking-tight text-primary dark:text-accent">AlgoVista Docs</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="flex-1"> {/* Ensures sidebar itself is scrollable if content overflows */}
+          <ScrollArea className="flex-1">
             <DocsSidebar onLinkClick={onSidebarLinkClick} />
           </ScrollArea>
         </SheetContent>
       </Sheet>
 
-
-       {/* Fullscreen Search Modal for Mobile */}
+      {/* Fullscreen Search Modal for Mobile */}
       {isSearchModalOpen && (
         <div className="fixed inset-0 z-[70] bg-background/95 backdrop-blur-sm p-4 flex flex-col lg:hidden">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Search Documentation</h2>
-                <Button variant="ghost" size="icon" onClick={closeSearchModal} aria-label="Close search"> <X /> </Button>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="font-headline text-xl font-semibold text-primary dark:text-accent">Search Documentation</h2>
+                <Button variant="ghost" size="icon" onClick={closeSearchModal} aria-label="Close search">
+                  <X className="h-5 w-5" />
+                </Button>
             </div>
-            <form onSubmit={handleSearch} className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <form onSubmit={handleSearchSubmit} className="relative mb-4">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                     type="search"
-                    placeholder="Search docs..."
-                    className="pl-10 h-12 text-lg"
+                    placeholder="Type to search..."
+                    className="pl-10 pr-4 h-12 text-base"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     autoFocus
                 />
             </form>
-            <div className="flex-1 overflow-y-auto">
+            <ScrollArea className="flex-1 -mx-4">
+              <div className="px-4">
                 {searchResults.length > 0 ? (
-                    searchResults.map(res => <a key={res.title} href={res.href} className="block p-2 hover:bg-accent rounded-md">{res.title}</a>)
+                    searchResults.map(res => (
+                        <Link key={res.slug} href={res.href} onClick={onSearchResultClick}
+                              className="block p-3 hover:bg-muted rounded-md transition-colors text-sm">
+                            {res.title}
+                        </Link>
+                    ))
                 ) : (
-                    searchQuery.trim() && <p className="text-muted-foreground">No results for "{searchQuery}".</p>
+                    searchQuery.trim() && <p className="p-3 text-muted-foreground text-sm">No results found for "{searchQuery}".</p>
                 )}
-            </div>
+                {!searchQuery.trim() && <p className="p-3 text-muted-foreground text-sm">Start typing to see results.</p>}
+              </div>
+            </ScrollArea>
         </div>
       )}
-
     </div>
   );
 }
-

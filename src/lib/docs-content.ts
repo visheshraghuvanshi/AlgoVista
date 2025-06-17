@@ -40,7 +40,7 @@ Using AlgoVista is designed to be intuitive:
         *   A detailed description of the algorithm/data structure.
         *   Time and Space Complexity analysis (Best, Average, Worst cases).
         *   Common use cases.
-5.  **Explore Documentation**: Use this Docs section (/docs) to delve deeper into theoretical concepts, understand algorithm categories, or get help with platform features.
+5.  **Explore Documentation**: Use this Docs section (\`/docs\`) to delve deeper into theoretical concepts, understand algorithm categories, or get help with platform features.
 
 ### Tips for Effective Learning
 -   **Start with Fundamentals**: If you're new, begin with simpler algorithms like Linear Search or Bubble Sort before moving to more complex ones like Red-Black Trees or Dijkstra's.
@@ -485,7 +485,7 @@ For recursive calls:
 4.  This process continues until the original call returns.
 
 ### Example: Factorial
-\`\`\`
+\`\`\`javascript
 function factorial(n) {
   // Base Case
   if (n === 0 || n === 1) {
@@ -565,14 +565,14 @@ Both methods are effective when a problem has overlapping subproblems. This mean
     *   Overhead of recursive function calls.
 
 **Example (Fibonacci with Memoization):**
-\`\`\`
-memo = {}
+\`\`\`javascript
+const memo = {};
 function fib_memo(n) {
-  if n in memo: return memo[n]
-  if n <= 1: return n
-  result = fib_memo(n-1) + fib_memo(n-2)
-  memo[n] = result
-  return result
+  if (n in memo) return memo[n];
+  if (n <= 1) return n;
+  const result = fib_memo(n-1) + fib_memo(n-2);
+  memo[n] = result;
+  return result;
 }
 \`\`\`
 
@@ -588,15 +588,16 @@ function fib_memo(n) {
     *   Can sometimes be less intuitive to formulate the iterative solution and table filling order.
 
 **Example (Fibonacci with Tabulation):**
-\`\`\`
+\`\`\`javascript
 function fib_tab(n) {
-  if n <= 1: return n
-  dp_table = array of size (n+1)
-  dp_table[0] = 0
-  dp_table[1] = 1
-  for i from 2 to n:
-    dp_table[i] = dp_table[i-1] + dp_table[i-2]
-  return dp_table[n]
+  if (n <= 1) return n;
+  const dp_table = new Array(n+1);
+  dp_table[0] = 0;
+  dp_table[1] = 1;
+  for (let i = 2; i <= n; i++) {
+    dp_table[i] = dp_table[i-1] + dp_table[i-2];
+  }
+  return dp_table[n];
 }
 \`\`\`
 
@@ -736,7 +737,7 @@ Understanding the project's folder structure is helpful for navigation and contr
 │   │   │   ├── contact/
 │   │   │   └── ...
 │   │   ├── docs/           # Documentation pages and layout
-│   │   │   ├── […slug]/page.tsx
+│   │   │   ├── [...slug]/page.tsx
 │   │   │   └── layout.tsx
 │   │   │   └── page.tsx      # Redirects to first doc page
 │   │   ├── visualizers/    # Core directory for all algorithm visualizers
@@ -810,7 +811,7 @@ Adding a new algorithm visualizer to AlgoVista involves several steps. Here's a 
             *   A \`LINE_MAP\` constant mapping conceptual code lines to numbers for synchronization.
         *   \`metadata.ts\`: Exports an \`AlgorithmMetadata\` object containing the title, description, category, difficulty, complexities, etc.
 
-**3. Implement the Logic (`*-logic.ts`)**
+**3. Implement the Logic (\`*-logic.ts\`)**
     *   Write the actual algorithm.
     *   Instrument your algorithm to produce an array of "step" objects. Each step should capture:
         *   The current state of the data structure (e.g., array contents, graph nodes/edges, tree structure).
@@ -819,18 +820,18 @@ Adding a new algorithm visualizer to AlgoVista involves several steps. Here's a 
         *   A message describing the current action.
         *   Any auxiliary data needed for the visualization panel (e.g., current sum, queue/stack contents).
 
-**4. Build the Visualization Panel (`*VisualizationPanel.tsx`)**
+**4. Build the Visualization Panel (\`*VisualizationPanel.tsx\`)**
     *   This component takes the current step data as a prop.
     *   Render the data visually (e.g., map array elements to bars, graph nodes to circles, tree nodes appropriately).
     *   Use the highlighting information from the step data to style elements (e.g., change colors, add borders).
 
-**5. Build the Code Panel (`*CodePanel.tsx`)**
+**5. Build the Code Panel (\`*CodePanel.tsx\`)**
     *   Store conceptual code snippets (JavaScript, Python, Java, C++) as arrays of strings.
     *   Use the current line number from the step data to highlight the corresponding line(s) in the displayed code.
     *   Implement language selection using Tabs.
     *   Ensure the code area is scrollable.
 
-**6. Create the Page Component (`page.tsx`)**
+**6. Create the Page Component (\`page\\.tsx\`)**
     *   Manage state for the visualizer: input values, current step index, animation speed, play/pause state.
     *   Handle user interactions from control panels (e.g., play, pause, step, reset, input changes).
     *   Call your logic function to generate steps when inputs change or reset is triggered.
@@ -896,3 +897,36 @@ This stack allows for a modern, efficient, and enjoyable development process, re
   },
 };
 
+// Ensure all keys in docsNavigation have corresponding entries in docsContentBySlug
+// This is a placeholder and should be filled with actual content for each page.
+// Example:
+// "algorithms-visualized/sorting/selection-sort": { title: "Selection Sort", content: "Selection Sort content coming soon..." },
+// ... and so on for all items in docsNavigation.
+// For now, I will create placeholders for any missing items.
+
+import { docsNavigation, type NavItem } from '@/app/docs/docs-navigation';
+
+function getAllSlugs(navItems: NavItem[]): string[] {
+  let slugs: string[] = [];
+  navItems.forEach(item => {
+    if (item.href && item.href.startsWith('/docs/')) {
+      slugs.push(item.href.substring('/docs/'.length));
+    }
+    if (item.children) {
+      slugs = slugs.concat(getAllSlugs(item.children));
+    }
+  });
+  return slugs;
+}
+
+const allDefinedSlugs = getAllSlugs(docsNavigation);
+
+allDefinedSlugs.forEach(slug => {
+  if (!docsContentBySlug[slug]) {
+    const titleParts = slug.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Coming Soon";
+    docsContentBySlug[slug] = {
+      title: titleParts,
+      content: `${titleParts} documentation is coming soon! Check back later for more details on this topic.`
+    };
+  }
+});

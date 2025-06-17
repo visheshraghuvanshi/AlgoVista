@@ -2,7 +2,7 @@
 import { docsNavigation } from '@/app/docs/docs-navigation';
 import { docsContentBySlug } from '@/lib/docs-content';
 import { notFound } from 'next/navigation';
-import { Callout } from '@/components/docs/Callout'; // Import Callout
+import { Callout } from '@/components/docs/Callout';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 // @ts-ignore Pkg has no types for this specific import path
@@ -59,42 +59,42 @@ export default async function DocPage({ params }: DocsPageProps) {
     <article>
       <ReactMarkdown
         components={{
-          h1: ({node, ...props}) => <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl mt-8 mb-4 pb-2 border-b border-border" {...props} />,
-          h2: ({node, ...props}) => <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl mt-10 mb-3 pb-1.5 border-b border-border" {...props} />,
-          h3: ({node, ...props}) => <h3 className="font-headline text-xl sm:text-2xl lg:text-3xl mt-8 mb-2" {...props} />,
-          h4: ({node, ...props}) => <h4 className="font-semibold text-lg mt-6 mb-1" {...props} />,
-          p: ({node, ...props}) => <p className="my-4 leading-relaxed" {...props} />,
-          ul: ({node, ...props}) => <ul className="list-disc pl-6 my-4 space-y-1" {...props} />,
-          ol: ({node, ...props}) => <ol className="list-decimal pl-6 my-4 space-y-1" {...props} />,
-          li: ({node, ...props}) => <li className="mb-1" {...props} />,
-          blockquote: ({node, ...props}) => <blockquote className="pl-4 italic border-l-4 border-border my-4 text-muted-foreground" {...props} />,
+          h1: ({node, ...props}) => <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl mt-0 mb-8 pb-3 border-b border-border/70" {...props} />,
+          h2: ({node, ...props}) => <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl mt-12 mb-6 pb-2 border-b border-border/60" {...props} />,
+          h3: ({node, ...props}) => <h3 className="font-headline text-xl sm:text-2xl lg:text-3xl mt-10 mb-4" {...props} />,
+          h4: ({node, ...props}) => <h4 className="font-semibold text-lg sm:text-xl mt-8 mb-2 text-foreground/90 dark:text-foreground/80" {...props} />,
+          p: ({node, ...props}) => <p className="text-base leading-relaxed my-5 text-foreground/80 dark:text-foreground/70" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc pl-6 my-5 space-y-2 text-foreground/80 dark:text-foreground/70" {...props} />,
+          ol: ({node, ...props}) => <ol className="list-decimal pl-6 my-5 space-y-2 text-foreground/80 dark:text-foreground/70" {...props} />,
+          li: ({node, ...props}) => <li className="mb-1.5" {...props} />,
+          blockquote: ({node, ...props}) => <blockquote className="pl-4 italic border-l-4 border-primary/50 dark:border-accent/50 my-6 text-muted-foreground bg-muted/20 dark:bg-muted/10 py-2" {...props} />,
           code({node, className, children, ...props}) {
             const match = /language-(\w+)/.exec(className || '')
             return match ? (
               <SyntaxHighlighter
-                style={oneDark}
+                style={oneDark} // oneDark is good for a modern, minimal feel.
                 language={match[1]}
                 PreTag="div"
-                className="rounded-md my-4 text-sm"
+                className="rounded-lg my-6 text-sm !bg-zinc-900 dark:!bg-zinc-800 shadow-md" // Custom background
+                customStyle={{padding: '1rem'}}
                 {...props}
               >
                 {String(children).replace(/\n$/, '')}
               </SyntaxHighlighter>
             ) : (
-              <code className="px-1 py-0.5 bg-muted rounded font-code text-sm text-primary dark:text-accent" {...props}>
+              <code className="px-1.5 py-0.5 bg-muted dark:bg-muted/40 rounded font-code text-sm text-primary/90 dark:text-accent/90" {...props}>
                 {children}
               </code>
             )
           },
           a: ({ node, ...props }) => (
-            <a className="text-primary dark:text-accent hover:underline" {...props} />
+            <a className="text-primary dark:text-accent hover:underline underline-offset-2 font-medium" {...props} />
           ),
-          // This setup does not automatically parse custom markdown for Callouts.
-          // If you use MDX files (.mdx), you can import and use the Callout component directly in your content.
-          // For now, with string markdown, callouts would need to be manually styled or parsed.
+          hr: ({node, ...props}) => <hr className="my-8 border-border/50" {...props} />,
         }}
-        remarkPlugins={[remarkGfm]} // For GitHub Flavored Markdown (tables, strikethrough, etc.)
+        remarkPlugins={[remarkGfm]}
       >
+        {/* Title is now part of the main content, rendered by h1 mapping above */}
         {`# ${title}\n\n${markdown}`}
       </ReactMarkdown>
     </article>
@@ -109,9 +109,3 @@ export async function generateMetadata({ params }: DocsPageProps) {
     title: `${title} | AlgoVista Docs`,
   };
 }
-
-// Delete the old src/app/docs/page.tsx as it's replaced by layout and [...slug]/page.tsx
-// This command assumes the file exists and will be handled by the system.
-// If it doesn't exist or you want manual control, remove this line.
-// delete: src/app/docs/page.tsx 
-// Actually, I'll modify it to redirect instead of deleting.
