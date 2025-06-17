@@ -19,6 +19,7 @@ import { TRAVERSAL_TYPES, type TraversalType } from '@/app/visualizers/binary-tr
 
 const RBT_CODE_SNIPPETS = {
   JavaScript: [
+    "// Red-Black Tree Node and Class Structure (Conceptual)",
     "const RED = true;",
     "const BLACK = false;",
     "",
@@ -36,67 +37,106 @@ const RBT_CODE_SNIPPETS = {
     "  constructor() {",
     "    // NIL node is a sentinel, black, and used for all leaves.",
     "    this.NIL = new RBTNode(null, BLACK); ",
-    "    this.NIL.parent = this.NIL; // NIL parent points to itself (or null)",
+    "    this.NIL.parent = this.NIL;",
     "    this.NIL.left = this.NIL;",
     "    this.NIL.right = this.NIL;",
     "    this.root = this.NIL;",
     "  }",
     "",
-    "  rotateLeft(x) { /* ... complex rotation logic ... */ }",
-    "  //   x (y's old left child)      y (new root of subtree)",
-    "  //  / \\                           / \\",
-    "  // T1  y          becomes        x   T3",
-    "  //    / \\                       / \\",
-    "  //   T2 T3                     T1 T2",
+    "  rotateLeft(x) {",
+    "    //   x (original root of subtree)      y (new root)",
+    "    //  / \\                               / \\",
+    "    // T1  y            becomes          x   T3",
+    "    //    / \\                           / \\",
+    "    //   T2 T3                         T1 T2",
+    "    let y = x.right;                   // Set y",
+    "    x.right = y.left;                  // Turn y's left subtree into x's right subtree",
+    "    if (y.left !== this.NIL) { y.left.parent = x; }",
+    "    y.parent = x.parent;               // Link y's parent to x's parent",
+    "    if (x.parent === this.NIL) { this.root = y; }",
+    "    else if (x === x.parent.left) { x.parent.left = y; }",
+    "    else { x.parent.right = y; }",
+    "    y.left = x;                        // Put x on y's left",
+    "    x.parent = y;",
+    "    // Note: Heights/subtree sizes would also be updated in augmented RBTs",
+    "  }",
     "",
-    "  rotateRight(y) { /* ... complex rotation logic ... */ }",
-    "  //     y (x's old right child)   x (new root of subtree)",
-    "  //    / \\                         / \\",
-    "  //   x  T3       becomes       T1  y",
-    "  //  / \\                           / \\",
-    "  // T1 T2                         T2 T3",
+    "  rotateRight(y) {",
+    "    //     y (original root of subtree)   x (new root)",
+    "    //    / \\                             / \\",
+    "    //   x  T3           becomes       T1  y",
+    "    //  / \\                               / \\",
+    "    // T1 T2                             T2 T3",
+    "    let x = y.left;                    // Set x",
+    "    y.left = x.right;                  // Turn x's right subtree into y's left subtree",
+    "    if (x.right !== this.NIL) { x.right.parent = y; }",
+    "    x.parent = y.parent;               // Link x's parent to y's parent",
+    "    if (y.parent === this.NIL) { this.root = x; }",
+    "    else if (y === y.parent.right) { y.parent.right = x; }",
+    "    else { y.parent.left = x; }",
+    "    x.right = y;                       // Put y on x's right",
+    "    y.parent = x;",
+    "  }",
     "",
     "  insert(value) {",
     "    let node = new RBTNode(value, RED, this.NIL, this.NIL, this.NIL);",
-    "    // Standard BST insert logic follows, using this.NIL for leaves...",
-    "    // ... (find parent y, set node's parent to y)",
-    "    // ... (if y is NIL, node becomes root; else, node is y's child)",
+    "    // Standard BST insert:",
+    "    let y = this.NIL; // Parent of x",
+    "    let x = this.root; // Current node",
+    "    while (x !== this.NIL) {",
+    "      y = x;",
+    "      if (node.value < x.value) x = x.left;",
+    "      else x = x.right;",
+    "    }",
+    "    node.parent = y;",
+    "    if (y === this.NIL) this.root = node; // Tree was empty",
+    "    else if (node.value < y.value) y.left = node;",
+    "    else y.right = node;",
     "    // After BST insert, call insertFixup to restore R-B properties.",
-    "    // this.insertFixup(node);",
-    "    console.log('Conceptual insert of ' + value + '. Full fixup logic is complex.');",
+    "    this.insertFixup(node);",
     "  }",
     "",
     "  insertFixup(z) {",
     "    // This function restores Red-Black properties after insertion.",
-    "    // It involves checking colors of parent, grandparent, and uncle.",
-    "    // Performs recoloring and rotations (LL, LR, RL, RR) based on cases.",
-    "    // Example conditions and actions (highly simplified):",
-    "    // while (z.parent.color === RED && z.parent !== this.root) {",
-    "    //   if (z.parent === z.parent.parent.left) {",
-    "    //     let y = z.parent.parent.right; // Uncle",
-    "    //     if (y.color === RED) { // Case 1: Uncle is RED",
-    "    //       z.parent.color = BLACK;",
-    "    //       y.color = BLACK;",
-    "    //       z.parent.parent.color = RED;",
-    "    //       z = z.parent.parent;",
-    "    //     } else { // Uncle is BLACK",
-    "    //       if (z === z.parent.right) { // Case 2: Triangle -> Line",
-    "    //         z = z.parent;",
-    "    //         this.rotateLeft(z);",
-    "    //       }",
-    "    //       // Case 3: Line",
-    "    //       z.parent.color = BLACK;",
-    "    //       z.parent.parent.color = RED;",
-    "    //       this.rotateRight(z.parent.parent);",
-    "    //     }",
-    "    //   } else { /* symmetric case for right child parent */ }",
-    "    // }",
-    "    // this.root.color = BLACK; // Root must always be black.",
-    "    console.log('Conceptual insertFixup for node ' + z.value);",
+    "    // While z's parent is RED (property violation as new node z is RED):",
+    "    //   Case 1: Uncle is RED -> Recolor parent, uncle, grandparent. Move z to grandparent.",
+    "    //   Case 2: Uncle is BLACK & z is an inner child (triangle) -> Rotate parent. Turns into Case 3.",
+    "    //   Case 3: Uncle is BLACK & z is an outer child (line) -> Recolor parent, grandparent. Rotate grandparent.",
+    "    // (Simplified logic description - actual code is more detailed with side checks)",
+    "    while (z.parent.color === RED && z !== this.root && z.parent !== this.root) {",
+    "      if (z.parent === z.parent.parent.left) { /* Parent is left child */",
+    "        let y = z.parent.parent.right; // Uncle",
+    "        if (y.color === RED) { /* Case 1: Uncle RED */",
+    "          z.parent.color = BLACK; y.color = BLACK;",
+    "          z.parent.parent.color = RED; z = z.parent.parent;",
+    "        } else { /* Uncle BLACK */",
+    "          if (z === z.parent.right) { /* Case 2: Triangle */",
+    "            z = z.parent; this.rotateLeft(z);",
+    "          }",
+    "          /* Case 3: Line */",
+    "          z.parent.color = BLACK; z.parent.parent.color = RED;",
+    "          this.rotateRight(z.parent.parent);",
+    "        }",
+    "      } else { /* Symmetric: Parent is right child */",
+    "        let y = z.parent.parent.left; // Uncle",
+    "        if (y.color === RED) { /* Case 1 */",
+    "          z.parent.color = BLACK; y.color = BLACK;",
+    "          z.parent.parent.color = RED; z = z.parent.parent;",
+    "        } else { /* Uncle BLACK */",
+    "          if (z === z.parent.left) { /* Case 2 */",
+    "            z = z.parent; this.rotateRight(z);",
+    "          }",
+    "          /* Case 3 */",
+    "          z.parent.color = BLACK; z.parent.parent.color = RED;",
+    "          this.rotateLeft(z.parent.parent);",
+    "        }",
+    "      }",
+    "    }",
+    "    this.root.color = BLACK; // Root must always be black.",
     "  }",
     "",
-    "  // delete(value) { /* ... Very complex logic ... */ }",
-    "  // deleteFixup(x) { /* ... Equally complex fixup logic ... */ }",
+    "  // delete(value) { /* ... Very complex logic involving BST delete + deleteFixup ... */ }",
+    "  // deleteFixup(x) { /* ... Equally complex fixup logic for deletion ... */ }",
     "}",
   ],
 };
@@ -107,7 +147,6 @@ export default function RedBlackTreeVisualizerPage() {
   const { toast } = useToast();
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
-  // Dummy state for BinaryTreeControlsPanel compatibility
   const [selectedTraversalType, setSelectedTraversalType] = useState<TraversalType>(TRAVERSAL_TYPES.INORDER);
 
   useEffect(() => {
@@ -117,9 +156,9 @@ export default function RedBlackTreeVisualizerPage() {
       setAlgorithm(foundAlgorithm);
        toast({
             title: "Conceptual Overview",
-            description: `Interactive Red-Black Tree operations (rotations, recoloring, balancing) visualization is highly complex and under construction.`,
+            description: `Interactive Red-Black Tree operations visualization is highly complex due to rotations, color changes, and numerous fixup cases. It is currently under construction.`,
             variant: "default",
-            duration: 6000,
+            duration: 7000,
         });
     } else {
       toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
@@ -184,9 +223,9 @@ export default function RedBlackTreeVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, demonstrating node coloring, rotations, and fixup operations, is currently under construction.
-                This is one of the most complex tree structures to visualize effectively!
-                Please check back later. Review the concepts and code snippets below.
+                The interactive visualizer for {algorithm.title}, demonstrating node coloring, rotations, and fixup operations for insert and delete, is a highly complex feature and currently under construction.
+                This structure requires specialized UI components to clearly show color changes and animated rotations.
+                Please check back later! Review the concepts and code snippets below for a better understanding.
             </p>
         </div>
         
@@ -221,14 +260,14 @@ export default function RedBlackTreeVisualizerPage() {
             onStep={() => {}}
             onReset={() => {}}
             onTreeInputChange={() => {}}
-            treeInputValue={"(e.g., 10,5,15,3,7,12,18)"} // Example input
+            treeInputValue={"(e.g., 10,5,15,3,7,12,18)"} 
             onTraversalTypeChange={setSelectedTraversalType}
-            selectedTraversalType={selectedTraversalType} // Dummy, not used for RBT ops directly
+            selectedTraversalType={selectedTraversalType} 
             isPlaying={false}
-            isFinished={true} // Disables play/pause/step
+            isFinished={true} 
             currentSpeed={500}
             onSpeedChange={() => {}}
-            isAlgoImplemented={false} // Disables most controls
+            isAlgoImplemented={false} 
             minSpeed={100}
             maxSpeed={2000}
           />
@@ -239,3 +278,4 @@ export default function RedBlackTreeVisualizerPage() {
     </div>
   );
 }
+
