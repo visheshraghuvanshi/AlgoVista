@@ -3,87 +3,89 @@ import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
 
 // Conceptual Line Maps - adjust based on actual code snippets shown
 export const SINGLY_LL_LINE_MAPS: Record<string, Record<string, number>> = {
+  structure: { // For structure display if needed
+    nodeClass: 1, nodeConstructor: 2, nodeData:3, nodeNext:4, nodeEnd: 5,
+    listClass: 6, listConstructor: 7, listHead: 8, listEnd: 9,
+  },
   insertHead: {
-    classDef: 1, 
-    constructor: 2,
-    insertHeadFunc: 3,
-    newNode: 4,
-    linkNewNode: 5,
-    updateHead: 6,
-    end: 7,
+    func: 1, // insertHead(data) {
+    newNode: 2, // const newNode = new Node(data);
+    linkNewNode: 3, // newNode.next = this.head;
+    updateHead: 4, // this.head = newNode;
+    end: 5, // }
   },
   insertTail: {
-    insertTailFunc: 1,
-    newNode: 2,
-    emptyCheck: 3,
-    assignHead: 4,
-    initCurrent: 5,
-    findTailLoop: 6,
-    moveCurrent: 7,
-    assignNext: 8,
-    end: 9,
+    func: 1, // insertTail(data) {
+    newNode: 2, // const newNode = new Node(data);
+    emptyCheck: 3, // if (!this.head) {
+    assignHead: 4, // this.head = newNode; return; }
+    initCurrent: 5, // let current = this.head;
+    findTailLoop: 6, // while (current.next) {
+    moveCurrent: 7, // current = current.next; }
+    assignNext: 8, // current.next = newNode;
+    end: 9, // }
   },
   deleteByValue: {
-    deleteFunc: 1,
-    emptyCheck: 2,
-    headMatch: 3,
-    updateHeadDelete: 4,
-    initCurrentPrev: 5,
-    findNodeLoop: 6,
-    checkMatchInLoop: 7,
-    updateNext: 8, 
-    returnFound: 9,
-    moveCurrentPrevInLoop: 10,
-    returnNull: 11, 
-    end: 12,
+    func: 1, // deleteByValue(data) {
+    emptyCheck: 2, // if (!this.head) return null;
+    headMatch: 3, // if (this.head.data === data) {
+    updateHeadDelete: 4, // this.head = this.head.next; return data; }
+    initCurrentPrev: 5, // let current = this.head, prev = null;
+    findNodeLoop: 6, // while (current && current.data !== data) {
+    moveCurrentPrevInLoop: 7, // prev = current; current = current.next; }
+    checkMatchInLoop: 8, // if (current) {
+    updateNext: 9, // prev.next = current.next;
+    returnFound: 10, // return data; }
+    returnNull: 11, // return null;
+    end: 12, // }
   },
    search: {
-    searchFunc: 1,
-    initCurrentIndex: 2,
-    loop: 3,
-    checkMatch: 4,
-    returnFound: 5, 
-    moveCurrentSearch: 6,
-    incrementIndex: 7,
-    returnNullSearch: 8, 
-    end: 9,
+    func: 1, // search(data) {
+    initCurrentIndex: 2, // let current = this.head, index = 0;
+    loop: 3, // while (current) {
+    checkMatch: 4, // if (current.data === data) {
+    returnFound: 5, // return { node: current, index }; }
+    moveCurrentSearch: 6, // current = current.next;
+    incrementIndex: 7, // index++; }
+    returnNullSearch: 8, // return null;
+    end: 9, // }
   },
   traverse: {
-    traverseFunc: 1,
-    initCurrentResult: 2,
-    loop: 3,
-    processNode: 4, 
-    moveNext: 5,
-    returnResult: 6,
-    end: 7,
+    func: 1, // traverse() {
+    initCurrentResult: 2, // let current = this.head, result = [];
+    loop: 3, // while (current) {
+    processNode: 4, // result.push(current.data);
+    moveNext: 5, // current = current.next; }
+    returnResult: 6, // return result;
+    end: 7, // }
   },
   insertAtPosition: {
-    func: 1,
-    newNode: 2,
-    posZeroCheck: 3, // if (pos === 0) -> insertHead logic
-    initTraverse: 4, // current, prev, count
-    traverseLoop: 5,
-    movePointers: 6,
-    posFoundInsert: 7, // prev.next = newNode; newNode.next = current;
-    posNotFound: 8, // If loop finishes and pos not reached (append or error)
-    end: 9,
+    func: 1, // insertAtPosition(data, position) {
+    newNode: 2, // const newNode = new Node(data);
+    posZeroCheck: 3, // if (position === 0) { this.insertHead(data); return; }
+    initTraverse: 4, // let current = this.head, prev = null, count = 0;
+    traverseLoop: 5, // while (current && count < position) {
+    movePointers: 6, // prev = current; current = current.next; count++; }
+    posFoundInsert: 7, // if (prev) { prev.next = newNode; newNode.next = current; }
+    posNotFound: 8, // else { /* ... */ }
+    end: 9, // }
   },
   deleteAtPosition: {
-    func: 1,
-    emptyCheck: 2,
-    posZeroCheck: 3, // Delete head
-    initTraverse: 4,
-    traverseLoop: 5,
-    movePointers: 6,
-    posFoundDelete: 7, // prev.next = current.next;
-    posNotFound: 8,
-    end: 9,
+    func: 1, // deleteAtPosition(position) {
+    emptyCheck: 2, // if (!this.head || position < 0) return null;
+    posZeroCheck: 3, // if (position === 0) { this.head = this.head.next; return; }
+    initTraverse: 4, // let current = this.head, prev = null, count = 0;
+    traverseLoop: 5, // while (current && count < position) {
+    movePointers: 6, // prev = current; current = current.next; count++; }
+    posFoundDelete: 7, // if (current && prev) { prev.next = current.next; }
+    posNotFound: 8, // else ...
+    end: 9, // }
   },
   init: { 
-    start: 1,
-    loop: 2, 
-    insertCall: 3,
-    end: 4,
+    start: 1, // Conceptual start for initialization
+    loop: 2,  // Conceptual loop for creating nodes from input
+    insertCall: 3, // Conceptual call to an insert method (like insertTail)
+    end: 4, // Conceptual end of init
   }
 };
 
@@ -249,7 +251,7 @@ export const generateSinglyLinkedListSteps = (
       const newNodeAtPosId = generateNodeId(value);
       addStep(lineMap.newNode, `New node with value ${value} for position ${position}.`, undefined, newNodeAtPosId, 'new');
       
-      if (position === 0) { // Insert at head
+      if (position === 0) { 
         addStep(lineMap.posZeroCheck, `Position 0. Inserting at head.`, undefined, newNodeAtPosId, 'new');
         actualListNodes.set(newNodeAtPosId, { value, nextId: headId });
         headId = newNodeAtPosId;
@@ -266,20 +268,19 @@ export const generateSinglyLinkedListSteps = (
           count++;
           addStep(lineMap.movePointers, `Moved to index ${count}. Prev: ${prev ? actualListNodes.get(prev)?.value : 'null'}, Current: ${current ? actualListNodes.get(current)?.value : 'null'}.`, current, undefined, undefined, {prev, current});
         }
-        if (count === position) { // Found position (or end of list if pos >= length)
+        if (count === position) { 
           actualListNodes.set(newNodeAtPosId, { value, nextId: current });
           if(prev) actualListNodes.get(prev)!.nextId = newNodeAtPosId;
-          else headId = newNodeAtPosId; // Should be covered by pos === 0, but for safety if pos > 0 and prev is null (empty list start scenario)
+          else headId = newNodeAtPosId; // Should not happen if pos > 0 and list not empty
           addStep(lineMap.posFoundInsert, `Inserted ${value} at position ${position}.`, prev, newNodeAtPosId, 'new', undefined, 'success');
-        } else {
+        } else { // Position out of bounds (treated as insert at tail)
           addStep(lineMap.posNotFound, `Position ${position} is out of bounds (list length ${count}). Appending to tail.`, undefined, newNodeAtPosId, 'new', undefined, 'info');
-          // Effectively insertTail if position is out of bounds but non-negative
            if (prev) { // If list was not empty
                 actualListNodes.get(prev)!.nextId = newNodeAtPosId;
                 actualListNodes.set(newNodeAtPosId, { value, nextId: null });
-            } else { // List was empty, this becomes head
+            } else { // List was empty, position was > 0
                 actualListNodes.set(newNodeAtPosId, { value, nextId: null });
-                headId = newNodeAtPosId;
+                headId = newNodeAtPosId; // This new node is now head
             }
              addStep(lineMap.end, `Appended ${value} as list length was ${count}.`, undefined, undefined, undefined, undefined, 'success');
         }
@@ -310,7 +311,7 @@ export const generateSinglyLinkedListSteps = (
                 count++;
                  addStep(lineMap.movePointers, `Moved to index ${count}.`, current, undefined, undefined, {prev, current});
             }
-            if (current && count === position) { // Node to delete found
+            if (current && count === position) { 
                 deletedNodeId = current;
                 addStep(lineMap.posFoundDelete, `Node to delete at pos ${position} is ${actualListNodes.get(current)?.value}.`, current, deletedNodeId, 'deleted');
                 if (prev) actualListNodes.get(prev)!.nextId = actualListNodes.get(current)!.nextId;
@@ -326,7 +327,7 @@ export const generateSinglyLinkedListSteps = (
       if (value === undefined) { addStep(lineMap.end, "Error: No value for delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
       if (!headId) { addStep(lineMap.emptyCheck, "List empty. Cannot delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
       
-      if (actualListNodes.get(headId)?.value == value) {
+      if (actualListNodes.get(headId)?.value == value) { // Use == for type flexibility with value
         const deletedId = headId;
         addStep(lineMap.headMatch, `Value ${value} found at head.`, headId, deletedId, 'deleted');
         headId = actualListNodes.get(headId)!.nextId;
@@ -336,10 +337,10 @@ export const generateSinglyLinkedListSteps = (
       }
       
       let currentDel = headId;
-      let prevDel: string | null = null; // Initialize prevDel to null
+      let prevDel: string | null = null; 
       let foundDel = false;
       addStep(lineMap.initCurrentPrev, "Searching for node to delete.", currentDel);
-      while(currentDel && actualListNodes.get(currentDel)?.value != value) {
+      while(currentDel && actualListNodes.get(currentDel)?.value != value) { // Use != for type flexibility
         addStep(lineMap.findNodeLoop, `Current: ${actualListNodes.get(currentDel)?.value}. Not ${value}.`, currentDel);
         prevDel = currentDel;
         currentDel = actualListNodes.get(currentDel)!.nextId;
@@ -367,7 +368,7 @@ export const generateSinglyLinkedListSteps = (
       addStep(lineMap.initCurrentIndex, `Searching for ${value}. Start at head.`, searchCurrent);
       while(searchCurrent) {
         addStep(lineMap.loop, `Current node: ${actualListNodes.get(searchCurrent)?.value} at index ${searchIndex}.`, searchCurrent);
-        if(actualListNodes.get(searchCurrent)?.value == value) {
+        if(actualListNodes.get(searchCurrent)?.value == value) { // Use == for type flexibility
           addStep(lineMap.returnFound, `Value ${value} found at index ${searchIndex}.`, searchCurrent, searchCurrent, 'searched', undefined, 'success');
           addStep(lineMap.end, "Search complete.");
           return localSteps;

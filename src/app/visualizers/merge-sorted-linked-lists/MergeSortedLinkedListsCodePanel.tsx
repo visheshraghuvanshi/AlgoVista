@@ -54,7 +54,7 @@ export const MERGE_CODE_SNIPPETS: Record<string, Record<string, string[]>> = {
   Python: {
     iterative: [
       "# Iterative Merge",
-      "# class Node: def __init__(self, data=0, next=None): self.data = data; self.next = next",
+      "# class Node: def __init__(self, data=0, next_node=None): self.data = data; self.next = next_node", # Renamed next to next_node
       "def merge_two_lists_iterative(l1, l2):",
       "    dummy = Node(0)",
       "    tail = dummy",
@@ -198,7 +198,7 @@ export function MergeSortedLinkedListsCodePanel({ currentLine, mergeType }: Merg
                     ))}
                 </TabsList>
             </Tabs>
-            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0 || codeToDisplay[0].startsWith("// Select")}>
                 <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
             </Button>
         </div>
