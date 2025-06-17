@@ -21,50 +21,61 @@ const SEGMENT_TREE_CODE_SNIPPETS = {
     "class SegmentTree {",
     "  constructor(arr) {",
     "    this.n = arr.length;",
-    "    this.tree = new Array(2 * this.n).fill(0); // Can be up to 4n for recursive style",
+    "    // Size of segment tree array is typically 2n or 4n for recursive version",
+    "    this.tree = new Array(2 * this.n).fill(0); // For iterative version, 2n is enough",
     "    this.build(arr);",
     "  }",
     "",
     "  // Iterative Build (bottom-up from leaves)",
     "  build(arr) {",
-    "    // Place leaf nodes",
+    "    // Place leaf nodes (original array elements)",
     "    for (let i = 0; i < this.n; i++) {",
     "      this.tree[this.n + i] = arr[i];",
     "    }",
     "    // Build internal nodes by summing children",
+    "    // Start from the parent of the last leaf and go up to the root (index 1)",
     "    for (let i = this.n - 1; i > 0; --i) {",
+    "      // Parent at index i has children at 2*i and 2*i+1",
     "      this.tree[i] = this.tree[2 * i] + this.tree[2 * i + 1];",
     "    }",
     "  }",
     "",
     "  // Iterative Update (point update)",
     "  update(index, value) {",
-    "    index += this.n; // Go to leaf node position",
-    "    this.tree[index] = value;",
+    "    let pos = index + this.n; // Go to leaf node position",
+    "    this.tree[pos] = value;",
     "    // Update parents by traversing up",
-    "    while (index > 1) {",
-    "      index = Math.floor(index / 2);",
-    "      this.tree[index] = this.tree[2 * index] + this.tree[2 * index + 1];",
+    "    while (pos > 1) {",
+    "      pos = Math.floor(pos / 2); // Move to parent",
+    "      this.tree[pos] = this.tree[2 * pos] + this.tree[2 * pos + 1]; // Update parent sum",
     "    }",
     "  }",
     "",
-    "  // Iterative Query (range sum [left, right) )",
-    "  query(left, right) { // query on interval [left, right)",
+    "  // Iterative Query (range sum on [left, right) - left inclusive, right exclusive )",
+    "  query(left, right) { ",
     "    let res = 0;",
-    "    left += this.n;  // Adjust to leaf positions",
+    "    left += this.n;  // Adjust to leaf positions in the tree array",
     "    right += this.n;",
     "    // Loop while left and right pointers don't cross",
     "    for (; left < right; left = Math.floor(left/2), right = Math.floor(right/2)) {",
-    "      if (left % 2 === 1) { // If left is odd, it's a right child, include it",
-    "        res += this.tree[left++];",
+    "      // If left pointer is odd, it's a right child. Its interval is fully covered.",
+    "      if (left % 2 === 1) { ",
+    "        res += this.tree[left++]; // Add its value and move left to its parent's right sibling (conceptually)",
     "      }",
-    "      if (right % 2 === 1) { // If right is odd, it's a right child, include its left sibling (original right-1)",
-    "        res += this.tree[--right];",
+    "      // If right pointer is odd, it's a right child. Its left sibling's interval is fully covered.",
+    "      if (right % 2 === 1) { ",
+    "        res += this.tree[--right]; // Add its left sibling's value and move right to its parent's left sibling",
     "      }",
     "    }",
     "    return res;",
     "  }",
     "}",
+    "// Example usage:",
+    "// const arr = [1, 3, 5, 7, 9, 11];",
+    "// const segTree = new SegmentTree(arr);",
+    "// console.log(segTree.query(1, 4)); // Sum of arr[1] to arr[3] (0-indexed original) -> 3+5+7 = 15",
+    "// segTree.update(2, 6); // Update arr[2] from 5 to 6",
+    "// console.log(segTree.query(1, 4)); // Sum of arr[1] to arr[3] -> 3+6+7 = 16",
   ],
 };
 
@@ -99,7 +110,7 @@ export default function SegmentTreeVisualizerPage() {
       average: "Build: O(n), Query: O(log n), Update: O(log n)", 
       worst: "Build: O(n), Query: O(log n), Update: O(log n)" 
     },
-    spaceComplexity: "O(n) for the tree structure.",
+    spaceComplexity: "O(n) for the tree structure (typically 2n or 4n elements in array representation).",
   } : null;
 
   if (!isClient) {
@@ -149,7 +160,7 @@ export default function SegmentTreeVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing tree construction, range queries, and updates, is currently under construction.
+                The interactive visualizer for {algorithm.title}, showing tree construction based on an array, range queries (sum, min, max), and point updates, is currently under construction.
                 Please check back later! Review the concepts and code snippets below.
             </p>
         </div>
@@ -185,12 +196,12 @@ export default function SegmentTreeVisualizerPage() {
             onStep={() => {}}
             onReset={() => {}}
             onInputChange={() => {}}
-            inputValue={"(e.g., initial array for segment tree)"}
+            inputValue={"(e.g., 1,3,5,7,9,11 for segment tree construction)"} // Example input
             isPlaying={false}
-            isFinished={true}
+            isFinished={true} // Disables play/pause/step
             currentSpeed={500}
             onSpeedChange={() => {}}
-            isAlgoImplemented={false}
+            isAlgoImplemented={false} // Disables most controls
             minSpeed={100}
             maxSpeed={2000}
           />
@@ -201,4 +212,3 @@ export default function SegmentTreeVisualizerPage() {
     </div>
   );
 }
-
