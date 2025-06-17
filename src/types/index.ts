@@ -2,16 +2,24 @@
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
+export interface AlgorithmTimeComplexities {
+  best: string;
+  average: string;
+  worst: string;
+}
+
 export interface AlgorithmMetadata {
   slug: string;
   title: string;
   category: AlgorithmCategory;
   difficulty: AlgorithmDifficulty;
-  description: string;
-  longDescription?: string; 
-  tags?: string[]; 
+  description: string; // Short description for card
+  longDescription?: string; // Detailed explanation for individual page
+  timeComplexities?: AlgorithmTimeComplexities;
+  spaceComplexity?: string;
+  tags?: string[];
   codeSnippets?: {
-    [language: string]: string[]; 
+    [language: string]: string[];
   };
   pseudocode?: string[];
 }
@@ -19,14 +27,14 @@ export interface AlgorithmMetadata {
 // For array-based algorithms (sorting, searching)
 export type ArrayAlgorithmStep = {
   array: number[];
-  activeIndices: number[]; 
-  swappingIndices: number[]; 
-  sortedIndices: number[]; 
+  activeIndices: number[];
+  swappingIndices: number[];
+  sortedIndices: number[];
   currentLine: number | null;
-  message?: string; 
-  processingSubArrayRange?: [number, number] | null; 
+  message?: string;
+  processingSubArrayRange?: [number, number] | null;
   pivotActualIndex?: number | null;
-  auxiliaryData?: Record<string, string | number | null>; // For Kadane's, etc.
+  auxiliaryData?: Record<string, string | number | null>; // For Kadane's, Segment Tree query result etc.
 };
 
 // For graph-based algorithms
@@ -52,7 +60,7 @@ export interface GraphEdge {
 export interface GraphAlgorithmStep {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  auxiliaryData?: { 
+  auxiliaryData?: {
     type: 'queue' | 'stack' | 'set' | 'distances' | 'path';
     label: string;
     values: string[] | { [key: string]: string | number };
@@ -67,13 +75,15 @@ export interface BinaryTreeNodeVisual {
   value: string | number | null;
   x: number;
   y: number;
-  color: string;
-  leftId?: string | null; 
-  rightId?: string | null; 
+  color: string; // Visual fill color (can be for state highlighting)
+  textColor?: string; // Explicit text color
+  nodeColor?: 'RED' | 'BLACK' | string; // Specific RBT color or other type
+  leftId?: string | null;
+  rightId?: string | null;
 }
 
 export interface BinaryTreeEdgeVisual {
-  id: string; 
+  id: string;
   sourceId: string;
   targetId: string;
   color?: string;
@@ -86,6 +96,7 @@ export interface TreeAlgorithmStep {
   currentLine: number | null;
   message?: string;
   currentProcessingNodeId?: string | null;
+  auxiliaryData?: Record<string, string | number | null>;
 }
 
 // Types for Linked List Visualizations
@@ -125,3 +136,4 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Graph algorithm pages will use GraphAlgorithmStep directly.
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
+

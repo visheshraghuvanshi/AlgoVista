@@ -7,12 +7,11 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { LinearSearchCodePanel } from './LinearSearchCodePanel'; 
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { AlgorithmDetailsCard } from '@/components/algo-vista/AlgorithmDetailsCard';
+import type { AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle } from 'lucide-react';
 import { LINEAR_SEARCH_LINE_MAP, generateLinearSearchSteps } from './linear-search-logic';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 
 const LINEAR_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
@@ -60,46 +59,10 @@ const LINEAR_SEARCH_CODE_SNIPPETS = {
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-const ALGORITHM_SLUG = 'linear-search';
-
-interface AlgorithmDetailsProps {
-  title: string;
-  description: string;
-  timeComplexities: { best: string; average: string; worst: string };
-  spaceComplexity: string;
-}
-
-function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
-  return (
-    <Card className="mt-8 shadow-lg rounded-xl">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
-          About {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-muted-foreground">{description}</p>
-        <div>
-          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
-          <ul className="list-disc list-inside text-muted-foreground space-y-1">
-            <li>Best Case: {timeComplexities.best}</li>
-            <li>Average Case: {timeComplexities.average}</li>
-            <li>Worst Case: {timeComplexities.worst}</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
-          <p className="text-muted-foreground">{spaceComplexity}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function LinearSearchVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-
+  
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
   const [targetValue, setTargetValue] = useState('7');
   
@@ -120,14 +83,6 @@ export default function LinearSearchVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAlgoImplemented = true;
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const parseInput = useCallback((value: string): number[] | null => {
     if (value.trim() === '') return [];
@@ -284,36 +239,15 @@ export default function LinearSearchVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails = {
-    title: "Linear Search",
-    description: "Sequentially checks each element of the list until a match is found or the whole list has been searched. A basic introduction to search operations.",
-    timeComplexities: { best: "O(1)", average: "O(n)", worst: "O(n)" },
-    spaceComplexity: "O(1)",
-  };
-
-  if (!algorithm) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-          <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-          <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{ALGORITHM_SLUG}&quot;.</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithm.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -355,10 +289,10 @@ export default function LinearSearchVisualizerPage() {
           />
         </div>
         <AlgorithmDetailsCard 
-            title={algoDetails.title}
-            description={algoDetails.description}
-            timeComplexities={algoDetails.timeComplexities}
-            spaceComplexity={algoDetails.spaceComplexity}
+            title={algorithmMetadata.title}
+            description={algorithmMetadata.longDescription || algorithmMetadata.description}
+            timeComplexities={algorithmMetadata.timeComplexities!}
+            spaceComplexity={algorithmMetadata.spaceComplexity!}
         />
       </main>
       <Footer />
