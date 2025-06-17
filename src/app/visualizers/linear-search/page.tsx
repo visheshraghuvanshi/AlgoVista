@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { CodePanel } from '@/components/algo-vista/code-panel';
-import { ControlsPanel } from '@/components/algo-vista/controls-panel';
+import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
@@ -67,15 +67,14 @@ export default function LinearSearchVisualizerPage() {
 
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
   const [targetValue, setTargetValue] = useState('7');
-  const [initialData, setInitialData] = useState<number[]>([]);
-
+  
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [swappingIndices, setSwappingIndices] = useState<number[]>([]);
-  const [sortedIndices, setSortedIndices] = useState<number[]>([]); // Repurposed for "found"
+  const [sortedIndices, setSortedIndices] = useState<number[]>([]); 
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
@@ -144,7 +143,6 @@ export default function LinearSearchVisualizerPage() {
     const parsedTarget = parseTarget(targetValue);
 
     if (parsedArray !== null && parsedTarget !== null) {
-      setInitialData(parsedArray);
       const newSteps = generateLinearSearchSteps(parsedArray, parsedTarget);
       setSteps(newSteps);
       setCurrentStepIndex(0);
@@ -265,7 +263,7 @@ export default function LinearSearchVisualizerPage() {
           </div>
         </div>
         <div className="w-full">
-          <ControlsPanel
+          <SearchingControlsPanel
             onPlay={handlePlay}
             onPause={handlePause}
             onStep={handleStep}
@@ -279,7 +277,6 @@ export default function LinearSearchVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            showTargetInput={true}
             targetValue={targetValue}
             onTargetValueChange={handleTargetChange}
             targetInputLabel="Target Value to Find"

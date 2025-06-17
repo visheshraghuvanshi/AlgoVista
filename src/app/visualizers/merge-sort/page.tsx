@@ -1,13 +1,14 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { CodePanel } from '@/components/algo-vista/code-panel';
-import { ControlsPanel } from '@/components/algo-vista/controls-panel';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
+import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
@@ -164,7 +165,7 @@ export default function MergeSortVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAlgoImplemented = true; // Hardcoded true
+  const isAlgoImplemented = true;
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -207,7 +208,7 @@ export default function MergeSortVisualizerPage() {
     }
   }, [steps]);
 
-  useEffect(() => {
+  const generateSteps = useCallback(() => {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
@@ -230,8 +231,11 @@ export default function MergeSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput]); 
+  }, [inputValue, parseInput, updateStateFromStep]);
+
+  useEffect(() => {
+    generateSteps();
+  }, [generateSteps]); 
 
 
   useEffect(() => {
@@ -308,18 +312,7 @@ export default function MergeSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
     }
-
-    const parsedData = parseInput(inputValue) || initialData; 
-    let newSteps: AlgorithmStep[] = generateMergeSortSteps(parsedData);
-
-    if (newSteps.length > 0) {
-        setSteps(newSteps);
-        setCurrentStepIndex(0);
-        updateStateFromStep(0);
-    } else { 
-        setDisplayedData(parsedData); setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null); setSteps([]);
-    }
+    generateSteps();
   };
   
   const handleSpeedChange = (speedValue: number) => {
@@ -376,7 +369,7 @@ export default function MergeSortVisualizerPage() {
         </div>
         
         <div className="w-full">
-          <ControlsPanel
+          <SortingControlsPanel
             onPlay={handlePlay}
             onPause={handlePause}
             onStep={handleStep}

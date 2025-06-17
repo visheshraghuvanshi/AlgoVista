@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { CodePanel } from '@/components/algo-vista/code-panel';
-import { ControlsPanel } from '@/components/algo-vista/controls-panel';
+import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
@@ -96,8 +96,7 @@ export default function BinarySearchVisualizerPage() {
 
   const [inputValue, setInputValue] = useState('1,2,3,4,5,6,7,8,9'); // Default to sorted
   const [targetValue, setTargetValue] = useState('7');
-  const [initialData, setInitialData] = useState<number[]>([]);
-
+  
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -115,6 +114,7 @@ export default function BinarySearchVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAlgoImplemented = true;
+  const lastProcessedInputValueRef = useRef<string | null>(null);
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -124,7 +124,7 @@ export default function BinarySearchVisualizerPage() {
     }
   }, [toast]);
 
-  const parseInput = useCallback((value: string): number[] | null => {
+  const parseInput = useCallback((value: string, notifySort: boolean = false): number[] | null => {
     if (value.trim() === '') return [];
     const parsed = value.split(',').map(s => s.trim()).filter(s => s !== '').map(s => parseInt(s, 10));
     if (parsed.some(isNaN)) {
@@ -135,9 +135,8 @@ export default function BinarySearchVisualizerPage() {
       toast({ title: "Input out of range", description: "Array numbers must be between -999 and 999.", variant: "destructive" });
       return null;
     }
-    // For Binary Search, the array *must* be sorted.
     const sortedParsed = [...parsed].sort((a, b) => a - b);
-    if (JSON.stringify(parsed) !== JSON.stringify(sortedParsed)) {
+    if (notifySort && JSON.stringify(parsed) !== JSON.stringify(sortedParsed)) {
         toast({ title: "Input Array Sorted", description: "Binary Search requires a sorted array. Your input has been sorted.", variant: "default" });
     }
     return sortedParsed;
@@ -173,19 +172,22 @@ export default function BinarySearchVisualizerPage() {
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
-    const parsedArray = parseInput(inputValue); // This now returns a sorted array
+  const generateSteps = useCallback((notifySort: boolean = false) => {
+    const parsedArray = parseInput(inputValue, notifySort); 
     const parsedTarget = parseTarget(targetValue);
 
     if (parsedArray !== null && parsedTarget !== null) {
-      setInitialData(parsedArray); // Store the (potentially newly sorted) array
-      setInputValue(parsedArray.join(',')); // Update input field to show sorted array
+      if (notifySort) { // If sorting happened due to direct input change, update inputValue
+        setInputValue(parsedArray.join(','));
+      }
+      lastProcessedInputValueRef.current = parsedArray.join(',');
+
 
       const newSteps = generateBinarySearchSteps(parsedArray, parsedTarget);
       setSteps(newSteps);
       setCurrentStepIndex(0);
       if (newSteps.length > 0) updateStateFromStep(0);
-      else setDisplayedData(parsedArray); // Show sorted array even if no steps
+      else setDisplayedData(parsedArray); 
       setIsPlaying(false);
       setIsFinished(false);
     } else {
@@ -198,20 +200,30 @@ export default function BinarySearchVisualizerPage() {
 
 
   useEffect(() => {
-    generateSteps();
+    // Generate steps only if target or relevant input aspects change
+    generateSteps(false); // Do not notify sort on initial load or target change
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetValue]); // Regenerate steps if target changes
+  }, [targetValue]);
 
   useEffect(() => {
-    // Only regenerate based on inputValue if it truly changes
-    // (and not just from the auto-sort update)
-    const parsedArray = parseInput(inputValue);
-    if(parsedArray && JSON.stringify(parsedArray) !== JSON.stringify(initialData)) {
-        generateSteps();
+    // This effect specifically handles changes to `inputValue` from the user
+    // It will parse, potentially sort, update `inputValue` if sorted, and then generate steps
+    if (inputValue !== lastProcessedInputValueRef.current) {
+        const parsedArray = parseInput(inputValue, true); // Notify sort if it happens
+        if (parsedArray) {
+            const newInputValueStr = parsedArray.join(',');
+            if (inputValue !== newInputValueStr) {
+                setInputValue(newInputValueStr); // This will trigger the generateSteps via its own dependency if needed
+            } else {
+                 generateSteps(true); // Input was already sorted or empty, generate directly
+            }
+             lastProcessedInputValueRef.current = newInputValueStr;
+        } else {
+             generateSteps(true); // Handle invalid input by clearing steps
+        }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]);
-
+  }, [inputValue]); // Only re-run when inputValue changes from user or direct set
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -265,16 +277,12 @@ export default function BinarySearchVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // Re-parse input and generate steps
-    const parsedArray = parseInput(inputValue);
-    if (parsedArray) setInputValue(parsedArray.join(',')); // Update input field if sorted
-    generateSteps();
+    generateSteps(true); // Allow sort notification on explicit reset
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
   if (!algorithm) {
-    // Standard loading/error display
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -318,7 +326,7 @@ export default function BinarySearchVisualizerPage() {
           </div>
         </div>
         <div className="w-full">
-          <ControlsPanel
+          <SearchingControlsPanel
             onPlay={handlePlay}
             onPause={handlePause}
             onStep={handleStep}
@@ -332,7 +340,6 @@ export default function BinarySearchVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            showTargetInput={true}
             targetValue={targetValue}
             onTargetValueChange={handleTargetChange}
             targetInputLabel="Target Value to Find"
