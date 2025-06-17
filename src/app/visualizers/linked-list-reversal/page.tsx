@@ -9,14 +9,17 @@ import { LinkedListReversalCodePanel } from './LinkedListReversalCodePanel';
 import { LinkedListControlsPanel, type LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
 import { generateLinkedListReversalSteps, REVERSAL_ITERATIVE_LINE_MAP, REVERSAL_RECURSIVE_LINE_MAP } from './linked-list-reversal-logic';
+import { algorithmMetadata } from './metadata'; // Import local metadata
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const ALGORITHM_SLUG = 'linked-list-reversal';
 const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
@@ -25,8 +28,7 @@ type ReversalType = 'iterative' | 'recursive' | 'init';
 
 export default function LinkedListReversalPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-
+  
   const [initialListStr, setInitialListStr] = useState('1,2,3,4');
   const [reversalType, setReversalType] = useState<ReversalType>('iterative');
   
@@ -44,11 +46,6 @@ export default function LinkedListReversalPage() {
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-  }, [toast]);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -63,16 +60,16 @@ export default function LinkedListReversalPage() {
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    if (reversalType === 'init') { // Just show initial list
-        const initSteps = generateLinkedListReversalSteps(initialListStr, 'iterative'); // use iterative for structure
+    if (reversalType === 'init') { 
+        const initSteps = generateLinkedListReversalSteps(initialListStr, 'iterative'); 
         if (initSteps.length > 0) {
             const firstStep = initSteps[0];
-             setSteps([firstStep]); // Only the first step
+             setSteps([firstStep]); 
              updateVisualStateFromStep(0);
         } else {
              setSteps([]); setCurrentNodes([]); setCurrentHeadId(null); setCurrentMessage("Could not initialize list.");
         }
-        setIsPlaying(false); setIsFinished(true); // No animation for init display
+        setIsPlaying(false); setIsFinished(true); 
         return;
     }
 
@@ -107,28 +104,28 @@ export default function LinkedListReversalPage() {
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4'); setReversalType('iterative');
-    // handleGenerateSteps will be called by useEffect
+    // handleGenerateSteps will be called by useEffect due to state changes
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" },
-    spaceComplexity: "Iterative: O(1), Recursive: O(n) stack space",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithm || !algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  if (!algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithm.title}</h1></div>
+        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="singly" /></div>
           <div className="lg:w-2/5 xl:w-1/3"><LinkedListReversalCodePanel currentLine={currentLine} reversalType={reversalType} /></div>
         </div>
-        {/* Simplified Controls Panel for Reversal */}
+        
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -150,7 +147,7 @@ export default function LinkedListReversalPage() {
             </div>
              <Button onClick={handleGenerateSteps} disabled={isPlaying}>Generate/Reset Steps</Button>
             <div className="flex items-center justify-start pt-4 border-t">
-                <Button onClick={onReset} variant="outline" disabled={isPlaying} aria-label="Reset visualization and inputs">
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying} aria-label="Reset visualization and inputs">
                     <RotateCcw className="mr-2 h-4 w-4" /> Reset All
                 </Button>
             </div>

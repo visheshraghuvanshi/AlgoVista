@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,20 +42,15 @@ const LCS_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'longest-common-subsequence';
-
 export default function LCSVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [string1, setString1] = useState("AGGTAB");
   const [string2, setString2] = useState("GXTXAYB");
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
        toast({
             title: "Conceptual Overview",
             description: `Interactive LCS visualization (DP table) is currently under construction.`,
@@ -63,19 +58,36 @@ export default function LCSVisualizerPage() {
             duration: 5000,
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for Longest Common Subsequence not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { best: "O(m*n)", average: "O(m*n)", worst: "O(m*n)" },
-    spaceComplexity: "O(m*n), can be optimized to O(min(m,n))",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
-  if (!algorithm || !algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="p-4"><AlertTriangle /></main><Footer /></div>; }
+  if (!algoDetails) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
+            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
+            <p className="text-muted-foreground text-lg">
+              Could not load data for &quot;longest-common-subsequence&quot;.
+            </p>
+            <Button asChild size="lg" className="mt-8">
+                <Link href="/visualizers">Back to Visualizers</Link>
+            </Button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -83,7 +95,7 @@ export default function LCSVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -93,7 +105,7 @@ export default function LCSVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing DP table construction and backtracking for the subsequence, is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title}, showing DP table construction and backtracking for the subsequence, is currently under construction.
                 Review the concepts and code below.
             </p>
         </div>
@@ -124,12 +136,12 @@ export default function LCSVisualizerPage() {
 
         <div className="w-full max-w-lg mx-auto my-4 p-4 border rounded-lg shadow-md space-y-4">
             <div>
-                <Label htmlFor="string1Input" className="text-sm font-medium">String 1</Label>
-                <Input id="string1Input" type="text" value={string1} onChange={(e) => setString1(e.target.value)} className="mt-1" disabled />
+                <Label htmlFor="string1InputLCS" className="text-sm font-medium">String 1</Label>
+                <Input id="string1InputLCS" type="text" value={string1} onChange={(e) => setString1(e.target.value)} className="mt-1" disabled />
             </div>
             <div>
-                <Label htmlFor="string2Input" className="text-sm font-medium">String 2</Label>
-                <Input id="string2Input" type="text" value={string2} onChange={(e) => setString2(e.target.value)} className="mt-1" disabled />
+                <Label htmlFor="string2InputLCS" className="text-sm font-medium">String 2</Label>
+                <Input id="string2InputLCS" type="text" value={string2} onChange={(e) => setString2(e.target.value)} className="mt-1" disabled />
             </div>
             <Button className="mt-2 w-full" disabled>Find LCS (Coming Soon)</Button>
         </div>

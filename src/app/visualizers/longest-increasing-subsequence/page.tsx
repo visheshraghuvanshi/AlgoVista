@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -62,39 +62,39 @@ const LIS_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'longest-increasing-subsequence';
-
 export default function LISVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [arrayInput, setArrayInput] = useState("10,9,2,5,3,7,101,18");
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-       toast({
-            title: "Conceptual Overview",
-            description: `Interactive LIS visualization (DP table or patience sorting) is currently under construction.`,
-            variant: "default",
-            duration: 5000,
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
+    toast({
+        title: "Conceptual Overview",
+        description: `Interactive LIS visualization (DP table or patience sorting) is currently under construction.`,
+        variant: "default",
+        duration: 5000,
+    });
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { best: "O(N log N)", average: "O(N log N)", worst: "O(N^2) or O(N log N)" },
-    spaceComplexity: "O(N)",
-  } : null;
+  const algoDetails: AlgorithmDetailsProps = {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  };
 
-  if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
-  if (!algorithm || !algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="p-4"><AlertTriangle /></main><Footer /></div>; }
+  if (!isClient) { 
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
+            <p className="text-muted-foreground">Loading visualizer...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -102,7 +102,7 @@ export default function LISVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -112,7 +112,7 @@ export default function LISVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing DP table or patience sorting steps, is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title}, showing DP table or patience sorting steps, is currently under construction.
                 Review the concepts and code below.
             </p>
         </div>

@@ -4,20 +4,18 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-// import { RadixSortCodePanel } from './RadixSortCodePanel'; // To be created if needed
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { algorithmMetadata } from './metadata'; // Import local metadata
 
 
-// Placeholder for Radix Sort specific code snippets
 const RADIX_SORT_CODE_SNIPPETS = {
   JavaScript: [
     "// Radix Sort (JavaScript - Conceptual, using Counting Sort as helper)",
@@ -63,34 +61,28 @@ const RADIX_SORT_CODE_SNIPPETS = {
   ],
 };
 
-
-const ALGORITHM_SLUG = 'radix-sort';
-
 export default function RadixSortVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
       toast({
             title: "Visualization Under Construction",
-            description: `The interactive visualizer for ${foundAlgorithm.title} is not yet fully implemented. Showing details only.`,
+            description: `The interactive visualizer for ${algorithmMetadata.title} is not yet fully implemented. Showing details only.`,
             variant: "default",
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for Radix Sort not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(d*(n+k))", average: "O(d*(n+k))", worst: "O(d*(n+k))" }, // d=digits, n=elements, k=base
-    spaceComplexity: "O(n+k)",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
    if (!isClient) {
@@ -105,7 +97,7 @@ export default function RadixSortVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -113,7 +105,7 @@ export default function RadixSortVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for Radix Sort.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -130,7 +122,7 @@ export default function RadixSortVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
         
@@ -140,7 +132,7 @@ export default function RadixSortVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title} is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title} is currently under construction.
                 Visualizing digit-by-digit sorting and bucket distribution requires a more specialized approach.
                 Please check back later! In the meantime, you can review the algorithm details below.
             </p>
@@ -157,7 +149,7 @@ export default function RadixSortVisualizerPage() {
                     <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                     <pre className="font-code text-sm p-4">
                         {RADIX_SORT_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground">
+                        <div key={'js-line-${index}'} className="px-2 py-0.5 rounded text-foreground">
                             <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                             {index + 1}
                             </span>
@@ -179,10 +171,10 @@ export default function RadixSortVisualizerPage() {
             onInputChange={() => {}}
             inputValue={"(Under Construction)"}
             isPlaying={false}
-            isFinished={true} // To disable controls
+            isFinished={true} 
             currentSpeed={500}
             onSpeedChange={() => {}}
-            isAlgoImplemented={false} // Disables controls
+            isAlgoImplemented={false} 
             minSpeed={100}
             maxSpeed={2000}
           />
