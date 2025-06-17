@@ -17,22 +17,41 @@ interface DutchNationalFlagCodePanelProps {
 export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchNationalFlagCodePanelProps) {
   const { toast } = useToast();
   
+  // Calculate initial languages based on the initial codeSnippets prop
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
     const initialLangs = Object.keys(codeSnippets);
-    return initialLangs.length > 0 && initialLangs.includes("JavaScript") ? "JavaScript" : (initialLangs.length > 0 ? initialLangs[0] : "Info");
+    return initialLangs.length > 0 && initialLangs.includes("JavaScript") 
+      ? "JavaScript" 
+      : (initialLangs.length > 0 ? initialLangs[0] : "Info");
   });
 
+  // Memoize languages derived from codeSnippets to use in dependencies and calculations
   const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
 
+  // Effect to update selectedLanguage if codeSnippets prop changes and current selection becomes invalid
   useEffect(() => {
-    // This effect synchronizes selectedLanguage if the available languages change
-    // and the current selectedLanguage is no longer valid.
-    if (languages.length > 0 && !languages.includes(selectedLanguage)) {
-      setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
-    } else if (languages.length === 0 && selectedLanguage !== "Info") {
-      setSelectedLanguage("Info");
+    const currentValidLanguages = Object.keys(codeSnippets); // Get languages from current prop
+    let newLanguageToSet = selectedLanguage; // Start with current state
+    let needsUpdate = false;
+
+    if (currentValidLanguages.length > 0) {
+      if (!currentValidLanguages.includes(selectedLanguage)) {
+        // If current selected language is not valid with new snippets, reset to default
+        newLanguageToSet = currentValidLanguages.includes("JavaScript") ? "JavaScript" : currentValidLanguages[0];
+        needsUpdate = true;
+      }
+    } else { // No languages available
+      if (selectedLanguage !== "Info") {
+        newLanguageToSet = "Info";
+        needsUpdate = true;
+      }
     }
-  }, [languages]); // Only re-run if `languages` (derived from `codeSnippets` prop) changes.
+    
+    // Only call setSelectedLanguage if the target language is different
+    if (needsUpdate) {
+      setSelectedLanguage(newLanguageToSet);
+    }
+  }, [codeSnippets]); // Only depend on codeSnippets. `selectedLanguage` is accessed from closure.
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -57,8 +76,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
   }, [selectedLanguage, codeSnippets]);
 
-  // Ensure tabValue is always valid, even if selectedLanguage is temporarily out of sync
-  // before useEffect kicks in (though less likely with the corrected useEffect).
+  // Ensure tabValue is always valid based on current `languages` and `selectedLanguage` state
   const tabValue = languages.includes(selectedLanguage) 
                    ? selectedLanguage 
                    : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
@@ -120,4 +138,3 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     </Card>
   );
 }
-
