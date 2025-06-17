@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -14,120 +13,8 @@ import { AlertTriangle } from 'lucide-react';
 import { RADIX_SORT_LINE_MAP, generateRadixSortSteps } from './radix-sort-logic';
 import { algorithmMetadata } from './metadata'; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // For auxiliary data display
+import { RADIX_SORT_CODE_SNIPPETS } from './RadixSortCodePanel';
 
-const RADIX_SORT_CODE_SNIPPETS = {
-  JavaScript: [
-    "// Radix Sort (JavaScript - LSD, using Counting Sort as helper)", 
-    "function radixSort(arr) {",                                
-    "  if (arr.length === 0) return arr;",
-    "  const maxVal = Math.max(...arr);",                       
-    "  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {", 
-    "    countingSortForRadix(arr, exp);",                      
-    "  }",
-    "  return arr;",                                            
-    "}",                                                        
-    "",
-    "function countingSortForRadix(arr, exp) {",                 
-    "  const n = arr.length;",                                  
-    "  const output = new Array(n);",                           
-    "  const count = new Array(10).fill(0);",                   
-    "",
-    "  for (let i = 0; i < n; i++) {",                           
-    "    const digit = Math.floor(arr[i] / exp) % 10;",         
-    "    count[digit]++;",                                      
-    "  }",                                                      
-    "",
-    "  for (let i = 1; i < 10; i++) {",                          
-    "    count[i] += count[i - 1];",                            
-    "  }",                                                      
-    "",
-    "  for (let i = n - 1; i >= 0; i--) {",                      
-    "    const digit = Math.floor(arr[i] / exp) % 10;",         
-    "    output[count[digit] - 1] = arr[i];",                   
-    "    count[digit]--;",                                      
-    "  }",                                                      
-    "",
-    "  for (let i = 0; i < n; i++) {",                           
-    "    arr[i] = output[i];",                                  
-    "  }",                                                      
-    "}",                                                        
-  ],
-  Python: [
-    "def counting_sort_for_radix(arr, exp):",
-    "    n = len(arr)",
-    "    output = [0] * n",
-    "    count = [0] * 10",
-    "    for i in range(n):",
-    "        index = arr[i] // exp",
-    "        count[index % 10] += 1",
-    "    for i in range(1, 10):",
-    "        count[i] += count[i - 1]",
-    "    i = n - 1",
-    "    while i >= 0:",
-    "        index = arr[i] // exp",
-    "        output[count[index % 10] - 1] = arr[i]",
-    "        count[index % 10] -= 1",
-    "        i -= 1",
-    "    for i in range(n):",
-    "        arr[i] = output[i]",
-    "",
-    "def radix_sort(arr):",
-    "    if not arr: return arr",
-    "    max_val = max(arr)",
-    "    exp = 1",
-    "    while max_val // exp > 0:",
-    "        counting_sort_for_radix(arr, exp)",
-    "        exp *= 10",
-    "    return arr",
-  ],
-   Java: [
-    "import java.util.Arrays;",
-    "class RadixSort {",
-    "    static void countingSort(int arr[], int n, int exp) {",
-    "        int output[] = new int[n];",
-    "        int count[] = new int[10];",
-    "        Arrays.fill(count, 0);",
-    "        for (int i = 0; i < n; i++) count[(arr[i] / exp) % 10]++;",
-    "        for (int i = 1; i < 10; i++) count[i] += count[i - 1];",
-    "        for (int i = n - 1; i >= 0; i--) {",
-    "            output[count[(arr[i] / exp) % 10] - 1] = arr[i];",
-    "            count[(arr[i] / exp) % 10]--;",
-    "        }",
-    "        for (int i = 0; i < n; i++) arr[i] = output[i];",
-    "    }",
-    "    static void radixSort(int arr[]) {",
-    "        if (arr.length == 0) return;",
-    "        int maxVal = arr[0];",
-    "        for (int i = 1; i < arr.length; i++) if (arr[i] > maxVal) maxVal = arr[i];",
-    "        for (int exp = 1; maxVal / exp > 0; exp *= 10)",
-    "            countingSort(arr, arr.length, exp);",
-    "    }",
-    "}",
-  ],
-  "C++": [
-    "#include <vector>",
-    "#include <algorithm> // For std::max_element",
-    "void countingSortForRadix(std::vector<int>& arr, int exp) {",
-    "    int n = arr.size();",
-    "    std::vector<int> output(n);",
-    "    std::vector<int> count(10, 0);",
-    "    for (int i = 0; i < n; i++) count[(arr[i] / exp) % 10]++;",
-    "    for (int i = 1; i < 10; i++) count[i] += count[i - 1];",
-    "    for (int i = n - 1; i >= 0; i--) {",
-    "        output[count[(arr[i] / exp) % 10] - 1] = arr[i];",
-    "        count[(arr[i] / exp) % 10]--;",
-    "    }",
-    "    for (int i = 0; i < n; i++) arr[i] = output[i];",
-    "}",
-    "void radixSort(std::vector<int>& arr) {",
-    "    if (arr.empty()) return;",
-    "    int maxVal = 0;",
-    "    if (!arr.empty()) maxVal = *std::max_element(arr.begin(), arr.end());",
-    "    for (int exp = 1; maxVal / exp > 0; exp *= 10)",
-    "        countingSortForRadix(arr, exp);",
-    "}",
-  ],
-};
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -151,8 +38,8 @@ export default function RadixSortVisualizerPage() {
   const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
 
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(isPlaying);
+  const [isFinished, setIsFinished] = useState(isFinished);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -201,7 +88,7 @@ export default function RadixSortVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(newSteps.length <= 1); // Finish if only one step (e.g. error or empty array)
+      setIsFinished(newSteps.length <= 1); 
 
 
       if (newSteps.length > 0) {
@@ -217,7 +104,7 @@ export default function RadixSortVisualizerPage() {
         setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
-        setIsPlaying(false); setIsFinished(true); // No steps to play
+        setIsPlaying(false); setIsFinished(true); 
     }
   }, [inputValue, parseInput, updateStateFromStep]);
 
@@ -288,9 +175,8 @@ export default function RadixSortVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false);
-    setIsFinished(false); // Allow playing new steps
-    setInputValue('170,45,75,90,802,24,2,66'); // Reset to default
-    // generateSteps will be called by useEffect due to inputValue change
+    setIsFinished(false); 
+    setInputValue('170,45,75,90,802,24,2,66'); 
   };
   
   const handleSpeedChange = (speedValue: number) => {
@@ -386,3 +272,4 @@ export default function RadixSortVisualizerPage() {
     </div>
   );
 }
+

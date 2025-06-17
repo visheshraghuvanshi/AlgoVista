@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,7 +19,7 @@ import { DequeOperationsCodePanel } from './DequeOperationsCodePanel';
 import { DequeOperationsVisualizationPanel } from './DequeOperationsVisualizationPanel';
 import { generateDequeSteps, type DequeAlgorithmStep, DEQUE_LINE_MAP } from './deque-logic';
 
-const DEFAULT_ANIMATION_SPEED = 600;
+const DEFAULT_ANIMATION_SPEED = 600; // Not used for discrete operations
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
 
@@ -34,14 +33,8 @@ export default function DequeOperationsVisualizerPage() {
   const [initialValuesInput, setInitialValuesInput] = useState("10,20,30");
   const [operationValueInput, setOperationValueInput] = useState("40");
 
-  const [steps, setSteps] = useState<DequeAlgorithmStep[]>([]);
   const [currentStep, setCurrentStep] = useState<DequeAlgorithmStep | null>(null);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true);
-  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
-  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Steps array and animation controls are not needed for fully discrete operations
 
   const dataStructureRef = useRef<(string | number)[]>([]);
 
@@ -56,8 +49,12 @@ export default function DequeOperationsVisualizerPage() {
   const initializeStructure = useCallback(() => {
     const parsed = parseValues(initialValuesInput);
     dataStructureRef.current = parsed;
-    const initialStepMessage = `Deque initialized with [${parsed.join(', ') || 'empty'}]`;
-    setCurrentStep({
+    let initialStepMessage = `Deque initialized.`;
+    if (parsed.length === 0) {
+      initialStepMessage = `Deque is empty.`;
+    }
+
+    const initialStepData: DequeAlgorithmStep = {
         array: [...parsed],
         activeIndices: [], swappingIndices: [], sortedIndices: [],
         currentLine: null, message: initialStepMessage,
@@ -66,31 +63,33 @@ export default function DequeOperationsVisualizerPage() {
         operationType: 'deque',
         lastOperation: "Initialize",
         processedValue: parsed.join(', ') || "empty"
-    });
-    setSteps([]); 
-    setIsFinished(true);
-    setCurrentStepIndex(0);
-  }, [initialValuesInput]);
+    };
+    setCurrentStep(initialStepData);
+  }, [initialValuesInput, selectedOperation]);
+
 
   useEffect(() => {
     setIsClient(true);
     initializeStructure();
   }, [initializeStructure]);
 
+
   const handleInitialValuesChange = (value: string) => {
     setInitialValuesInput(value);
+    const parsed = parseValues(value);
+    dataStructureRef.current = parsed;
+    const initialStepMessage = `Deque updated with new initial values.`;
+     const updatedInitialStep: DequeAlgorithmStep = {
+        array: [...parsed], activeIndices: [], swappingIndices: [], sortedIndices: [],
+        currentLine: null, message: initialStepMessage,
+        frontIndex: parsed.length > 0 ? 0 : -1,
+        rearIndex: parsed.length > 0 ? parsed.length - 1 : -1,
+        operationType: 'deque', lastOperation: "Set Initial Values", processedValue: parsed.join(', ') || "empty"
+    };
+    setCurrentStep(updatedInitialStep);
   };
   
-  const updateStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
-    }
-  }, [steps]);
-
   const handleExecuteOperation = () => {
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    
-    let newSteps: DequeAlgorithmStep[] = [];
     let opValue: string | number | undefined = operationValueInput.trim();
     if (opValue && !isNaN(Number(opValue))) opValue = Number(opValue);
 
@@ -100,66 +99,31 @@ export default function DequeOperationsVisualizerPage() {
         return;
     }
 
-    newSteps = generateDequeSteps([...dataStructureRef.current], selectedOperation, opValue);
-    if (newSteps.length > 0) {
-        dataStructureRef.current = [...newSteps[newSteps.length-1].array];
-    }
+    // For discrete operations, we generate just one "step" representing the result
+    const resultingSteps = generateDequeSteps([...dataStructureRef.current], selectedOperation, opValue);
+    const finalStep = resultingSteps[resultingSteps.length - 1];
     
-    setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateStateFromStep(0);
-    else { 
-        setCurrentStep({ 
-            array: [...dataStructureRef.current],
-            activeIndices: [], swappingIndices: [], sortedIndices: [],
-            currentLine: null, message: "Operation did not produce new steps or state.",
-            frontIndex: dataStructureRef.current.length > 0 ? 0 : -1,
-            rearIndex: dataStructureRef.current.length > 0 ? dataStructureRef.current.length - 1 : -1,
+    if (finalStep) {
+        dataStructureRef.current = [...finalStep.array];
+        setCurrentStep(finalStep);
+        toast({title: `${finalStep.lastOperation || 'Operation'} Complete`, description: finalStep.message});
+    } else {
+        const currentArrayState = [...dataStructureRef.current];
+        setCurrentStep({
+            array: currentArrayState, activeIndices: [], swappingIndices: [], sortedIndices: [],
+            currentLine: null, message: "Operation resulted in no change or an error.",
+            frontIndex: currentArrayState.length > 0 ? 0 : -1,
+            rearIndex: currentArrayState.length > 0 ? currentArrayState.length - 1 : -1,
             operationType: 'deque'
         });
     }
   };
 
-  useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length - 1) {
-      animationTimeoutRef.current = setTimeout(() => {
-        const nextStepIndex = currentStepIndex + 1;
-        setCurrentStepIndex(nextStepIndex);
-        updateStateFromStep(nextStepIndex);
-      }, animationSpeed);
-    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false);
-      setIsFinished(true);
-    }
-    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
-
-  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
-  const handlePause = () => setIsPlaying(false);
-  const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false);
-    const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
-    if (nextIdx === steps.length - 1) setIsFinished(true);
-  };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(true);
     setInitialValuesInput("10,20,30");
-    // initializeStructure will be called by initialValuesInput change.
+    initializeStructure(); 
     setOperationValueInput("40");
-    const parsed = parseValues("10,20,30");
-     dataStructureRef.current = parsed;
-     setCurrentStep({
-        array: [...parsed],
-        activeIndices: [], swappingIndices: [], sortedIndices: [],
-        currentLine: null, message: `Deque reset to default.`,
-        frontIndex: parsed.length > 0 ? 0 : -1,
-        rearIndex: parsed.length > 0 ? parsed.length - 1 : -1,
-        operationType: 'deque'
-    });
-    setSteps([]);
+    setSelectedOperation('addRear');
   };
 
   const algoDetails: AlgorithmDetailsProps = {
@@ -199,11 +163,11 @@ export default function DequeOperationsVisualizerPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-1">
                 <Label htmlFor="initialDequeValues">Initial Values (comma-sep)</Label>
-                <Input id="initialDequeValues" value={initialValuesInput} onChange={(e) => handleInitialValuesChange(e.target.value)} disabled={isPlaying}/>
+                <Input id="initialDequeValues" value={initialValuesInput} onChange={(e) => handleInitialValuesChange(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="dequeOp">Deque Operation</Label>
-                <Select value={selectedOperation} onValueChange={(val) => setSelectedOperation(val as DequeOperation)} disabled={isPlaying}>
+                <Select value={selectedOperation} onValueChange={(val) => setSelectedOperation(val as DequeOperation)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="addFront">Add Front</SelectItem>
@@ -218,27 +182,16 @@ export default function DequeOperationsVisualizerPage() {
               {(selectedOperation === 'addFront' || selectedOperation === 'addRear') && (
                 <div className="space-y-1">
                   <Label htmlFor="opValueDeque">Value to Add</Label>
-                  <Input id="opValueDeque" value={operationValueInput} onChange={(e) => setOperationValueInput(e.target.value)} disabled={isPlaying} />
+                  <Input id="opValueDeque" value={operationValueInput} onChange={(e) => setOperationValueInput(e.target.value)} />
                 </div>
               )}
             </div>
-            <Button onClick={handleExecuteOperation} disabled={isPlaying}>Execute Operation</Button>
+            <Button onClick={handleExecuteOperation} className="w-full md:w-auto">Execute Operation</Button>
 
             <div className="flex items-center justify-start pt-4 border-t">
-              <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Deque & Controls</Button>
+              <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Deque & Controls</Button>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-              <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
-                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
-                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
-              </div>
-              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
-                <Label htmlFor="speedControl">Animation Speed</Label>
-                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
-                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
-              </div>
-            </div>
+            {/* Play/Pause/Step/Speed controls removed as they are not suitable for discrete operations */}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -247,3 +200,4 @@ export default function DequeOperationsVisualizerPage() {
     </div>
   );
 }
+

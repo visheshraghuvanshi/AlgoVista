@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -19,7 +18,7 @@ import { STACK_QUEUE_CODE_SNIPPETS, StackQueueCodeSnippetsPanel } from './StackQ
 import { StackQueueVisualizationPanel } from './StackQueueVisualizationPanel';
 import { generateStackSteps, generateQueueSteps, type StackQueueAlgorithmStep, STACK_LINE_MAP, QUEUE_LINE_MAP } from './stack-queue-logic';
 
-const DEFAULT_ANIMATION_SPEED = 600;
+const DEFAULT_ANIMATION_SPEED = 600; // Not used as Play/Pause are removed
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
 
@@ -40,12 +39,7 @@ export default function StackQueueVisualizerPage() {
 
   const [steps, setSteps] = useState<StackQueueAlgorithmStep[]>([]);
   const [currentStep, setCurrentStep] = useState<StackQueueAlgorithmStep | null>(null);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true);
-  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
-  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // currentStepIndex and animation controls are less relevant for discrete operations
 
   const dataStructureRef = useRef<(string | number)[]>([]);
 
@@ -78,8 +72,6 @@ export default function StackQueueVisualizerPage() {
     };
     setCurrentStep(initialStepData);
     setSteps([initialStepData]); 
-    setIsFinished(true);
-    setCurrentStepIndex(0);
   }, [initialValuesInput, selectedStructure]);
 
 
@@ -91,18 +83,23 @@ export default function StackQueueVisualizerPage() {
 
   const handleInitialValuesChange = (value: string) => {
     setInitialValuesInput(value);
+     // Re-initialize with new values
+    const parsed = parseValues(value);
+    dataStructureRef.current = parsed;
+    const initialStepMessage = `${selectedStructure.charAt(0).toUpperCase() + selectedStructure.slice(1)} updated with new initial values.`;
+     const updatedInitialStep: StackQueueAlgorithmStep = {
+        array: [...parsed], activeIndices: [], swappingIndices: [], sortedIndices: [],
+        currentLine: null, message: initialStepMessage,
+        topIndex: selectedStructure === 'stack' ? (parsed.length > 0 ? parsed.length - 1 : -1) : undefined,
+        frontIndex: selectedStructure === 'queue' ? (parsed.length > 0 ? 0 : -1) : undefined,
+        rearIndex: selectedStructure === 'queue' ? (parsed.length > 0 ? parsed.length - 1 : -1) : undefined,
+        operationType: selectedStructure, lastOperation: "Set Initial Values", processedValue: parsed.join(', ') || "empty"
+    };
+    setCurrentStep(updatedInitialStep);
+    setSteps([updatedInitialStep]);
   };
   
-  const updateStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
-    }
-  }, [steps]);
-
   const handleExecuteOperation = () => {
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    
-    let newSteps: StackQueueAlgorithmStep[] = [];
     let opValue: string | number | undefined = operationValueInput.trim();
     if (opValue && !isNaN(Number(opValue))) opValue = Number(opValue);
 
@@ -111,64 +108,46 @@ export default function StackQueueVisualizerPage() {
         toast({title: "Input Needed", description: "Please provide a value for this operation.", variant: "destructive"});
         return;
     }
+    
+    let operationResultStep: StackQueueAlgorithmStep | undefined;
 
     if (selectedStructure === 'stack') {
-      newSteps = generateStackSteps([...dataStructureRef.current], selectedStackOp, opValue);
-      if (newSteps.length > 0) {
-          dataStructureRef.current = [...newSteps[newSteps.length-1].array];
-      }
+      const tempSteps = generateStackSteps([...dataStructureRef.current], selectedStackOp, opValue);
+      operationResultStep = tempSteps[tempSteps.length -1]; // Get the final state from generated steps
+      if(operationResultStep) dataStructureRef.current = [...operationResultStep.array];
     } else { 
-      newSteps = generateQueueSteps([...dataStructureRef.current], selectedQueueOp, opValue);
-       if (newSteps.length > 0) {
-          dataStructureRef.current = [...newSteps[newSteps.length-1].array];
-      }
+      const tempSteps = generateQueueSteps([...dataStructureRef.current], selectedQueueOp, opValue);
+      operationResultStep = tempSteps[tempSteps.length -1];
+      if(operationResultStep) dataStructureRef.current = [...operationResultStep.array];
     }
     
-    setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateStateFromStep(0);
-    else { // If no steps (e.g., error in logic or op not changing state)
-        setCurrentStep({ // Show current state
-            array: [...dataStructureRef.current],
-            activeIndices: [], swappingIndices: [], sortedIndices: [],
-            currentLine: null, message: "Operation did not produce new steps or state.",
-            topIndex: selectedStructure === 'stack' ? (dataStructureRef.current.length > 0 ? dataStructureRef.current.length - 1 : -1) : undefined,
-            frontIndex: selectedStructure === 'queue' ? (dataStructureRef.current.length > 0 ? 0 : -1) : undefined,
-            rearIndex: selectedStructure === 'queue' ? (dataStructureRef.current.length > 0 ? dataStructureRef.current.length - 1 : -1) : undefined,
+    if (operationResultStep) {
+        setCurrentStep(operationResultStep);
+        // For discrete ops, we might just show the final step, or a minimal sequence
+        // For simplicity now, just showing the final state of the operation.
+        setSteps([operationResultStep]); 
+        toast({title: `${operationResultStep.lastOperation || 'Operation'} Complete`, description: operationResultStep.message});
+    } else {
+        // Fallback if operation didn't produce a step (e.g., error handled in logic)
+        const currentArrayState = [...dataStructureRef.current];
+        setCurrentStep({
+            array: currentArrayState, activeIndices: [], swappingIndices: [], sortedIndices: [],
+            currentLine: null, message: "Operation resulted in no change or an error.",
+            topIndex: selectedStructure === 'stack' ? (currentArrayState.length > 0 ? currentArrayState.length - 1 : -1) : undefined,
+            frontIndex: selectedStructure === 'queue' ? (currentArrayState.length > 0 ? 0 : -1) : undefined,
+            rearIndex: selectedStructure === 'queue' ? (currentArrayState.length > 0 ? currentArrayState.length - 1 : -1) : undefined,
             operationType: selectedStructure
         });
+        setSteps(currentStep ? [currentStep] : []);
     }
   };
 
-  useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length - 1) {
-      animationTimeoutRef.current = setTimeout(() => {
-        const nextStepIndex = currentStepIndex + 1;
-        setCurrentStepIndex(nextStepIndex);
-        updateStateFromStep(nextStepIndex);
-      }, animationSpeed);
-    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false);
-      setIsFinished(true);
-    }
-    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
-
-  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
-  const handlePause = () => setIsPlaying(false);
-  const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false);
-    const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
-    if (nextIdx === steps.length - 1) setIsFinished(true);
-  };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(true);
     setInitialValuesInput("10,20,30");
-    initializeStructure(); // This will use the new initialValuesInput due to state update cycle
+    // initializeStructure will be called by initialValuesInput change.
     setOperationValueInput("40");
+    setSelectedStackOp('push');
+    setSelectedQueueOp('enqueue');
   };
 
   const algoDetails: AlgorithmDetailsProps = {
@@ -211,15 +190,14 @@ export default function StackQueueVisualizerPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-1">
                 <Label htmlFor="initialValues">Initial Values (comma-sep)</Label>
-                <Input id="initialValues" value={initialValuesInput} onChange={(e) => handleInitialValuesChange(e.target.value)} disabled={isPlaying}/>
+                <Input id="initialValues" value={initialValuesInput} onChange={(e) => handleInitialValuesChange(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="structureType">Structure Type</Label>
                 <Select value={selectedStructure} onValueChange={(val) => {
                     setSelectedStructure(val as StructureType);
-                    // dataStructureRef.current = parseValues(initialValuesInput); // Ensure ref is updated
                     initializeStructure(); 
-                }} disabled={isPlaying}>
+                }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="stack">Stack</SelectItem>
@@ -230,7 +208,7 @@ export default function StackQueueVisualizerPage() {
               {selectedStructure === 'stack' && (
                 <div className="space-y-1">
                   <Label htmlFor="stackOp">Stack Operation</Label>
-                  <Select value={selectedStackOp} onValueChange={(val) => setSelectedStackOp(val as StackOperation)} disabled={isPlaying}>
+                  <Select value={selectedStackOp} onValueChange={(val) => setSelectedStackOp(val as StackOperation)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="push">Push</SelectItem>
@@ -243,7 +221,7 @@ export default function StackQueueVisualizerPage() {
               {selectedStructure === 'queue' && (
                 <div className="space-y-1">
                   <Label htmlFor="queueOp">Queue Operation</Label>
-                  <Select value={selectedQueueOp} onValueChange={(val) => setSelectedQueueOp(val as QueueOperation)} disabled={isPlaying}>
+                  <Select value={selectedQueueOp} onValueChange={(val) => setSelectedQueueOp(val as QueueOperation)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="enqueue">Enqueue</SelectItem>
@@ -257,26 +235,15 @@ export default function StackQueueVisualizerPage() {
             {((selectedStructure === 'stack' && selectedStackOp === 'push') || (selectedStructure === 'queue' && selectedQueueOp === 'enqueue') )&& (
               <div className="space-y-1 max-w-xs">
                 <Label htmlFor="opValue">Value to {selectedStructure === 'stack' ? 'Push' : 'Enqueue'}</Label>
-                <Input id="opValue" value={operationValueInput} onChange={(e) => setOperationValueInput(e.target.value)} disabled={isPlaying} />
+                <Input id="opValue" value={operationValueInput} onChange={(e) => setOperationValueInput(e.target.value)} />
               </div>
             )}
-            <Button onClick={handleExecuteOperation} disabled={isPlaying}>Execute Operation</Button>
+            <Button onClick={handleExecuteOperation} className="w-full md:w-auto">Execute Operation</Button>
 
             <div className="flex items-center justify-start pt-4 border-t">
-              <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Structure & Controls</Button>
+              <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Structure & Controls</Button>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-              <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
-                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
-                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
-              </div>
-              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
-                <Label htmlFor="speedControl">Animation Speed</Label>
-                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
-                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
-              </div>
-            </div>
+            {/* Removed Play/Pause/Step/Speed controls as they are not suitable for discrete operations */}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -285,3 +252,4 @@ export default function StackQueueVisualizerPage() {
     </div>
   );
 }
+

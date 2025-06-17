@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -7,7 +6,7 @@ import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2 } from 'lucide-react';
+import { AlertTriangle, Construction, Code2, Sigma } from 'lucide-react'; // Using Sigma for Sum
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { SegmentTreeCodePanel } from './SegmentTreeCodePanel';
+import { SegmentTreeCodePanel, SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG } from './SegmentTreeCodePanel';
 import { generateSegmentTreeSteps, SEGMENT_TREE_LINE_MAP, type SegmentTreeOperation } from './segment-tree-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
-// Re-using SortingControlsPanel for basic animation controls
+import { algorithmMetadata } from './metadata'; 
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -33,32 +31,30 @@ export default function SegmentTreeVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
 
-  const [inputValue, setInputValue] = useState("1,3,5,7,9,11"); // For initial array
+  const [inputValue, setInputValue] = useState("1,3,5,7,9,11"); 
   const [selectedOperation, setSelectedOperation] = useState<SegmentTreeOperation>('build');
   
-  // For Query operation
   const [queryLeft, setQueryLeft] = useState("1");
-  const [queryRight, setQueryRight] = useState("4"); // Exclusive
+  const [queryRight, setQueryRight] = useState("4"); 
 
-  // For Update operation
   const [updateIndex, setUpdateIndex] = useState("2");
   const [updateValue, setUpdateValue] = useState("10");
   
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [displayedData, setDisplayedData] = useState<number[]>([]); // Shows the segment tree array
+  const [displayedData, setDisplayedData] = useState<number[]>([]); 
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [auxiliaryDisplay, setAuxiliaryDisplay] = useState<Record<string, string|number> | null>(null);
 
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [isFinished, setIsFinished] = useState(isFinished);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const segmentTreeArrayRef = useRef<number[]>([]); // Stores the built segment tree array
-  const originalArraySizeRef = useRef<number>(0); // Stores N
+  const segmentTreeArrayRef = useRef<number[]>([]); 
+  const originalArraySizeRef = useRef<number>(0); 
 
   useEffect(() => {
     setIsClient(true);
@@ -71,6 +67,9 @@ export default function SegmentTreeVisualizerPage() {
       toast({ title: "Invalid Input", description: "Please enter comma-separated numbers.", variant: "destructive" });
       return null;
     }
+    if (parsed.length > 12) { // Limit size for better visualization
+        toast({ title: "Input Too Long", description: "Max 12 numbers for optimal visualization.", variant: "default"});
+    }
     if (parsed.some(n => n > 999 || n < -999)) {
       toast({ title: "Input out of range", description: "Numbers must be between -999 and 999.", variant: "destructive" });
       return null;
@@ -81,7 +80,7 @@ export default function SegmentTreeVisualizerPage() {
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
-      setDisplayedData(currentS.array);
+      setDisplayedData(currentS.array); // This is the segment tree array
       setActiveIndices(currentS.activeIndices);
       setCurrentLine(currentS.currentLine);
       setAuxiliaryDisplay(currentS.auxiliaryData || null);
@@ -105,7 +104,7 @@ export default function SegmentTreeVisualizerPage() {
         newSteps = generateSegmentTreeSteps('build', parsedInitialArray, [], originalArraySizeRef.current);
         if (newSteps.length > 0) segmentTreeArrayRef.current = [...newSteps[newSteps.length -1].array];
          toast({title: "Segment Tree Build", description: "Steps generated for building."});
-    } else { // Query or Update
+    } else { 
         if (segmentTreeArrayRef.current.length === 0 || originalArraySizeRef.current === 0) {
             toast({title: "Build Tree First", description: "Please build the segment tree before querying or updating.", variant: "destructive"});
             return;
@@ -127,7 +126,7 @@ export default function SegmentTreeVisualizerPage() {
                 return;
             }
             newSteps = generateSegmentTreeSteps('update', [], segmentTreeArrayRef.current, originalArraySizeRef.current, undefined, undefined, uIdx, uVal);
-             if (newSteps.length > 0) segmentTreeArrayRef.current = [...newSteps[newSteps.length-1].array]; // Persist update
+             if (newSteps.length > 0) segmentTreeArrayRef.current = [...newSteps[newSteps.length-1].array]; 
             toast({title: "Update Operation", description: "Steps generated for update."});
         }
     }
@@ -141,10 +140,9 @@ export default function SegmentTreeVisualizerPage() {
 
   }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast, updateStateFromStep]);
 
-  useEffect(() => { // Initial build on load
+  useEffect(() => { 
     if (selectedOperation === 'build') handleExecuteOperation();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOperation, inputValue]); // Rebuild if input or op (to build) changes
+  }, [selectedOperation, inputValue, handleExecuteOperation]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -177,7 +175,6 @@ export default function SegmentTreeVisualizerPage() {
     setQueryLeft("1"); setQueryRight("4");
     setUpdateIndex("2"); setUpdateValue("10");
     segmentTreeArrayRef.current = []; originalArraySizeRef.current = 0;
-    // handleExecuteOperation will be called by useEffect
   };
 
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -195,28 +192,31 @@ export default function SegmentTreeVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
+          <Sigma className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Sigma for Sum */}
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Visualizing array representation: Build, Query (Sum), Update.
+            Visualizing array representation: Build, Query (Sum), Update. Tree is 1-indexed conceptually, array is 0-indexed with leaves at N to 2N-1.
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
             <div className="lg:w-3/5 xl:w-2/3">
                 <VisualizationPanel
-                    data={displayedData}
+                    data={displayedData} // This will show the segment tree array
                     activeIndices={activeIndices}
                     swappingIndices={[]} sortedIndices={[]}
                 />
                  {auxiliaryDisplay && (
                     <Card className="mt-4">
-                        <CardHeader><CardTitle className="text-sm font-medium">Operation Result</CardTitle></CardHeader>
-                        <CardContent className="text-sm">
-                            {Object.entries(auxiliaryDisplay).map(([key, value]) => (
-                                <p key={key}><strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value.toString()}</p>
-                            ))}
+                        <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Operation Details</CardTitle></CardHeader>
+                        <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
+                            {Object.entries(auxiliaryDisplay).map(([key, value]) => {
+                                if (key === 'pArray' || key === 'nMatrices') return null; // Don't re-display input array
+                                return (
+                                <p key={key}><strong>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:</strong> {value.toString()}</p>
+                            );})}
                         </CardContent>
                     </Card>
                 )}
@@ -231,7 +231,7 @@ export default function SegmentTreeVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="arrayInput">Initial Array (comma-separated)</Label>
+                <Label htmlFor="arrayInput">Initial Array (comma-sep, max 12)</Label>
                 <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="e.g., 1,3,5,7" disabled={isPlaying && selectedOperation !== 'build'} />
               </div>
               <div className="space-y-2">
@@ -255,7 +255,7 @@ export default function SegmentTreeVisualizerPage() {
             )}
             {selectedOperation === 'update' && (
                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"> <Label htmlFor="updateIndex">Index to Update</Label> <Input id="updateIndex" type="number" value={updateIndex} onChange={e=>setUpdateIndex(e.target.value)} disabled={isPlaying}/> </div>
+                    <div className="space-y-2"> <Label htmlFor="updateIndex">Index to Update (original array)</Label> <Input id="updateIndex" type="number" value={updateIndex} onChange={e=>setUpdateIndex(e.target.value)} disabled={isPlaying}/> </div>
                     <div className="space-y-2"> <Label htmlFor="updateValue">New Value</Label> <Input id="updateValue" type="number" value={updateValue} onChange={e=>setUpdateValue(e.target.value)} disabled={isPlaying}/> </div>
                 </div>
             )}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -77,6 +76,7 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "",
       "    def _hash(self, key):",
       "        hash_value = 0",
+      "        # Simple hash: sum of char codes modulo size",
       "        for char_code in map(ord, str(key)):",
       "            hash_value = (hash_value + char_code) % self.size",
       "        return hash_value",
@@ -87,9 +87,9 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "        bucket = self.buckets[index]",
       "        for i, (k, v) in enumerate(bucket):",
       "            if k == key:",
-      "                bucket[i] = (key, value)",
+      "                bucket[i] = (key, value) # Update",
       "                return",
-      "        bucket.append((key, value))",
+      "        bucket.append((key, value, )) # Insert new",
     ],
     search: [
       "    def search(self, key):",
@@ -98,7 +98,7 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "        for k, v in bucket:",
       "            if k == key:",
       "                return v",
-      "        return None",
+      "        return None # Not found",
     ],
     delete: [
       "    def delete(self, key):",
@@ -108,7 +108,7 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "            if k == key:",
       "                bucket.pop(i)",
       "                return True",
-      "        return False",
+      "        return False # Not found",
     ],
   },
   Java: {
@@ -119,13 +119,13 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "    private class Entry { K key; V value; Entry(K k, V v){key=k;value=v;} }",
       "    private ArrayList<LinkedList<Entry>> buckets;",
       "    private int size;",
-      "    public HashTable(int size) {",
-      "        this.size = size;",
-      "        this.buckets = new ArrayList<>(size);",
-      "        for (int i = 0; i < size; i++) buckets.add(new LinkedList<>());",
+      "    public HashTable(int tableSize) {", // Renamed parameter to avoid conflict
+      "        this.size = tableSize;",
+      "        this.buckets = new ArrayList<>(tableSize);",
+      "        for (int i = 0; i < tableSize; i++) buckets.add(new LinkedList<>());",
       "    }",
       "    private int hash(K key) {",
-      "        return Math.abs(key.toString().hashCode() % size);",
+      "        return Math.abs(key.toString().hashCode() % size);", // Ensure positive index
       "    }",
     ],
     insert: [
@@ -152,9 +152,11 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "    public boolean delete(K key) {",
       "        int index = hash(key);",
       "        LinkedList<Entry> bucket = buckets.get(index);",
-      "        for (Entry entry : bucket) {",
+      "        for (Entry entry : bucket) {", // Note: ConcurrentModificationException possible if removing while iterating this way
       "            if (entry.key.equals(key)) { bucket.remove(entry); return true; }",
       "        }",
+      "        // Better way for Java: Iterator or removeIf",
+      "        // return bucket.removeIf(entry -> entry.key.equals(key));",
       "        return false;",
       "    }",
       "}",
@@ -166,15 +168,20 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "#include <list>",
       "#include <string>",
       "#include <functional> // For std::hash",
+      "#include <memory>     // For std::unique_ptr or std::shared_ptr if managing complex objects",
       "template<typename K, typename V>",
       "class HashTable {",
       "private:",
       "    struct Entry { K key; V value; };",
       "    std::vector<std::list<Entry>> buckets;",
       "    int table_size;",
-      "    int hash_function(K key) {",
-      "        // Simple string conversion for hash; better hashing for non-strings needed",
-      "        return std::hash<std::string>{}(std::to_string(key)) % table_size;",
+      "    int hash_function(const K& key) {", // Pass by const ref
+      "        // Convert key to string for std::hash<std::string>",
+      "        // This is a placeholder; more robust string conversion or specialized hash needed for non-string K",
+      "        std::string key_str; ",
+      "        if constexpr (std::is_same_v<K, std::string>) { key_str = key; }",
+      "        else { key_str = std::to_string(key); }",
+      "        return std::hash<std::string>{}(key_str) % table_size;",
       "    }",
       "public:",
       "    HashTable(int size = 10) : table_size(size) {",
@@ -182,7 +189,7 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "    }",
     ],
     insert: [
-      "    void insert(K key, V value) {",
+      "    void insert(const K& key, const V& value) {",
       "        int index = hash_function(key);",
       "        for (auto& entry : buckets[index]) {",
       "            if (entry.key == key) { entry.value = value; return; }",
@@ -191,16 +198,16 @@ const HASH_TABLE_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
       "    }",
     ],
     search: [
-      "    V search(K key, bool& found) {",
+      "    V search(const K& key, bool& found) {", // Pass found by reference
       "        int index = hash_function(key);",
       "        for (const auto& entry : buckets[index]) {",
       "            if (entry.key == key) { found = true; return entry.value; }",
       "        }",
-      "        found = false; return V{}; // Default value if not found",
+      "        found = false; return V{}; // Return default-constructed V if not found",
       "    }",
     ],
     delete: [
-      "    bool remove(K key) {",
+      "    bool remove(const K& key) {",
       "        int index = hash_function(key);",
       "        auto& bucket = buckets[index];",
       "        for (auto it = bucket.begin(); it != bucket.end(); ++it) {",
@@ -233,8 +240,19 @@ export function HashTableCodePanel({ currentLine, selectedOperation }: HashTable
 
   const handleCopyCode = () => {
     const opCodeString = codeToDisplay.join('\n');
-    const fullCode = (effectiveOp !== 'structure' ? (structureCode.join('\n') + '\n\n  // Operation:\n  ' + opCodeString.split('\n').map(line => `  ${line}`).join('\n') + '\n}') : structureCode.join('\n') );
-
+    let fullCode = "";
+    if (effectiveOp !== 'structure') {
+        const baseStructure = structureCode.join('\n');
+        const operationIndented = opCodeString.split('\n').map(line => `    ${line}`).join('\n'); // Indent op methods
+        if (selectedLanguage === "JavaScript" || selectedLanguage === "Java" || selectedLanguage === "C++") {
+            fullCode = `${baseStructure}\n${operationIndented}\n}`; // Close class
+        } else if (selectedLanguage === "Python") {
+             fullCode = `${baseStructure}\n${operationIndented}`; // Python uses indentation
+        }
+    } else {
+        fullCode = structureCode.join('\n');
+    }
+    
     if (fullCode) {
       navigator.clipboard.writeText(fullCode)
         .then(() => toast({ title: `${selectedLanguage} HashTable Code Copied!` }))
@@ -248,7 +266,7 @@ export function HashTableCodePanel({ currentLine, selectedOperation }: HashTable
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> Code: {operationTitle}
+            <Code2 className="mr-2 h-5 w-5" /> Code: Hash Table {operationTitle}
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
           <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
@@ -264,7 +282,7 @@ export function HashTableCodePanel({ currentLine, selectedOperation }: HashTable
             ))}
           </TabsList>
           <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-            <pre className="font-code text-sm p-4 whitespace-pre-wrap">
+            <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
               {effectiveOp !== 'structure' && structureCode.length > 0 && (
                 <>
                   {structureCode.map((line, index) => (
@@ -283,9 +301,9 @@ export function HashTableCodePanel({ currentLine, selectedOperation }: HashTable
                 >
                   <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                     {/* Line numbers relative to the specific operation snippet for highlighting */}
-                    {index + 1} 
+                    {index + 1 + (effectiveOp !== 'structure' ? structureCode.length +1 : 0) } 
                   </span>
-                  {effectiveOp !== 'structure' && !line.startsWith("}") && !line.startsWith("public") && !line.startsWith("private") && !line.startsWith("#include") && !line.startsWith("template") && !line.startsWith("class") ? `    ${line}` : line}
+                  {line}
                 </div>
               ))}
             </pre>

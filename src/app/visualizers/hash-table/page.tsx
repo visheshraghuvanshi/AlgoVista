@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -8,7 +7,7 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import type { AlgorithmMetadata, HashTableStep, HashTableEntry, HashValue } from '@/types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, KeyRound, TabletSmartphone, PlusCircle, SearchIcon, Trash2 } from 'lucide-react'; // Replaced Search with SearchIcon
+import { Play, Pause, SkipForward, RotateCcw, KeyRound, TabletSmartphone, PlusCircle, SearchIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
@@ -19,7 +18,7 @@ import { HashTableVisualizationPanel } from './HashTableVisualizationPanel';
 import { HashTableCodePanel } from './HashTableCodePanel';
 import { generateHashTableSteps, createInitialHashTable, HASH_TABLE_LINE_MAP } from './hash-table-logic';
 
-const DEFAULT_ANIMATION_SPEED = 700;
+const DEFAULT_ANIMATION_SPEED = 700; // Not used as operations are discrete
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
 const DEFAULT_TABLE_SIZE = 7;
@@ -35,21 +34,19 @@ export default function HashTableVisualizerPage() {
   const [valueInput, setValueInput] = useState<HashValue>("Alice");
   const [selectedOperation, setSelectedOperation] = useState<HashTableOperationType>('insert');
   
-  const [steps, setSteps] = useState<HashTableStep[]>([]);
   const [currentStep, setCurrentStep] = useState<HashTableStep | null>(null);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true);
-  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
-  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Steps array and animation controls are less relevant for discrete operations
 
   const hashTableRef = useRef<HashTableEntry[][]>(createInitialHashTable(DEFAULT_TABLE_SIZE));
+  const [insertedWords, setInsertedWords] = useState<string[]>([]); // For displaying current state
 
-  useEffect(() => { setIsClient(true); }, []);
-  
+  useEffect(() => { 
+    setIsClient(true); 
+    initializeTable();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const initializeTable = useCallback(() => {
-    if (tableSize < 1 || tableSize > 20) { // Added max size
+    if (tableSize < 1 || tableSize > 20) {
         toast({title: "Invalid Table Size", description: "Size must be between 1 and 20.", variant: "destructive"});
         return;
     }
@@ -59,66 +56,68 @@ export default function HashTableVisualizerPage() {
         activeIndices: [], swappingIndices: [], sortedIndices: [],
     };
     setCurrentStep(initialStep);
-    setSteps([initialStep]);
-    setIsFinished(true);
-    setCurrentStepIndex(0);
+    setInsertedWords([]); // Clear displayed words on re-init
   }, [tableSize, toast]);
 
   useEffect(() => {
     initializeTable();
   }, [tableSize, initializeTable]);
-
-  const updateStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
-  }, [steps]);
   
   const handleExecuteOperation = () => {
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    
-    const currentKey = isNaN(Number(keyInput)) ? String(keyInput) : Number(keyInput);
-    const currentValue = (selectedOperation === 'insert' && valueInput !== undefined) 
-                          ? (isNaN(Number(valueInput)) ? String(valueInput) : Number(valueInput))
-                          : undefined;
+    const currentKeyStr = String(keyInput).trim();
+    const currentValueStr = String(valueInput).trim();
 
-    if (String(currentKey).trim() === "") {
+    if (currentKeyStr === "") {
         toast({title: "Invalid Key", description: "Key cannot be empty.", variant: "destructive"}); return;
     }
-    if (selectedOperation === 'insert' && String(currentValue).trim() === "") {
-        toast({title: "Invalid Value", description: "Value cannot be empty for insert.", variant: "destructive"}); return;
+    const currentKey: HashValue = isNaN(Number(currentKeyStr)) ? currentKeyStr : Number(currentKeyStr);
+    
+    let currentValue: HashValue | undefined;
+    if (selectedOperation === 'insert') {
+        if (currentValueStr === "") {
+            toast({title: "Invalid Value", description: "Value cannot be empty for insert.", variant: "destructive"}); return;
+        }
+        currentValue = isNaN(Number(currentValueStr)) ? currentValueStr : Number(currentValueStr);
     }
 
-    const newSteps = generateHashTableSteps(hashTableRef.current, tableSize, selectedOperation as 'insert'|'search'|'delete', currentKey, currentValue);
-    setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) {
-        updateStateFromStep(0);
-        hashTableRef.current = newSteps[newSteps.length - 1].buckets; // Persist final state
+    // For discrete operations, we just generate the final state after the operation
+    const resultingSteps = generateHashTableSteps(hashTableRef.current, tableSize, selectedOperation as 'insert'|'search'|'delete', currentKey, currentValue);
+    const finalStep = resultingSteps[resultingSteps.length - 1]; // The outcome of the operation
+    
+    if (finalStep) {
+        hashTableRef.current = [...finalStep.buckets]; // Persist the new state
+        setCurrentStep(finalStep); // Display the final state
+        
+        if (selectedOperation === 'insert') {
+            const wordKey = String(finalStep.currentKey);
+            if (!insertedWords.includes(wordKey) || (insertedWords.includes(wordKey) && finalStep.message?.includes("Updated"))) {
+               const newInserted = new Set(insertedWords);
+               newInserted.add(wordKey);
+               setInsertedWords(Array.from(newInserted).sort());
+            }
+        } else if (selectedOperation === 'delete' && finalStep.message?.includes("Removed")) {
+            const wordKey = String(finalStep.currentKey);
+            setInsertedWords(prev => prev.filter(w => w !== wordKey));
+        }
+
+        toast({title: `${selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)} Complete`, description: finalStep.message});
     } else {
-        setCurrentStep({ ...currentStep!, message: "Operation did not produce steps." });
+        // Show current state if operation failed or produced no steps
+        const currentTableState = [...hashTableRef.current];
+         setCurrentStep({
+            buckets: currentTableState, tableSize, operation: selectedOperation,
+            message: "Operation did not change state or an error occurred.", currentLine: null,
+            activeIndices: [], swappingIndices: [], sortedIndices: []
+        });
     }
   };
 
-  useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length - 1) {
-      animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
-      }, animationSpeed);
-    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
-    }
-    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
-
-  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
-  const handlePause = () => setIsPlaying(false);
-  const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
-    if (nextIdx === steps.length - 1) setIsFinished(true);
+  const handleReset = () => { 
+    setTableSize(DEFAULT_TABLE_SIZE); // This will trigger initializeTable via useEffect
+    setKeyInput("name");
+    setValueInput("Alice");
+    setSelectedOperation('insert');
   };
-  const handleReset = () => { setIsPlaying(false); setIsFinished(true); setTableSize(DEFAULT_TABLE_SIZE); /* initializeTable called by useEffect */ };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
@@ -149,11 +148,11 @@ export default function HashTableVisualizerPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
               <div className="space-y-1">
                 <Label htmlFor="tableSizeInput">Table Size (1-20)</Label>
-                <Input id="tableSizeInput" type="number" value={tableSize} onChange={e => setTableSize(Math.min(20, Math.max(1, parseInt(e.target.value) || 1 )))} min="1" max="20" disabled={isPlaying}/>
+                <Input id="tableSizeInput" type="number" value={tableSize} onChange={e => setTableSize(Math.min(20, Math.max(1, parseInt(e.target.value) || 1 )))} min="1" max="20"/>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="htOperationSelect">Operation</Label>
-                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as HashTableOperationType)} disabled={isPlaying}>
+                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as HashTableOperationType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="insert">Insert (Key, Value)</SelectItem>
@@ -164,34 +163,28 @@ export default function HashTableVisualizerPage() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="keyInputHT">Key (string/number)</Label>
-                <Input id="keyInputHT" value={keyInput.toString()} onChange={e => setKeyInput(e.target.value)} disabled={isPlaying} />
+                <Input id="keyInputHT" value={keyInput.toString()} onChange={e => setKeyInput(e.target.value)} />
               </div>
               {selectedOperation === 'insert' && (
                 <div className="space-y-1">
                   <Label htmlFor="valueInputHT">Value (string/number)</Label>
-                  <Input id="valueInputHT" value={valueInput.toString()} onChange={e => setValueInput(e.target.value)} disabled={isPlaying} />
+                  <Input id="valueInputHT" value={valueInput.toString()} onChange={e => setValueInput(e.target.value)} />
                 </div>
               )}
             </div>
-            <Button onClick={handleExecuteOperation} disabled={isPlaying} className="w-full md:w-auto">
-                {selectedOperation === 'insert' ? <PlusCircle /> : selectedOperation === 'search' ? <SearchIcon /> : <Trash2 />}
+            <Button onClick={handleExecuteOperation} className="w-full md:w-auto">
+                {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4" /> : selectedOperation === 'search' ? <SearchIcon className="mr-2 h-4 w-4" /> : <Trash2 className="mr-2 h-4 w-4" />}
                 Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
             </Button>
             
             <div className="flex items-center justify-start pt-4 border-t">
-                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Table & Controls</Button>
+                <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Hash Table & Controls</Button>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-              <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
-                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
-                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
-              </div>
-              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
-                <Label htmlFor="speedControl">Animation Speed</Label>
-                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
-                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
-              </div>
+             <div className="mt-2 p-2 border rounded-md bg-background">
+                <p className="text-xs font-semibold text-muted-foreground">Current Keys in Table:</p>
+                <div className="flex flex-wrap gap-1 text-xs">
+                    {insertedWords.length > 0 ? insertedWords.map((w, i) => <Badge key={i} variant="secondary">{w}</Badge>) : "(empty)"}
+                </div>
             </div>
           </CardContent>
         </Card>
@@ -201,3 +194,4 @@ export default function HashTableVisualizerPage() {
     </div>
   );
 }
+

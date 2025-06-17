@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -11,40 +10,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const RADIX_SORT_CODE_SNIPPETS = {
   JavaScript: [
-    "// Radix Sort (JavaScript - LSD, using Counting Sort as helper)", // Conceptual comment
-    "function radixSort(arr) {",                                // 1
+    "// Radix Sort (JavaScript - LSD, using Counting Sort as helper)", 
+    "function radixSort(arr) {",                                
     "  if (arr.length === 0) return arr;",
-    "  const maxVal = Math.max(...arr);",                       // 2
-    "  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {", // 3
-    "    countingSortForRadix(arr, exp);",                      // 4
+    "  const maxVal = Math.max(...arr);",                       
+    "  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {", 
+    "    countingSortForRadix(arr, exp);",                      
     "  }",
-    "  return arr;",                                            // 6 (Adjusted mapping to RADIX_SORT_LINE_MAP)
-    "}",                                                        // 7
+    "  return arr;",                                            
+    "}",                                                        
     "",
-    "function countingSortForRadix(arr, exp) {",                 // 8
-    "  const n = arr.length;",                                  // 9
-    "  const output = new Array(n);",                           // 10
-    "  const count = new Array(10).fill(0);",                   // 11
+    "function countingSortForRadix(arr, exp) {",                 
+    "  const n = arr.length;",                                  
+    "  const output = new Array(n);",                           
+    "  const count = new Array(10).fill(0);",                   
     "",
-    "  for (let i = 0; i < n; i++) {",                           // 12
-    "    const digit = Math.floor(arr[i] / exp) % 10;",         // 13
-    "    count[digit]++;",                                      // 14
-    "  }",                                                      // 15
+    "  for (let i = 0; i < n; i++) {",                           
+    "    const digit = Math.floor(arr[i] / exp) % 10;",         
+    "    count[digit]++;",                                      
+    "  }",                                                      
     "",
-    "  for (let i = 1; i < 10; i++) {",                          // 16
-    "    count[i] += count[i - 1];",                            // 17
-    "  }",                                                      // 18
+    "  for (let i = 1; i < 10; i++) {",                          
+    "    count[i] += count[i - 1];",                            
+    "  }",                                                      
     "",
-    "  for (let i = n - 1; i >= 0; i--) {",                      // 19
-    "    const digit = Math.floor(arr[i] / exp) % 10;",         // 20
-    "    output[count[digit] - 1] = arr[i];",                   // 21
-    "    count[digit]--;",                                      // 22
-    "  }",                                                      // 23
+    "  for (let i = n - 1; i >= 0; i--) {",                      
+    "    const digit = Math.floor(arr[i] / exp) % 10;",         
+    "    output[count[digit] - 1] = arr[i];",                   
+    "    count[digit]--;",                                      
+    "  }",                                                      
     "",
-    "  for (let i = 0; i < n; i++) {",                           // 24
-    "    arr[i] = output[i];",                                  // 25
-    "  }",                                                      // 26
-    "}",                                                        // 27
+    "  for (let i = 0; i < n; i++) {",                           
+    "    arr[i] = output[i];",                                  
+    "  }",                                                      
+    "}",                                                        
   ],
   Python: [
     "def counting_sort_for_radix(arr, exp):",
@@ -193,8 +192,8 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
             </TabsList>
             {languages.map((lang) => (
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                  <pre className="font-code text-sm p-4">
+                <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                  <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-line-${index}`}
@@ -217,7 +216,7 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
             </ScrollArea>
@@ -227,3 +226,4 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
     </Card>
   );
 }
+

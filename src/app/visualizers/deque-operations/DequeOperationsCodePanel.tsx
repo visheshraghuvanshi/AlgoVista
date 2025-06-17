@@ -11,33 +11,33 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const DEQUE_OPERATIONS_CODE_SNIPPETS: Record<string, string[]> = {
   JavaScript: [
-    "// Deque (Conceptual using Array)",                // 0
-    "class Deque {",                                     // 1 (DEQUE_LINE_MAP.classDef)
-    "  constructor() { this.items = []; }",              // 2 (DEQUE_LINE_MAP.constructor)
-    "  addFront(element) {",                             // 3 (DEQUE_LINE_MAP.addFrontStart)
-    "    this.items.unshift(element);",                  // 4 (DEQUE_LINE_MAP.addFrontOp)
-    "  }",                                               // 5 (DEQUE_LINE_MAP.addFrontEnd)
-    "  addRear(element) {",                              // 6 (DEQUE_LINE_MAP.addRearStart)
-    "    this.items.push(element);",                     // 7 (DEQUE_LINE_MAP.addRearOp)
-    "  }",                                               // 8 (DEQUE_LINE_MAP.addRearEnd)
-    "  removeFront() {",                                 // 9 (DEQUE_LINE_MAP.removeFrontStart)
-    "    if (this.isEmpty()) return null;",             // 10 (DEQUE_LINE_MAP.removeFrontCheckEmpty)
-    "    return this.items.shift();",                    // 11 (DEQUE_LINE_MAP.removeFrontOp)
-    "  }",                                               // 12 (DEQUE_LINE_MAP.removeFrontEnd)
-    "  removeRear() {",                                  // 13 (DEQUE_LINE_MAP.removeRearStart)
-    "    if (this.isEmpty()) return null;",             // 14 (DEQUE_LINE_MAP.removeRearCheckEmpty)
-    "    return this.items.pop();",                      // 15 (DEQUE_LINE_MAP.removeRearOp)
-    "  }",                                               // 16 (DEQUE_LINE_MAP.removeRearEnd)
-    "  peekFront() {",                                   // 17 (DEQUE_LINE_MAP.peekFrontStart)
-    "    if (this.isEmpty()) return null;",             // 18 (DEQUE_LINE_MAP.peekFrontCheckEmpty)
-    "    return this.items[0];",                         // 19 (DEQUE_LINE_MAP.peekFrontReturn)
-    "  }",                                               // 20 (DEQUE_LINE_MAP.peekFrontEnd)
-    "  peekRear() {",                                    // 21 (DEQUE_LINE_MAP.peekRearStart)
-    "    if (this.isEmpty()) return null;",             // 22 (DEQUE_LINE_MAP.peekRearCheckEmpty)
-    "    return this.items[this.items.length - 1];",     // 23 (DEQUE_LINE_MAP.peekRearReturn)
-    "  }",                                               // 24 (DEQUE_LINE_MAP.peekRearEnd)
-    "  isEmpty() { return this.items.length === 0; }",  // 25 (DEQUE_LINE_MAP.isEmpty)
-    "  size() { return this.items.length; }",           // 26 (DEQUE_LINE_MAP.size)
+    "// Deque (Conceptual using Array)",
+    "class Deque {",
+    "  constructor() { this.items = []; }",
+    "  addFront(element) {",
+    "    this.items.unshift(element);",
+    "  }",
+    "  addRear(element) {",
+    "    this.items.push(element);",
+    "  }",
+    "  removeFront() {",
+    "    if (this.isEmpty()) return null;",
+    "    return this.items.shift();",
+    "  }",
+    "  removeRear() {",
+    "    if (this.isEmpty()) return null;",
+    "    return this.items.pop();",
+    "  }",
+    "  peekFront() {",
+    "    if (this.isEmpty()) return null;",
+    "    return this.items[0];",
+    "  }",
+    "  peekRear() {",
+    "    if (this.isEmpty()) return null;",
+    "    return this.items[this.items.length - 1];",
+    "  }",
+    "  isEmpty() { return this.items.length === 0; }",
+    "  size() { return this.items.length; }",
     "}",
   ],
   Python: [
@@ -159,10 +159,10 @@ export function DequeOperationsCodePanel({ currentLine }: DequeOperationsCodePan
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-          <pre className="font-code text-sm p-4">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
             {codeToDisplay.map((line, index) => (
               <div key={`deque-${selectedLanguage}-line-${index}`}
-                className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
                 {line}
               </div>
@@ -173,3 +173,4 @@ export function DequeOperationsCodePanel({ currentLine }: DequeOperationsCodePan
     </Card>
   );
 }
+
