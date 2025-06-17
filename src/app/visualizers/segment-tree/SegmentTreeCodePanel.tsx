@@ -7,72 +7,61 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import type { SegmentTreeOperation } from './segment-tree-logic'; // Assuming type is exported
 
-export const SEGMENT_TREE_CODE_SNIPPETS = {
+export const SEGMENT_TREE_CODE_SNIPPETS: Record<SegmentTreeOperation, string[]> = {
   build: [
     "// Iterative Segment Tree Build (Sum Query)",
-    "class SegmentTree {",
-    "  constructor(inputArray) {",
-    "    this.n = inputArray.length;",
-    "    this.tree = new Array(2 * this.n).fill(0);",
-    "    this.build(inputArray);",
-    "  }",
-    "  build(arr) {",
-    "    // Insert leaf nodes in tree",
-    "    for (let i = 0; i < this.n; i++) {",          // LINE_MAP.buildLeafLoop
-    "      this.tree[this.n + i] = arr[i];",         // LINE_MAP.buildSetLeaf
-    "    }",
-    "    // Build the tree by calculating parents",
-    "    for (let i = this.n - 1; i > 0; --i) {",      // LINE_MAP.buildInternalLoop
-    "      this.tree[i] = this.tree[i * 2] + this.tree[i * 2 + 1];", // LINE_MAP.buildSetInternal
-    "    }",
-    "  }",
-    "  // query(left, right) { ... } // For range [left, right)",
-    "  // update(index, value) { ... }",
+    "// In constructor or separate build method:",
+    "this.n = inputArray.length;",
+    "this.tree = new Array(2 * this.n).fill(0);",
+    "// Insert leaf nodes in tree:",
+    "for (let i = 0; i < this.n; i++) {",          // LINE_MAP.buildLeafLoop
+    "  this.tree[this.n + i] = inputArray[i];",   // LINE_MAP.buildSetLeaf
+    "}",
+    "// Build the tree by calculating parents:",
+    "for (let i = this.n - 1; i > 0; --i) {",      // LINE_MAP.buildInternalLoop
+    "  this.tree[i] = this.tree[i * 2] + this.tree[i * 2 + 1];", // LINE_MAP.buildSetInternal
     "}",
   ],
   query: [
     "// Iterative Segment Tree Query (Sum on [left, right) )",
-    "query(left, right) { // left inclusive, right exclusive",
-    "  let result = 0;",
-    "  // Loop to find the sum in the range",
-    "  left += this.n; // Adjust to leaf positions",
-    "  right += this.n;",
-    "  for (; left < right; left = Math.floor(left/2), right = Math.floor(right/2)) {",
-    "    if (left % 2 === 1) { // If left is odd, it's a right child",
-    "      result += this.tree[left++];",
+    "query(left, right) { // left inclusive, right exclusive", // queryFuncStart (12)
+    "  let result = 0;", // queryInitResult (13)
+    "  left += this.n; right += this.n;", // queryAdjustLR (14)
+    "  for (; left < right; left = Math.floor(left/2), right = Math.floor(right/2)) {", // queryLoop (15)
+    "    if (left % 2 === 1) { // queryIfLeftOdd (16)",
+    "      result += this.tree[left++];", // queryAddLeft (17)
     "    }",
-    "    if (right % 2 === 1) { // If right is odd, it's a right child",
-    "      result += this.tree[--right]; // (its left sibling is in range)",
+    "    if (right % 2 === 1) { // queryIfRightOdd (18)",
+    "      result += this.tree[--right];", // queryAddRight (19)
     "    }",
     "  }",
-    "  return result;",
-    "}",
+    "  return result;", // queryReturnResult (20)
+    "}", // queryFuncEnd (21)
   ],
   update: [
     "// Iterative Segment Tree Update (Point Update)",
-    "update(index, value) {",
-    "  let pos = index + this.n; // Go to leaf node position",
-    "  this.tree[pos] = value;",
-    "  // Update parents by traversing up",
-    "  while (pos > 1) {",
-    "    pos = Math.floor(pos / 2); // Move to parent",
-    "    this.tree[pos] = this.tree[pos * 2] + this.tree[pos * 2 + 1];",
+    "update(index, value) {", // updateFuncStart (22)
+    "  let pos = index + this.n;", // updateGoToLeaf (23)
+    "  this.tree[pos] = value;", // updateSetLeaf (24)
+    "  while (pos > 1) {", // updateLoopToRoot (25)
+    "    pos = Math.floor(pos / 2);", // updateMoveToParent (26)
+    "    this.tree[pos] = this.tree[pos * 2] + this.tree[pos * 2 + 1];", // updateSetParent (27)
     "  }",
-    "}",
+    "}", // updateFuncEnd (28)
   ]
 };
 
 interface SegmentTreeCodePanelProps {
   currentLine: number | null;
-  // Could add prop for selected operation if panel showed different snippets
+  selectedOperation: SegmentTreeOperation;
 }
 
-export function SegmentTreeCodePanel({ currentLine }: SegmentTreeCodePanelProps) {
+export function SegmentTreeCodePanel({ currentLine, selectedOperation }: SegmentTreeCodePanelProps) {
   const { toast } = useToast();
-  // For now, always show 'build' code as it's the only interactive part.
-  const codeToDisplay = SEGMENT_TREE_CODE_SNIPPETS.build;
-  const operationLabel = "Build Process";
+  const codeToDisplay = SEGMENT_TREE_CODE_SNIPPETS[selectedOperation] || SEGMENT_TREE_CODE_SNIPPETS.build;
+  const operationLabel = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1);
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');
@@ -87,7 +76,7 @@ export function SegmentTreeCodePanel({ currentLine }: SegmentTreeCodePanelProps)
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-          <Code2 className="mr-2 h-5 w-5" /> Segment Tree Code ({operationLabel})
+          <Code2 className="mr-2 h-5 w-5" /> Segment Tree Code: {operationLabel}
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
           <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
