@@ -1,0 +1,14 @@
+
+import DocsPageClient from './DocsPageClient';
+
+export default function DocsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <DocsPageClient>
+      {children}
+    </DocsPageClient>
+  );
+}
