@@ -15,6 +15,9 @@ const SVG_WIDTH = 500;
 const SVG_HEIGHT = 300; 
 const NODE_RADIUS = 15;
 
+// Define the specific color string used for 'inQueue' and 'start' states
+const ACCENT_BACKGROUND_COLOR = "hsl(var(--accent))";
+
 export function GraphVisualizationPanel({
   nodes,
   edges,
@@ -127,7 +130,7 @@ export function GraphVisualizationPanel({
                       textAnchor="middle"
                       dy=".3em"
                       fontSize="10"
-                      fill={ node.color === NODE_COLORS.inQueue || node.color === NODE_COLORS.start ? "hsl(var(--accent-foreground))" : "hsl(var(--primary-foreground))"}
+                      fill={ node.color === ACCENT_BACKGROUND_COLOR ? "hsl(var(--accent-foreground))" : "hsl(var(--primary-foreground))"}
                       fontWeight="bold"
                     >
                       {node.label}
