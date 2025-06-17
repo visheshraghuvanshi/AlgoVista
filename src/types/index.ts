@@ -1,5 +1,6 @@
 
 
+
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -64,7 +65,7 @@ export interface GraphAlgorithmStep {
   auxiliaryData?: {
     type: 'queue' | 'stack' | 'set' | 'distances' | 'path';
     label: string;
-    values: string[] | { [key: string]: string | number };
+    values: string[] | { [key: string]: string | number | null }; // Updated value type
   }[];
   currentLine: number | null;
   message?: string;
@@ -271,3 +272,4 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
     
+

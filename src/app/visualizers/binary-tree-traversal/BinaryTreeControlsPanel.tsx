@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -67,7 +68,7 @@ export function BinaryTreeControlsPanel({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="treeInput" className="text-sm font-medium flex items-center">
-              <Binary className="mr-2 h-4 w-4 text-muted-foreground" /> Tree (comma-sep, level-order, use 'null')
+              <Binary className="mr-2 h-4 w-4 text-muted-foreground" /> Tree (comma-sep, level-order, use 'null' for empty nodes)
             </Label>
             <Input
               id="treeInput"
@@ -107,7 +108,7 @@ export function BinaryTreeControlsPanel({
             <Button
                 onClick={onReset}
                 variant="outline"
-                disabled={isPlaying}
+                disabled={isPlaying && isAlgoImplemented} // Only disable reset if playing AND implemented
                 aria-label="Reset algorithm and input"
             >
                 <RotateCcw className="mr-2 h-4 w-4" /> Reset Data & Algorithm
@@ -179,3 +180,4 @@ export function BinaryTreeControlsPanel({
     </Card>
   );
 }
+
