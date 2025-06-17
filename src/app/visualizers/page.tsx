@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -262,7 +263,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Trees', 
     difficulty: 'Medium', 
     description: 'A tree for efficient string retrieval (e.g., auto-completion). Each node represents a character; paths from root form prefixes. O(L) for search/insert (L=word length).',
-    longDescription: 'A Trie, also known as a prefix tree or digital tree, is a tree-like data structure that stores a dynamic set of strings. Each node represents a character, and the path from the root to a node represents a prefix. A special marker (e.g., isEndOfWord flag) in a node can indicate the end of a complete word. Tries are highly efficient for operations like word insertion, search, and prefix-based search (e.g., "find all words starting with \'pre\'"). The time complexity for these operations is O(L), where L is the length of the string, independent of the number of strings stored. Space complexity can be high if the alphabet size is large and strings don\'t share many common prefixes.'
+    longDescription: 'A Trie, also known as a prefix tree or digital tree, is a tree-like data structure that stores a dynamic set of strings. Each node represents a character, and the path from the root to a node represents a prefix. A special marker (e.g., `isEndOfWord` flag) in a node can indicate the end of a complete word. Tries are highly efficient for operations like word insertion, search, and prefix-based search (e.g., "find all words starting with \'pre\'"). The time complexity for these operations is O(L), where L is the length of the string, independent of the number of strings stored. Space complexity can be high if the alphabet size is large and strings don\'t share many common prefixes.'
   },
   { 
     slug: 'huffman-coding', 
@@ -295,70 +296,80 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Depth-First Search (DFS)', 
     category: 'Graphs', 
     difficulty: 'Medium', 
-    description: 'Explores as far as possible along each branch before backtracking. Useful for path finding, cycle detection, and topological sorting.' 
+    description: 'Explores as far as possible along each branch before backtracking. Useful for path finding, cycle detection, and topological sorting.',
+    longDescription: 'Depth-First Search (DFS) is an algorithm for traversing or searching tree or graph data structures. The algorithm starts at the root node (or an arbitrary node in a graph) and explores as far as possible along each branch before backtracking. It uses a stack (implicitly via recursion or explicitly) to keep track of nodes to visit. When a dead end is reached or all adjacent nodes have been visited, DFS backtracks to the previous node to explore other unvisited branches. DFS is fundamental for tasks like finding connected components, cycle detection in graphs, path finding, and topological sorting. Time complexity is O(V+E) where V is vertices and E is edges. Space complexity is O(V) in the worst case for the stack or visited set.'
   },
   { 
     slug: 'bfs', 
     title: 'Breadth-First Search (BFS)', 
     category: 'Graphs', 
     difficulty: 'Medium', 
-    description: 'Traverses graph level by level, exploring all neighbors at the present depth. Finds the shortest path in unweighted graphs.' 
+    description: 'Traverses graph level by level, exploring all neighbors at the present depth. Finds the shortest path in unweighted graphs.',
+    longDescription: 'Breadth-First Search (BFS) is another algorithm for traversing or searching tree or graph data structures. It starts at the root node (or an arbitrary node) and explores all of the neighbor nodes at the present depth prior to moving on to the nodes at the next depth level. BFS uses a queue to keep track of nodes to visit. It is particularly useful for finding the shortest path between two nodes in an unweighted graph, as it explores layer by layer. Applications include finding connected components, cycle detection (for undirected graphs), and solving puzzles like mazes. Time complexity is O(V+E) and space complexity is O(V) in the worst case for the queue or visited set.'
   },
   { 
     slug: 'dijkstra', 
     title: 'Dijkstra’s Algorithm', 
     category: 'Graphs', 
     difficulty: 'Hard', 
-    description: 'Finds the shortest paths from a single source node to all other nodes in a weighted graph with non-negative edge weights.' 
+    description: 'Finds the shortest paths from a single source node to all other nodes in a weighted graph with non-negative edge weights.',
+    longDescription: "Dijkstra's Algorithm finds the shortest paths from a single source node to all other nodes in a graph with non-negative edge weights. It maintains a set of visited nodes and a data structure (typically a priority queue) storing tentative distances to unvisited nodes. In each step, it selects the unvisited node with the smallest tentative distance, marks it as visited, and updates the distances of its neighbors if a shorter path is found through the current node (relaxation). The algorithm terminates once all reachable nodes have been visited or the destination node is reached. Time complexity is O(E log V) with a binary heap or Fibonacci heap for the priority queue, or O(V^2) with a simple array. It does not work correctly with negative edge weights."
   },
   { 
     slug: 'bellman-ford', 
     title: 'Bellman-Ford Algorithm', 
     category: 'Graphs', 
     difficulty: 'Hard', 
-    description: 'Finds shortest paths from a single source vertex to all other vertices in a weighted digraph. Can handle negative edge weights and detect negative cycles.'
+    description: 'Finds shortest paths from a single source vertex to all other vertices in a weighted digraph. Can handle negative edge weights and detect negative cycles.',
+    longDescription: "The Bellman-Ford algorithm computes shortest paths from a single source vertex to all of the other vertices in a weighted digraph. Unlike Dijkstra's algorithm, Bellman-Ford can handle graphs with negative edge weights. It works by iteratively relaxing all edges in the graph |V|-1 times, where |V| is the number of vertices. After |V|-1 iterations, if there are no negative-weight cycles reachable from the source, the shortest paths are found. A final iteration can be performed to detect negative-weight cycles: if any distance is further reduced, a negative cycle exists. Time complexity is O(VE). It's slower than Dijkstra's but more versatile due to its ability to handle negative weights and detect negative cycles."
   },
   { 
     slug: 'floyd-warshall', 
     title: 'Floyd-Warshall Algorithm', 
     category: 'Graphs', 
     difficulty: 'Hard', 
-    description: 'An algorithm for finding shortest paths in a weighted graph with positive or negative edge weights (but no negative cycles). Computes all-pairs shortest paths.'
+    description: 'An algorithm for finding shortest paths in a weighted graph with positive or negative edge weights (but no negative cycles). Computes all-pairs shortest paths.',
+    longDescription: "The Floyd-Warshall algorithm is a dynamic programming algorithm for finding the shortest paths between all pairs of vertices in a weighted directed graph. It can handle positive or negative edge weights but assumes no negative-weight cycles. The algorithm considers all possible intermediate vertices for each pair of source and destination vertices. It initializes a distance matrix with direct edge weights (or infinity if no direct edge). Then, for each vertex k, it updates the shortest path from i to j by checking if path i -> k -> j is shorter than the current path i -> j. The time complexity is O(V^3). It's suitable for dense graphs where V is relatively small."
   },
   { 
     slug: 'prims-algorithm', 
     title: 'Prim’s Algorithm', 
     category: 'Graphs', 
     difficulty: 'Hard', 
-    description: 'A greedy algorithm that finds a minimum spanning tree (MST) for a weighted undirected graph.'
+    description: 'A greedy algorithm that finds a minimum spanning tree (MST) for a weighted undirected graph. It builds the MST by iteratively adding the cheapest edge connecting a vertex in the MST to a vertex outside it.',
+    longDescription: "Prim's algorithm is a greedy algorithm used to find a Minimum Spanning Tree (MST) for a connected, weighted, undirected graph. An MST is a subgraph that connects all vertices with the minimum possible total edge weight. Prim's algorithm starts with an arbitrary vertex and grows the MST one edge at a time. In each step, it finds the minimum-weight edge that connects a vertex currently in the MST to a vertex not yet in the MST, and adds this edge (and the new vertex) to the MST. This process is repeated until all vertices are included. A priority queue is often used to efficiently find the minimum-weight edge. Time complexity is typically O(E log V) with a binary heap or O(E + V log V) with a Fibonacci heap."
   },
   { 
     slug: 'kruskals-algorithm', 
     title: 'Kruskal’s Algorithm', 
     category: 'Graphs', 
     difficulty: 'Hard', 
-    description: 'A greedy algorithm that finds a minimum spanning tree (MST) for a connected, undirected graph. Uses the Disjoint Set Union (DSU) data structure.'
+    description: 'A greedy algorithm that finds a minimum spanning tree (MST) for a connected, undirected graph. It sorts all edges by weight and adds edges to the MST if they don\'t form a cycle with already included edges, using a Disjoint Set Union (DSU) data structure to check for cycles.',
+    longDescription: "Kruskal's algorithm is another greedy algorithm for finding a Minimum Spanning Tree (MST) of a connected, weighted, undirected graph. It works by first sorting all the edges in the graph by their weights in non-decreasing order. Then, it iterates through the sorted edges, adding an edge to the MST if and only if adding it does not form a cycle with the edges already included in the MST. A Disjoint Set Union (DSU) data structure (also known as Union-Find) is typically used to efficiently detect and prevent cycles. The algorithm terminates when |V|-1 edges have been added to the MST. Time complexity is dominated by edge sorting, O(E log E), or O(E log V) if E is close to V^2. DSU operations are nearly constant time on average (O(α(V)) where α is the inverse Ackermann function)."
   },
   { 
     slug: 'topological-sort', 
     title: 'Topological Sort', 
     category: 'Graphs', 
     difficulty: 'Medium', 
-    description: 'A linear ordering of vertices such that for every directed edge from vertex u to vertex v, u comes before v in the ordering. For Directed Acyclic Graphs (DAGs).'
+    description: 'A linear ordering of vertices such that for every directed edge from vertex u to vertex v, u comes before v in the ordering. Applicable only to Directed Acyclic Graphs (DAGs).',
+    longDescription: "Topological Sort is an algorithm for finding a linear ordering of nodes in a Directed Acyclic Graph (DAG) such that for every directed edge from node `u` to node `v`, node `u` comes before node `v` in the ordering. If the graph contains a cycle, it has no topological sorting. One common approach is Kahn's algorithm (using in-degrees): 1. Compute in-degrees of all nodes. 2. Initialize a queue with all nodes having an in-degree of 0. 3. While the queue is not empty: dequeue a node `u`, add it to the topological sort, and for each neighbor `v` of `u`, decrement `v`'s in-degree. If `v`'s in-degree becomes 0, enqueue `v`. Another approach uses DFS: perform DFS and add nodes to the result in the reverse order of their finishing times. Time complexity for both is O(V+E)."
   },
   { 
     slug: 'graph-cycle-detection', 
     title: 'Cycle Detection in Graphs', 
     category: 'Graphs', 
     difficulty: 'Medium', 
-    description: 'Algorithms to detect cycles in both directed and undirected graphs using DFS or other techniques.'
+    description: 'Algorithms to detect cycles in both directed and undirected graphs. For undirected graphs, DFS can check for back-edges to visited ancestors (not parent). For directed graphs, DFS can check for back-edges to nodes currently in the recursion stack.',
+    longDescription: "Cycle detection in graphs involves determining if a graph contains a sequence of vertices starting and ending at the same vertex. For **undirected graphs**, a cycle exists if a DFS traversal encounters a visited vertex that is not the parent of the current vertex in the DFS tree. For **directed graphs**, a cycle exists if DFS encounters a visited vertex that is currently in the recursion stack (an ancestor in the DFS tree). This indicates a back-edge. BFS can also be used for cycle detection in undirected graphs by checking if a visited node is encountered that is not the parent. For directed graphs using Kahn's algorithm for topological sort, if the count of visited nodes in the topological sort is less than the total number of nodes, then the graph has a cycle. Time complexity is typically O(V+E)."
   },
   { 
     slug: 'connected-components', 
     title: 'Connected Components', 
     category: 'Graphs', 
     difficulty: 'Medium', 
-    description: 'Algorithms (using BFS or DFS) to find all connected components in an undirected graph or strongly connected components in a directed graph.'
+    description: 'Algorithms (using BFS or DFS) to find all connected components in an undirected graph. For directed graphs, this usually refers to finding Strongly Connected Components (SCCs).',
+    longDescription: "In an **undirected graph**, a connected component is a subgraph in which any two vertices are connected to each other by paths, and which is connected to no additional vertices in the supergraph. Finding all connected components can be done by performing BFS or DFS starting from an arbitrary unvisited vertex, marking all reachable vertices as part of one component, and repeating this process until all vertices are visited. For **directed graphs**, the concept is more nuanced, often referring to Strongly Connected Components (SCCs). An SCC is a subgraph where every vertex is reachable from every other vertex within that subgraph. Algorithms like Kosaraju's algorithm or Tarjan's algorithm (both DFS-based) are used to find SCCs. Time complexity for finding connected components or SCCs is typically O(V+E)."
   },
 
   // SECTION VII: Recursion & Backtracking
@@ -536,7 +547,8 @@ export default function VisualizersPage() {
     return MOCK_ALGORITHMS.filter(algo => {
       const matchesSearch = searchTerm.trim() === '' ||
         algo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        algo.description.toLowerCase().includes(searchTerm.toLowerCase());
+        algo.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (algo.longDescription && algo.longDescription.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory = !selectedCategory || algo.category === selectedCategory;
       const matchesDifficulty = !selectedDifficulty || algo.difficulty === selectedDifficulty;
       return matchesSearch && matchesCategory && matchesDifficulty;
