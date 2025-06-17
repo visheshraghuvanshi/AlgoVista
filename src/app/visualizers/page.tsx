@@ -107,55 +107,55 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     description: 'A variation of Bubble Sort that sorts in both directions on each pass through the list. It passes through the list from left to right, then from right to left, continuously swapping adjacent elements if they are in the wrong order.'
   },
 
-  // SECTION III: Searching & Array Techniques
+  // SECTION III: Arrays & Search
   { 
     slug: 'jump-search', 
     title: 'Jump Search', 
     category: 'Arrays & Search', 
     difficulty: 'Easy', 
-    description: 'A searching algorithm for sorted arrays. The basic idea is to check fewer elements by jumping ahead by fixed steps.'
+    description: 'A searching algorithm for sorted arrays that improves upon linear search by checking fewer elements. The basic idea is to "jump" ahead by fixed steps (block size, typically √n) and then perform a linear search within that block if the target element might be present.'
   },
   { 
     slug: 'ternary-search', 
     title: 'Ternary Search', 
     category: 'Arrays & Search', 
     difficulty: 'Medium', 
-    description: 'A decrease and conquer search algorithm that specifies the position of an element in a sorted array by recursively dividing the array into three parts.'
+    description: 'A divide and conquer search algorithm that finds the position of an element in a sorted array. It divides the array into three parts and determines which part might contain the target. It is applicable to unimodal functions for finding maxima/minima.'
   },
   { 
     slug: 'kadanes-algorithm', 
     title: 'Kadane’s Algorithm', 
     category: 'Arrays & Search', 
     difficulty: 'Medium', 
-    description: 'Used to find the maximum sum subarray within a given one-dimensional array of numbers.'
+    description: 'An efficient dynamic programming algorithm used to find the maximum sum contiguous subarray within a given one-dimensional array of numbers. It iterates through the array, keeping track of the maximum sum ending at the current position and the overall maximum sum found so far.'
   },
   { 
     slug: 'two-pointers', 
     title: 'Two Pointers Technique', 
     category: 'Arrays & Search', 
     difficulty: 'Medium', 
-    description: 'A common technique for array traversal where two pointers iterate through the data structure until one or both meet certain conditions.'
+    description: 'A common and versatile technique for array traversal where two pointers iterate through the data structure, often from opposite ends or one fast and one slow, until they meet or a certain condition is satisfied. Useful for problems like finding pairs with a specific sum, reversing arrays, or detecting cycles.'
   },
   { 
     slug: 'sliding-window', 
     title: 'Sliding Window Technique', 
     category: 'Arrays & Search', 
     difficulty: 'Medium', 
-    description: 'A technique used for finding a subarray or substring that satisfies given conditions by maintaining a window of a certain size or properties.'
+    description: 'A technique used for efficiently finding a subarray or substring that satisfies given conditions. It involves maintaining a "window" of a certain size or properties that slides through the data structure, typically an array or string, adjusting its start and end points based on problem constraints.'
   },
   { 
     slug: 'dutch-national-flag', 
     title: 'Dutch National Flag Algorithm', 
     category: 'Arrays & Search', 
     difficulty: 'Medium', 
-    description: 'An algorithm for sorting an array containing three distinct values (e.g., 0s, 1s, and 2s) in linear time.'
+    description: 'An algorithm for sorting an array containing three distinct values (e.g., 0s, 1s, and 2s, often representing colors of the Dutch flag) in linear time and O(1) space. It partitions the array into three sections based on a pivot value (typically 1).'
   },
   { 
     slug: 'subarray-sum-problems', 
-    title: 'Subarray Sum Problems', 
+    title: 'Subarray Sum Variants', 
     category: 'Arrays & Search', 
     difficulty: 'Medium', 
-    description: 'A class of problems involving finding subarrays that sum to a target value or have specific sum properties (e.g., max sum, zero sum).'
+    description: 'A class of problems focused on finding subarrays whose elements sum up to a target value, or possess specific sum-related properties (e.g., maximum sum, zero sum, sum closest to target). Techniques like prefix sums, Kadane\'s algorithm, or hash maps are often employed.'
   },
 
   // SECTION IV: Linked Lists
@@ -631,5 +631,4 @@ export default function VisualizersPage() {
     </div>
   );
 }
-
     
