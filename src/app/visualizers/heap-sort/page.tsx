@@ -371,7 +371,7 @@ export default function HeapSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description}
+             {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
 

@@ -32,7 +32,8 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
   Python: [
     "def sieve_of_eratosthenes(n):",
     "    prime = [True for _ in range(n + 1)]",
-    "    prime[0] = prime[1] = False",
+    "    if n >= 0: prime[0] = False # Ensure index safety",
+    "    if n >= 1: prime[1] = False # Ensure index safety",
     "    p = 2",
     "    while (p * p <= n):",
     "        if (prime[p] == True):",
@@ -63,8 +64,8 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
     "            }",
     "        }",
     "        List<Integer> primesList = new ArrayList<>();",
-    "        for (int p = 2; p <= n; p++) {",
-    "            if (prime[p]) { primesList.add(p); }",
+    "        for (int p_num = 2; p_num <= n; p_num++) {", // Renamed loop variable
+    "            if (prime[p_num]) { primesList.add(p_num); }",
     "        }",
     "        return primesList;",
     "    }",
@@ -85,8 +86,8 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
     "        }",
     "    }",
     "    std::vector<int> primes_list;",
-    "    for (int p = 2; p <= n; p++) {",
-    "        if (prime[p]) { primes_list.push_back(p); }",
+    "    for (int p_num = 2; p_num <= n; p_num++) {", // Renamed loop variable
+    "        if (prime[p_num]) { primes_list.push_back(p_num); }",
     "    }",
     "    return primes_list;",
     "}",
@@ -137,10 +138,10 @@ export function SieveCodePanel({ currentLine }: SieveCodePanelProps) {
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-          <pre className="font-code text-sm p-4">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
             {codeToDisplay.map((line, index) => (
               <div key={`sieve-${selectedLanguage}-line-${index}`}
-                className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
                 {line}
               </div>

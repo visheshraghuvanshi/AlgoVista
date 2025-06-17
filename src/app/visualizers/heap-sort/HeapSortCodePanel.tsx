@@ -79,8 +79,8 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
             </TabsList>
             {languages.map((lang) => (
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                  <pre className="font-code text-sm p-4">
+                <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                  <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-line-${index}`}
@@ -102,8 +102,8 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
             </ScrollArea>

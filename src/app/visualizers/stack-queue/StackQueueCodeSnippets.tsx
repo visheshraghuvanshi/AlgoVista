@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, {useState} from 'react';
@@ -67,14 +68,14 @@ export const STACK_QUEUE_CODE_SNIPPETS: Record<string, Record<string, string[]>>
       "class Queue:",
       "    def __init__(self): self.items = deque()",
       "    def enqueue(self, element): self.items.append(element)",
-      "    def dequeue(self):", # Corrected indentation
-      "        if not self.items: return None", # Corrected is_empty and items access
+      "    def dequeue(self): # Corrected indentation",
+      "        if not self.items: return None # Corrected is_empty and items access",
       "        return self.items.popleft()",
       "    def front(self):",
-      "        if not self.items: return None", # Corrected is_empty and items access
+      "        if not self.items: return None # Corrected is_empty and items access",
       "        return self.items[0]",
-      "    def is_empty(self): return len(self.items) == 0", # Corrected method def
-      "    def size(self): return len(self.items)", # Corrected method def
+      "    def is_empty(self): return len(self.items) == 0 # Corrected method def",
+      "    def size(self): return len(self.items)", // Corrected method def
     ]
   },
   Java: {
@@ -214,19 +215,12 @@ export function StackQueueCodeSnippetsPanel({ currentLine, structureType }: Stac
               let lineIsHighlighted = false;
               if(currentLine) {
                 if (structureType === 'stack') {
-                    // JS Stack snippet starts at line 0 in its own array, and has 14 lines.
-                    // STACK_LINE_MAP.classDef is 1.
-                    // So, for JS stack, highlighted line would be currentLine.
-                    // Example: if currentLine is STACK_LINE_MAP.pushToArray (value 4), and this is line "  push(element) { this.items.push(element); }" which is index 3 of the snippet.
-                    // The line number from STACK_LINE_MAP needs to be mapped to the index in the snippet.
-                    // For simplicity, if the currentLine matches a conceptual line number that maps to this line in the displayed snippet
                     const lineMapValues = Object.values(STACK_LINE_MAP);
-                    // This mapping is tricky; for now, direct comparison assuming currentLine is 1-based for the snippet
                     if (index + 1 === currentLine) lineIsHighlighted = true;
 
                 } else if (structureType === 'queue') {
                     const lineMapValues = Object.values(QUEUE_LINE_MAP);
-                     if (index + 1 === (currentLine - 15) ) lineIsHighlighted = true; // Adjusting because queue lines start after stack in conceptual map
+                     if (index + 1 === (currentLine - 16) ) lineIsHighlighted = true; // Adjusted base for Queue lines
                 }
               }
 

@@ -12,7 +12,7 @@ import type { AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { QUICK_SORT_LINE_MAP, generateQuickSortSteps } from './quick-sort-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const QUICK_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -317,7 +317,7 @@ export default function QuickSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description}
+             {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
 
