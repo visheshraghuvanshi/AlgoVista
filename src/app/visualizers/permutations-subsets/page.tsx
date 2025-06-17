@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -56,20 +56,15 @@ const PERMUTATIONS_SUBSETS_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'permutations-subsets';
-
 export default function PermutationsSubsetsVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [inputSet, setInputSet] = useState("1,2,3");
 
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
        toast({
             title: "Conceptual Overview",
             description: `Interactive Permutations & Subsets visualization is under construction. Review concepts and code.`,
@@ -77,19 +72,15 @@ export default function PermutationsSubsetsVisualizerPage() {
             duration: 5000,
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for Permutations & Subsets not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "Permutations: O(N*N!), Subsets: O(N*2^N)", 
-      average: "Permutations: O(N*N!), Subsets: O(N*2^N)", 
-      worst: "Permutations: O(N*N!), Subsets: O(N*2^N)" 
-    },
-    spaceComplexity: "Permutations: O(N) for recursion stack (excluding output), Subsets: O(N) for recursion stack (excluding output). Output storage is O(N*N!) and O(N*2^N) respectively.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
@@ -104,7 +95,7 @@ export default function PermutationsSubsetsVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -112,7 +103,7 @@ export default function PermutationsSubsetsVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for &quot;{algorithmMetadata?.slug || 'Permutations & Subsets'}&quot;.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -129,7 +120,7 @@ export default function PermutationsSubsetsVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algoDetails.title}
           </h1>
         </div>
 
@@ -139,7 +130,7 @@ export default function PermutationsSubsetsVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing how permutations or subsets are generated step-by-step, is currently under construction.
+                The interactive visualizer for {algoDetails.title}, showing how permutations or subsets are generated step-by-step, is currently under construction.
                 Please check back later! Review the concepts and code snippets below.
             </p>
         </div>
@@ -179,4 +170,3 @@ export default function PermutationsSubsetsVisualizerPage() {
     </div>
   );
 }
-    
