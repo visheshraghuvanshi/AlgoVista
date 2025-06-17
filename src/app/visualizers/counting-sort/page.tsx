@@ -1,19 +1,21 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel'; // Using existing panel
 // import { CountingSortCodePanel } from './CountingSortCodePanel'; // To be created if needed
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import type { AlgorithmMetadata } from '@/types';
+import { algorithmMetadata } from './metadata'; // Changed to local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction } from 'lucide-react';
+import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 // Placeholder for Counting Sort specific code snippets
 const COUNTING_SORT_CODE_SNIPPETS = {
@@ -74,17 +76,14 @@ const ALGORITHM_SLUG = 'counting-sort';
 
 export default function CountingSortVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-      toast({
+    if (algorithmMetadata) {
+       toast({
             title: "Visualization Under Construction",
-            description: `The interactive visualizer for ${foundAlgorithm.title} is not yet fully implemented. Showing details only.`,
+            description: `The interactive visualizer for ${algorithmMetadata.title} is not yet fully implemented. Showing details only.`,
             variant: "default",
         });
     } else {
@@ -92,15 +91,14 @@ export default function CountingSortVisualizerPage() {
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n+k)", average: "O(n+k)", worst: "O(n+k)" }, // n=num elements, k=range of input
-    spaceComplexity: "O(n+k)",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
-    // Return a loading state or null for SSR/initial render
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
@@ -112,7 +110,7 @@ export default function CountingSortVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -137,7 +135,7 @@ export default function CountingSortVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -147,7 +145,7 @@ export default function CountingSortVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title} is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title} is currently under construction.
                 We are working on a more specialized visualization to best demonstrate its unique mechanics (like count arrays and output construction).
                 Please check back later for the full interactive experience! In the meantime, you can review the algorithm details below.
             </p>

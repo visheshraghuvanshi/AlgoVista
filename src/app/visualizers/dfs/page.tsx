@@ -8,10 +8,11 @@ import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizat
 import { DfsCodePanel } from './DfsCodePanel'; 
 import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
 import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DFS_LINE_MAP, generateDfsSteps, parseGraphInput } from './dfs-logic';
+import { algorithmMetadata } from './metadata'; // Changed to local import
 
 const DFS_CODE_SNIPPETS = {
   JavaScript: [
@@ -56,11 +57,10 @@ const DFS_CODE_SNIPPETS = {
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-const ALGORITHM_SLUG = 'dfs';
 
 export default function DfsVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+  // algorithmMetadata is now imported directly
 
   const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:0,3;2:0,4;3:1;4:2,5;5:4'); 
   const [startNodeValue, setStartNodeValue] = useState('0');
@@ -79,14 +79,6 @@ export default function DfsVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAlgoImplemented = true;
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -123,7 +115,7 @@ export default function DfsVisualizerPage() {
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(false);
+    setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
       const firstStep = newSteps[0];
@@ -170,7 +162,7 @@ export default function DfsVisualizerPage() {
   const handleStartNodeChange = (value: string) => setStartNodeValue(value);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -183,7 +175,7 @@ export default function DfsVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated.", variant: "default" });
       return;
     }
@@ -205,19 +197,26 @@ export default function DfsVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  if (!algorithm) {
+  if (!algorithmMetadata) { // Changed from `!algorithm`
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
           <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
           <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{ALGORITHM_SLUG}&quot;.</p>
+          <p className="text-muted-foreground text-lg">Could not load data for DFS.</p>
         </main>
         <Footer />
       </div>
     );
   }
+
+  const algoDetails: AlgorithmDetailsProps = {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -225,9 +224,9 @@ export default function DfsVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithm.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -264,6 +263,7 @@ export default function DfsVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
+        <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
