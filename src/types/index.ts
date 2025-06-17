@@ -133,9 +133,9 @@ export interface LinkedListAlgorithmStep {
 // N-Queens Step Type 
 export interface NQueensStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
   board: number[][]; // N x N board, 1 for Queen, 0 for empty
-  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' };
+  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' ; num?: number};
   foundSolutions?: number[][][]; // Array of found board states
-  isSafe?: boolean; // Result of the last safety check
+  isSafeResult?: boolean; // Result of the last safety check
 }
 
 // Rat in a Maze Step Type
@@ -150,6 +150,31 @@ export interface RatInAMazeStep extends Omit<ArrayAlgorithmStep, 'array' | 'acti
   activeIndices: [number, number] | [];
 }
 
+// Sudoku Solver Step Type
+export interface SudokuStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
+  board: number[][]; // 9x9 Sudoku board
+  currentCell?: { row: number; col: number; num?: number; action: 'find_empty' | 'try_num' | 'place_num' | 'backtrack_remove' | 'check_safe' };
+  isSafe?: boolean; // Result of safety check
+  message: string;
+  currentLine: number | null;
+  solutionFound?: boolean;
+}
+
+// Disjoint Set Union (DSU) Step Type
+export interface DSUStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex' | 'swappingIndices' | 'sortedIndices'> {
+  parentArray: number[];
+  rankArray?: number[]; // Optional, for union by rank
+  sizeArray?: number[]; // Optional, for union by size
+  operation: 'makeSet' | 'find' | 'union' | 'initial';
+  elementsInvolved: number[]; // e.g., [element] for find, [el1, el2] for union
+  root1?: number; // For union operation
+  root2?: number; // For union operation
+  pathCompressedNodes?: number[]; // Nodes whose parents changed during path compression
+  message: string;
+  currentLine: number | null;
+  activeIndices: number[]; // For highlighting elements in parent/rank arrays
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
@@ -159,3 +184,8 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Linked list pages will use LinkedListAlgorithmStep directly.
 // N-Queens page will use NQueensStep directly in its state and logic.
 // Rat in a Maze page will use RatInAMazeStep.
+// Sudoku page will use SudokuStep.
+// DSU page will use DSUStep.
+
+
+    
