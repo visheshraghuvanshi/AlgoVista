@@ -21,19 +21,20 @@ export type LinkedListOperation =
   | 'traverse';
 
 export const ALL_OPERATIONS: { value: LinkedListOperation; label: string; icon?: React.ElementType, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
-  { value: 'init', label: 'Initialize List', icon: ListPlus, needsValue: true },
+  { value: 'init', label: 'Initialize/Set List', icon: ListPlus }, // Does not need extra value input here, uses initialListValue
   { value: 'insertHead', label: 'Insert Head', icon: ListPlus, needsValue: true },
   { value: 'insertTail', label: 'Insert Tail', icon: ListPlus, needsValue: true },
   // { value: 'insertAtPosition', label: 'Insert At Position', icon: ListPlus, needsValue: true, needsPosition: true },
-  { value: 'deleteHead', label: 'Delete Head', icon: Trash2 },
-  { value: 'deleteTail', label: 'Delete Tail', icon: Trash2 },
+  // { value: 'deleteHead', label: 'Delete Head', icon: Trash2 }, // No value needed
+  // { value: 'deleteTail', label: 'Delete Tail', icon: Trash2 }, // No value needed
   { value: 'deleteByValue', label: 'Delete by Value', icon: Trash2, needsValue: true },
   // { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
   { value: 'search', label: 'Search Value', icon: SearchCode, needsValue: true },
-  { value: 'reverse', label: 'Reverse List', icon: Shuffle },
-  { value: 'detectCycle', label: 'Detect Cycle', icon: LocateFixed }, // Special for cycle detection visualizer
-  { value: 'merge', label: 'Merge Two Lists', icon: GitMerge, needsSecondList: true }, // Special for merge visualizer
   { value: 'traverse', label: 'Traverse List', icon: FastForward },
+  // The following are more specialized and might be handled by their own visualizers/control panels
+  // { value: 'reverse', label: 'Reverse List', icon: Shuffle },
+  // { value: 'detectCycle', label: 'Detect Cycle', icon: LocateFixed }, 
+  // { value: 'merge', label: 'Merge Two Lists', icon: GitMerge, needsSecondList: true },
 ];
 
 interface LinkedListControlsPanelProps {
@@ -52,19 +53,16 @@ interface LinkedListControlsPanelProps {
   secondListValue?: string; // For merge operation
   onSecondListValueChange?: (value: string) => void;
 
-  // positionValue?: string; // For operations needing an index
-  // onPositionValueChange?: (value: string) => void;
-
   selectedOperation: LinkedListOperation | null;
   onSelectedOperationChange: (operation: LinkedListOperation) => void;
   
-  availableOperations?: LinkedListOperation[]; // To customize available ops per visualizer
+  availableOperations?: LinkedListOperation[]; 
 
   isPlaying: boolean;
   isFinished: boolean;
   currentSpeed: number;
   onSpeedChange: (speed: number) => void;
-  isAlgoImplemented: boolean; // If false, all interactive controls are disabled
+  isAlgoImplemented: boolean; 
   minSpeed: number;
   maxSpeed: number;
 }
@@ -74,7 +72,6 @@ export function LinkedListControlsPanel({
   initialListValue, onInitialListValueChange,
   inputValue, onInputValueChange,
   secondListValue, onSecondListValueChange,
-  // positionValue, onPositionValueChange,
   selectedOperation, onSelectedOperationChange,
   availableOperations,
   isPlaying, isFinished, currentSpeed, onSpeedChange,
@@ -84,15 +81,9 @@ export function LinkedListControlsPanel({
   const currentOpDetails = ALL_OPERATIONS.find(op => op.value === selectedOperation);
   const showValueInput = currentOpDetails?.needsValue;
   const showSecondListInput = currentOpDetails?.needsSecondList;
-  // const showPositionInput = currentOpDetails?.needsPosition;
 
   const handleExecuteOperation = () => {
     if (selectedOperation) {
-      // const pos = showPositionInput && positionValue ? parseInt(positionValue, 10) : undefined;
-      // if (showPositionInput && (pos === undefined || isNaN(pos))) {
-      //   // Consider adding a toast here for invalid position
-      //   return;
-      // }
       onOperationChange(selectedOperation, showValueInput ? inputValue : undefined, showSecondListInput ? secondListValue : undefined);
     }
   };
@@ -101,12 +92,13 @@ export function LinkedListControlsPanel({
     ? ALL_OPERATIONS.filter(op => availableOperations.includes(op.value))
     : ALL_OPERATIONS;
 
-  const commonPlayDisabled = isFinished || !isAlgoImplemented || !selectedOperation; // Play/Step usually follows an operation setup
-  const commonStepDisabled = isPlaying || isFinished || !isAlgoImplemented || !selectedOperation;
-  const executeOpDisabled = isPlaying || !isAlgoImplemented || !selectedOperation || 
-                            (showValueInput && inputValue.trim() === '') ||
-                            (showSecondListInput && (secondListValue === undefined || secondListValue.trim() === ''));
-                            // (showPositionInput && (positionValue === undefined || positionValue.trim() === ''));
+  // Disable execute if operation doesn't need value OR if it does and value is empty
+  const isExecuteDisabled = isPlaying || !isAlgoImplemented || !selectedOperation ||
+    (showValueInput && inputValue.trim() === '') ||
+    (showSecondListInput && (!secondListValue || secondListValue.trim() === '')) ||
+    (selectedOperation === 'init'); // 'init' is handled by initialListValue change
+
+  const isValueInputRelevant = showValueInput && selectedOperation !== 'init';
 
   return (
     <Card className="shadow-xl rounded-xl">
@@ -116,7 +108,7 @@ export function LinkedListControlsPanel({
       <CardContent className="space-y-6">
         <div className="space-y-2">
             <Label htmlFor="initialListInput" className="text-sm font-medium">
-              Initial List (comma-separated, e.g., 1,2,3)
+              Current/Initial List (comma-separated, e.g., 1,2,3)
             </Label>
             <Input
               id="initialListInput"
@@ -153,30 +145,19 @@ export function LinkedListControlsPanel({
             </Select>
           </div>
 
-          {showValueInput && (
+          {isValueInputRelevant && (
             <div className="space-y-2">
               <Label htmlFor="valueInput" className="text-sm font-medium">Value</Label>
               <Input
                 id="valueInput" type="text" value={inputValue}
                 onChange={(e) => onInputValueChange(e.target.value)}
                 placeholder="Enter value"
-                disabled={isPlaying || !isAlgoImplemented}
+                disabled={isPlaying || !isAlgoImplemented || !showValueInput}
               />
             </div>
           )}
-          {/* {showPositionInput && (
-            <div className="space-y-2">
-              <Label htmlFor="positionInput" className="text-sm font-medium">Position (0-indexed)</Label>
-              <Input
-                id="positionInput" type="number" value={positionValue}
-                onChange={(e) => onPositionValueChange && onPositionValueChange(e.target.value)}
-                placeholder="Enter index"
-                disabled={isPlaying || !isAlgoImplemented}
-              />
-            </div>
-          )} */}
           {showSecondListInput && onSecondListValueChange && (
-             <div className="space-y-2">
+             <div className="space-y-2 md:col-span-2"> {/* Span to take full width if only this extra input */}
                 <Label htmlFor="secondListInput" className="text-sm font-medium">Second List (for Merge)</Label>
                 <Input
                     id="secondListInput" type="text" value={secondListValue}
@@ -188,8 +169,8 @@ export function LinkedListControlsPanel({
           )}
         </div>
         
-        <Button onClick={handleExecuteOperation} disabled={executeOpDisabled} className="w-full md:w-auto">
-          Setup Operation / Generate Steps
+        <Button onClick={handleExecuteOperation} disabled={isExecuteDisabled} className="w-full md:w-auto">
+          Execute {selectedOperation ? ALL_OPERATIONS.find(op=>op.value===selectedOperation)?.label : ''}
         </Button>
         
         <div className="flex items-center justify-start pt-4 border-t">
@@ -201,7 +182,7 @@ export function LinkedListControlsPanel({
         <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {!isPlaying ? (
-              <Button onClick={onPlay} disabled={commonPlayDisabled} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
+              <Button onClick={onPlay} disabled={isFinished || !isAlgoImplemented || !selectedOperation || steps.length <=1} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
                 <Play className="mr-2 h-5 w-5" /> Play Steps
               </Button>
             ) : (
@@ -209,7 +190,7 @@ export function LinkedListControlsPanel({
                 <Pause className="mr-2 h-5 w-5" /> Pause
               </Button>
             )}
-            <Button onClick={onStep} variant="outline" disabled={commonStepDisabled} size="lg">
+            <Button onClick={onStep} variant="outline" disabled={isPlaying || isFinished || !isAlgoImplemented || !selectedOperation || steps.length <=1} size="lg">
               <SkipForward className="mr-2 h-5 w-5" /> Step
             </Button>
           </div>
@@ -239,3 +220,4 @@ export function LinkedListControlsPanel({
     </Card>
   );
 }
+

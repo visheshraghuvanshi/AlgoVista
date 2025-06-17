@@ -153,3 +153,4 @@ export const generateJumpSearchSteps = (sortedArrToSearch: number[], target: num
   addStep(lm.functionEnd);
   return localSteps;
 };
+

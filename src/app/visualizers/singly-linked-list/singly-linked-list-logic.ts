@@ -4,47 +4,59 @@ import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
 // Conceptual Line Maps - adjust based on actual code snippets shown
 export const SINGLY_LL_LINE_MAPS: Record<string, Record<string, number>> = {
   insertHead: {
-    start: 1,
-    newNode: 2,
-    linkNewNode: 3,
-    updateHead: 4,
-    end: 5,
+    classDef: 1, // Node class
+    constructor: 2, // SLL constructor
+    insertHeadFunc: 3,
+    newNode: 4,
+    linkNewNode: 5,
+    updateHead: 6,
+    end: 7,
   },
   insertTail: {
-    start: 1,
+    // classDef...
+    insertTailFunc: 1,
     newNode: 2,
     emptyCheck: 3,
     assignHead: 4,
-    findTailLoop: 5,
-    assignNext: 6,
-    end: 7,
+    initCurrent: 5,
+    findTailLoop: 6,
+    moveCurrent: 7,
+    assignNext: 8,
+    end: 9,
   },
   deleteByValue: {
-    start: 1,
+    deleteFunc: 1,
     emptyCheck: 2,
     headMatch: 3,
     updateHeadDelete: 4,
-    findNodeLoop: 5,
-    nodeFound: 6,
-    updateNext: 7,
-    returnNull: 8, // Not found
-    end: 9,
+    initCurrentPrev: 5,
+    findNodeLoop: 6,
+    checkMatchInLoop: 7,
+    updateNext: 8, // prev.next = current.next
+    returnFound: 9,
+    moveCurrentPrevInLoop: 10,
+    returnNull: 11, // Not found
+    end: 12,
   },
   search: {
-    start: 1,
-    loop: 2,
-    checkMatch: 3,
-    returnFound: 4,
-    moveNext: 5,
-    returnNull: 6, // Not found
-    end: 7,
+    searchFunc: 1,
+    initCurrentIndex: 2,
+    loop: 3,
+    checkMatch: 4,
+    returnFound: 5, // return { node, index }
+    moveCurrentSearch: 6,
+    incrementIndex: 7,
+    returnNullSearch: 8, // Not found
+    end: 9,
   },
   traverse: {
-    start: 1,
-    loop: 2,
-    processNode: 3, // e.g., add to result array
-    moveNext: 4,
-    end: 5,
+    traverseFunc: 1,
+    initCurrentResult: 2,
+    loop: 3,
+    processNode: 4, // e.g., add to result array
+    moveNext: 5,
+    returnResult: 6,
+    end: 7,
   },
   init: { // For initializing from an array
     start: 1,
@@ -56,10 +68,11 @@ export const SINGLY_LL_LINE_MAPS: Record<string, Record<string, number>> = {
 
 const NODE_COLORS = {
   default: "hsl(var(--secondary))",
-  active: "hsl(var(--primary))",
-  new: "hsl(var(--accent))",
-  deleted: "hsl(var(--destructive))",
-  head: "hsl(var(--ring))",
+  active: "hsl(var(--primary))", // General active node (e.g., current in traversal)
+  new: "hsl(var(--accent))",      // Newly inserted node
+  deleted: "hsl(var(--destructive))", // Node being deleted
+  head: "hsl(var(--ring))",       // Distinct color for head
+  searched: "hsl(var(--accent))", // Highlight for search operations
 };
 const TEXT_COLORS = {
   default: "hsl(var(--secondary-foreground))",
@@ -70,7 +83,7 @@ const TEXT_COLORS = {
 
 
 let nodeIdCounter = 0;
-const generateNodeId = (val: string | number) => `node-${val}-${nodeIdCounter++}`;
+const generateNodeId = (val: string | number) => `sll-node-${val}-${nodeIdCounter++}`;
 
 export function parseStringToListNodes(input: string): { value: string | number, id: string }[] {
   if (input.trim() === '') return [];
@@ -79,63 +92,45 @@ export function parseStringToListNodes(input: string): { value: string | number,
     .filter(s => s !== '')
     .map(valStr => {
       const num = Number(valStr);
-      const value = isNaN(num) ? valStr : num;
-      return { value, id: generateNodeId(value) }; // Give unique ID early
+      const value = isNaN(num) ? valStr : num; // Allow string or number values
+      return { value, id: generateNodeId(value) };
     });
 }
 
-function createVisualNodes(
-  parsedNodes: { value: string | number, id: string }[],
+function createVisualNodesFromCurrentState(
+  actualListNodes: Map<string, { value: string | number; nextId: string | null }>,
   currentHeadId: string | null,
   activeNodeId?: string | null,
-  newNodeId?: string | null,
-  deletedNodeId?: string | null
+  specialHighlightId?: string | null, // For new/deleted/found node
+  specialHighlightType?: 'new' | 'deleted' | 'searched'
 ): LinkedListNodeVisual[] {
   const visualNodes: LinkedListNodeVisual[] = [];
-  let tempHead = currentHeadId;
-  const idMap = new Map(parsedNodes.map(p => [p.id, p])); // For quick lookup
+  let currentId = currentHeadId;
+  const visited = new Set<string>(); // Basic cycle detection for safety during rendering
 
-  // Reconstruct the list order from head for visualization
-  const orderedNodeIds: string[] = [];
-  let currentId = tempHead;
-  const visited = new Set<string>(); // For cycle detection in case of bad logic
-  while(currentId && !visited.has(currentId)) {
-    orderedNodeIds.push(currentId);
+  while (currentId && !visited.has(currentId)) {
     visited.add(currentId);
-    // This part is tricky as actual list structure is not directly passed
-    // We rely on the parsedNodes array and headId.
-    // For visualization, we'll infer nextId from array order IF currentHeadId aligns with parsedNodes[0].id
-    // This simplified logic assumes parsedNodes reflects current list state to some extent.
-    // A more robust step generator would maintain the actual list structure.
-    const currentIndexInParsed = parsedNodes.findIndex(p => p.id === currentId);
-    if (currentIndexInParsed !== -1 && currentIndexInParsed < parsedNodes.length - 1) {
-       // Attempt to find the "next" from the original parsed order if we don't have explicit links yet
-       // This is a simplification. Real steps would pass the current list structure.
-       const nextInParsed = parsedNodes[currentIndexInParsed + 1];
-       currentId = nextInParsed ? nextInParsed.id : null;
-    } else {
-        currentId = null; // End of list or couldn't infer
-    }
-  }
-   // If orderedNodeIds is empty but parsedNodes is not, it means headId was bad or list is empty.
-   // Fallback to just using parsedNodes order if head-based reconstruction fails
-   const nodesToRender = orderedNodeIds.length > 0 ? orderedNodeIds.map(id => idMap.get(id)!) : parsedNodes;
+    const nodeData = actualListNodes.get(currentId);
+    if (!nodeData) break;
 
-
-  nodesToRender.forEach((pNode, index) => {
     let color = NODE_COLORS.default;
-    if (pNode.id === activeNodeId) color = NODE_COLORS.active;
-    if (pNode.id === newNodeId) color = NODE_COLORS.new;
-    if (pNode.id === deletedNodeId) color = NODE_COLORS.deleted;
+    if (currentId === currentHeadId) color = NODE_COLORS.head;
+    if (currentId === activeNodeId) color = NODE_COLORS.active;
+    if (currentId === specialHighlightId) {
+      if (specialHighlightType === 'new') color = NODE_COLORS.new;
+      else if (specialHighlightType === 'deleted') color = NODE_COLORS.deleted;
+      else if (specialHighlightType === 'searched') color = NODE_COLORS.searched;
+    }
 
     visualNodes.push({
-      id: pNode.id,
-      value: pNode.value,
-      nextId: (index < nodesToRender.length - 1) ? nodesToRender[index+1].id : null,
+      id: currentId,
+      value: nodeData.value,
+      nextId: nodeData.nextId,
       color: color,
-      isHead: pNode.id === currentHeadId,
+      isHead: currentId === currentHeadId,
     });
-  });
+    currentId = nodeData.nextId;
+  }
   return visualNodes;
 }
 
@@ -143,192 +138,161 @@ function createVisualNodes(
 export const generateSinglyLinkedListSteps = (
   initialListString: string,
   operation: string,
-  value?: string | number
+  value?: string | number // For operations needing a value
 ): LinkedListAlgorithmStep[] => {
   const localSteps: LinkedListAlgorithmStep[] = [];
-  nodeIdCounter = 0; // Reset for fresh IDs
-  let currentParsedNodes = parseStringToListNodes(initialListString);
-  let headId: string | null = currentParsedNodes.length > 0 ? currentParsedNodes[0].id : null;
+  nodeIdCounter = 0; // Reset for fresh IDs for this operation sequence
+  
+  // Initialize actual list structure from initialListString for this operation
+  const initialParsed = parseStringToListNodes(initialListString);
+  const actualListNodes = new Map<string, { value: string | number; nextId: string | null }>();
+  initialParsed.forEach((pNode, index) => {
+    actualListNodes.set(pNode.id, {
+      value: pNode.value,
+      nextId: index < initialParsed.length - 1 ? initialParsed[index + 1].id : null,
+    });
+  });
+  let headId: string | null = initialParsed.length > 0 ? initialParsed[0].id : null;
+  
   const lineMap = SINGLY_LL_LINE_MAPS[operation] || SINGLY_LL_LINE_MAPS.init;
 
   const addStep = (
     line: number,
     message: string,
     activeNodeId?: string | null,
-    newNodeId?: string | null,
-    deletedNodeId?: string | null,
-    auxPointers?: Record<string, string | null>
+    specialNodeId?: string | null,
+    specialType?: 'new' | 'deleted' | 'searched',
+    auxPointers?: Record<string, string | null>,
+    opStatus?: 'success' | 'failure' | 'info'
   ) => {
     localSteps.push({
-      nodes: createVisualNodes(currentParsedNodes, headId, activeNodeId, newNodeId, deletedNodeId),
+      nodes: createVisualNodesFromCurrentState(actualListNodes, headId, activeNodeId, specialNodeId, specialType),
       headId: headId,
       currentLine: line,
       message,
       auxiliaryPointers: auxPointers,
       operation,
+      status: opStatus,
     });
   };
-
-  addStep(lineMap.start, `Starting ${operation}`);
+  
+  let currentOpMessage = `Starting ${operation}`;
+  if(value !== undefined) currentOpMessage += ` with value ${value}`;
+  addStep(lineMap.start, currentOpMessage);
 
   switch (operation) {
     case 'init':
-      // Initial state is already based on currentParsedNodes
-      addStep(lineMap.end, `List initialized with: ${initialListString || '(empty)'}`);
+      addStep(lineMap.end, `List initialized: ${initialListString || '(empty)'}`);
       break;
 
     case 'insertHead':
-      if (value === undefined) {
-        addStep(lineMap.end, "Error: No value provided for insertHead.", undefined, undefined, undefined, {status: 'failure'});
-        break;
-      }
-      const newHeadNode = { value, id: generateNodeId(value) };
-      addStep(lineMap.newNode, `Creating new node with value ${value}`, undefined, newHeadNode.id);
-      
-      const oldHeadId = headId;
-      currentParsedNodes = [newHeadNode, ...currentParsedNodes]; // Prepend
-      headId = newHeadNode.id;
-      
-      addStep(lineMap.linkNewNode, `Linking new node. Next of ${value} points to ${oldHeadId ? currentParsedNodes.find(n=>n.id===oldHeadId)?.value : 'null'}`, newHeadNode.id, newHeadNode.id);
-      addStep(lineMap.updateHead, `Updating head to new node ${value}`, headId, newHeadNode.id);
-      addStep(lineMap.end, `Inserted ${value} at head.`);
+      if (value === undefined) { addStep(lineMap.end, "Error: No value for insertHead.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      const newHeadNodeId = generateNodeId(value);
+      addStep(lineMap.newNode, `New node with value ${value}`, undefined, newHeadNodeId, 'new');
+      actualListNodes.set(newHeadNodeId, { value, nextId: headId });
+      headId = newHeadNodeId;
+      addStep(lineMap.linkNewNode, `Linking new node. New head: ${value}`, headId, newHeadNodeId, 'new');
+      addStep(lineMap.updateHead, `Head updated.`, headId, newHeadNodeId, 'new');
+      addStep(lineMap.end, `Inserted ${value} at head.`, undefined, undefined, undefined, undefined, 'success');
       break;
     
     case 'insertTail':
-      if (value === undefined) {
-         addStep(lineMap.end, "Error: No value provided for insertTail.", undefined, undefined, undefined, {status: 'failure'});
-        break;
-      }
-      const newTailNode = { value, id: generateNodeId(value) };
-      addStep(lineMap.newNode, `Creating new node with value ${value}`, undefined, newTailNode.id);
-
+      if (value === undefined) { addStep(lineMap.end, "Error: No value for insertTail.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      const newTailNodeId = generateNodeId(value);
+      addStep(lineMap.newNode, `New node with value ${value}`, undefined, newTailNodeId, 'new');
       if (!headId) {
-        addStep(lineMap.emptyCheck, `List is empty. New node becomes head.`, undefined, newTailNode.id);
-        currentParsedNodes = [newTailNode];
-        headId = newTailNode.id;
-        addStep(lineMap.assignHead, `Head is now ${value}`, headId, newTailNode.id);
+        addStep(lineMap.emptyCheck, `List empty. New node is head.`, undefined, newTailNodeId, 'new');
+        actualListNodes.set(newTailNodeId, { value, nextId: null });
+        headId = newTailNodeId;
+        addStep(lineMap.assignHead, `Head is now ${value}`, headId, newTailNodeId, 'new');
       } else {
-        addStep(lineMap.findTailLoop, `Finding tail of the list...`, headId);
         let currentId = headId;
-        let tailIdx = 0;
-        for(let i=0; i<currentParsedNodes.length; i++){
-            if(currentParsedNodes[i].id === currentId){
-                 addStep(lineMap.findTailLoop, `Current node: ${currentParsedNodes[i].value}`, currentId);
-                 if(i === currentParsedNodes.length - 1) { // Found tail
-                     tailIdx = i;
-                     break;
-                 }
-                 currentId = currentParsedNodes[i+1]?.id; // Simplified: assumes next in array
-            }
+        addStep(lineMap.initCurrent, `Finding tail. Start at head: ${actualListNodes.get(currentId)?.value}`, currentId);
+        while (actualListNodes.get(currentId)?.nextId) {
+           addStep(lineMap.findTailLoop, `Current: ${actualListNodes.get(currentId)?.value}. Moving next.`, currentId);
+           currentId = actualListNodes.get(currentId)!.nextId!;
         }
-        currentParsedNodes.push(newTailNode); // Append
-        addStep(lineMap.assignNext, `Attaching new node ${value} to tail ${currentParsedNodes[tailIdx].value}`, currentParsedNodes[tailIdx].id, newTailNode.id);
+        addStep(lineMap.findTailLoop, `Tail found: ${actualListNodes.get(currentId)?.value}.`, currentId);
+        actualListNodes.get(currentId)!.nextId = newTailNodeId;
+        actualListNodes.set(newTailNodeId, { value, nextId: null });
+        addStep(lineMap.assignNext, `Attaching new node ${value} to tail.`, currentId, newTailNodeId, 'new');
       }
-      addStep(lineMap.end, `Inserted ${value} at tail.`);
+      addStep(lineMap.end, `Inserted ${value} at tail.`, undefined, undefined, undefined, undefined, 'success');
       break;
 
     case 'deleteByValue':
-      if (value === undefined) {
-        addStep(lineMap.end, "Error: No value provided for deleteByValue.", undefined, undefined, undefined, {status: 'failure'});
+      if (value === undefined) { addStep(lineMap.end, "Error: No value for delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      if (!headId) { addStep(lineMap.emptyCheck, "List empty. Cannot delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      
+      if (actualListNodes.get(headId)?.value == value) {
+        const deletedId = headId;
+        addStep(lineMap.headMatch, `Value ${value} found at head.`, headId, deletedId, 'deleted');
+        headId = actualListNodes.get(headId)!.nextId;
+        actualListNodes.delete(deletedId);
+        addStep(lineMap.updateHeadDelete, `Deleted head. New head: ${headId ? actualListNodes.get(headId)?.value : 'null'}.`, headId, undefined, undefined, undefined, 'success');
         break;
       }
-      if (!headId) {
-        addStep(lineMap.emptyCheck, `List is empty. Cannot delete.`, undefined, undefined, undefined, {status: 'failure'});
-        break;
+      
+      let current = headId;
+      let prev = null;
+      let found = false;
+      addStep(lineMap.initCurrentPrev, "Searching for node to delete.", current);
+      while(current && actualListNodes.get(current)?.value != value) {
+        addStep(lineMap.findNodeLoop, `Current: ${actualListNodes.get(current)?.value}. Not ${value}.`, current);
+        prev = current;
+        current = actualListNodes.get(current)!.nextId;
+        addStep(lineMap.moveCurrentPrevInLoop, "Moving to next node.", current, undefined, undefined, {prev, current});
       }
-      addStep(lineMap.start, `Attempting to delete value ${value}.`);
-      if (currentParsedNodes[0].id === headId && currentParsedNodes[0].value == value) { // Using == for type flexibility
-        const deletedNode = currentParsedNodes[0];
-        addStep(lineMap.headMatch, `Value ${value} found at head.`, headId, undefined, deletedNode.id);
-        headId = currentParsedNodes[1] ? currentParsedNodes[1].id : null;
-        currentParsedNodes.shift();
-        addStep(lineMap.updateHeadDelete, `Deleted head. New head is ${headId ? currentParsedNodes[0]?.value : 'null'}.`, headId, undefined, deletedNode.id);
+      if(current) { // Node found
+        const deletedId = current;
+        addStep(lineMap.checkMatchInLoop, `Node with value ${value} found.`, current, deletedId, 'deleted');
+        if(prev) actualListNodes.get(prev)!.nextId = actualListNodes.get(current)!.nextId;
+        actualListNodes.delete(deletedId);
+        addStep(lineMap.updateNext, `Linking previous node to next.`, prev, undefined, undefined, {prev, next: actualListNodes.get(prev!)?.nextId}, 'success');
+        found = true;
       } else {
-        let found = false;
-        let prevNodeId: string | null = null;
-        for (let i = 0; i < currentParsedNodes.length; i++) {
-          const currentNode = currentParsedNodes[i];
-          addStep(lineMap.findNodeLoop, `Checking node ${currentNode.value}`, currentNode.id);
-          if (currentNode.value == value) {
-            const deletedNode = currentNode;
-            addStep(lineMap.nodeFound, `Value ${value} found.`, currentNode.id, undefined, deletedNode.id);
-            if (prevNodeId) {
-              // Find previous node in array and conceptually update its 'next'
-            }
-            currentParsedNodes.splice(i, 1); // Remove from array
-            found = true;
-            addStep(lineMap.updateNext, `Deleted node ${value}. Previous node now points to next.`, prevNodeId, undefined, deletedNode.id);
-            break;
-          }
-          prevNodeId = currentNode.id;
-        }
-        if (!found) {
-          addStep(lineMap.returnNull, `Value ${value} not found in list.`, undefined, undefined, undefined, {status: 'failure'});
-        }
+        addStep(lineMap.returnNull, `Value ${value} not found.`, undefined, undefined, undefined, undefined, 'failure');
       }
-      addStep(lineMap.end, `Deletion attempt for ${value} complete.`);
+      addStep(lineMap.end, `Delete operation for ${value} complete.`);
       break;
 
     case 'search':
-      if (value === undefined) {
-         addStep(lineMap.end, "Error: No value provided for search.", undefined, undefined, undefined, {status: 'failure'});
-        break;
+      if (value === undefined) { addStep(lineMap.end, "Error: No value for search.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      if (!headId) { addStep(lineMap.end, "List empty. Cannot search.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      
+      let searchCurrent = headId;
+      let searchIndex = 0;
+      addStep(lineMap.initCurrentIndex, `Searching for ${value}. Start at head.`, searchCurrent);
+      while(searchCurrent) {
+        addStep(lineMap.loop, `Current node: ${actualListNodes.get(searchCurrent)?.value} at index ${searchIndex}.`, searchCurrent);
+        if(actualListNodes.get(searchCurrent)?.value == value) {
+          addStep(lineMap.returnFound, `Value ${value} found at index ${searchIndex}.`, searchCurrent, searchCurrent, 'searched', undefined, 'success');
+          addStep(lineMap.end, "Search complete.");
+          return localSteps;
+        }
+        addStep(lineMap.moveCurrentSearch, `Not ${value}. Moving to next.`, searchCurrent);
+        searchCurrent = actualListNodes.get(searchCurrent)!.nextId;
+        searchIndex++;
       }
-      if (!headId) {
-        addStep(lineMap.end, `List is empty. Cannot search.`, undefined, undefined, undefined, {status: 'failure'});
-        break;
-      }
-      addStep(lineMap.start, `Searching for value ${value}.`);
-      let searchCurrentId = headId;
-      let foundAtIndex = -1;
-      for(let i=0; i < currentParsedNodes.length; i++) {
-          const node = currentParsedNodes[i];
-          if(node.id !== searchCurrentId) continue; // Only process if it's part of logical list from head
-
-          addStep(lineMap.loop, `Checking node ${node.value} at index ${i}`, node.id);
-          if(node.value == value) {
-              addStep(lineMap.returnFound, `Value ${value} found at index ${i}.`, node.id);
-              foundAtIndex = i;
-              break;
-          }
-          addStep(lineMap.moveNext, `Value not ${value}. Moving to next.`, node.id);
-          searchCurrentId = (i < currentParsedNodes.length - 1) ? currentParsedNodes[i+1]?.id : null;
-      }
-      if(foundAtIndex === -1) {
-          addStep(lineMap.returnNull, `Value ${value} not found.`, undefined, undefined, undefined, {status: 'failure'});
-      }
-      addStep(lineMap.end, `Search for ${value} complete.`);
+      addStep(lineMap.returnNullSearch, `Value ${value} not found.`, undefined, undefined, undefined, undefined, 'failure');
+      addStep(lineMap.end, "Search complete.");
       break;
-    
+
     case 'traverse':
-        if(!headId) {
-            addStep(lineMap.end, "List is empty. Nothing to traverse.", undefined, undefined, undefined, {status: 'info'});
-            break;
-        }
-        addStep(lineMap.start, "Starting traversal.");
-        let traverseCurrentId = headId;
-        for(let i=0; i < currentParsedNodes.length; i++){
-            const node = currentParsedNodes[i];
-            if(node.id !== traverseCurrentId) continue; // Safety: ensure we're on the logical path
-            
-            addStep(lineMap.processNode, `Visiting node ${node.value}`, node.id);
-            traverseCurrentId = (i < currentParsedNodes.length -1) ? currentParsedNodes[i+1]?.id : null;
-             if(traverseCurrentId) {
-                addStep(lineMap.moveNext, `Moving to next node.`, node.id);
-            }
-        }
-        addStep(lineMap.end, "Traversal complete.");
-        break;
+       if (!headId) { addStep(lineMap.end, "List empty. Nothing to traverse.", undefined, undefined, undefined, undefined, 'info'); break; }
+       let travCurrent = headId;
+       addStep(lineMap.initCurrentResult, "Starting traversal.", travCurrent);
+       while(travCurrent) {
+           const nodeData = actualListNodes.get(travCurrent)!;
+           addStep(lineMap.processNode, `Visiting node ${nodeData.value}.`, travCurrent);
+           travCurrent = nodeData.nextId;
+           if(travCurrent) addStep(lineMap.moveNext, "Moving to next node.", travCurrent);
+       }
+       addStep(lineMap.returnResult, "Traversal complete."); // Result array not explicitly stored in step for now
+       break;
 
     default:
-      addStep(0, `Operation ${operation} not implemented for visualization.`);
+      addStep(0, `Operation ${operation} visualization not fully implemented.`);
   }
   return localSteps;
 };
-
-// Simplified logic for other list types for now (focus on Singly first)
-export const generateDoublyLinkedListSteps = (initialListString: string, operation: string, value?: string | number) => generateSinglyLinkedListSteps(initialListString, operation, value);
-export const generateCircularLinkedListSteps = (initialListString: string, operation: string, value?: string | number) => generateSinglyLinkedListSteps(initialListString, operation, value);
-export const generateLinkedListReversalSteps = (initialListString: string) => generateSinglyLinkedListSteps(initialListString, 'reverse');
-export const generateCycleDetectionSteps = (initialListString: string, cyclePoint?: number) => generateSinglyLinkedListSteps(initialListString, 'detectCycle');
-export const generateMergeSortedListsSteps = (list1String: string, list2String: string) => generateSinglyLinkedListSteps(`${list1String},${list2String}`, 'merge'); // Very simplified merge

@@ -133,3 +133,4 @@ export const generateCocktailSortSteps = (arrToSort: number[]): AlgorithmStep[] 
   addStep(lm.functionEnd, [], [], "Algorithm finished");
   return localSteps;
 };
+

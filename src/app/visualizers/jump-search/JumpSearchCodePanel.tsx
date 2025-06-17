@@ -114,3 +114,4 @@ export function JumpSearchCodePanel({ codeSnippets, currentLine }: JumpSearchCod
     </Card>
   );
 }
+

@@ -9,10 +9,10 @@ import { JumpSearchCodePanel } from './JumpSearchCodePanel';
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { JUMP_SEARCH_LINE_MAP, generateJumpSearchSteps } from './jump-search-logic';
+import { algorithmMetadata } from './metadata';
 
 const JUMP_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
@@ -33,7 +33,7 @@ const JUMP_SEARCH_CODE_SNIPPETS = {
     "    if (prev === Math.min(step, n)) return -1;",            // 14
     "  }",
     "  // If element is found",
-    "  if (sortedArr[prev] === target) return prev;",            // 15 & 16
+    "  if (prev < n && sortedArr[prev] === target) return prev;",// 15 & 16 (added prev < n check)
     "  return -1;",                                             // 17
     "}",                                                        // 18
   ],
@@ -63,11 +63,9 @@ const JUMP_SEARCH_CODE_SNIPPETS = {
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-const ALGORITHM_SLUG = 'jump-search';
 
 export default function JumpSearchVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
 
   const [inputValue, setInputValue] = useState('1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16'); 
   const [targetValue, setTargetValue] = useState('13');
@@ -77,11 +75,11 @@ export default function JumpSearchVisualizerPage() {
 
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
-  const [swappingIndices, setSwappingIndices] = useState<number[]>([]); // Not used but part of AlgorithmStep
-  const [sortedIndices, setSortedIndices] = useState<number[]>([]); // Used for found item
+  const [swappingIndices, setSwappingIndices] = useState<number[]>([]); 
+  const [sortedIndices, setSortedIndices] = useState<number[]>([]); 
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
-  const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null); // Not used
+  const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null); 
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -91,14 +89,6 @@ export default function JumpSearchVisualizerPage() {
   const isAlgoImplemented = true;
   const lastProcessedInputValueRef = useRef<string | null>(null);
 
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const parseInput = useCallback((value: string, notifySort: boolean = false): number[] | null => {
     if (value.trim() === '') return [];
@@ -158,7 +148,7 @@ export default function JumpSearchVisualizerPage() {
 
     if (parsedArray !== null && parsedTarget !== null) {
       if (notifySort) { 
-        setInputValue(parsedArray.join(',')); // Update input field if sorted
+        setInputValue(parsedArray.join(',')); 
       }
       lastProcessedInputValueRef.current = parsedArray.join(',');
 
@@ -169,8 +159,7 @@ export default function JumpSearchVisualizerPage() {
       setIsFinished(false);
 
       if (newSteps.length > 0) {
-        const firstStep = newSteps[0];
-        updateStateFromStep(0); // Use helper to set all state vars from step
+        updateStateFromStep(0); 
       } else {
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -187,31 +176,27 @@ export default function JumpSearchVisualizerPage() {
 
 
   useEffect(() => {
-    generateSteps(false); // Initial generation without forcing sort notification for default value
+    generateSteps(false); 
   }, [targetValue, generateSteps]); 
 
   useEffect(() => {
-    // This effect specifically handles changes to inputValue to re-sort and re-generate.
     if (inputValue !== lastProcessedInputValueRef.current) {
-        const parsedArray = parseInput(inputValue, true); // Notify sort if input changes manually
+        const parsedArray = parseInput(inputValue, true); 
         if (parsedArray) {
             const newInputValueStr = parsedArray.join(',');
             if (inputValue !== newInputValueStr) {
-                // If sorting changed the input string, set it, which will trigger the other useEffect
-                // via generateSteps dependency on inputValue.
                 setInputValue(newInputValueStr); 
             } else {
-                 // If string is same after sort (already sorted or empty), directly generate steps
                  generateSteps(true); 
             }
              lastProcessedInputValueRef.current = newInputValueStr;
         } else {
-             // Handle case where parseInput returns null (invalid input)
-             generateSteps(true); // Will likely show errors via toasts and reset visuals
+             generateSteps(true);
         }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput]); // Note: generateSteps is not here to avoid loop with setInputValue
+  }, [inputValue, parseInput]); 
+
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -265,26 +250,20 @@ export default function JumpSearchVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps(true); // True to ensure sorting notification if input was manually unsorted
+    generateSteps(true);
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(1)", average: "O(√n)", worst: "O(√n)" },
-    spaceComplexity: "O(1)",
-  } : null;
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
           <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
           <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{ALGORITHM_SLUG}&quot;.</p>
+          <p className="text-muted-foreground text-lg">Could not load data for Jump Search.</p>
         </main>
         <Footer />
       </div>
@@ -297,8 +276,9 @@ export default function JumpSearchVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -339,9 +319,15 @@ export default function JumpSearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
-         <AlgorithmDetailsCard {...algoDetails} />
+         <AlgorithmDetailsCard 
+            title={algorithmMetadata.title}
+            description={algorithmMetadata.longDescription || algorithmMetadata.description}
+            timeComplexities={algorithmMetadata.timeComplexities!}
+            spaceComplexity={algorithmMetadata.spaceComplexity!}
+        />
       </main>
       <Footer />
     </div>
   );
 }
+
