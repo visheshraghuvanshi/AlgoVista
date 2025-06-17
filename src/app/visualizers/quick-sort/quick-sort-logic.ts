@@ -82,7 +82,7 @@ export const generateQuickSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
       addStep(lm.partitionLoopEnd, currentArr, [high], [], `Partition loop finished. i = ${i}`, [low, high], high);
 
       addStep(lm.swapPivotToMiddle, currentArr, [i+1, high], [i+1, high], `Swap pivot arr[${high}] (${currentArr[high]}) with arr[${i+1}] (${currentArr[i+1]})`, [low, high], high);
-      [currentArr[i + 1], currentArr[high]] = [currentArr[high], currentArr[i + 1]];
+      [currentArr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
       const partitionIndex = i + 1;
       addStep(lm.swapPivotToMiddle, currentArr, [partitionIndex], [partitionIndex], `Pivot swapped. Partition index pi = ${partitionIndex}. Array: [${currentArr.slice(low,high+1).join(',')}]`, [low, high], partitionIndex);
       
