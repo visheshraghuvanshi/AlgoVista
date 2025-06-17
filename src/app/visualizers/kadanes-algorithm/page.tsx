@@ -9,10 +9,10 @@ import { KadanesAlgorithmCodePanel } from './KadanesAlgorithmCodePanel';
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel'; // Using SortingControls as it's an array input problem
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { KADANES_ALGORITHM_LINE_MAP, generateKadanesAlgorithmSteps } from './kadanes-algorithm-logic';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 
 const KADANES_ALGORITHM_CODE_SNIPPETS = {
   JavaScript: [
@@ -63,12 +63,10 @@ const KADANES_ALGORITHM_CODE_SNIPPETS = {
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-const ALGORITHM_SLUG = 'kadanes-algorithm';
 
 export default function KadanesAlgorithmVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-
+  
   const [inputValue, setInputValue] = useState('-2,1,-3,4,-1,2,1,-5,4'); 
   
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
@@ -88,14 +86,6 @@ export default function KadanesAlgorithmVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAlgoImplemented = true;
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const parseInput = useCallback((value: string): number[] | null => {
     if (value.trim() === '') return [];
@@ -140,12 +130,12 @@ export default function KadanesAlgorithmVisualizerPage() {
 
       if (newSteps.length > 0) {
         updateStateFromStep(0);
-      } else { // Should not happen if parseInput returns valid array
+      } else { 
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
       }
-    } else { // parseInput returned null
+    } else { 
       setSteps([]); setCurrentStepIndex(0);
       setDisplayedData([]);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -158,7 +148,7 @@ export default function KadanesAlgorithmVisualizerPage() {
   useEffect(() => {
     generateSteps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]); // Regenerate steps when input changes
+  }, [inputValue]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -216,21 +206,21 @@ export default function KadanesAlgorithmVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" },
-    spaceComplexity: "O(1)",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
           <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
           <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{ALGORITHM_SLUG}&quot;.</p>
+          <p className="text-muted-foreground text-lg">Could not load data for Kadane&apos;s Algorithm.</p>
         </main>
         <Footer />
       </div>
@@ -243,7 +233,7 @@ export default function KadanesAlgorithmVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -252,8 +242,8 @@ export default function KadanesAlgorithmVisualizerPage() {
               data={displayedData}
               activeIndices={activeIndices}
               swappingIndices={swappingIndices}
-              sortedIndices={sortedIndices} // Represents the max sum subarray
-              processingSubArrayRange={processingSubArrayRange} // Represents current positive sum subarray
+              sortedIndices={sortedIndices} 
+              processingSubArrayRange={processingSubArrayRange} 
               pivotActualIndex={pivotActualIndex}
             />
           </div>
@@ -287,3 +277,4 @@ export default function KadanesAlgorithmVisualizerPage() {
     </div>
   );
 }
+
