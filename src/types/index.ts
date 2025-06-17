@@ -1,6 +1,4 @@
 
-
-
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -82,6 +80,9 @@ export interface BinaryTreeNodeVisual {
   nodeColor?: 'RED' | 'BLACK' | string; // Specific RBT color or other type
   leftId?: string | null;
   rightId?: string | null;
+  // Huffman specific additions:
+  char?: string | null; // For Huffman leaf nodes
+  freq?: number;      // For Huffman nodes frequency
 }
 
 export interface BinaryTreeEdgeVisual {
@@ -264,6 +265,36 @@ export interface BucketSortStep extends AlgorithmStep {
   phase?: 'distributing' | 'sorting_bucket' | 'gathering';
 }
 
+// Huffman Coding Specific Types
+export interface HuffmanFrequencyItem {
+  char: string;
+  freq: number;
+  id: string; // Unique ID for visualization
+}
+
+export interface HuffmanNodeForPQ {
+  id: string;
+  char: string | null; // Null for internal nodes
+  freq: number;
+  leftId?: string | null;
+  rightId?: string | null;
+}
+
+export interface HuffmanCodeItem {
+  char: string;
+  code: string;
+}
+
+export interface HuffmanStep extends Omit<TreeAlgorithmStep, 'traversalPath'> {
+  phase: 'frequency_calculation' | 'pq_initialization' | 'tree_construction' | 'code_generation' | 'finished';
+  frequencies?: HuffmanFrequencyItem[];
+  priorityQueueState?: HuffmanNodeForPQ[]; // Conceptual representation
+  huffmanCodes?: HuffmanCodeItem[];
+  activeNodeIds?: string[]; // Nodes being merged from PQ or currently visited in code assignment
+  mergedNodeId?: string | null; // Newly created internal node
+  currentPathForCode?: string; // Path from root to current node during code generation
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
@@ -272,4 +303,3 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
     
-
