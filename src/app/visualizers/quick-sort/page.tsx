@@ -13,6 +13,97 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { QUICK_SORT_LINE_MAP, generateQuickSortSteps } from './quick-sort-logic';
 
+const QUICK_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+      "function quickSort(arr, low, high) {", // 1
+      "  if (low < high) {",                   // 2
+      "    let pi = partition(arr, low, high);", // 3
+      "    quickSort(arr, low, pi - 1);",      // 4
+      "    quickSort(arr, pi + 1, high);",     // 5
+      "  }",                                   // 6
+      "}",                                     // 7
+      "function partition(arr, low, high) {", // 8
+      "  let pivot = arr[high];",               // 9
+      "  let i = low - 1;",                    // 10
+      "  for (let j = low; j < high; j++) {",  // 11
+      "    if (arr[j] < pivot) {",             // 12
+      "      i++;",                             // 13
+      "      [arr[i], arr[j]] = [arr[j], arr[i]];", // 14 (Swap)
+      "    }",                                 // 15
+      "  }",                                   // 16
+      "  [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];", // 17 (Swap pivot)
+      "  return i + 1;",                       // 18
+      "}",                                     // 19
+      "// Initial call: quickSort(arr, 0, arr.length - 1);", // 20
+  ],
+  Python: [
+      "def quick_sort(arr, low, high):",
+      "    if low < high:",
+      "        pi = partition(arr, low, high)",
+      "        quick_sort(arr, low, pi - 1)",
+      "        quick_sort(arr, pi + 1, high)",
+      "",
+      "def partition(arr, low, high):",
+      "    pivot = arr[high]",
+      "    i = low - 1",
+      "    for j in range(low, high):",
+      "        if arr[j] < pivot:",
+      "            i += 1",
+      "            arr[i], arr[j] = arr[j], arr[i]",
+      "    arr[i + 1], arr[high] = arr[high], arr[i + 1]",
+      "    return i + 1",
+      "",
+      "# Initial call: quick_sort(arr, 0, len(arr) - 1)",
+  ],
+  Java: [
+      "public class QuickSort {",
+      "    int partition(int arr[], int low, int high) {",
+      "        int pivot = arr[high];",
+      "        int i = (low - 1);",
+      "        for (int j = low; j < high; j++) {",
+      "            if (arr[j] < pivot) {",
+      "                i++;",
+      "                int temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;",
+      "            }",
+      "        }",
+      "        int temp = arr[i + 1]; arr[i + 1] = arr[high]; arr[high] = temp;",
+      "        return i + 1;",
+      "    }",
+      "    void sort(int arr[], int low, int high) {",
+      "        if (low < high) {",
+      "            int pi = partition(arr, low, high);",
+      "            sort(arr, low, pi - 1);",
+      "            sort(arr, pi + 1, high);",
+      "        }",
+      "    }",
+      "    // Initial call: new QuickSort().sort(arr, 0, arr.length - 1);",
+      "}",
+  ],
+  "C++": [
+      "#include <vector>",
+      "#include <algorithm> // For std::swap",
+      "int partition(std::vector<int>& arr, int low, int high) {",
+      "    int pivot = arr[high];",
+      "    int i = (low - 1);",
+      "    for (int j = low; j < high; j++) {",
+      "        if (arr[j] < pivot) {",
+      "            i++;",
+      "            std::swap(arr[i], arr[j]);",
+      "        }",
+      "    }",
+      "    std::swap(arr[i + 1], arr[high]);",
+      "    return i + 1;",
+      "}",
+      "void quickSort(std::vector<int>& arr, int low, int high) {",
+      "    if (low < high) {",
+      "        int pi = partition(arr, low, high);",
+      "        quickSort(arr, low, pi - 1);",
+      "        quickSort(arr, pi + 1, high);",
+      "    }",
+      "}",
+      "// Initial call: quickSort(arr, 0, arr.size() - 1);",
+  ],
+};
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -44,9 +135,7 @@ export default function QuickSortVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAlgoImplemented = useMemo(() => {
-    return ['bubble-sort', 'insertion-sort', 'merge-sort', 'quick-sort'].includes(algorithm?.slug || '');
-  }, [algorithm]);
+  const isAlgoImplemented = true; // Hardcoded true
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -93,23 +182,12 @@ export default function QuickSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
-      let newSteps: AlgorithmStep[] = [];
-
-      if (isAlgoImplemented && ALGORITHM_SLUG === 'quick-sort') { 
-        newSteps = generateQuickSortSteps(parsedData);
-      } else {
-        setDisplayedData(parsedData);
-        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setSteps([]); 
-      }
+      let newSteps: AlgorithmStep[] = generateQuickSortSteps(parsedData);
       
-      if (isAlgoImplemented && newSteps.length > 0) {
+      if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
-      } else if (!isAlgoImplemented) {
-         setDisplayedData(parsedData); 
       } else { 
         setSteps([]);
         setDisplayedData(parsedData);
@@ -124,11 +202,11 @@ export default function QuickSortVisualizerPage() {
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, isAlgoImplemented]); 
+  }, [inputValue, parseInput]); 
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1 && isAlgoImplemented) {
+    if (isPlaying && currentStepIndex < steps.length -1) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -147,7 +225,7 @@ export default function QuickSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, isAlgoImplemented]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
 
   const handleInputChange = (value: string) => {
@@ -158,10 +236,6 @@ export default function QuickSortVisualizerPage() {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
-      return;
-    }
-    if (!isAlgoImplemented) {
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
     setIsPlaying(true);
@@ -179,10 +253,6 @@ export default function QuickSortVisualizerPage() {
   const handleStep = () => {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
-      return;
-    }
-     if (!isAlgoImplemented) {
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
 
@@ -211,13 +281,9 @@ export default function QuickSortVisualizerPage() {
     }
 
     const parsedData = parseInput(inputValue) || initialData; 
-    let newSteps: AlgorithmStep[] = [];
+    let newSteps: AlgorithmStep[] = generateQuickSortSteps(parsedData);
 
-    if (isAlgoImplemented && ALGORITHM_SLUG === 'quick-sort') { 
-        newSteps = generateQuickSortSteps(parsedData);
-    }
-
-    if (isAlgoImplemented && newSteps.length > 0) {
+    if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
@@ -247,8 +313,6 @@ export default function QuickSortVisualizerPage() {
     );
   }
 
-  const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -275,7 +339,7 @@ export default function QuickSortVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <CodePanel 
-              codeSnippets={codeSnippetsToDisplay} 
+              codeSnippets={QUICK_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
               defaultLanguage={"JavaScript"}
             />

@@ -13,6 +13,91 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { BUBBLE_SORT_LINE_MAP, generateBubbleSortSteps } from './bubble-sort-logic';
 
+const BUBBLE_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "function bubbleSort(arr) {",        // 1
+    "  let n = arr.length;",              // 2
+    "  let swapped;",                     // 3
+    "  do {",                             // 4
+    "    swapped = false;",               // 5
+    "    for (let i = 0; i < n - 1; i++) {",// 6
+    "      // Compare arr[i] and arr[i+1]", // 7 
+    "      if (arr[i] > arr[i + 1]) {",   // 8
+    "        // Swap arr[i] and arr[i+1]", // 9 
+    "        let temp = arr[i];",          // 10
+    "        arr[i] = arr[i + 1];",        // 11
+    "        arr[i + 1] = temp;",         // 12
+    "        swapped = true;",            // 13
+    "      }",                            // 14
+    "    }",                              // 15
+    "    n--; // Optimization",            // 16
+    "  } while (swapped && n > 0);",      // 17
+    "  return arr;",                     // 18
+    "}",                                  // 19
+  ],
+  Python: [
+    "def bubble_sort(arr):",
+    "    n = len(arr)",
+    "    # Outer loop for passes",
+    "    for i in range(n - 1):",
+    "        swapped_in_pass = False",
+    "        # Inner loop for comparisons",
+    "        for j in range(n - 1 - i):",
+    "            # Compare arr[j] and arr[j+1]",
+    "            if arr[j] > arr[j+1]:",
+    "                # Swap arr[j] and arr[j+1]",
+    "                arr[j], arr[j+1] = arr[j+1], arr[j]",
+    "                swapped_in_pass = True",
+    "            # End if",
+    "        # End inner loop",
+    "        # Optimization: if no swaps, array is sorted",
+    "        if not swapped_in_pass:",
+    "            break",
+    "    return arr",
+  ],
+  Java: [
+    "public class BubbleSort {",
+    "  public static void bubbleSort(int[] arr) {",
+    "    int n = arr.length;",
+    "    boolean swapped;",
+    "    do {",
+    "      swapped = false;",
+    "      for (int i = 0; i < n - 1; i++) {",
+    "        // Compare arr[i] and arr[i+1]",
+    "        if (arr[i] > arr[i + 1]) {",
+    "          // Swap arr[i] and arr[i+1]",
+    "          int temp = arr[i];",
+    "          arr[i] = arr[i + 1];",
+    "          arr[i + 1] = temp;",
+    "          swapped = true;",
+    "        }",
+    "      }",
+    "      n--; // Optimization",
+    "    } while (swapped && n > 0);",
+    "  }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::swap",
+    "void bubbleSort(std::vector<int>& arr) {",
+    "  int n = arr.size();",
+    "  bool swapped;",
+    "  do {",
+    "    swapped = false;",
+    "    for (int i = 0; i < n - 1; ++i) {",
+    "      // Compare arr[i] and arr[i+1]",
+    "      if (arr[i] > arr[i+1]) {",
+    "        // Swap arr[i] and arr[i+1]",
+    "        std::swap(arr[i], arr[i+1]);",
+    "        swapped = true;",
+    "      }",
+    "    }",
+    "    n--; // Optimization",
+    "  } while (swapped && n > 0);",
+    "}",
+  ],
+};
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -44,9 +129,7 @@ export default function BubbleSortVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAlgoImplemented = useMemo(() => {
-    return ['bubble-sort', 'insertion-sort', 'merge-sort', 'quick-sort'].includes(algorithm?.slug || '');
-  }, [algorithm]);
+  const isAlgoImplemented = true; // Hardcoded true for this specific page
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -93,23 +176,12 @@ export default function BubbleSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
-      let newSteps: AlgorithmStep[] = [];
-
-      if (isAlgoImplemented && ALGORITHM_SLUG === 'bubble-sort') { 
-        newSteps = generateBubbleSortSteps(parsedData);
-      } else {
-        setDisplayedData(parsedData); 
-        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setSteps([]); 
-      }
+      let newSteps: AlgorithmStep[] = generateBubbleSortSteps(parsedData);
       
-      if (isAlgoImplemented && newSteps.length > 0) {
+      if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
-      } else if (!isAlgoImplemented) {
-         setDisplayedData(parsedData); 
       } else { 
         setSteps([]);
         setDisplayedData(parsedData);
@@ -124,11 +196,11 @@ export default function BubbleSortVisualizerPage() {
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, isAlgoImplemented]); 
+  }, [inputValue, parseInput]); 
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1 && isAlgoImplemented) {
+    if (isPlaying && currentStepIndex < steps.length -1 ) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -147,7 +219,7 @@ export default function BubbleSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, isAlgoImplemented]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
 
   const handleInputChange = (value: string) => {
@@ -158,10 +230,6 @@ export default function BubbleSortVisualizerPage() {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
-      return;
-    }
-    if (!isAlgoImplemented) { 
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
     setIsPlaying(true);
@@ -181,11 +249,6 @@ export default function BubbleSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
-     if (!isAlgoImplemented) { 
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
-      return;
-    }
-
     setIsPlaying(false); 
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
@@ -211,13 +274,9 @@ export default function BubbleSortVisualizerPage() {
     }
 
     const parsedData = parseInput(inputValue) || initialData; 
-    let newSteps: AlgorithmStep[] = [];
+    let newSteps: AlgorithmStep[] = generateBubbleSortSteps(parsedData);
 
-    if (isAlgoImplemented && ALGORITHM_SLUG === 'bubble-sort') { 
-        newSteps = generateBubbleSortSteps(parsedData);
-    }
-
-    if (isAlgoImplemented && newSteps.length > 0) {
+    if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
@@ -247,8 +306,6 @@ export default function BubbleSortVisualizerPage() {
     );
   }
 
-  const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -275,7 +332,7 @@ export default function BubbleSortVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <CodePanel 
-              codeSnippets={codeSnippetsToDisplay} 
+              codeSnippets={BUBBLE_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
               defaultLanguage={"JavaScript"}
             />

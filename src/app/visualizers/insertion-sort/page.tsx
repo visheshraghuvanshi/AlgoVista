@@ -13,6 +13,75 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { INSERTION_SORT_LINE_MAP, generateInsertionSortSteps } from './insertion-sort-logic';
 
+const INSERTION_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "function insertionSort(arr) {",           // 1
+    "  let n = arr.length;",                   // 2
+    "  for (let i = 1; i < n; i++) {",         // 3
+    "    let key = arr[i];",                  // 4
+    "    let j = i - 1;",                      // 5
+    "    // Move elements of arr[0..i-1] that are", // 6
+    "    // greater than key, to one position ahead", // 7
+    "    while (j >= 0 && arr[j] > key) {",    // 8
+    "      arr[j + 1] = arr[j];",             // 9
+    "      j = j - 1;",                        // 10
+    "    }",                                   // 11
+    "    arr[j + 1] = key;",                   // 12
+    "  }",                                     // 13
+    "  return arr;",                          // 14
+    "}",                                       // 15
+  ],
+  Python: [
+    "def insertion_sort(arr):",
+    "    n = len(arr)",
+    "    for i in range(1, n):",
+    "        key = arr[i]",
+    "        j = i - 1",
+    "        # Move elements of arr[0..i-1] that are",
+    "        # greater than key, to one position ahead",
+    "        while j >= 0 and arr[j] > key:",
+    "            arr[j + 1] = arr[j]",
+    "            j -= 1",
+    "        arr[j + 1] = key",
+    "    return arr",
+  ],
+  Java: [
+    "public class InsertionSort {",
+    "    public static void sort(int[] arr) {",
+    "        int n = arr.length;",
+    "        for (int i = 1; i < n; ++i) {",
+    "            int key = arr[i];",
+    "            int j = i - 1;",
+    "            // Move elements of arr[0..i-1], that are",
+    "            // greater than key, to one position ahead",
+    "            while (j >= 0 && arr[j] > key) {",
+    "                arr[j + 1] = arr[j];",
+    "                j = j - 1;",
+    "            }",
+    "            arr[j + 1] = key;",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "void insertionSort(std::vector<int>& arr) {",
+    "    int n = arr.size();",
+    "    for (int i = 1; i < n; i++) {",
+    "        int key = arr[i];",
+    "        int j = i - 1;",
+    "        // Move elements of arr[0..i-1], that are",
+    "        // greater than key, to one position ahead",
+    "        while (j >= 0 && arr[j] > key) {",
+    "            arr[j + 1] = arr[j];",
+    "            j = j - 1;",
+    "        }",
+    "        arr[j + 1] = key;",
+    "    }",
+    "}",
+  ],
+};
+
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
 const MAX_SPEED = 2000;
@@ -43,9 +112,7 @@ export default function InsertionSortVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAlgoImplemented = useMemo(() => {
-    return ['bubble-sort', 'insertion-sort', 'merge-sort', 'quick-sort'].includes(algorithm?.slug || '');
-  }, [algorithm]);
+  const isAlgoImplemented = true; // Hardcoded true for this specific page
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -92,23 +159,12 @@ export default function InsertionSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
-      let newSteps: AlgorithmStep[] = [];
-
-      if (isAlgoImplemented && ALGORITHM_SLUG === 'insertion-sort') { 
-        newSteps = generateInsertionSortSteps(parsedData);
-      } else {
-        setDisplayedData(parsedData);
-        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setSteps([]); 
-      }
+      let newSteps: AlgorithmStep[] = generateInsertionSortSteps(parsedData);
       
-      if (isAlgoImplemented && newSteps.length > 0) {
+      if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
-      } else if (!isAlgoImplemented) {
-         setDisplayedData(parsedData); 
       } else { 
         setSteps([]);
         setDisplayedData(parsedData);
@@ -123,11 +179,11 @@ export default function InsertionSortVisualizerPage() {
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, isAlgoImplemented]); 
+  }, [inputValue, parseInput]); 
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1 && isAlgoImplemented) {
+    if (isPlaying && currentStepIndex < steps.length -1) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -146,7 +202,7 @@ export default function InsertionSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, isAlgoImplemented]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
 
   const handleInputChange = (value: string) => {
@@ -157,10 +213,6 @@ export default function InsertionSortVisualizerPage() {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
-      return;
-    }
-    if (!isAlgoImplemented) {
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
     setIsPlaying(true);
@@ -180,11 +232,6 @@ export default function InsertionSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
-     if (!isAlgoImplemented) {
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
-      return;
-    }
-
     setIsPlaying(false); 
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
@@ -210,13 +257,9 @@ export default function InsertionSortVisualizerPage() {
     }
 
     const parsedData = parseInput(inputValue) || initialData; 
-    let newSteps: AlgorithmStep[] = [];
+    let newSteps: AlgorithmStep[] = generateInsertionSortSteps(parsedData);
 
-    if (isAlgoImplemented && ALGORITHM_SLUG === 'insertion-sort') { 
-        newSteps = generateInsertionSortSteps(parsedData);
-    }
-
-    if (isAlgoImplemented && newSteps.length > 0) {
+    if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
@@ -246,8 +289,6 @@ export default function InsertionSortVisualizerPage() {
     );
   }
 
-  const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -274,7 +315,7 @@ export default function InsertionSortVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <CodePanel 
-              codeSnippets={codeSnippetsToDisplay} 
+              codeSnippets={INSERTION_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
               defaultLanguage={"JavaScript"}
             />

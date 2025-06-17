@@ -13,6 +13,126 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { MERGE_SORT_LINE_MAP, generateMergeSortSteps } from './merge-sort-logic';
 
+const MERGE_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "function mergeSort(arr, low, high) { // Rec helper", // 1
+    "  if (low >= high) return; // Base case",        // 2
+    "  const middle = Math.floor(low + (high - low) / 2);",// 3
+    "  mergeSort(arr, low, middle); // Sort left",     // 4
+    "  mergeSort(arr, middle + 1, high); // Sort right",// 5
+    "  merge(arr, low, middle, high); // Merge halves", // 6
+    "}",                                               // 7
+    "function merge(arr, low, mid, high) {",          // 8
+    "  const leftSize = mid - low + 1;",               // 9
+    "  const rightSize = high - mid;",                 // 10
+    "  const L = new Array(leftSize);",                // 11
+    "  const R = new Array(rightSize);",               // 12
+    "  for (let i = 0; i < leftSize; i++) L[i] = arr[low + i];", // 13
+    "  for (let j = 0; j < rightSize; j++) R[j] = arr[mid + 1 + j];", //14
+    "  let i = 0, j = 0, k = low;",                    // 15
+    "  while (i < leftSize && j < rightSize) {",       // 16
+    "    if (L[i] <= R[j]) {",                         // 17
+    "      arr[k] = L[i]; i++;",                       // 18
+    "    } else {",                                    // 19
+    "      arr[k] = R[j]; j++;",                       // 20
+    "    }",                                           // 21
+    "    k++;",                                        // 22
+    "  }",                                             // 23
+    "  while (i < leftSize) arr[k++] = L[i++];",       // 24
+    "  while (j < rightSize) arr[k++] = R[j++];",      // 25
+    "}",                                               // 26
+    "// Initial call: mergeSort(arr, 0, arr.length - 1);", // 27
+  ],
+  Python: [
+    "def merge_sort(arr, low, high):",
+    "    if low < high:",
+    "        middle = low + (high - low) // 2",
+    "        merge_sort(arr, low, middle)",
+    "        merge_sort(arr, middle + 1, high)",
+    "        merge(arr, low, middle, high)",
+    "",
+    "def merge(arr, low, mid, high):",
+    "    left_size = mid - low + 1",
+    "    right_size = high - mid",
+    "    L = [0] * left_size",
+    "    R = [0] * right_size",
+    "    for i in range(left_size): L[i] = arr[low + i]",
+    "    for j in range(right_size): R[j] = arr[mid + 1 + j]",
+    "    i, j, k = 0, 0, low",
+    "    while i < left_size and j < right_size:",
+    "        if L[i] <= R[j]:",
+    "            arr[k] = L[i]; i += 1",
+    "        else:",
+    "            arr[k] = R[j]; j += 1",
+    "        k += 1",
+    "    while i < left_size: arr[k] = L[i]; i += 1; k += 1",
+    "    while j < right_size: arr[k] = R[j]; j += 1; k += 1",
+    "",
+    "# Initial call: merge_sort(arr, 0, len(arr) - 1)",
+  ],
+  Java: [
+    "public class MergeSort {",
+    "    void merge(int arr[], int l, int m, int r) {",
+    "        int n1 = m - l + 1;",
+    "        int n2 = r - m;",
+    "        int L[] = new int[n1];",
+    "        int R[] = new int[n2];",
+    "        for (int i = 0; i < n1; ++i) L[i] = arr[l + i];",
+    "        for (int j = 0; j < n2; ++j) R[j] = arr[m + 1 + j];",
+    "        int i = 0, j = 0, k = l;",
+    "        while (i < n1 && j < n2) {",
+    "            if (L[i] <= R[j]) {",
+    "                arr[k] = L[i]; i++;",
+    "            } else {",
+    "                arr[k] = R[j]; j++;",
+    "            }",
+    "            k++;",
+    "        }",
+    "        while (i < n1) arr[k++] = L[i++];",
+    "        while (j < n2) arr[k++] = R[j++];",
+    "    }",
+    "    void sort(int arr[], int l, int r) {",
+    "        if (l < r) {",
+    "            int m = l + (r - l) / 2;",
+    "            sort(arr, l, m);",
+    "            sort(arr, m + 1, r);",
+    "            merge(arr, l, m, r);",
+    "        }",
+    "    }",
+    "    // Initial call: new MergeSort().sort(arr, 0, arr.length - 1);",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "void merge(std::vector<int>& arr, int l, int m, int r) {",
+    "    int n1 = m - l + 1;",
+    "    int n2 = r - m;",
+    "    std::vector<int> L(n1), R(n2);",
+    "    for (int i = 0; i < n1; i++) L[i] = arr[l + i];",
+    "    for (int j = 0; j < n2; j++) R[j] = arr[m + 1 + j];",
+    "    int i = 0, j = 0, k = l;",
+    "    while (i < n1 && j < n2) {",
+    "        if (L[i] <= R[j]) {",
+    "            arr[k] = L[i]; i++;",
+    "        } else {",
+    "            arr[k] = R[j]; j++;",
+    "        }",
+    "        k++;",
+    "    }",
+    "    while (i < n1) arr[k++] = L[i++];",
+    "    while (j < n2) arr[k++] = R[j++];",
+    "}",
+    "void mergeSort(std::vector<int>& arr, int l, int r) {",
+    "    if (l < r) {",
+    "        int m = l + (r - l) / 2;",
+    "        mergeSort(arr, l, m);",
+    "        mergeSort(arr, m + 1, r);",
+    "        merge(arr, l, m, r);",
+    "    }",
+    "}",
+    "// Initial call: mergeSort(arr, 0, arr.size() - 1);",
+  ],
+};
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -44,9 +164,7 @@ export default function MergeSortVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAlgoImplemented = useMemo(() => {
-    return ['bubble-sort', 'insertion-sort', 'merge-sort', 'quick-sort'].includes(algorithm?.slug || '');
-  }, [algorithm]);
+  const isAlgoImplemented = true; // Hardcoded true
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -93,23 +211,12 @@ export default function MergeSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
-      let newSteps: AlgorithmStep[] = [];
-
-      if (isAlgoImplemented && ALGORITHM_SLUG === 'merge-sort') { 
-        newSteps = generateMergeSortSteps(parsedData);
-      } else {
-        setDisplayedData(parsedData);
-        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setSteps([]); 
-      }
+      let newSteps: AlgorithmStep[] = generateMergeSortSteps(parsedData);
       
-      if (isAlgoImplemented && newSteps.length > 0) {
+      if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
-      } else if (!isAlgoImplemented) {
-         setDisplayedData(parsedData); 
       } else { 
         setSteps([]);
         setDisplayedData(parsedData);
@@ -124,11 +231,11 @@ export default function MergeSortVisualizerPage() {
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, isAlgoImplemented]); 
+  }, [inputValue, parseInput]); 
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1 && isAlgoImplemented) {
+    if (isPlaying && currentStepIndex < steps.length -1 ) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -147,7 +254,7 @@ export default function MergeSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, isAlgoImplemented]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
 
   const handleInputChange = (value: string) => {
@@ -158,10 +265,6 @@ export default function MergeSortVisualizerPage() {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
-      return;
-    }
-    if (!isAlgoImplemented) {
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
     setIsPlaying(true);
@@ -179,10 +282,6 @@ export default function MergeSortVisualizerPage() {
   const handleStep = () => {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
-      return;
-    }
-     if (!isAlgoImplemented) {
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
 
@@ -211,13 +310,9 @@ export default function MergeSortVisualizerPage() {
     }
 
     const parsedData = parseInput(inputValue) || initialData; 
-    let newSteps: AlgorithmStep[] = [];
+    let newSteps: AlgorithmStep[] = generateMergeSortSteps(parsedData);
 
-    if (isAlgoImplemented && ALGORITHM_SLUG === 'merge-sort') { 
-        newSteps = generateMergeSortSteps(parsedData);
-    }
-
-    if (isAlgoImplemented && newSteps.length > 0) {
+    if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
@@ -247,8 +342,6 @@ export default function MergeSortVisualizerPage() {
     );
   }
 
-  const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -275,7 +368,7 @@ export default function MergeSortVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <CodePanel 
-              codeSnippets={codeSnippetsToDisplay} 
+              codeSnippets={MERGE_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
               defaultLanguage={"JavaScript"}
             />

@@ -13,6 +13,151 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { HEAP_SORT_LINE_MAP, generateHeapSortSteps } from './heap-sort-logic';
 
+const HEAP_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "function heapSort(arr) {",                            // 1
+    "  let n = arr.length;",                               // 2
+    "  // Build heap (rearrange array)",
+    "  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {", // 3
+    "    heapify(arr, n, i);",                             // 4
+    "  }",                                                 // 5
+    "  // One by one extract an element from heap",
+    "  for (let i = n - 1; i > 0; i--) {",                 // 6
+    "    // Move current root to end",
+    "    [arr[0], arr[i]] = [arr[i], arr[0]];",            // 7
+    "    // arr[i] is now sorted (implicitly visualized)",  // 8
+    "    // call max heapify on the reduced heap",
+    "    heapify(arr, i, 0);",                             // 9
+    "  }",                                                 // 10
+    "  return arr;",                                       // 11
+    "}",                                                   // 12
+    "function heapify(arr, n, i) {",                       // 13
+    "  let largest = i;",                                  // 14
+    "  let l = 2 * i + 1;",                                // 15
+    "  let r = 2 * i + 2;",                                // 16
+    "  // If left child is larger than root",
+    "  if (l < n && arr[l] > arr[largest]) {",             // 17
+    "    largest = l;",                                  // 18
+    "  }",                                                 // 19
+    "  // If right child is larger than largest so far",
+    "  if (r < n && arr[r] > arr[largest]) {",             // 20
+    "    largest = r;",                                  // 21
+    "  }",                                                 // 22
+    "  // If largest is not root",
+    "  if (largest !== i) {",                              // 23
+    "    [arr[i], arr[largest]] = [arr[largest], arr[i]];",// 24
+    "    // Recursively heapify the affected sub-tree",
+    "    heapify(arr, n, largest);",                       // 25
+    "  }",                                                 // 26
+    "}",                                                   // 27
+  ],
+  Python: [
+    "def heap_sort(arr):",
+    "    n = len(arr)",
+    "    # Build a maxheap.",
+    "    for i in range(n // 2 - 1, -1, -1):",
+    "        heapify(arr, n, i)",
+    "    # One by one extract elements",
+    "    for i in range(n - 1, 0, -1):",
+    "        arr[i], arr[0] = arr[0], arr[i]  # swap",
+    "        heapify(arr, i, 0)",
+    "    return arr",
+    "",
+    "def heapify(arr, n, i):",
+    "    largest = i  # Initialize largest as root",
+    "    l = 2 * i + 1  # left = 2*i + 1",
+    "    r = 2 * i + 2  # right = 2*i + 2",
+    "    # See if left child of root exists and is",
+    "    # greater than root",
+    "    if l < n and arr[l] > arr[largest]:",
+    "        largest = l",
+    "    # See if right child of root exists and is",
+    "    # greater than root",
+    "    if r < n and arr[r] > arr[largest]:",
+    "        largest = r",
+    "    # Change root, if needed",
+    "    if largest != i:",
+    "        arr[i], arr[largest] = arr[largest], arr[i]  # swap",
+    "        # Heapify the root.",
+    "        heapify(arr, n, largest)",
+  ],
+  Java: [
+    "public class HeapSort {",
+    "    public void sort(int arr[]) {",
+    "        int n = arr.length;",
+    "        // Build heap (rearrange array)",
+    "        for (int i = n / 2 - 1; i >= 0; i--)",
+    "            heapify(arr, n, i);",
+    "        // One by one extract an element from heap",
+    "        for (int i = n - 1; i > 0; i--) {",
+    "            // Move current root to end",
+    "            int temp = arr[0];",
+    "            arr[0] = arr[i];",
+    "            arr[i] = temp;",
+    "            // call max heapify on the reduced heap",
+    "            heapify(arr, i, 0);",
+    "        }",
+    "    }",
+    "    // To heapify a subtree rooted with node i which is",
+    "    // an index in arr[]. n is size of heap",
+    "    void heapify(int arr[], int n, int i) {",
+    "        int largest = i; // Initialize largest as root",
+    "        int l = 2 * i + 1; // left = 2*i + 1",
+    "        int r = 2 * i + 2; // right = 2*i + 2",
+    "        // If left child is larger than root",
+    "        if (l < n && arr[l] > arr[largest])",
+    "            largest = l;",
+    "        // If right child is larger than largest so far",
+    "        if (r < n && arr[r] > arr[largest])",
+    "            largest = r;",
+    "        // If largest is not root",
+    "        if (largest != i) {",
+    "            int swap = arr[i];",
+    "            arr[i] = arr[largest];",
+    "            arr[largest] = swap;",
+    "            // Recursively heapify the affected sub-tree",
+    "            heapify(arr, n, largest);",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::swap",
+    "// To heapify a subtree rooted with node i which is an index in arr[].",
+    "// n is size of heap.",
+    "void heapify(std::vector<int>& arr, int n, int i) {",
+    "    int largest = i; // Initialize largest as root",
+    "    int l = 2 * i + 1; // left = 2*i + 1",
+    "    int r = 2 * i + 2; // right = 2*i + 2",
+    "    // If left child is larger than root",
+    "    if (l < n && arr[l] > arr[largest])",
+    "        largest = l;",
+    "    // If right child is larger than largest so far",
+    "    if (r < n && arr[r] > arr[largest])",
+    "        largest = r;",
+    "    // If largest is not root",
+    "    if (largest != i) {",
+    "        std::swap(arr[i], arr[largest]);",
+    "        // Recursively heapify the affected sub-tree",
+    "        heapify(arr, n, largest);",
+    "    }",
+    "}",
+    "void heapSort(std::vector<int>& arr) {",
+    "    int n = arr.size();",
+    "    // Build heap (rearrange array)",
+    "    for (int i = n / 2 - 1; i >= 0; i--)",
+    "        heapify(arr, n, i);",
+    "    // One by one extract an element from heap",
+    "    for (int i = n - 1; i > 0; i--) {",
+    "        // Move current root to end",
+    "        std::swap(arr[0], arr[i]);",
+    "        // call max heapify on the reduced heap",
+    "        heapify(arr, i, 0);",
+    "    }",
+    "}",
+  ],
+};
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -36,7 +181,7 @@ export default function HeapSortVisualizerPage() {
   const [sortedIndices, setSortedIndices] = useState<number[]>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
-  const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null); // Not used in Heap Sort but part of AlgorithmStep
+  const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null); 
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -44,10 +189,7 @@ export default function HeapSortVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // For Heap Sort, isAlgoImplemented should be true
-  const isAlgoImplemented = useMemo(() => {
-    return ['bubble-sort', 'insertion-sort', 'merge-sort', 'quick-sort', 'heap-sort'].includes(algorithm?.slug || '');
-  }, [algorithm]);
+  const isAlgoImplemented = true; // Hardcoded true
 
   useEffect(() => {
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
@@ -86,7 +228,7 @@ export default function HeapSortVisualizerPage() {
       setSortedIndices(currentS.sortedIndices);
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
-      setPivotActualIndex(currentS.pivotActualIndex || null); // Keep for type consistency
+      setPivotActualIndex(currentS.pivotActualIndex || null); 
     }
   }, [steps]);
 
@@ -94,26 +236,15 @@ export default function HeapSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (parsedData !== null) {
       setInitialData(parsedData);
-      let newSteps: AlgorithmStep[] = [];
-
-      if (ALGORITHM_SLUG === 'heap-sort') { 
-        newSteps = generateHeapSortSteps(parsedData);
-      } else {
-        // Fallback for other potential algorithms if this structure was copied
-        setDisplayedData(parsedData);
-        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setSteps([]); 
-      }
+      let newSteps: AlgorithmStep[] = generateHeapSortSteps(parsedData);
       
       if (newSteps.length > 0) {
         setSteps(newSteps);
         setCurrentStepIndex(0);
         updateStateFromStep(0);
       } else { 
-        // Handles case where parsedData is empty or step generation fails for some reason
         setSteps([]);
-        setDisplayedData(parsedData); // Show initial parsed data even if no steps
+        setDisplayedData(parsedData); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
       }
@@ -129,7 +260,7 @@ export default function HeapSortVisualizerPage() {
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1 && isAlgoImplemented) {
+    if (isPlaying && currentStepIndex < steps.length -1) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -148,7 +279,7 @@ export default function HeapSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep, isAlgoImplemented]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
 
   const handleInputChange = (value: string) => {
@@ -159,10 +290,6 @@ export default function HeapSortVisualizerPage() {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
-      return;
-    }
-    if (!isAlgoImplemented) { // Should be true for Heap Sort
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
     setIsPlaying(true);
@@ -182,11 +309,6 @@ export default function HeapSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
-     if (!isAlgoImplemented) { // Should be true for Heap Sort
-      toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
-      return;
-    }
-
     setIsPlaying(false); 
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
@@ -212,11 +334,7 @@ export default function HeapSortVisualizerPage() {
     }
 
     const parsedData = parseInput(inputValue) || initialData; 
-    let newSteps: AlgorithmStep[] = [];
-
-    if (ALGORITHM_SLUG === 'heap-sort') { 
-        newSteps = generateHeapSortSteps(parsedData);
-    }
+    let newSteps: AlgorithmStep[] = generateHeapSortSteps(parsedData);
 
     if (newSteps.length > 0) {
         setSteps(newSteps);
@@ -248,8 +366,6 @@ export default function HeapSortVisualizerPage() {
     );
   }
 
-  const codeSnippetsToDisplay = algorithm.codeSnippets || { "Info": ["// Code snippets not available for this algorithm yet."] };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -276,7 +392,7 @@ export default function HeapSortVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <CodePanel 
-              codeSnippets={codeSnippetsToDisplay} 
+              codeSnippets={HEAP_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
               defaultLanguage={"JavaScript"}
             />

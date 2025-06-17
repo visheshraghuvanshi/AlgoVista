@@ -10,8 +10,8 @@ export interface AlgorithmMetadata {
   description: string;
   longDescription?: string; 
   tags?: string[]; 
-  codeSnippets?: {
-    [language: string]: string[]; // Allow any language key
+  codeSnippets?: { // Made optional
+    [language: string]: string[]; 
   };
   pseudocode?: string[];
 }
@@ -26,3 +26,4 @@ export type AlgorithmStep = {
   processingSubArrayRange?: [number, number] | null; 
   pivotActualIndex?: number | null;
 };
+
