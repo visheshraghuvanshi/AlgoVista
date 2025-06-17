@@ -204,6 +204,19 @@ export interface PriorityQueueStep extends Omit<AlgorithmStep, 'array'> {
   activeHeapIndices?: number[]; // Indices in heapArray being actively worked on (e.g. during heapify)
 }
 
+// Dynamic Programming Step Type
+export interface DPAlgorithmStep {
+  dpTable: number[][] | number[]; // The DP table itself (1D or 2D)
+  dpTableDimensions?: { rows: number; cols: number }; // For 2D tables
+  currentIndices?: { item?: number; capacity?: number; amount?: number; coin?: number; i?: number, j?: number, k?: number }; // Indices being processed
+  highlightedCells?: {row: number, col: number, type: 'current' | 'dependency' | 'result'}[]; // For DP table cell highlighting
+  message: string;
+  currentLine: number | null;
+  auxiliaryData?: Record<string, any> | null; // General purpose aux data
+  resultValue?: number; // Final result of the DP calculation
+  selectedItems?: {weight: number, value: number}[]; // For Knapsack item reconstruction
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
@@ -211,5 +224,6 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Graph algorithm pages will use GraphAlgorithmStep directly.
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
+    
 
     

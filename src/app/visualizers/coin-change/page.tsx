@@ -1,163 +1,191 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
+import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2 } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { CoinChangeVisualizationPanel } from './CoinChangeVisualizationPanel';
+import { CoinChangeCodePanel } from './CoinChangeCodePanel';
+import { generateCoinChangeSteps } from './coin-change-logic';
+import type { CoinChangeProblemType } from './coin-change-logic';
 
-const COIN_CHANGE_CODE_SNIPPETS = {
-  JavaScript: [
-    "// Coin Change - Minimum Coins (Dynamic Programming)",
-    "function minCoins(coins, amount) {",
-    "  // dp[i] will store the minimum number of coins required for amount i",
-    "  // Initialize dp array with Infinity, dp[0] = 0",
-    "  const dp = new Array(amount + 1).fill(Infinity);",
-    "  dp[0] = 0;",
-    "",
-    "  for (let i = 1; i <= amount; i++) {",
-    "    for (const coin of coins) {",
-    "      if (coin <= i) {",
-    "        dp[i] = Math.min(dp[i], dp[i - coin] + 1);",
-    "      }",
-    "    }",
-    "  }",
-    "  return dp[amount] === Infinity ? -1 : dp[amount]; // -1 if not possible",
-    "}",
-    "",
-    "// Coin Change - Number of Ways (Dynamic Programming)",
-    "function countWays(coins, amount) {",
-    "  // dp[i] will store the number of ways to make amount i",
-    "  const dp = new Array(amount + 1).fill(0);",
-    "  dp[0] = 1; // One way to make amount 0 (by choosing no coins)",
-    "",
-    "  for (const coin of coins) { // Iterate through coins first to count combinations",
-    "    for (let i = coin; i <= amount; i++) {",
-    "      dp[i] += dp[i - coin];",
-    "    }",
-    "  }",
-    "  return dp[amount];",
-    "}",
-  ],
-};
+const DEFAULT_ANIMATION_SPEED = 400;
+const MIN_SPEED = 50;
+const MAX_SPEED = 1500;
+const DEFAULT_COINS_INPUT = "1,2,5";
+const DEFAULT_AMOUNT_INPUT = "11";
 
 export default function CoinChangeVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [coinsInput, setCoinsInput] = useState("1,2,5");
-  const [amountInput, setAmountInput] = useState("11");
 
-  useEffect(() => {
-    setIsClient(true);
-    if (algorithmMetadata) {
-       toast({
-            title: "Conceptual Overview",
-            description: `Interactive Coin Change (DP table for min coins or ways) is currently under construction.`,
-            variant: "default",
-            duration: 5000,
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for Coin Change Problem not found.`, variant: "destructive" });
+  const [coinsInput, setCoinsInput] = useState(DEFAULT_COINS_INPUT);
+  const [amountInput, setAmountInput] = useState(DEFAULT_AMOUNT_INPUT);
+  const [problemType, setProblemType] = useState<CoinChangeProblemType>('minCoins');
+  
+  const [steps, setSteps] = useState<DPAlgorithmStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<DPAlgorithmStep | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => { setIsClient(true); }, []);
+
+  const parseCoinsInput = useCallback((input: string): number[] | null => {
+    try {
+      const coins = input.split(',').map(cStr => parseInt(cStr.trim(), 10));
+      if (coins.some(isNaN) || coins.some(c => c <= 0)) {
+        throw new Error("Coins must be positive integers.");
+      }
+      if (coins.length === 0 && input.trim() !== "") throw new Error("No valid coins provided.");
+      return coins.sort((a,b) => a - b); // Sort for consistent processing order
+    } catch (e: any) {
+      toast({ title: "Invalid Coins Format", description: e.message || "Use comma-separated positive integers.", variant: "destructive" });
+      return null;
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
-  } : null;
+  const updateStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
+  }, [steps]);
+  
+  const handleGenerateSteps = useCallback(() => {
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    
+    const coins = parseCoinsInput(coinsInput);
+    const amount = parseInt(amountInput, 10);
+
+    if (!coins || isNaN(amount) || amount < 0) {
+      if (!coins) {} // parseCoinsInput already toasting
+      else toast({ title: "Invalid Amount", description: "Amount must be a non-negative integer.", variant: "destructive" });
+      setSteps([]); setCurrentStep(null); setIsFinished(true);
+      return;
+    }
+    if (coins.length > 15 || amount > 100) { // Limits for visualization performance
+        toast({title:"Input too large", description: "Max 15 coins and amount 100 for smooth viz.", variant:"default"});
+    }
+
+    const newSteps = generateCoinChangeSteps(coins, amount, problemType);
+    setSteps(newSteps);
+    setCurrentStepIndex(0);
+    setCurrentStep(newSteps[0] || null);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+
+  }, [coinsInput, amountInput, problemType, parseCoinsInput, toast, updateStateFromStep]);
+  
+  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false); setIsFinished(true);
+    }
+    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+
+  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
+  const handlePause = () => setIsPlaying(false);
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    if (nextIdx === steps.length - 1) setIsFinished(true);
+  };
+  const handleReset = () => { 
+    setIsPlaying(false); setIsFinished(false); 
+    setCoinsInput(DEFAULT_COINS_INPUT);
+    setAmountInput(DEFAULT_AMOUNT_INPUT);
+    setProblemType('minCoins');
+    // handleGenerateSteps will be called by useEffect on input changes
+  };
+  
+  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
-  if (!algoDetails) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-            <p className="text-muted-foreground text-lg">
-              Could not load data for "coin-change".
-            </p>
-            <Button asChild size="lg" className="mt-8">
-                <Link href="/visualizers">Back to Visualizers</Link>
-            </Button>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithmMetadata.title}
-          </h1>
+          <Coins className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
 
-        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
-            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                Interactive Visualization Coming Soon!
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithmMetadata.title}, showing DP table construction for min coins or number of ways, is currently under construction.
-                Review the concepts and code below.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
+            <CoinChangeVisualizationPanel step={currentStep} />
+          </div>
+          <div className="lg:w-2/5 xl:w-1/3">
+            <CoinChangeCodePanel currentLine={currentStep?.currentLine ?? null} selectedProblem={problemType} />
+          </div>
         </div>
         
-        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code (JavaScript)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
-                    <pre className="font-code text-sm p-4">
-                        {COIN_CHANGE_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
-                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                            {index + 1}
-                            </span>
-                            {line}
-                        </div>
-                        ))}
-                    </pre>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="w-full max-w-lg mx-auto my-4 p-4 border rounded-lg shadow-md space-y-4">
-            <div>
-                <Label htmlFor="coinsInput" className="text-sm font-medium">Coin Denominations (comma-separated)</Label>
-                <Input id="coinsInput" type="text" value={coinsInput} onChange={(e) => setCoinsInput(e.target.value)} className="mt-1" disabled />
+        <Card className="shadow-xl rounded-xl mb-6">
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Problem Setup</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-1">
+                <Label htmlFor="coinsInputCC">Coin Denominations (comma-sep)</Label>
+                <Input id="coinsInputCC" value={coinsInput} onChange={e => setCoinsInput(e.target.value)} disabled={isPlaying} placeholder="e.g., 1,2,5"/>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="amountInputCC">Target Amount</Label>
+                <Input id="amountInputCC" type="number" value={amountInput} onChange={e => setAmountInput(e.target.value)} disabled={isPlaying} placeholder="e.g., 11"/>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="problemTypeSelectCC">Problem Type</Label>
+                <Select value={problemType} onValueChange={v => setProblemType(v as CoinChangeProblemType)} disabled={isPlaying}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="minCoins">Minimum Coins</SelectItem>
+                    <SelectItem value="numWays">Number of Ways</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-                <Label htmlFor="amountInput" className="text-sm font-medium">Target Amount</Label>
-                <Input id="amountInput" type="number" value={amountInput} onChange={(e) => setAmountInput(e.target.value)} className="mt-1" disabled />
+            <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto">Solve</Button>
+            
+            <div className="flex items-center justify-start pt-4 border-t">
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Inputs & Simulation</Button>
             </div>
-            <Button className="mt-2 w-full" disabled>Calculate (Coming Soon)</Button>
-        </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex gap-2">
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+              </div>
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl">Animation Speed</Label>
+                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
+
+    
