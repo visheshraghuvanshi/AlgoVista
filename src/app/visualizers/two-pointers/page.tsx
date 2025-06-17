@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,38 +48,25 @@ const TWO_POINTERS_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'two-pointers';
-
 export default function TwoPointersVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-       toast({
-            title: "Conceptual Overview",
-            description: `The Two Pointers technique is versatile. Interactive visualization coming soon for specific examples.`,
-            variant: "default",
-            duration: 5000,
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
+    toast({
+        title: "Conceptual Overview",
+        description: `The Two Pointers technique is versatile. Interactive visualization coming soon for specific examples.`,
+        variant: "default",
+        duration: 5000,
+    });
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description, // This will now be the detailed description from MOCK_ALGORITHMS
-    timeComplexities: { 
-      best: "Varies (e.g., O(n) for pair sum in sorted array, O(1) if target is immediately found)", 
-      average: "Varies (e.g., O(n))", 
-      worst: "Varies (e.g., O(n))" 
-    },
-    spaceComplexity: "Typically O(1) (in-place modification or constant extra space).",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
@@ -94,7 +81,7 @@ export default function TwoPointersVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -102,7 +89,7 @@ export default function TwoPointersVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for &quot;{algorithmMetadata?.slug || 'Two Pointers'}&quot;.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -119,7 +106,7 @@ export default function TwoPointersVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algoDetails.title}
           </h1>
         </div>
 
