@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel'; // Updated path
+import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel'; 
 import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
@@ -12,14 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
   generateRBTreeSteps,
-  type RBTNodeInternal,
   type RBTreeGraph,
-  NIL_ID,
   createInitialRBTreeGraph,
-  // getFinalRBTreeGraph, // This helper might not be strictly needed if logic modifies ref or returns final state
 } from './red-black-tree-logic';
 import type { RBTOperationType } from './RedBlackTreeCodePanel';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +72,7 @@ export default function RedBlackTreePage() {
   }, [steps]);
   
   const handleOperation = useCallback((
-      opType: 'build' | 'insert' | 'search', 
+      opType: 'build' | 'insert' | 'search' | 'delete', 
       primaryValue?: string,
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -86,7 +83,7 @@ export default function RedBlackTreePage() {
     if (opType === 'build') {
         valuesForBuild = primaryValue || initialArrayInput;
         rbtRef.current = createInitialRBTreeGraph(); 
-    } else if (opType === 'insert' || opType === 'search') {
+    } else if (opType === 'insert' || opType === 'search' || opType === 'delete') {
         const opValStr = primaryValue || operationValue;
         if (opValStr.trim() === "") {
             toast({ title: "Input Missing", description: "Please enter a value for the operation.", variant: "destructive" });
@@ -103,7 +100,7 @@ export default function RedBlackTreePage() {
       opType,
       valuesForBuild,
       valueForOp,
-      rbtRef.current // Pass the current state of the tree for insert/search
+      rbtRef.current 
     );
     
     setSteps(newSteps);
@@ -114,7 +111,7 @@ export default function RedBlackTreePage() {
     if (newSteps.length > 0) {
         updateStateFromStep(0);
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
-        if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { // Avoid toast for initial build display
+        if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { 
             const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
             toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 3000 });
         }
@@ -176,7 +173,7 @@ export default function RedBlackTreePage() {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
-  const isOperationWithValue = selectedOperation === 'insert' || selectedOperation === 'search';
+  const isOperationWithValue = selectedOperation === 'insert' || selectedOperation === 'search' || selectedOperation === 'delete';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -211,15 +208,15 @@ export default function RedBlackTreePage() {
                   <SelectContent>
                     <SelectItem value="insert">Insert Value</SelectItem>
                     <SelectItem value="search">Search Value</SelectItem>
-                    <SelectItem value="delete" disabled>Delete Value (Conceptual)</SelectItem>
+                    <SelectItem value="delete">Delete Value (Conceptual)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationValue">Value for Operation</Label>
                 <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue} />
-                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search', operationValue)} disabled={isPlaying || !isOperationWithValue || selectedOperation === 'delete'} className="w-full md:w-auto mt-1">
-                    {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4"/> : <Search className="mr-2 h-4 w-4"/>}
+                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search' | 'delete', operationValue)} disabled={isPlaying || !isOperationWithValue} className="w-full md:w-auto mt-1">
+                    {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4"/> : selectedOperation === 'search' ? <Search className="mr-2 h-4 w-4"/> : <Trash2 className="mr-2 h-4 w-4"/>}
                     Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
                 </Button>
               </div>
@@ -245,7 +242,7 @@ export default function RedBlackTreePage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              Interactive visualization for **Insert** and **Search** operations are available. Delete is conceptual and not interactive.
+              Interactive visualization for **Insert** and **Search** operations are available. Delete visualization is conceptual and does not show full rebalancing.
               NIL nodes are logical and not visually rendered for clarity.
             </p>
           </CardContent>
