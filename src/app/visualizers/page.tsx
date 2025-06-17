@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ListFilter, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { allAlgorithmMetadata } from '../metadataRegistry'; // Import from the new registry
+import { allAlgorithmMetadata } from './metadataRegistry'; // Import from the new registry
 
 // ALL_CATEGORIES and ALL_DIFFICULTIES can be derived from allAlgorithmMetadata
 const ALL_CATEGORIES = Array.from(new Set(allAlgorithmMetadata.map(algo => algo.category))).sort();

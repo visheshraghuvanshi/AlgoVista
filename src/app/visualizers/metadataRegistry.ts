@@ -178,3 +178,4 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
   hashTableMeta,
 
 ].sort((a, b) => a.title.localeCompare(b.title));
+    
