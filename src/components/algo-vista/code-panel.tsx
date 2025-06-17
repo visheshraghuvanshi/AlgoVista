@@ -22,7 +22,6 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
 
   useEffect(() => {
-    // If the available languages change and the selected one is no longer valid, reset to initial.
     if (!languages.includes(selectedLanguage)) {
       setSelectedLanguage(initialLang);
     }
@@ -48,7 +47,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const currentCodeLines = codeSnippets[selectedLanguage] || [];
 
   return (
-    <Card className="shadow-lg rounded-lg h-[300px] md:h-[400px] flex flex-col">
+    <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
@@ -119,3 +118,5 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     </Card>
   );
 }
+
+    

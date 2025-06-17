@@ -710,8 +710,8 @@ export default function AlgorithmVisualizerPage() {
           </p>
         </div>
 
-        <div className="space-y-6">
-          <div className="w-full">
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
             <VisualizationPanel 
               data={displayedData} 
               activeIndices={activeIndices}
@@ -721,26 +721,7 @@ export default function AlgorithmVisualizerPage() {
               pivotActualIndex={pivotActualIndex}
             />
           </div>
-
-          <div className="w-full">
-            <ControlsPanel
-              onPlay={handlePlay}
-              onPause={handlePause}
-              onStep={handleStep}
-              onReset={handleReset}
-              onInputChange={handleInputChange}
-              inputValue={inputValue}
-              isPlaying={isPlaying}
-              isFinished={isFinished}
-              currentSpeed={animationSpeed}
-              onSpeedChange={handleSpeedChange}
-              isAlgoImplemented={isAlgoImplemented}
-              minSpeed={MIN_SPEED}
-              maxSpeed={MAX_SPEED}
-            />
-          </div>
-          
-          <div className="w-full">
+          <div className="lg:w-2/5 xl:w-1/3">
             <CodePanel 
               codeSnippets={codeSnippetsToDisplay} 
               currentLine={currentLine}
@@ -748,8 +729,28 @@ export default function AlgorithmVisualizerPage() {
             />
           </div>
         </div>
+        
+        <div className="w-full">
+          <ControlsPanel
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onStep={handleStep}
+            onReset={handleReset}
+            onInputChange={handleInputChange}
+            inputValue={inputValue}
+            isPlaying={isPlaying}
+            isFinished={isFinished}
+            currentSpeed={animationSpeed}
+            onSpeedChange={handleSpeedChange}
+            isAlgoImplemented={isAlgoImplemented}
+            minSpeed={MIN_SPEED}
+            maxSpeed={MAX_SPEED}
+          />
+        </div>
       </main>
       <Footer />
     </div>
   );
 }
+
+    
