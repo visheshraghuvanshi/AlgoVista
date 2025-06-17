@@ -1,177 +1,203 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata, HashTableStep, HashTableEntry, HashValue } from '@/types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Construction, Code2, KeyRound, TabletSmartphone } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, KeyRound, TabletSmartphone, PlusCircle, SearchIcon, Trash2 } from 'lucide-react'; // Replaced Search with SearchIcon
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { HashTableVisualizationPanel } from './HashTableVisualizationPanel';
+import { HashTableCodePanel } from './HashTableCodePanel';
+import { generateHashTableSteps, createInitialHashTable, HASH_TABLE_LINE_MAP } from './hash-table-logic';
 
-const HASH_TABLE_CODE_SNIPPETS = {
-  JavaScript: [
-    "// Hash Table (Conceptual - using chaining with arrays for buckets)",
-    "class HashTable {",
-    "  constructor(size = 10) {",
-    "    this.buckets = new Array(size).fill(null).map(() => []);",
-    "    this.size = size;",
-    "  }",
-    "",
-    "  _hash(key) { // Simple hash function (not for production)",
-    "    let hashValue = 0;",
-    "    for (let i = 0; i < key.length; i++) {",
-    "      hashValue = (hashValue + key.charCodeAt(i) * (i + 1)) % this.size;",
-    "    }",
-    "    return hashValue;",
-    "  }",
-    "",
-    "  insert(key, value) {",
-    "    const index = this._hash(key);",
-    "    const bucket = this.buckets[index];",
-    "    // Check if key already exists in bucket, update if so",
-    "    for (let i = 0; i < bucket.length; i++) {",
-    "      if (bucket[i][0] === key) {",
-    "        bucket[i][1] = value; return;",
-    "      }",
-    "    }",
-    "    bucket.push([key, value]); // Add new key-value pair",
-    "  }",
-    "",
-    "  search(key) {",
-    "    const index = this._hash(key);",
-    "    const bucket = this.buckets[index];",
-    "    for (let i = 0; i < bucket.length; i++) {",
-    "      if (bucket[i][0] === key) return bucket[i][1]; // Return value",
-    "    }",
-    "    return undefined; // Key not found",
-    "  }",
-    "",
-    "  delete(key) {",
-    "    const index = this._hash(key);",
-    "    const bucket = this.buckets[index];",
-    "    for (let i = 0; i < bucket.length; i++) {",
-    "      if (bucket[i][0] === key) {",
-    "        bucket.splice(i, 1); // Remove pair",
-    "        return true;",
-    "      }",
-    "    }",
-    "    return false; // Key not found",
-    "  }",
-    "  // Rehashing would be needed for production quality when load factor is high.",
-    "}",
-  ],
-};
+const DEFAULT_ANIMATION_SPEED = 700;
+const MIN_SPEED = 100;
+const MAX_SPEED = 1500;
+const DEFAULT_TABLE_SIZE = 7;
+
+type HashTableOperationType = 'insert' | 'search' | 'delete' | 'init';
 
 export default function HashTableVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [keyInput, setKeyInput] = useState("name");
-  const [valueInput, setValueInput] = useState("Alice");
 
+  const [tableSize, setTableSize] = useState(DEFAULT_TABLE_SIZE);
+  const [keyInput, setKeyInput] = useState<HashValue>("name");
+  const [valueInput, setValueInput] = useState<HashValue>("Alice");
+  const [selectedOperation, setSelectedOperation] = useState<HashTableOperationType>('insert');
+  
+  const [steps, setSteps] = useState<HashTableStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<HashTableStep | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const hashTableRef = useRef<HashTableEntry[][]>(createInitialHashTable(DEFAULT_TABLE_SIZE));
+
+  useEffect(() => { setIsClient(true); }, []);
+  
+  const initializeTable = useCallback(() => {
+    if (tableSize < 1 || tableSize > 20) { // Added max size
+        toast({title: "Invalid Table Size", description: "Size must be between 1 and 20.", variant: "destructive"});
+        return;
+    }
+    hashTableRef.current = createInitialHashTable(tableSize);
+    const initialStep: HashTableStep = {
+        buckets: [...hashTableRef.current], tableSize, operation: 'init', message: `Hash Table (size ${tableSize}) initialized.`, currentLine: null,
+        activeIndices: [], swappingIndices: [], sortedIndices: [],
+    };
+    setCurrentStep(initialStep);
+    setSteps([initialStep]);
+    setIsFinished(true);
+    setCurrentStepIndex(0);
+  }, [tableSize, toast]);
 
   useEffect(() => {
-    setIsClient(true);
-    toast({
-      title: "Conceptual Overview",
-      description: `Interactive Hash Table visualization (hashing, collision resolution) is currently under construction.`,
-      variant: "default",
-      duration: 5000,
-    });
-  }, [toast]);
+    initializeTable();
+  }, [tableSize, initializeTable]);
 
-  const algoDetails: AlgorithmDetailsProps = {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  const updateStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
+  }, [steps]);
+  
+  const handleExecuteOperation = () => {
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    
+    const currentKey = isNaN(Number(keyInput)) ? String(keyInput) : Number(keyInput);
+    const currentValue = (selectedOperation === 'insert' && valueInput !== undefined) 
+                          ? (isNaN(Number(valueInput)) ? String(valueInput) : Number(valueInput))
+                          : undefined;
+
+    if (String(currentKey).trim() === "") {
+        toast({title: "Invalid Key", description: "Key cannot be empty.", variant: "destructive"}); return;
+    }
+    if (selectedOperation === 'insert' && String(currentValue).trim() === "") {
+        toast({title: "Invalid Value", description: "Value cannot be empty for insert.", variant: "destructive"}); return;
+    }
+
+    const newSteps = generateHashTableSteps(hashTableRef.current, tableSize, selectedOperation as 'insert'|'search'|'delete', currentKey, currentValue);
+    setSteps(newSteps);
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+    if (newSteps.length > 0) {
+        updateStateFromStep(0);
+        hashTableRef.current = newSteps[newSteps.length - 1].buckets; // Persist final state
+    } else {
+        setCurrentStep({ ...currentStep!, message: "Operation did not produce steps." });
+    }
   };
 
-  if (!isClient) { 
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground">Loading visualizer...</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false); setIsFinished(true);
+    }
+    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+
+  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
+  const handlePause = () => setIsPlaying(false);
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    if (nextIdx === steps.length - 1) setIsFinished(true);
+  };
+  const handleReset = () => { setIsPlaying(false); setIsFinished(true); setTableSize(DEFAULT_TABLE_SIZE); /* initializeTable called by useEffect */ };
+  
+  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+
+  if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-            <TabletSmartphone className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Using TabletSmartphone as a placeholder icon */}
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithmMetadata.title}
-          </h1>
+          <KeyRound className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
 
-        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
-            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                Interactive Visualization Coming Soon!
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithmMetadata.title}, demonstrating hash function calculations, bucket assignments, and collision resolution strategies (like chaining or open addressing), is currently under construction.
-                Please check back later! Review the concepts and code snippets below.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
+            <HashTableVisualizationPanel step={currentStep} />
+          </div>
+          <div className="lg:w-2/5 xl:w-1/3">
+            <HashTableCodePanel currentLine={currentStep?.currentLine ?? null} selectedOperation={selectedOperation} />
+          </div>
         </div>
         
-        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code (JavaScript - Chaining)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
-                    <pre className="font-code text-sm p-4">
-                        {HASH_TABLE_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
-                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                            {index + 1}
-                            </span>
-                            {line}
-                        </div>
-                        ))}
-                    </pre>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="w-full max-w-lg mx-auto my-4 p-4 border rounded-lg shadow-md space-y-4">
-             <div className="grid grid-cols-2 gap-2">
-                <div>
-                    <Label htmlFor="keyInputHT" className="text-sm font-medium">Key (string):</Label>
-                    <Input id="keyInputHT" type="text" value={keyInput} onChange={e => setKeyInput(e.target.value)} className="mt-1" disabled />
+        <Card className="shadow-xl rounded-xl mb-6">
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Operations</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <div className="space-y-1">
+                <Label htmlFor="tableSizeInput">Table Size (1-20)</Label>
+                <Input id="tableSizeInput" type="number" value={tableSize} onChange={e => setTableSize(Math.min(20, Math.max(1, parseInt(e.target.value) || 1 )))} min="1" max="20" disabled={isPlaying}/>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="htOperationSelect">Operation</Label>
+                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as HashTableOperationType)} disabled={isPlaying}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="insert">Insert (Key, Value)</SelectItem>
+                    <SelectItem value="search">Search (Key)</SelectItem>
+                    <SelectItem value="delete">Delete (Key)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="keyInputHT">Key (string/number)</Label>
+                <Input id="keyInputHT" value={keyInput.toString()} onChange={e => setKeyInput(e.target.value)} disabled={isPlaying} />
+              </div>
+              {selectedOperation === 'insert' && (
+                <div className="space-y-1">
+                  <Label htmlFor="valueInputHT">Value (string/number)</Label>
+                  <Input id="valueInputHT" value={valueInput.toString()} onChange={e => setValueInput(e.target.value)} disabled={isPlaying} />
                 </div>
-                <div>
-                    <Label htmlFor="valueInputHT" className="text-sm font-medium">Value (string):</Label>
-                    <Input id="valueInputHT" type="text" value={valueInput} onChange={e => setValueInput(e.target.value)} className="mt-1" disabled />
-                </div>
+              )}
             </div>
-            <div className="grid grid-cols-3 gap-2">
-                <Button className="mt-2 w-full" disabled>Insert</Button>
-                <Button className="mt-2 w-full" disabled>Search</Button>
-                <Button className="mt-2 w-full" disabled>Delete</Button>
+            <Button onClick={handleExecuteOperation} disabled={isPlaying} className="w-full md:w-auto">
+                {selectedOperation === 'insert' ? <PlusCircle /> : selectedOperation === 'search' ? <SearchIcon /> : <Trash2 />}
+                Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
+            </Button>
+            
+            <div className="flex items-center justify-start pt-4 border-t">
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Table & Controls</Button>
             </div>
-        </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex gap-2">
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+              </div>
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl">Animation Speed</Label>
+                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-    

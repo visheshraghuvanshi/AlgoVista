@@ -145,14 +145,13 @@ export interface RatInAMazeStep extends Omit<ArrayAlgorithmStep, 'array' | 'acti
   action?: 'try_move' | 'mark_path' | 'backtrack' | 'goal_reached' | 'stuck';
   message: string;
   currentLine: number | null;
-  // activeIndices can be used to highlight the current cell, if needed by VisualizationPanel
-  // For RatInAMaze, activeIndices might represent [row, col] of the current rat position
   activeIndices: [number, number] | [];
 }
 
 // Sudoku Solver Step Type
 export interface SudokuStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
   board: number[][]; // 9x9 Sudoku board
+  initialBoard?: number[][]; // Store the initial board to distinguish original numbers
   currentCell?: { row: number; col: number; num?: number; action: 'find_empty' | 'try_num' | 'place_num' | 'backtrack_remove' | 'check_safe' };
   isSafe?: boolean; // Result of safety check
   message: string;
@@ -175,6 +174,36 @@ export interface DSUStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingS
   activeIndices: number[]; // For highlighting elements in parent/rank arrays
 }
 
+// Hash Table Step Type
+export type HashValue = string | number; // Key type
+export type HashTableEntry = [HashValue, HashValue]; // [key, value] pair
+
+export interface HashTableStep extends Omit<AlgorithmStep, 'array'> {
+  buckets: HashTableEntry[][]; // Array of buckets, each bucket is an array of entries (chaining)
+  tableSize: number;
+  operation: 'insert' | 'search' | 'delete' | 'init';
+  currentKey?: HashValue;
+  currentValue?: HashValue;
+  hashIndex?: number;
+  foundValue?: HashValue | null; // null if not found, undefined if not a search op
+  message: string;
+  activeBucketIndex?: number | null; // Index of the bucket being operated on
+  activeEntry?: HashTableEntry | null; // The specific entry being examined/added/deleted
+}
+
+// Priority Queue Step Type (assuming heap-based)
+export interface PriorityQueueItem {
+  value: string | number;
+  priority: number;
+}
+export interface PriorityQueueStep extends Omit<AlgorithmStep, 'array'> {
+  heapArray: PriorityQueueItem[]; // Array representing the heap
+  operation: 'enqueue' | 'dequeue' | 'peek' | 'init';
+  processedItem?: PriorityQueueItem | null; // Item enqueued or dequeued
+  message: string;
+  activeHeapIndices?: number[]; // Indices in heapArray being actively worked on (e.g. during heapify)
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
@@ -182,10 +211,5 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Graph algorithm pages will use GraphAlgorithmStep directly.
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
-// N-Queens page will use NQueensStep directly in its state and logic.
-// Rat in a Maze page will use RatInAMazeStep.
-// Sudoku page will use SudokuStep.
-// DSU page will use DSUStep.
-
 
     
