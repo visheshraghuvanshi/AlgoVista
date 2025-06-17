@@ -8,8 +8,7 @@ import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel';
 import { BinaryTreeTraversalCodePanel } from './BinaryTreeTraversalCodePanel';
 import { BinaryTreeControlsPanel } from './BinaryTreeControlsPanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
@@ -20,6 +19,7 @@ import {
   generateTraversalSteps,
   type TraversalType,
 } from './binary-tree-traversal-logic';
+import { algorithmMetadata } from './metadata'; // Corrected import
 
 const TRAVERSAL_CODE_SNIPPETS: Record<TraversalType, string[]> = {
   [TRAVERSAL_TYPES.INORDER]: [
@@ -51,11 +51,10 @@ const TRAVERSAL_CODE_SNIPPETS: Record<TraversalType, string[]> = {
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-const ALGORITHM_SLUG = 'binary-tree-traversal';
 
 export default function BinaryTreeTraversalPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+  // algorithmMetadata is now imported directly
 
   const [treeInputValue, setTreeInputValue] = useState('5,3,8,2,4,6,9,1,null,null,null,null,null,7');
   const [selectedTraversalType, setSelectedTraversalType] = useState<TraversalType>(TRAVERSAL_TYPES.INORDER);
@@ -76,14 +75,6 @@ export default function BinaryTreeTraversalPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAlgoImplemented = true;
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -202,22 +193,22 @@ export default function BinaryTreeTraversalPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" }, // n is number of nodes
-    spaceComplexity: "O(h) for recursive stack (h=height), O(n) in worst case (skewed tree). Iterative can be O(w) where w is max width for BFS-like or O(h) for stack-based DFS-like.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
           <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
           <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{ALGORITHM_SLUG}&quot;.</p>
+          <p className="text-muted-foreground text-lg">Could not load data for &quot;{algorithmMetadata.slug}&quot;.</p>
         </main>
         <Footer />
       </div>
@@ -230,7 +221,7 @@ export default function BinaryTreeTraversalPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -275,4 +266,3 @@ export default function BinaryTreeTraversalPage() {
     </div>
   );
 }
-
