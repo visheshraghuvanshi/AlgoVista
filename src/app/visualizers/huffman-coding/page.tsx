@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -76,14 +76,13 @@ const ALGORITHM_SLUG = 'huffman-coding';
 
 export default function HuffmanCodingVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [inputSet, setInputSet] = useState("example string data compression");
+
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) { 
        toast({
             title: "Conceptual Overview",
             description: `Interactive Huffman Coding visualization (tree building, code generation) is currently under construction.`,
@@ -95,15 +94,11 @@ export default function HuffmanCodingVisualizerPage() {
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "O(n log n) due to priority queue operations (n = number of unique characters)", 
-      average: "O(n log n)", 
-      worst: "O(n log n)" 
-    },
-    spaceComplexity: "O(n) for storing characters, frequencies, and the Huffman tree.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
@@ -118,7 +113,7 @@ export default function HuffmanCodingVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) { 
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -143,7 +138,7 @@ export default function HuffmanCodingVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -153,7 +148,7 @@ export default function HuffmanCodingVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, demonstrating frequency calculation, Huffman Tree construction, and code assignment, is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title}, demonstrating frequency calculation, Huffman Tree construction, and code assignment, is currently under construction.
                 Please check back later! Review the concepts and code snippets below.
             </p>
         </div>
@@ -183,8 +178,8 @@ export default function HuffmanCodingVisualizerPage() {
         </div>
 
         <div className="w-full max-w-md mx-auto my-4 p-4 border rounded-lg shadow-md">
-            <Label htmlFor="huffmanInput" className="text-sm font-medium">Conceptual Input (e.g., string for frequencies)</Label>
-            <Input id="huffmanInput" type="text" placeholder="Example: aabbbc" className="mt-1" disabled />
+            <Label htmlFor="huffmanInput" className="text-sm font-medium">Input String (for frequencies)</Label>
+            <Input id="huffmanInput" type="text" value={inputSet} onChange={(e) => setInputSet(e.target.value)} placeholder="Example: aabbbc" className="mt-1" disabled />
             <Button className="mt-2 w-full" disabled>Generate Huffman Tree (Coming Soon)</Button>
         </div>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -193,4 +188,4 @@ export default function HuffmanCodingVisualizerPage() {
     </div>
   );
 }
-
+    
