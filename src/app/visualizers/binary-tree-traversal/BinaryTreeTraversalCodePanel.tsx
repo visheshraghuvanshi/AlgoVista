@@ -136,23 +136,22 @@ export function BinaryTreeTraversalCodePanel({
   });
 
   useEffect(() => {
-    // When selectedTraversalType changes, update available languages and potentially reset selectedLanguage
-    const currentOpLanguages = Object.keys(TRAVERSAL_CODE_SNIPPETS_ALL_LANG[selectedTraversalType] || {});
-    if (currentOpLanguages.length > 0) {
-      if (!currentOpLanguages.includes(selectedLanguage)) {
-        setSelectedLanguage(currentOpLanguages.includes("JavaScript") ? "JavaScript" : currentOpLanguages[0]);
+    setSelectedLanguage(prevSelectedLang => {
+      const currentOpLanguages = Object.keys(TRAVERSAL_CODE_SNIPPETS_ALL_LANG[selectedTraversalType] || {});
+      if (currentOpLanguages.length > 0) {
+        if (currentOpLanguages.includes(prevSelectedLang)) {
+          return prevSelectedLang; 
+        }
+        return currentOpLanguages.includes("JavaScript") ? "JavaScript" : currentOpLanguages[0];
+      } else {
+        return "Info";
       }
-    } else {
-      if (selectedLanguage !== "Info") {
-        setSelectedLanguage("Info");
-      }
-    }
-  }, [selectedTraversalType, languages]); // Depend on `languages` as well, since it's derived from `selectedTraversalType` via `codeSnippetsForTraversal`
-
+    });
+  }, [selectedTraversalType]);
 
   const codeToDisplay = useMemo(() => {
     return codeSnippetsForTraversal[selectedLanguage] || [];
-  }, [selectedTraversalType, selectedLanguage, codeSnippetsForTraversal]);
+  }, [selectedLanguage, codeSnippetsForTraversal]);
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');
@@ -169,9 +168,15 @@ export function BinaryTreeTraversalCodePanel({
     }
   };
 
-  const tabValue = languages.includes(selectedLanguage) 
-                   ? selectedLanguage 
-                   : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
+  const tabValue = useMemo(() => {
+    if (languages.includes(selectedLanguage)) {
+      return selectedLanguage;
+    }
+    if (languages.length > 0) {
+      return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+    }
+    return "Info";
+  }, [languages, selectedLanguage]);
 
 
   return (
@@ -220,4 +225,3 @@ export function BinaryTreeTraversalCodePanel({
     </Card>
   );
 }
-

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
@@ -260,7 +260,27 @@ interface HeapOperationsCodePanelProps {
 export function HeapOperationsCodePanel({ currentLine, selectedOperation }: HeapOperationsCodePanelProps) {
   const { toast } = useToast();
   const languages = React.useMemo(() => Object.keys(HEAP_CODE_SNIPPETS_ALL_LANG.classDefinition), []);
-  const [selectedLanguage, setSelectedLanguage] = React.useState<string>(languages[0] || "JavaScript");
+  
+  const [selectedLanguage, setSelectedLanguage] = React.useState<string>(() => {
+    const initialLangs = Object.keys(HEAP_CODE_SNIPPETS_ALL_LANG.classDefinition);
+    if (initialLangs.length > 0) {
+      return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
+    }
+    return "Info";
+  });
+
+  useEffect(() => {
+    setSelectedLanguage(prevSelectedLang => {
+      if (languages.length > 0) {
+        if (languages.includes(prevSelectedLang)) {
+          return prevSelectedLang; 
+        }
+        return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+      } else {
+        return "Info";
+      }
+    });
+  }, [languages]);
   
   const codeToDisplay = HEAP_CODE_SNIPPETS_ALL_LANG[selectedOperation]?.[selectedLanguage] || HEAP_CODE_SNIPPETS_ALL_LANG.classDefinition[selectedLanguage];
   const structureCode = HEAP_CODE_SNIPPETS_ALL_LANG.classDefinition[selectedLanguage];
@@ -271,8 +291,9 @@ export function HeapOperationsCodePanel({ currentLine, selectedOperation }: Heap
      if (selectedOperation !== 'classDefinition' && structureCode) {
         codeString = structureCode.join('\n') + '\n\n  // Operation:\n  ' + codeToDisplay.map(line => `  ${line}`).join('\n');
         if(selectedLanguage === 'JavaScript' || selectedLanguage === 'Java' || selectedLanguage === 'C++') {
-           // Add closing brace for class if not present in structureCode's last line (it is)
-           // and if the operation code doesn't end with one (it typically won't if it's just methods)
+           if(!structureCode[structureCode.length-1].trim().endsWith("}")) {
+                 codeString += "\n}";
+           }
         }
     } else if (structureCode) {
         codeString = structureCode.join('\n');
@@ -286,7 +307,7 @@ export function HeapOperationsCodePanel({ currentLine, selectedOperation }: Heap
   };
 
   return (
-    <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[600px] flex flex-col">
+    <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
           <Code2 className="mr-2 h-5 w-5" /> Code: {operationLabel}
@@ -324,12 +345,9 @@ export function HeapOperationsCodePanel({ currentLine, selectedOperation }: Heap
               <div key={`${operationLabel}-${selectedLanguage}-line-${index}`}
                 className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                  {/* Adjust line number for display if structure code is prepended */}
                   {index + 1 + (selectedOperation !== 'classDefinition' && structureCode ? structureCode.length + 2 : 0)}
                 </span>
-                {/* Indent operation methods for languages like Java/C++ if they are inside a class block */}
-                {selectedOperation !== 'classDefinition' && (selectedLanguage === 'Java' || selectedLanguage === 'C++') && !line.startsWith("//") && !line.startsWith("public") && !line.startsWith("private") && !line.startsWith("void") && !line.startsWith("int") && !line.startsWith("boolean") && !line.startsWith("class") && !line.startsWith("import") && !line.startsWith("#include") ? `    ${line}` : line}
-                {selectedOperation !== 'classDefinition' && (selectedLanguage === 'Python') && !line.startsWith("#") && !line.startsWith("def") && !line.startsWith("class") && !line.startsWith("import") ? `    ${line}` : line}
+                {selectedOperation !== 'classDefinition' && (selectedLanguage === 'Java' || selectedLanguage === 'C++' || selectedLanguage === 'Python') && !line.startsWith("//") && !line.startsWith("#") && !line.startsWith("public") && !line.startsWith("private") && !line.startsWith("void") && !line.startsWith("int") && !line.startsWith("boolean") && !line.startsWith("class") && !line.startsWith("import") ? `    ${line}` : line}
                 {selectedOperation !== 'classDefinition' && (selectedLanguage === 'JavaScript') && !line.startsWith("//") && !line.startsWith("class") && !line.startsWith("constructor") ? `  ${line}` : line}
                 {selectedOperation === 'classDefinition' && line}
               </div>
@@ -341,5 +359,3 @@ export function HeapOperationsCodePanel({ currentLine, selectedOperation }: Heap
     </Card>
   );
 }
-
-    

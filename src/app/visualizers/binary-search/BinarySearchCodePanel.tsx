@@ -27,17 +27,17 @@ export function BinarySearchCodePanel({ codeSnippets, currentLine }: BinarySearc
   });
 
   useEffect(() => {
-    if (languages.length > 0) {
-      if (!languages.includes(selectedLanguage)) {
-        setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
+    setSelectedLanguage(prevSelectedLang => {
+      if (languages.length > 0) {
+        if (languages.includes(prevSelectedLang)) {
+          return prevSelectedLang; 
+        }
+        return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+      } else {
+        return "Info";
       }
-    } else {
-      if (selectedLanguage !== "Info") {
-        setSelectedLanguage("Info");
-      }
-    }
-  }, [languages]); // Only depend on `languages`
-
+    });
+  }, [languages]);
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -58,15 +58,15 @@ export function BinarySearchCodePanel({ codeSnippets, currentLine }: BinarySearc
     }
   };
 
-  const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage] 
-           ? [] 
-           : (codeSnippets[selectedLanguage] || []);
-  }, [selectedLanguage, codeSnippets]);
-
-  const tabValue = languages.includes(selectedLanguage) 
-                   ? selectedLanguage 
-                   : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
+  const tabValue = useMemo(() => {
+    if (languages.includes(selectedLanguage)) {
+      return selectedLanguage;
+    }
+    if (languages.length > 0) {
+      return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+    }
+    return "Info";
+  }, [languages, selectedLanguage]);
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -74,7 +74,7 @@ export function BinarySearchCodePanel({ codeSnippets, currentLine }: BinarySearc
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
           Copy
         </Button>
@@ -125,5 +125,3 @@ export function BinarySearchCodePanel({ codeSnippets, currentLine }: BinarySearc
     </Card>
   );
 }
-
-

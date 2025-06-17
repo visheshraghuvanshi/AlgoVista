@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
@@ -15,18 +16,28 @@ interface TernarySearchCodePanelProps {
 
 export function TernarySearchCodePanel({ codeSnippets, currentLine }: TernarySearchCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  const languages = useMemo(() => Object.keys(codeSnippets || {}), [codeSnippets]);
   
-  const initialLanguage = languages.length > 0 && languages.includes("JavaScript") ? "JavaScript" : (languages.length > 0 ? languages[0] : "Info");
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
-
-  React.useEffect(() => {
-    if (languages.length > 0 && !languages.includes(selectedLanguage)) {
-      setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
-    } else if (languages.length === 0 && selectedLanguage !== "Info") {
-        setSelectedLanguage("Info");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    const initialLangs = Object.keys(codeSnippets || {});
+    if (initialLangs.length > 0) {
+      return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
     }
-  }, [languages, selectedLanguage]);
+    return "Info";
+  });
+
+  useEffect(() => {
+    setSelectedLanguage(prevSelectedLang => {
+      if (languages.length > 0) {
+        if (languages.includes(prevSelectedLang)) {
+          return prevSelectedLang; 
+        }
+        return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+      } else {
+        return "Info";
+      }
+    });
+  }, [languages]);
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -47,13 +58,15 @@ export function TernarySearchCodePanel({ codeSnippets, currentLine }: TernarySea
     }
   };
 
-  const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
-  }, [selectedLanguage, codeSnippets]);
-
-  const tabValue = languages.includes(selectedLanguage) 
-                   ? selectedLanguage 
-                   : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
+  const tabValue = useMemo(() => {
+    if (languages.includes(selectedLanguage)) {
+      return selectedLanguage;
+    }
+    if (languages.length > 0) {
+      return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+    }
+    return "Info";
+  }, [languages, selectedLanguage]);
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -61,7 +74,7 @@ export function TernarySearchCodePanel({ codeSnippets, currentLine }: TernarySea
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
           Copy
         </Button>
@@ -102,7 +115,7 @@ export function TernarySearchCodePanel({ codeSnippets, currentLine }: TernarySea
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
             </ScrollArea>

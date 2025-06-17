@@ -16,31 +16,37 @@ interface DutchNationalFlagCodePanelProps {
 
 export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchNationalFlagCodePanelProps) {
   const { toast } = useToast();
-  
+
+  // Memoize the languages array to ensure stability unless codeSnippets prop changes
   const languages = useMemo(() => Object.keys(codeSnippets || {}), [codeSnippets]);
 
+  // Initialize selectedLanguage using a function to ensure it's set correctly on mount
+  // based on the initial codeSnippets prop.
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
     const initialLangs = Object.keys(codeSnippets || {});
     if (initialLangs.length > 0) {
       return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
     }
-    return "Info";
+    return "Info"; // Default if no languages
   });
 
+  // This useEffect synchronizes selectedLanguage if the `languages` array changes
+  // (e.g., if codeSnippets prop was dynamic, though it's constant here).
+  // It ensures selectedLanguage is always valid.
   useEffect(() => {
-    // This effect synchronizes selectedLanguage if the available languages change
-    // and the current selectedLanguage is no longer valid.
-    if (languages.length > 0) {
-      if (!languages.includes(selectedLanguage)) {
-        setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
+    setSelectedLanguage(prevSelectedLang => {
+      if (languages.length > 0) {
+        if (languages.includes(prevSelectedLang)) {
+          return prevSelectedLang; // Current selection is still valid
+        }
+        // Current selection is invalid, pick a new default
+        return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+      } else {
+        // No languages available
+        return "Info";
       }
-    } else {
-      // No languages available, or codeSnippets is empty/null
-      if (selectedLanguage !== "Info") {
-        setSelectedLanguage("Info");
-      }
-    }
-  }, [languages]); // Only depend on `languages` (which correctly depends on `codeSnippets`)
+    });
+  }, [languages]); // ONLY depends on the 'languages' array
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -60,16 +66,18 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
         toast({ title: "No Code to Copy", description: "No code available for selected language.", variant: "default" });
     }
   };
-
-  const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage]
-           ? [] 
-           : (codeSnippets[selectedLanguage] || []);
-  }, [selectedLanguage, codeSnippets]);
-
-  const tabValue = languages.includes(selectedLanguage) 
-                   ? selectedLanguage 
-                   : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
+  
+  // This derived value determines which tab is active.
+  // It falls back to a default if selectedLanguage is somehow invalid.
+  const tabValue = useMemo(() => {
+    if (languages.includes(selectedLanguage)) {
+      return selectedLanguage;
+    }
+    if (languages.length > 0) {
+      return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+    }
+    return "Info";
+  }, [languages, selectedLanguage]);
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -77,7 +85,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
           Copy
         </Button>
@@ -128,4 +136,3 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     </Card>
   );
 }
-
