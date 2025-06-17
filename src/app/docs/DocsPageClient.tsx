@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Menu, Search, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"; // Ensured SheetTrigger is here
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { docsContentBySlug } from '@/lib/docs-content'; 
+import { docsContentBySlug } from '@/lib/docs-content';
 import Link from 'next/link';
 
 // Actual client-side search function
