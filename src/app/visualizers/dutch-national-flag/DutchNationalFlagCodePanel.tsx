@@ -17,36 +17,29 @@ interface DutchNationalFlagCodePanelProps {
 export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchNationalFlagCodePanelProps) {
   const { toast } = useToast();
 
-  // Memoize the languages array to ensure stability unless codeSnippets prop changes
   const languages = useMemo(() => Object.keys(codeSnippets || {}), [codeSnippets]);
 
-  // Initialize selectedLanguage using a function to ensure it's set correctly on mount
-  // based on the initial codeSnippets prop.
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
-    const initialLangs = Object.keys(codeSnippets || {});
-    if (initialLangs.length > 0) {
-      return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
+    if (languages.length > 0) {
+      return languages.includes("JavaScript") ? "JavaScript" : languages[0];
     }
-    return "Info"; // Default if no languages
+    return "Info"; // Default if no languages or codeSnippets is initially empty/undefined
   });
 
-  // This useEffect synchronizes selectedLanguage if the `languages` array changes
-  // (e.g., if codeSnippets prop was dynamic, though it's constant here).
-  // It ensures selectedLanguage is always valid.
+  // This effect ensures that selectedLanguage is valid if codeSnippets (and thus languages) changes.
   useEffect(() => {
-    setSelectedLanguage(prevSelectedLang => {
-      if (languages.length > 0) {
-        if (languages.includes(prevSelectedLang)) {
-          return prevSelectedLang; // Current selection is still valid
-        }
-        // Current selection is invalid, pick a new default
-        return languages.includes("JavaScript") ? "JavaScript" : languages[0];
-      } else {
-        // No languages available
-        return "Info";
+    if (languages.length > 0) {
+      // Only update if the current selectedLanguage is NOT in the new list of languages
+      if (!languages.includes(selectedLanguage)) {
+        setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
       }
-    });
-  }, [languages]); // ONLY depends on the 'languages' array
+    } else {
+      // If there are no languages, default to "Info"
+      if (selectedLanguage !== "Info") {
+        setSelectedLanguage("Info");
+      }
+    }
+  }, [languages]); // Only re-run if the 'languages' array itself changes
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -67,8 +60,13 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     }
   };
   
-  // This derived value determines which tab is active.
-  // It falls back to a default if selectedLanguage is somehow invalid.
+  const currentCodeLines = useMemo(() => {
+    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage] 
+           ? [] 
+           : (codeSnippets[selectedLanguage] || []);
+  }, [selectedLanguage, codeSnippets]);
+
+  // tabValue ensures that the Tabs component always receives a valid value from the 'languages' list or 'Info'
   const tabValue = useMemo(() => {
     if (languages.includes(selectedLanguage)) {
       return selectedLanguage;
@@ -85,7 +83,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={selectedLanguage === 'Info'}>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
           Copy
         </Button>
@@ -100,17 +98,17 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
                 </TabsTrigger>
               ))}
             </TabsList>
-            {languages.map((lang) => (
-              <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            {/* Render TabsContent only for the currently active tabValue to potentially optimize */}
+            <TabsContent key={tabValue} value={tabValue} className="m-0 flex-grow overflow-hidden flex flex-col">
+                <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4">
-                    {(codeSnippets[lang] || []).map((line, index) => (
+                    {currentCodeLines.map((line, index) => (
                       <div
-                        key={`${lang}-line-${index}`}
+                        key={`${tabValue}-line-${index}`}
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                          index + 1 === currentLine && lang === tabValue ? "bg-accent text-accent-foreground" : "text-foreground"
+                          index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
                         }`}
-                        aria-current={index + 1 === currentLine && lang === tabValue ? "step" : undefined}
+                        aria-current={index + 1 === currentLine ? "step" : undefined}
                       >
                         <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                           {index + 1}
@@ -121,11 +119,10 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
                   </pre>
                 </ScrollArea>
               </TabsContent>
-            ))}
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
