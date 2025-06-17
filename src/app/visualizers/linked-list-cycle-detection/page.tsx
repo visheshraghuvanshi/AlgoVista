@@ -94,9 +94,9 @@ export default function LinkedListCycleDetectionPage() {
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4,5,6'); setCycleConnectsTo('3');
-    handleGenerateSteps();
+    // handleGenerateSteps will be called by useEffect due to state changes
   };
-
+  
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,

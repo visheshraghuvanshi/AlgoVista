@@ -225,5 +225,3 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
     
-
-    

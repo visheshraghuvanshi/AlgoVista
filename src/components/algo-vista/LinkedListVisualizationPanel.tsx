@@ -55,7 +55,8 @@ export function LinkedListVisualizationPanel({
   }));
 
   const svgWidth = Math.max(300, SVG_PADDING * 2 + nodes.length * NODE_SPACING_X - (nodes.length > 0 ? (NODE_SPACING_X - NODE_WIDTH) : 0));
-  const svgHeight = Math.max(150, SVG_PADDING * 2 + NODE_HEIGHT * 2 + Object.keys(auxiliaryPointers).length * 20);
+  const svgHeight = Math.max(150, SVG_PADDING * 2 + NODE_HEIGHT * 2 + Object.keys(auxiliaryPointers).length * 20 + (message ? 30: 0) );
+
 
   const viewBox = `0 0 ${svgWidth} ${svgHeight}`;
 
@@ -152,7 +153,11 @@ export function LinkedListVisualizationPanel({
                 let textFill = TEXT_COLORS.default;
                 if (node.isHead) { nodeFill = NODE_COLORS.head; textFill = TEXT_COLORS.head; }
                 if (node.isSlow || node.isFast) { nodeFill = NODE_COLORS.highlight; textFill = TEXT_COLORS.highlight; }
-                if (node.id === auxiliaryPointers?.current) { nodeFill = NODE_COLORS.active; textFill = TEXT_COLORS.active; }
+                // Check if node ID is ANY of the values in auxiliaryPointers for general activity
+                const isAuxPointed = Object.values(auxiliaryPointers).some(val => val === node.id);
+                if (isAuxPointed && !node.isHead && !node.isSlow && !node.isFast) { // Avoid re-coloring head/slow/fast if also aux
+                    nodeFill = NODE_COLORS.active; textFill = TEXT_COLORS.active;
+                }
 
 
                 return (
@@ -174,35 +179,38 @@ export function LinkedListVisualizationPanel({
                       fill={textFill}
                       fontWeight="bold"
                     >
-                      {node.value}
+                      {String(node.value)}
                     </text>
-                    {node.isSlow && <text x={NODE_WIDTH/2} y={NODE_HEIGHT + 12} fontSize="10" textAnchor="middle" fill="hsl(var(--accent-foreground))">S</text>}
-                    {node.isFast && <text x={NODE_WIDTH/2} y={NODE_HEIGHT + (node.isSlow ? 24 : 12)} fontSize="10" textAnchor="middle" fill="hsl(var(--accent-foreground))">F</text>}
+                    {node.isSlow && <text x={NODE_WIDTH/2} y={NODE_HEIGHT + 12} fontSize="10" textAnchor="middle" fill={TEXT_COLORS.highlight}>S</text>}
+                    {node.isFast && <text x={NODE_WIDTH/2} y={NODE_HEIGHT + (node.isSlow ? 24 : 12)} fontSize="10" textAnchor="middle" fill={TEXT_COLORS.highlight}>F</text>}
                   </g>
                 );
               })}
               
-              {/* Auxiliary Pointers */}
-              {Object.entries(auxiliaryPointers).map(([key, nodeId], index) => {
-                if (!nodeId) return null;
-                const targetNode = positionedNodes.find(n => n.id === nodeId);
+              {/* Auxiliary Pointers (general rendering for those not covered by isSlow/isFast) */}
+              {Object.entries(auxiliaryPointers).map(([key, nodeIdStr], index) => {
+                if (!nodeIdStr || key === 'slow' || key === 'fast') return null; // Skip handled ones
+                const targetNode = positionedNodes.find(n => n.id === nodeIdStr);
                 if (!targetNode) return null;
-                if (key === 'current' || key === 'slow' || key === 'fast') return null; // Handled by node color/text
+
+                // Avoid rendering "current" if it's already covered by slow/fast or head highlighting logic
+                if (key === 'current' && (targetNode.isSlow || targetNode.isFast || targetNode.isHead)) return null;
 
                 return (
-                  <g key={`aux-${key}`}>
+                  <g key={`aux-${key}-${nodeIdStr}`}>
                     <text
                       x={targetNode.x!}
-                      y={targetNode.y! - NODE_HEIGHT / 2 - 5 - (index * 10) % 20} // Stagger to avoid overlap
+                      y={targetNode.y! - NODE_HEIGHT / 2 - 5 - (Object.keys(auxiliaryPointers).indexOf(key) * 10) % 20} 
                       textAnchor="middle"
                       fontSize="10"
                       fill="hsl(var(--foreground))"
+                      className="font-mono"
                     >
-                      {key}
+                      {key} ({auxiliaryPointers[key+'_val'] || targetNode.value})
                     </text>
                     <line 
                         x1={targetNode.x!} 
-                        y1={targetNode.y! - NODE_HEIGHT / 2 - 2 - (index * 10) % 20} 
+                        y1={targetNode.y! - NODE_HEIGHT / 2 - 2 - (Object.keys(auxiliaryPointers).indexOf(key) * 10) % 20} 
                         x2={targetNode.x!}
                         y2={targetNode.y! - NODE_HEIGHT / 2 + 2}
                         stroke="hsl(var(--foreground))" strokeWidth="1"
@@ -215,7 +223,7 @@ export function LinkedListVisualizationPanel({
           )}
         </div>
         {message && (
-          <div className="flex-shrink-0 p-1 border rounded-md bg-background text-xs text-center">
+          <div className="flex-shrink-0 p-1 border rounded-md bg-background text-xs text-center mt-2">
             <p className="font-semibold text-muted-foreground">Status:</p>
             <p className="font-code break-all">{message}</p>
           </div>

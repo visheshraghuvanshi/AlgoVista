@@ -17,12 +17,11 @@ export function parseListStringForMerge(input: string): { value: string | number
     if (input.trim() === '') return [];
     return input.split(',').map(s => s.trim()).filter(s => s !== '').map(valStr => {
         const num = Number(valStr);
-        const value = isNaN(num) ? valStr : num;
-        return { value, id: generateNodeId(value) }; // Ensure unique IDs
-    }).sort((a,b) => (a.value as number) - (b.value as number)); // Assume lists are sorted, sort if not for consistency
+        const value = isNaN(num) ? valStr : num; // Allow string or number values
+        return { value, id: generateNodeId(value) }; 
+    }).sort((a,b) => (a.value as number) - (b.value as number)); // Ensure lists are sorted for merge logic
 }
 
-// Simplified: Visualizes one list at a time or the merged list
 function createVisualNodesForMerge(
   nodeMap: Map<string, { value: string | number, nextId: string | null }>,
   listHeadId: string | null,
@@ -31,6 +30,7 @@ function createVisualNodesForMerge(
   const visualNodes: LinkedListNodeVisual[] = [];
   let currentId = listHeadId;
   const visited = new Set<string>();
+  let xPos = 0;
 
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId);
@@ -38,14 +38,17 @@ function createVisualNodesForMerge(
     if (!nodeData) break;
 
     let color = "hsl(var(--secondary))";
-    if (auxPointers.l1 === currentId || auxPointers.l2 === currentId) color = "hsl(var(--primary))";
+    if (auxPointers.l1 === currentId) color = "hsl(var(--blue-500))"; // Use a distinct color for l1 pointer
+    if (auxPointers.l2 === currentId) color = "hsl(var(--green-500))"; // Distinct for l2
     if (auxPointers.tail === currentId || auxPointers.mergedCurrent === currentId) color = "hsl(var(--accent))";
     
     visualNodes.push({
       id: currentId, value: nodeData.value, nextId: nodeData.nextId, color,
       isHead: currentId === listHeadId,
+      x: 20 + xPos * 80, y: 100, // Simple horizontal layout for merged list
     });
     currentId = nodeData.nextId;
+    xPos++;
   }
   return visualNodes;
 }
@@ -56,7 +59,7 @@ export const generateMergeSortedListsSteps = (
   type: 'iterative' | 'recursive'
 ): LinkedListAlgorithmStep[] => {
   const localSteps: LinkedListAlgorithmStep[] = [];
-  nodeIdCounter = 5000; // Reset
+  nodeIdCounter = 5000; // Reset ID counter
   const parsedL1 = parseListStringForMerge(list1String);
   const parsedL2 = parseListStringForMerge(list2String);
 
@@ -68,119 +71,127 @@ export const generateMergeSortedListsSteps = (
   parsedL2.forEach((p, i) => l2Map.set(p.id, { value: p.value, nextId: i < parsedL2.length - 1 ? parsedL2[i+1].id : null }));
   let l2HeadId: string | null = parsedL2.length > 0 ? parsedL2[0].id : null;
   
+  // This map will hold all nodes that become part of the merged list.
   const mergedListMap = new Map<string, { value: string | number, nextId: string | null }>();
   let mergedHeadId: string | null = null;
   
-  // AddStep needs to handle showing L1, L2, and Merged list.
-  // For simplicity, this example might just show the merged list as it's built.
-  // Or, it could show all three with auxiliary pointers indicating current nodes in L1, L2.
-  const addStep = (line: number, message: string, aux?: Record<string, string | null>) => {
-    // This visualization is complex. For now, focus on merged list + aux pointers for l1,l2 heads.
-    const nodesToShow = createVisualNodesForMerge(mergedListMap, mergedHeadId, aux);
-    // We could also add L1 and L2 nodes to nodesToShow with different Y offsets if panel supported it well.
-    // For now, the message and aux pointers will have to imply L1/L2 state.
-    
+  const addStep = (line: number, message: string, currentL1: string|null, currentL2: string|null, currentTailOfMerged: string|null, displayMap?: Map<string, { value: string | number, nextId: string | null }>, displayHead?: string|null) => {
+    const nodesToShow = createVisualNodesForMerge(displayMap || mergedListMap, displayHead || mergedHeadId, { l1: currentL1, l2: currentL2, tail: currentTailOfMerged });
     localSteps.push({
-      nodes: nodesToShow, // This ideally would show L1, L2 and Merged. Simplified here.
-      headId: mergedHeadId, // Head of the merged list
-      currentLine: line, message, auxiliaryPointers: aux, operation: `merge-${type}`
+      nodes: nodesToShow, 
+      headId: displayHead || mergedHeadId,
+      currentLine: line, message, 
+      auxiliaryPointers: { l1: currentL1, l2: currentL2, tail: currentTailOfMerged,
+         l1_val: currentL1 ? (l1Map.get(currentL1)?.value?.toString() || 'null') : 'null',
+         l2_val: currentL2 ? (l2Map.get(currentL2)?.value?.toString() || 'null') : 'null',
+         tail_val: currentTailOfMerged ? (mergedListMap.get(currentTailOfMerged)?.value?.toString() || 'null') : 'null'
+      }, 
+      operation: `merge-${type}`
     });
   };
 
   if (type === 'iterative') {
     const lm = MERGE_ITERATIVE_LINE_MAP;
-    addStep(lm.funcDeclare, "Start Iterative Merge.", { l1: l1HeadId, l2: l2HeadId });
+    addStep(lm.funcDeclare, "Start Iterative Merge.", l1HeadId, l2HeadId, null);
 
     const dummyNodeId = generateNodeId('dummy');
     mergedListMap.set(dummyNodeId, { value: 'dummy', nextId: null });
-    let tailId: string | null = dummyNodeId;
-    addStep(lm.initDummy, "Create dummy head for merged list.", { l1: l1HeadId, l2: l2HeadId, dummy: dummyNodeId });
-    addStep(lm.initTail, "Initialize tail pointer to dummy.", { l1: l1HeadId, l2: l2HeadId, tail: tailId });
+    let tailId: string = dummyNodeId; // Tail of the merged list
+    addStep(lm.initDummy, "Create dummy head for merged list.", l1HeadId, l2HeadId, tailId);
+    addStep(lm.initTail, "Initialize tail pointer to dummy.", l1HeadId, l2HeadId, tailId);
 
     let currentL1Id = l1HeadId;
     let currentL2Id = l2HeadId;
 
     while (currentL1Id && currentL2Id) {
-      addStep(lm.whileLoop, "Comparing elements from L1 and L2.", { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+      addStep(lm.whileLoop, "Comparing elements from L1 and L2.", currentL1Id, currentL2Id, tailId);
       const l1Node = l1Map.get(currentL1Id)!;
       const l2Node = l2Map.get(currentL2Id)!;
-      addStep(lm.compareL1L2, `Compare L1 (${l1Node.value}) and L2 (${l2Node.value}).`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+      addStep(lm.compareL1L2, `Compare L1 (${l1Node.value}) and L2 (${l2Node.value}).`, currentL1Id, currentL2Id, tailId);
 
       if ((l1Node.value as number) < (l2Node.value as number)) {
-        mergedListMap.get(tailId!)!.nextId = currentL1Id;
-        mergedListMap.set(currentL1Id, l1Node); // Add to merged map
-        addStep(lm.linkL1, `L1 is smaller. Link ${l1Node.value} to merged list.`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+        mergedListMap.get(tailId)!.nextId = currentL1Id; // Link
+        if(!mergedListMap.has(currentL1Id)) mergedListMap.set(currentL1Id, l1Node); // Add to merged map
+        addStep(lm.linkL1, `L1 is smaller. Link ${l1Node.value} to merged list.`, currentL1Id, currentL2Id, tailId);
         tailId = currentL1Id;
         currentL1Id = l1Node.nextId;
-        addStep(lm.moveL1, `Move L1 pointer to ${currentL1Id ? l1Map.get(currentL1Id)?.value : 'null'}.`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+        addStep(lm.moveL1, `Move L1 pointer.`, currentL1Id, currentL2Id, tailId);
       } else {
-        mergedListMap.get(tailId!)!.nextId = currentL2Id;
-        mergedListMap.set(currentL2Id, l2Node); // Add to merged map
-        addStep(lm.linkL2, `L2 is smaller or equal. Link ${l2Node.value} to merged list.`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+        mergedListMap.get(tailId)!.nextId = currentL2Id; // Link
+        if(!mergedListMap.has(currentL2Id)) mergedListMap.set(currentL2Id, l2Node);
+        addStep(lm.linkL2, `L2 is smaller or equal. Link ${l2Node.value} to merged list.`, currentL1Id, currentL2Id, tailId);
         tailId = currentL2Id;
         currentL2Id = l2Node.nextId;
-        addStep(lm.moveL2, `Move L2 pointer to ${currentL2Id ? l2Map.get(currentL2Id)?.value : 'null'}.`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+        addStep(lm.moveL2, `Move L2 pointer.`, currentL1Id, currentL2Id, tailId);
       }
-      if (mergedHeadId === null) mergedHeadId = mergedListMap.get(dummyNodeId)!.nextId; // First actual node
-      addStep(lm.moveTail, `Move tail pointer to ${tailId ? mergedListMap.get(tailId)?.value : 'null'}.`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+      if (mergedHeadId === null && mergedListMap.get(dummyNodeId)!.nextId) mergedHeadId = mergedListMap.get(dummyNodeId)!.nextId;
+      addStep(lm.moveTail, `Move tail pointer to ${mergedListMap.get(tailId)?.value}.`, currentL1Id, currentL2Id, tailId);
     }
     
     const remainingId = currentL1Id || currentL2Id;
     const remainingMap = currentL1Id ? l1Map : l2Map;
-    if (tailId) mergedListMap.get(tailId!)!.nextId = remainingId;
-    // Add all remaining nodes from the non-empty list to mergedListMap
+    mergedListMap.get(tailId!)!.nextId = remainingId; // Append rest
+    // Add all remaining nodes from the non-empty list to mergedListMap for rendering
     let tempCurrent = remainingId;
     while(tempCurrent) {
-        if(remainingMap.has(tempCurrent)) mergedListMap.set(tempCurrent, remainingMap.get(tempCurrent)!);
-        else break; // Should not happen if maps are correct
+        if(remainingMap.has(tempCurrent) && !mergedListMap.has(tempCurrent)) mergedListMap.set(tempCurrent, remainingMap.get(tempCurrent)!);
+        else if (!remainingMap.has(tempCurrent)) break; 
         tempCurrent = remainingMap.get(tempCurrent)!.nextId;
     }
 
-    addStep(lm.appendRemaining, `Append remaining nodes from ${currentL1Id ? 'L1' : (currentL2Id ? 'L2' : 'none')}.`, { l1: currentL1Id, l2: currentL2Id, tail: tailId });
+    addStep(lm.appendRemaining, `Append remaining nodes from ${currentL1Id ? 'L1' : (currentL2Id ? 'L2' : 'none')}.`, currentL1Id, currentL2Id, tailId);
     
-    mergedHeadId = mergedListMap.get(dummyNodeId)!.nextId; // Final head of merged
-    mergedListMap.delete(dummyNodeId); // Remove dummy
+    mergedHeadId = mergedListMap.get(dummyNodeId)!.nextId; // Final head
+    mergedListMap.delete(dummyNodeId); // Clean up dummy
 
-    addStep(lm.returnMerged, "Merge complete. Return merged list.", { mergedHead: mergedHeadId });
-  } else { // Recursive (Highly conceptual steps for visualization)
+    addStep(lm.returnMerged, "Iterative merge complete.", null, null, null);
+  } else { // Recursive
     const lm = MERGE_RECURSIVE_LINE_MAP;
     
     function mergeRecursiveHelper(h1: string | null, h2: string | null): string | null {
-        addStep(lm.funcDeclare, `mergeRecursive(${h1 ? l1Map.get(h1)?.value : 'null'}, ${h2 ? l2Map.get(h2)?.value : 'null'})`, { l1:h1, l2:h2 });
-        if (!h1) { addStep(lm.baseL1Null, `L1 is null, return L2 (${h2 ? l2Map.get(h2)?.value : 'null'})`, {l1:h1,l2:h2}); return h2; }
-        if (!h2) { addStep(lm.baseL2Null, `L2 is null, return L1 (${h1 ? l1Map.get(h1)?.value : 'null'})`, {l1:h1,l2:h2}); return h1; }
+        addStep(lm.funcDeclare, `Call: mergeRecursive(${h1 ? l1Map.get(h1)?.value : 'null'}, ${h2 ? l2Map.get(h2)?.value : 'null'})`, h1, h2, null);
+        if (!h1) { addStep(lm.baseL1Null, `L1 is null, return L2.`, h1, h2, null); return h2; }
+        if (!h2) { addStep(lm.baseL2Null, `L2 is null, return L1.`, h1, h2, null); return h1; }
 
         const n1 = l1Map.get(h1)!;
         const n2 = l2Map.get(h2)!;
-        addStep(lm.compareL1L2, `Compare L1 (${n1.value}) and L2 (${n2.value})`, {l1:h1,l2:h2});
+        addStep(lm.compareL1L2, `Compare L1 (${n1.value}) and L2 (${n2.value})`, h1, h2, null);
         
         let resultNodeId: string | null;
         if ((n1.value as number) < (n2.value as number)) {
-            addStep(lm.linkL1Recurse, `L1 smaller. Set L1.next = merge(L1.next, L2). Recurse.`, {l1:h1,l2:h2});
-            const nextMergeHead = mergeRecursiveHelper(n1.nextId, h2);
-            l1Map.get(h1)!.nextId = nextMergeHead;
-            // Update mergedListMap as we go
-            if (!mergedListMap.has(h1)) mergedListMap.set(h1, l1Map.get(h1)!);
-            if (nextMergeHead && !mergedListMap.has(nextMergeHead) && (l1Map.has(nextMergeHead) || l2Map.has(nextMergeHead))) {
-                 mergedListMap.set(nextMergeHead, (l1Map.get(nextMergeHead) || l2Map.get(nextMergeHead))!);
+            addStep(lm.linkL1Recurse, `L1 smaller. L1.next = merge(L1.next, L2). Recurse.`, h1, h2, null);
+            const nextMergedHeadId = mergeRecursiveHelper(n1.nextId, h2);
+            l1Map.get(h1)!.nextId = nextMergedHeadId; // Actual link for the call stack return
+            if(!mergedListMap.has(h1)) mergedListMap.set(h1, l1Map.get(h1)!); // Add to map for rendering
+            // Ensure nodes from returned sub-list are in mergedMap too
+            let temp = nextMergedHeadId;
+            while(temp && !mergedListMap.has(temp)){
+                if(l1Map.has(temp)) mergedListMap.set(temp, l1Map.get(temp)!);
+                else if(l2Map.has(temp)) mergedListMap.set(temp, l2Map.get(temp)!);
+                else break;
+                temp = mergedListMap.get(temp)!.nextId;
             }
             resultNodeId = h1;
-            addStep(lm.returnL1, `Return L1 (${n1.value}) as current merged head.`, {l1:h1,l2:h2, currentMerged: resultNodeId});
+            addStep(lm.returnL1, `Return L1 (${n1.value}) as current merged head.`, h1, h2, resultNodeId, mergedListMap, resultNodeId);
         } else {
-            addStep(lm.linkL2Recurse, `L2 smaller/equal. Set L2.next = merge(L1, L2.next). Recurse.`, {l1:h1,l2:h2});
-            const nextMergeHead = mergeRecursiveHelper(h1, n2.nextId);
-            l2Map.get(h2)!.nextId = nextMergeHead;
-            if (!mergedListMap.has(h2)) mergedListMap.set(h2, l2Map.get(h2)!);
-             if (nextMergeHead && !mergedListMap.has(nextMergeHead) && (l1Map.has(nextMergeHead) || l2Map.has(nextMergeHead))) {
-                 mergedListMap.set(nextMergeHead, (l1Map.get(nextMergeHead) || l2Map.get(nextMergeHead))!);
+            addStep(lm.linkL2Recurse, `L2 smaller/equal. L2.next = merge(L1, L2.next). Recurse.`, h1, h2, null);
+            const nextMergedHeadId = mergeRecursiveHelper(h1, n2.nextId);
+            l2Map.get(h2)!.nextId = nextMergedHeadId;
+            if(!mergedListMap.has(h2)) mergedListMap.set(h2, l2Map.get(h2)!);
+            let temp = nextMergedHeadId;
+             while(temp && !mergedListMap.has(temp)){
+                if(l1Map.has(temp)) mergedListMap.set(temp, l1Map.get(temp)!);
+                else if(l2Map.has(temp)) mergedListMap.set(temp, l2Map.get(temp)!);
+                else break;
+                temp = mergedListMap.get(temp)!.nextId;
             }
             resultNodeId = h2;
-            addStep(lm.returnL2, `Return L2 (${n2.value}) as current merged head.`, {l1:h1,l2:h2, currentMerged: resultNodeId});
+            addStep(lm.returnL2, `Return L2 (${n2.value}) as current merged head.`, h1, h2, resultNodeId, mergedListMap, resultNodeId);
         }
         return resultNodeId;
     }
     mergedHeadId = mergeRecursiveHelper(l1HeadId, l2HeadId);
-    addStep(lm.funcDeclare, "Recursive merge complete.", { mergedHead: mergedHeadId });
+    addStep(lm.funcDeclare, "Recursive merge complete.", null, null, null, mergedListMap, mergedHeadId);
   }
   return localSteps;
 };

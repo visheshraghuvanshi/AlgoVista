@@ -44,14 +44,12 @@ function createVisualNodesForCycleDetection(
   fastId: string | null
 ): LinkedListNodeVisual[] {
   const visualNodes: LinkedListNodeVisual[] = [];
-  const renderedIds = new Set<string>();
-
   let currentRenderId = currentHeadId;
-  let positionX = 0; // Simple X positioning for now
+  const visited = new Set<string>(); // For rendering to avoid infinite loop if cycle
+  let positionX = 0;
 
-  // Render the main chain first
-  while(currentRenderId && !renderedIds.has(currentRenderId) && positionX < parsedNodes.length * 2) { // Limit rendering length
-    renderedIds.add(currentRenderId);
+  while(currentRenderId && !visited.has(currentRenderId) && positionX < parsedNodes.length * 2) { // Limit rendering length for safety
+    visited.add(currentRenderId);
     const nodeData = actualList.get(currentRenderId);
     if(!nodeData) break;
 
@@ -59,20 +57,19 @@ function createVisualNodesForCycleDetection(
       id: currentRenderId,
       value: nodeData.value,
       nextId: nodeData.nextId,
-      color: "hsl(var(--secondary))",
+      color: "hsl(var(--secondary))", // Base color, will be overridden by isSlow/isFast/isHead
       isHead: currentRenderId === currentHeadId,
       isSlow: currentRenderId === slowId,
       isFast: currentRenderId === fastId,
-      x: 20 + positionX * 80, // Adjust spacing as needed
+      x: 20 + positionX * 80, 
       y: 100,
     });
     currentRenderId = nodeData.nextId;
     positionX++;
   }
   
-  // If there's a cycle and the fast pointer is on a node not yet rendered (part of the cycle deeper in)
-  // This part is tricky for a simple linear layout, real cycle visualization needs graph layout
-  if(fastId && !renderedIds.has(fastId) && actualList.has(fastId)){
+  // If fast pointer is part of a cycle and not yet rendered (can happen if cycle is short)
+  if (fastId && !visited.has(fastId) && actualList.has(fastId)) {
      const fastNodeData = actualList.get(fastId)!;
       visualNodes.push({
         id: fastId, value: fastNodeData.value, nextId: fastNodeData.nextId,
@@ -80,8 +77,6 @@ function createVisualNodesForCycleDetection(
         x: 20 + positionX * 80, y: 100
       });
   }
-
-
   return visualNodes;
 }
 
@@ -91,9 +86,10 @@ export const generateCycleDetectionSteps = (
   cycleConnectsToValue?: string | number
 ): LinkedListAlgorithmStep[] => {
   const localSteps: LinkedListAlgorithmStep[] = [];
-  nodeIdCounter = 4000;
+  nodeIdCounter = 4000; // Reset ID counter for this generation
   const { nodes: parsedNodes, headId: initialHeadId, actualCycleNodeId } = parseListStringWithCycle(listString, cycleConnectsToValue);
 
+  // Build the actual list structure in a map for easy pointer manipulation
   const listNodesMap = new Map<string, { value: string | number, nextId: string | null }>();
   parsedNodes.forEach((pNode, index) => {
     listNodesMap.set(pNode.id, {
@@ -128,8 +124,8 @@ export const generateCycleDetectionSteps = (
   addStep(lm.initSlow, "Initialize slow pointer to head.", slow, fast);
   addStep(lm.initFast, "Initialize fast pointer to head.", slow, fast);
 
-  let iterations = 0; // Safety break for visualization
-  const maxIterations = parsedNodes.length * 3; 
+  let iterations = 0; 
+  const maxIterations = parsedNodes.length * 3 + 5; // Safety break increased slightly
 
   while (fast !== null && listNodesMap.get(fast)?.nextId !== null && iterations < maxIterations) {
     const fastNodeData = listNodesMap.get(fast)!;
@@ -137,7 +133,8 @@ export const generateCycleDetectionSteps = (
     
     addStep(lm.whileLoop, `Loop: Fast is ${fastNodeData.value}, Fast.next is ${fastNextNodeData ? fastNextNodeData.value : 'null'}`, slow, fast);
     
-    slow = listNodesMap.get(slow!)!.nextId;
+    const slowNodeData = listNodesMap.get(slow!)!;
+    slow = slowNodeData.nextId;
     addStep(lm.moveSlow, `Move slow to ${slow ? listNodesMap.get(slow)?.value : 'null'}`, slow, fast);
 
     fast = fastNextNodeData ? fastNextNodeData.nextId : null; // fast moves two steps
@@ -151,10 +148,11 @@ export const generateCycleDetectionSteps = (
     addStep(lm.checkMeet, "Pointers did not meet yet.", slow, fast);
     iterations++;
   }
-    if (iterations >= maxIterations) {
-       addStep(lm.returnFalseNoCycle, "Max iterations reached (safety break). Assuming no cycle or very long list.", slow, fast, false);
-    } else {
-       addStep(lm.returnFalseNoCycle, "Fast pointer reached end. No cycle. Return false.", slow, fast, false);
-    }
+  
+  if (iterations >= maxIterations) {
+     addStep(lm.returnFalseNoCycle, "Max iterations reached. Assuming no cycle or very complex list.", slow, fast, false);
+  } else {
+     addStep(lm.returnFalseNoCycle, "Fast pointer reached end of list. No cycle found. Return false.", slow, fast, false);
+  }
   return localSteps;
 };

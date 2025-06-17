@@ -62,16 +62,21 @@ export default function MergeSortedLinkedListsPage() {
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     if (mergeType === 'init') {
-        const initialParsedL1 = list1Str.split(',').map((s,i)=>({id: `l1-${i}`, value: s.trim(), nextId: null, color: "hsl(var(--secondary))"} as LinkedListNodeVisual));
-        setCurrentNodes(initialParsedL1);
-        setCurrentHeadId(initialParsedL1.length > 0 ? initialParsedL1[0].id : null);
-        setCurrentMessage("Input lists ready. Select merge type and play.");
-        setSteps([ { nodes: initialParsedL1, headId: currentHeadId, currentLine: 0, message: "Initial L1" }]);
+        // For init, we might just display the two lists separately or not do much.
+        // For this visualizer, "init" means "ready to merge", so just reset steps.
+        const initialMessage = "Lists ready for merge. Select merge type and play/step.";
+        setCurrentNodes([]); // Or display L1 and L2 if panel supports it
+        setCurrentHeadId(null);
+        setCurrentAuxPointers({l1: 'L1_Head_Placeholder', l2: 'L2_Head_Placeholder'});
+        setCurrentMessage(initialMessage);
+        setCurrentLine(null);
+        setSteps([{ nodes: [], headId: null, currentLine: 0, message: initialMessage }]); // Dummy step for initial state
         setIsPlaying(false); setIsFinished(true); 
         return;
     }
     if (list1Str.trim() === '' && list2Str.trim() === '') {
         toast({title: "Input Missing", description: "Please provide at least one list.", variant: "destructive"});
+        setCurrentNodes([]); setCurrentHeadId(null); setSteps([]); setIsFinished(true);
         return;
     }
     const newSteps = generateMergeSortedListsSteps(list1Str, list2Str, mergeType);
@@ -81,7 +86,7 @@ export default function MergeSortedLinkedListsPage() {
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) updateVisualStateFromStep(0);
     else setCurrentNodes([]);
-  }, [list1Str, list2Str, mergeType, updateVisualStateFromStep, toast, currentHeadId]);
+  }, [list1Str, list2Str, mergeType, updateVisualStateFromStep, toast]);
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -96,17 +101,17 @@ export default function MergeSortedLinkedListsPage() {
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
-  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
+  const handlePlay = () => { if (!isFinished && steps.length > 1 && mergeType !== 'init') { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    if (isFinished || currentStepIndex >= steps.length - 1 || mergeType === 'init') return;
     setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); 
     setList1Str('1,3,5,7'); setList2Str('2,4,6,8'); setMergeType('iterative');
-    handleGenerateSteps();
+    // handleGenerateSteps will be called by useEffect due to state changes
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -157,9 +162,9 @@ export default function MergeSortedLinkedListsPage() {
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || mergeType === 'init'} size="lg"><Play className="mr-2"/>Play</Button> 
                              : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
-                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1 || mergeType === 'init'} size="lg"><SkipForward className="mr-2"/>Step</Button>
               </div>
               <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
                 <Label htmlFor="speedControl">Animation Speed</Label>
