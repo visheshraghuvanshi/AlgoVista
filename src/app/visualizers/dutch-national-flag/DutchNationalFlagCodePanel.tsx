@@ -18,40 +18,33 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
   const { toast } = useToast();
   
   // Calculate initial languages based on the initial codeSnippets prop
+  // Use a function for useState's initial value to ensure it's only computed once.
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
-    const initialLangs = Object.keys(codeSnippets);
+    const initialLangs = Object.keys(codeSnippets || {}); // Handle if codeSnippets is initially undefined
     return initialLangs.length > 0 && initialLangs.includes("JavaScript") 
       ? "JavaScript" 
       : (initialLangs.length > 0 ? initialLangs[0] : "Info");
   });
 
   // Memoize languages derived from codeSnippets to use in dependencies and calculations
-  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  const languages = useMemo(() => Object.keys(codeSnippets || {}), [codeSnippets]);
 
   // Effect to update selectedLanguage if codeSnippets prop changes and current selection becomes invalid
   useEffect(() => {
-    const currentValidLanguages = Object.keys(codeSnippets); // Get languages from current prop
-    let newLanguageToSet = selectedLanguage; // Start with current state
-    let needsUpdate = false;
-
+    const currentValidLanguages = Object.keys(codeSnippets || {}); // Languages from the current prop
+    
     if (currentValidLanguages.length > 0) {
       if (!currentValidLanguages.includes(selectedLanguage)) {
-        // If current selected language is not valid with new snippets, reset to default
-        newLanguageToSet = currentValidLanguages.includes("JavaScript") ? "JavaScript" : currentValidLanguages[0];
-        needsUpdate = true;
+        // If current selectedLanguage is no longer in the valid set, update it
+        setSelectedLanguage(currentValidLanguages.includes("JavaScript") ? "JavaScript" : currentValidLanguages[0]);
       }
-    } else { // No languages available
+    } else {
+      // No languages available, set to "Info" if not already
       if (selectedLanguage !== "Info") {
-        newLanguageToSet = "Info";
-        needsUpdate = true;
+        setSelectedLanguage("Info");
       }
     }
-    
-    // Only call setSelectedLanguage if the target language is different
-    if (needsUpdate) {
-      setSelectedLanguage(newLanguageToSet);
-    }
-  }, [codeSnippets]); // Only depend on codeSnippets. `selectedLanguage` is accessed from closure.
+  }, [codeSnippets]); // Only re-run if codeSnippets prop changes. selectedLanguage is read from state.
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -73,7 +66,9 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
   };
 
   const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
+    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage] 
+           ? [] 
+           : (codeSnippets[selectedLanguage] || []);
   }, [selectedLanguage, codeSnippets]);
 
   // Ensure tabValue is always valid based on current `languages` and `selectedLanguage` state
@@ -128,7 +123,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
             </ScrollArea>
@@ -138,3 +133,4 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     </Card>
   );
 }
+
