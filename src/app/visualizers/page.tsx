@@ -378,35 +378,40 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Tower of Hanoi', 
     category: 'Backtracking', 
     difficulty: 'Easy', 
-    description: 'A classic mathematical puzzle involving moving disks between pegs. A great example of simple recursion.'
+    description: 'A classic mathematical puzzle involving moving disks between pegs. A great example of simple recursion.',
+    longDescription: 'The Tower of Hanoi is a mathematical puzzle that consists of three rods and a number of disks of different sizes which can slide onto any rod. The puzzle starts with the disks in a neat stack in ascending order of size on one rod, the smallest at the top, thus making a conical shape. The objective of the puzzle is to move the entire stack to another rod, obeying the following simple rules: 1. Only one disk can be moved at a time. 2. Each move consists of taking the upper disk from one of the stacks and placing it on top of another stack or on an empty rod. 3. No disk may be placed on top of a smaller disk. The puzzle has a simple recursive solution: To move n disks from source peg A to target peg C using auxiliary peg B: 1. Move n-1 disks from A to B, using C as auxiliary. 2. Move the nth disk from A to C. 3. Move n-1 disks from B to C, using A as auxiliary. The base case is when n=1, simply move the disk from source to target. The number of moves required is 2^n - 1.'
   },
   { 
     slug: 'n-queens-problem', 
     title: 'N-Queens Problem', 
     category: 'Backtracking', 
     difficulty: 'Medium', 
-    description: 'The problem of placing N chess queens on an N×N chessboard so that no two queens threaten each other. Visualizes the backtracking search.'
+    description: 'The problem of placing N chess queens on an N×N chessboard so that no two queens threaten each other. Visualizes the backtracking search.',
+    longDescription: 'The N-Queens problem is the challenge of placing N non-attacking chess queens on an N×N chessboard. This means that no two queens can share the same row, column, or diagonal. It is a classic example of a problem that can be solved using a backtracking algorithm. The general approach is to place queens one by one in different columns, starting from the leftmost column. When placing a queen in a column, check for clashes with already placed queens. If a row is found where a queen can be placed safely, mark this row and column as "occupied" and recursively try to place queens in the next columns. If all N queens are placed, a solution is found. If it\'s not possible to place a queen in the current column (or subsequent recursive calls fail), backtrack by removing the queen from the current position and trying the next safe row in the current column. The time complexity is roughly O(N!) due to the nature of exploring permutations, though pruning via backtracking significantly reduces the search space. Space complexity is O(N) for storing the board state or queen positions.'
   },
   { 
     slug: 'sudoku-solver', 
     title: 'Sudoku Solver', 
     category: 'Backtracking', 
     difficulty: 'Hard', 
-    description: 'A backtracking algorithm to solve Sudoku puzzles by trying to fill in digits and backtracking when a conflict is found.'
+    description: 'A backtracking algorithm to solve Sudoku puzzles by trying to fill in digits and backtracking when a conflict is found.',
+    longDescription: 'A Sudoku solver typically uses a backtracking algorithm to find a solution to a partially filled Sudoku grid. The algorithm works by trying to place digits (1-9) in empty cells one by one, adhering to Sudoku rules: each digit must appear exactly once in each row, each column, and each 3x3 subgrid. The process is: 1. Find an empty cell. If no empty cells, a solution is found. 2. For the empty cell, try placing digits from 1 to 9. 3. For each digit, check if it\'s safe to place (i.e., doesn\'t violate Sudoku rules). 4. If safe, place the digit and recursively call the solver for the next empty cell. 5. If the recursive call returns true (meaning a solution was found), then the current placement is part of the solution, so return true. 6. If the recursive call returns false, it means the current digit choice led to a dead end. Remove the digit (backtrack) and try the next digit. 7. If all digits 1-9 have been tried for the current cell and none lead to a solution, return false. The time complexity is hard to define precisely but can be approximated as O(9^m) where m is the number of empty cells, though constant-time checks and pruning make it faster in practice for typical Sudoku puzzles. Space complexity is O(N^2) for the board and O(N^2) for the recursion stack in the worst case (where N is the grid size, typically 9).'
   },
   { 
     slug: 'rat-in-a-maze', 
     title: 'Rat in a Maze', 
     category: 'Backtracking', 
     difficulty: 'Medium', 
-    description: 'Find a path for a rat to reach its destination in a maze, typically represented as a grid. Explores paths using backtracking.'
+    description: 'Find a path for a rat to reach its destination in a maze, typically represented as a grid. Explores paths using backtracking.',
+    longDescription: 'The Rat in a Maze problem involves finding a path from a source cell to a destination cell in a maze represented as a 2D grid. Some cells are blocked (walls), and others are open paths. The rat can typically move in four directions: up, down, left, right. A backtracking algorithm is commonly used: 1. Start from the source cell. Mark it as part of the solution path. 2. Try to move to an adjacent cell. Before moving, check if the cell is valid (within maze boundaries), open (not a wall), and not already visited in the current path. 3. If a valid move is found, make the move, mark the new cell as part of the path, and recursively call the solver from this new cell. 4. If the destination is reached, a path is found. Return true. 5. If a recursive call returns true, propagate true upwards. 6. If no valid moves lead to the destination from the current cell (i.e., all recursive calls return false), then this cell is not part of a solution path. Unmark it (backtrack) and return false. The time complexity can be exponential in the worst case (O(4^(N*M)) without pruning, where N, M are maze dimensions), but practically much less with visited checks. Space complexity is O(N*M) for the solution path matrix and recursion stack.'
   },
   { 
     slug: 'permutations-subsets', 
     title: 'Permutations & Subsets', 
     category: 'Backtracking', 
     difficulty: 'Medium', 
-    description: 'Generate all possible permutations or subsets of a given set of elements using recursive backtracking techniques.'
+    description: 'Generate all possible permutations or subsets of a given set of elements using recursive backtracking techniques.',
+    longDescription: '**Permutations**: Generating all permutations of a set of elements involves arranging them in every possible order. A common recursive backtracking approach: For a given array/list, iterate through each element. For each element, place it at the current position (first for the initial call), then recursively generate permutations for the rest of the elements. Swap back to backtrack and try the next element for the current position. Time complexity: O(N * N!) to generate and store/print all N! permutations of length N. Space complexity: O(N) for recursion stack and O(N * N!) to store all permutations. \n\n**Subsets (Powerset)**: Generating all subsets of a set involves finding all possible combinations of elements, including the empty set and the set itself. A recursive backtracking approach (also known as the "choose/not choose" or "include/exclude" method): For each element in the input set, make two recursive calls: one where the current element is included in the current subset, and one where it\'s not. The base case is when all elements have been considered, at which point the current subset is added to the list of all subsets. Time complexity: O(2^N * N) as there are 2^N subsets, and for each, it might take O(N) to copy it if storing. Space complexity: O(N) for recursion stack and O(2^N * N) to store all subsets.'
   },
 
   // SECTION VIII: Dynamic Programming
@@ -696,3 +701,4 @@ export default function VisualizersPage() {
     
 
     
+
