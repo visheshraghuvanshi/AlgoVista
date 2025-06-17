@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/footer';
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Changed to local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,33 +72,30 @@ const BUCKET_SORT_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'bucket-sort';
 
 export default function BucketSortVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+  // algorithmMetadata is now directly imported
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
        toast({
             title: "Visualization Under Construction",
-            description: `The interactive visualizer for ${foundAlgorithm.title} is not yet fully implemented. Showing details only.`,
+            description: `The interactive visualizer for ${algorithmMetadata.title} is not yet fully implemented. Showing details only.`,
             variant: "default",
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for Bucket Sort not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n+k)", average: "O(n+k)", worst: "O(n²)" }, // k is num buckets, n elements. Worst if all in one bucket.
-    spaceComplexity: "O(n+k)",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
@@ -113,7 +110,7 @@ export default function BucketSortVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -121,7 +118,7 @@ export default function BucketSortVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for "bucket-sort".
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -138,7 +135,7 @@ export default function BucketSortVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -148,7 +145,7 @@ export default function BucketSortVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title} is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title} is currently under construction.
                 A proper visualization requires displaying multiple buckets and their sorting process, which is beyond our current simple bar chart.
                 Please check back later! In the meantime, you can review the algorithm details below.
             </p>

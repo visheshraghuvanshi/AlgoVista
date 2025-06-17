@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types'; // Reusing ArrayAlgorithmStep for stack/queue
+import type { AlgorithmStep } from '@/types';
 
 export interface StackQueueAlgorithmStep extends AlgorithmStep {
   topIndex?: number; // For stack visualization
@@ -7,26 +7,47 @@ export interface StackQueueAlgorithmStep extends AlgorithmStep {
   rearIndex?: number; // For queue visualization
   operationType: 'stack' | 'queue';
   lastOperation?: string; // e.g., "Pushed 5", "Popped 3", "Enqueued 7"
-  processedValue?: string | number | null; // Value that was pushed, popped, enqueued, dequeued
+  processedValue?: string | number | null | undefined; // Value that was pushed, popped, enqueued, dequeued
 }
 
 
 export const STACK_LINE_MAP = {
-  pushStart: 1, // Conceptual: push(element) {
-  pushToArray: 2, // this.items.push(element);
-  pushEnd: 3, // }
-  popStart: 4, // pop() {
-  popCheckEmpty: 5, // if (this.isEmpty()) return null;
-  popFromArray: 6, // return this.items.pop();
-  popEnd: 7, // }
-  peekStart: 8, // peek() {
-  peekCheckEmpty: 9, // if (this.isEmpty()) return null;
-  peekReturnTop: 10, // return this.items[this.items.length - 1];
-  peekEnd: 11, // }
-  constructor: 12, // constructor() { this.items = []; }
-  isEmpty: 13, // isEmpty() { return this.items.length === 0; }
-  size: 14, // size() { return this.items.length; }
+  classDef: 1, // class Stack {
+  constructor: 2, // constructor() { this.items = []; }
+  pushStart: 3, // push(element) {
+  pushToArray: 4, // this.items.push(element);
+  pushEnd: 5, // }
+  popStart: 6, // pop() {
+  popCheckEmpty: 7, // if (this.isEmpty()) return null;
+  popFromArray: 8, // return this.items.pop();
+  popEnd: 9, // }
+  peekStart: 10, // peek() {
+  peekCheckEmpty: 11, // if (this.isEmpty()) return null;
+  peekReturnTop: 12, // return this.items[this.items.length - 1];
+  peekEnd: 13, // }
+  isEmpty: 14, // isEmpty() { return this.items.length === 0; }
+  size: 15, // size() { return this.items.length; }
 };
+
+export const QUEUE_LINE_MAP = {
+  // Conceptual lines based on a simple array implementation for the snippets
+  classDef: 17, // class Queue {
+  constructor: 18, // constructor() { this.items = []; }
+  enqueueStart: 19, // enqueue(element) {
+  enqueueToArray: 20, // this.items.push(element); // Adds to rear
+  enqueueEnd: 21, // }
+  dequeueStart: 22, // dequeue() {
+  dequeueCheckEmpty: 23, // if (this.isEmpty()) return null;
+  dequeueFromArray: 24, // return this.items.shift(); // Removes from front
+  dequeueEnd: 25, // }
+  frontStart: 26, // front() {
+  frontCheckEmpty: 27, // if (this.isEmpty()) return null;
+  frontReturnFirst: 28, // return this.items[0];
+  frontEnd: 29, // }
+  isEmpty: 30, // isEmpty() { return this.items.length === 0; }
+  size: 31, // size() { return this.items.length; }
+};
+
 
 export const generateStackSteps = (
   currentStackArray: (string | number)[],
@@ -60,7 +81,7 @@ export const generateStackSteps = (
     });
   };
 
-  addStep(null, stack, [], `Initial state for ${operation}. Stack: [${stack.join(', ')}]`);
+  addStep(null, stack, [], `Initial state for Stack ${operation}. Stack: [${stack.join(', ')}]`);
 
   switch (operation) {
     case 'push':
@@ -105,17 +126,81 @@ export const generateStackSteps = (
   return localSteps;
 };
 
-// Queue logic will be added in a future step
 export const generateQueueSteps = (
   currentQueueArray: (string | number)[],
   operation: 'enqueue' | 'dequeue' | 'front',
   value?: string | number
 ): StackQueueAlgorithmStep[] => {
   const localSteps: StackQueueAlgorithmStep[] = [];
-   localSteps.push({
-      array: [...currentQueueArray], activeIndices: [], swappingIndices: [], sortedIndices: [],
-      currentLine: null, message: "Queue operations not yet visually implemented.", operationType: 'queue'
-  });
+  let queue = [...currentQueueArray];
+  const lm = QUEUE_LINE_MAP;
+  let message = "";
+  let processedVal: string | number | null | undefined = undefined;
+
+  const addStep = (
+    line: number | null,
+    currentArrState: (string | number)[],
+    activeIdx: number[] = [], // For queue, could be front or rear
+    msg: string = message,
+    lastOpMsg?: string,
+  ) => {
+    localSteps.push({
+      array: [...currentArrState],
+      activeIndices: activeIdx,
+      swappingIndices: [],
+      sortedIndices: [],
+      currentLine: line,
+      message: msg,
+      frontIndex: currentArrState.length > 0 ? 0 : -1,
+      rearIndex: currentArrState.length > 0 ? currentArrState.length - 1 : -1,
+      operationType: 'queue',
+      lastOperation: lastOpMsg,
+      processedValue: processedVal,
+    });
+  };
+
+  addStep(null, queue, [], `Initial state for Queue ${operation}. Queue: [${queue.join(', ')}]`);
+
+  switch (operation) {
+    case 'enqueue':
+      if (value === undefined) {
+        addStep(null, queue, [], "Error: Value undefined for enqueue.");
+        return localSteps;
+      }
+      message = `Enqueuing ${value}...`;
+      addStep(lm.enqueueStart, queue, [], message);
+      processedVal = value;
+      queue.push(value); // Simple array push for enqueue (adds to rear)
+      addStep(lm.enqueueToArray, queue, [queue.length - 1], `${message} Added ${value} to rear.`, `Enqueued ${value}`);
+      addStep(lm.enqueueEnd, queue, [queue.length - 1], `Enqueue ${value} complete. Queue: [${queue.join(', ')}]`);
+      break;
+    case 'dequeue':
+      message = "Dequeuing from queue...";
+      addStep(lm.dequeueStart, queue, queue.length > 0 ? [0] : [], message);
+      addStep(lm.dequeueCheckEmpty, queue, queue.length > 0 ? [0] : [], `${message} Is queue empty? (${queue.length === 0})`);
+      if (queue.length === 0) {
+        addStep(null, queue, [], `${message} Queue is empty. Cannot dequeue.`);
+        processedVal = null;
+      } else {
+        processedVal = queue.shift(); // Simple array shift for dequeue (removes from front)
+        addStep(lm.dequeueFromArray, queue, [], `${message} Dequeued ${processedVal} from front.`, `Dequeued ${processedVal}`);
+      }
+      addStep(lm.dequeueEnd, queue, [], `Dequeue complete. Queue: [${queue.join(', ')}]`);
+      break;
+    case 'front':
+      message = "Peeking front of queue...";
+      addStep(lm.frontStart, queue, queue.length > 0 ? [0] : [], message);
+      addStep(lm.frontCheckEmpty, queue, queue.length > 0 ? [0] : [], `${message} Is queue empty? (${queue.length === 0})`);
+      if (queue.length === 0) {
+        addStep(null, queue, [], `${message} Queue is empty. Nothing at front.`);
+        processedVal = null;
+      } else {
+        processedVal = queue[0];
+        addStep(lm.frontReturnFirst, queue, [0], `${message} Front element is ${processedVal}.`, `Front is ${processedVal}`);
+      }
+      addStep(lm.frontEnd, queue, queue.length > 0 ? [0] : [], `Front peek complete. Queue: [${queue.join(', ')}]`);
+      break;
+  }
   return localSteps;
 };
     
