@@ -5,23 +5,37 @@ export const RADIX_SORT_LINE_MAP = {
   // Main Radix Sort Function
   radixSortFuncStart: 1,
   getMaxVal: 2,
-  outerLoopExp: 3, // for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10)
+  outerLoopExpStart: 3, // for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10)
   callCountingSortForRadix: 4,
-  radixSortFuncEnd: 5,
+  outerLoopExpEnd: 5, // Conceptual end of exp loop
+  returnArrRadix: 6, // return arr; (from radixSort)
+  radixSortFuncEnd: 7,
 
   // Counting Sort Subroutine (Conceptual Lines)
-  countingSortSubFuncStart: 6,
-  initOutputAndCount: 7,
-  countOccurrencesLoop: 8,
-  incrementDigitCount: 9,
-  modifyCountLoop: 10,
-  cumulativeCount: 11,
-  buildOutputLoop: 12,
-  placeInOutput: 13,
-  decrementDigitCount: 14,
-  copyOutputToArrLoop: 15,
-  assignToOriginalArr: 16,
-  countingSortSubFuncEnd: 17,
+  countingSortSubFuncStart: 8, // function countingSortForRadix(arr, exp) {
+  getNCountingSort: 9,        // const n = arr.length;
+  initOutputArrayCounting: 10, // const output = new Array(n);
+  initCountArrayCounting: 11,  // const count = new Array(10).fill(0);
+
+  countOccurrencesLoopStart: 12, // for (let i = 0; i < n; i++) {
+  getDigitForCount: 13,         // count[Math.floor(arr[i] / exp) % 10]++;
+  incrementDigitCount: 14,      // count[digit]++;
+  countOccurrencesLoopEnd: 15,
+
+  modifyCountLoopStart: 16,     // for (let i = 1; i < 10; i++) {
+  cumulativeCount: 17,          // count[i] += count[i - 1];
+  modifyCountLoopEnd: 18,
+
+  buildOutputLoopStart: 19,     // for (let i = n - 1; i >= 0; i--) {
+  getDigitForOutput: 20,        // Math.floor(arr[i] / exp) % 10
+  placeInOutput: 21,            // output[count[digit] - 1] = arr[i];
+  decrementDigitCount: 22,      // count[digit]--;
+  buildOutputLoopEnd: 23,
+
+  copyOutputToArrLoopStart: 24, // for (let i = 0; i < n; i++) {
+  assignToOriginalArr: 25,      // arr[i] = output[i];
+  copyOutputToArrLoopEnd: 26,
+  countingSortSubFuncEnd: 27,   // } (end of countingSortForRadix)
 };
 
 
@@ -32,8 +46,6 @@ export const generateRadixSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
     return localSteps;
   }
   
-  // Radix sort typically works with non-negative integers.
-  // This implementation will assume non-negative for simplicity of visualization.
   if (arrToSort.some(num => num < 0)) {
     localSteps.push({ array: arrToSort, activeIndices: [], swappingIndices: [], sortedIndices: [], currentLine: null, message: "Radix Sort (this version) expects non-negative integers." });
     return localSteps;
@@ -47,64 +59,73 @@ export const generateRadixSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
       line: number,
       currentArrState: number[],
       active: number[] = [],
-      swapping: number[] = [], // Not typically used directly in top-level Radix viz
       message: string = "",
-      processingSubArrayRange: [number, number] | null = null, // Can show full array as processing
-      auxData?: Record<string, any> // For current exponent (digit place)
+      auxData?: Record<string, any> 
   ) => {
       localSteps.push({
           array: [...currentArrState],
           activeIndices: active,
-          swappingIndices: swapping,
-          sortedIndices: (line === lm.radixSortFuncEnd) ? arr.map((_,i) => i) : [], // Mark sorted at the very end
+          swappingIndices: [], // Radix sort itself doesn't swap in main array, counting sort does internally
+          sortedIndices: (line === lm.radixSortFuncEnd) ? arr.map((_,i) => i) : [],
           currentLine: line,
           message,
-          processingSubArrayRange: processingSubArrayRange || [0, n-1],
-          pivotActualIndex: null, // Not used
+          processingSubArrayRange: [0, n-1], // Radix sort always considers the full array for each pass
+          pivotActualIndex: null,
           auxiliaryData: auxData,
       });
   }
 
-  // --- Counting Sort Subroutine (Simplified for Radix Steps) ---
+  // --- Counting Sort Subroutine (Detailed Steps) ---
   function countingSortForRadix(currentArr: number[], exp: number, passNum: number) {
-    addStep(lm.callCountingSortForRadix, currentArr, [], [], `Calling Counting Sort for digit place (exp = ${exp}), Pass ${passNum}`, null, {exponent: exp});
+    addStep(lm.countingSortSubFuncStart, currentArr, [], `(Pass ${passNum}, Counting Sort for exp=${exp}) Start subroutine.`, {exponent: exp});
     
-    const output = new Array(n).fill(0);
+    const countN = currentArr.length; // n for counting sort scope
+    addStep(lm.getNCountingSort, currentArr, [], `(CS Pass ${passNum}) n = ${countN}.`, {exponent: exp});
+
+    const output = new Array(countN).fill(0);
+    addStep(lm.initOutputArrayCounting, currentArr, [], `(CS Pass ${passNum}) Initialize output array (size ${countN}).`, {exponent: exp, outputArray: [...output]});
+    
     const count = new Array(10).fill(0);
-    addStep(lm.initOutputAndCount, currentArr, [], [], `(Counting Sort) Initialized output and count arrays.`, null, {exponent: exp});
+    addStep(lm.initCountArrayCounting, currentArr, [], `(CS Pass ${passNum}) Initialize count array (size 10 for digits 0-9).`, {exponent: exp, countArray: [...count], outputArray: [...output]});
 
     // Store count of occurrences in count[]
-    for (let i = 0; i < n; i++) {
+    addStep(lm.countOccurrencesLoopStart, currentArr, [], `(CS Pass ${passNum}) Counting occurrences of each digit.`, {exponent: exp, countArray: [...count], outputArray: [...output]});
+    for (let i = 0; i < countN; i++) {
       const digit = Math.floor(currentArr[i] / exp) % 10;
-      addStep(lm.countOccurrencesLoop, currentArr, [i], [], `(Counting Sort) Counting digit for arr[${i}]=${currentArr[i]}. Digit is ${digit}.`, null, {exponent: exp, currentDigit: digit});
+      addStep(lm.getDigitForCount, currentArr, [i], `(CS Pass ${passNum}) arr[${i}]=${currentArr[i]}. Digit for exp ${exp} is ${digit}.`, {exponent: exp, countArray: [...count], outputArray: [...output], currentDigitProcessing: digit});
       count[digit]++;
+      addStep(lm.incrementDigitCount, currentArr, [i], `(CS Pass ${passNum}) Increment count[${digit}]. Count array: [${count.join(', ')}].`, {exponent: exp, countArray: [...count], outputArray: [...output], currentDigitProcessing: digit});
     }
-    addStep(lm.countOccurrencesLoop, currentArr, [], [], `(Counting Sort) Finished counting occurrences for this digit.`, null, {exponent: exp, countArray: [...count]});
+    addStep(lm.countOccurrencesLoopEnd, currentArr, [], `(CS Pass ${passNum}) Finished counting occurrences. Count array: [${count.join(', ')}].`, {exponent: exp, countArray: [...count], outputArray: [...output]});
 
-
-    // Change count[i] so that count[i] now contains actual
-    // position of this digit in output array
+    // Change count[i] so that count[i] now contains actual position of this digit in output array
+    addStep(lm.modifyCountLoopStart, currentArr, [], `(CS Pass ${passNum}) Modifying count array for cumulative positions.`, {exponent: exp, countArray: [...count], outputArray: [...output]});
     for (let i = 1; i < 10; i++) {
       count[i] += count[i - 1];
+      addStep(lm.cumulativeCount, currentArr, [i], `(CS Pass ${passNum}) count[${i}] = count[${i-1}] + (original count of ${i}) = ${count[i]}.`, {exponent: exp, countArray: [...count], outputArray: [...output]});
     }
-    addStep(lm.modifyCountLoop, currentArr, [], [], `(Counting Sort) Modified count array to store cumulative positions.`, null, {exponent: exp, countArray: [...count]});
+    addStep(lm.modifyCountLoopEnd, currentArr, [], `(CS Pass ${passNum}) Cumulative count array: [${count.join(', ')}].`, {exponent: exp, countArray: [...count], outputArray: [...output]});
 
     // Build the output array
-    for (let i = n - 1; i >= 0; i--) {
+    addStep(lm.buildOutputLoopStart, currentArr, [], `(CS Pass ${passNum}) Building output array (iterating input from end for stability).`, {exponent: exp, countArray: [...count], outputArray: [...output]});
+    for (let i = countN - 1; i >= 0; i--) {
       const digit = Math.floor(currentArr[i] / exp) % 10;
-      addStep(lm.buildOutputLoop, currentArr, [i], [], `(Counting Sort) Placing arr[${i}]=${currentArr[i]} into output array. Digit=${digit}, Position=${count[digit]-1}.`, null, {exponent: exp});
+      addStep(lm.getDigitForOutput, currentArr, [i], `(CS Pass ${passNum}) arr[${i}]=${currentArr[i]}. Digit=${digit}. Output position: count[${digit}]-1 = ${count[digit]-1}.`, {exponent: exp, countArray: [...count], outputArray: [...output]});
       output[count[digit] - 1] = currentArr[i];
+      addStep(lm.placeInOutput, currentArr, [i], `(CS Pass ${passNum}) Placed ${currentArr[i]} into output[${count[digit]-1}]. Output: [${output.join(', ')}].`, {exponent: exp, countArray: [...count], outputArray: [...output]});
       count[digit]--;
+      addStep(lm.decrementDigitCount, currentArr, [i], `(CS Pass ${passNum}) Decrement count[${digit}] to ${count[digit]}.`, {exponent: exp, countArray: [...count], outputArray: [...output]});
     }
-    addStep(lm.buildOutputLoop, currentArr, [], [], `(Counting Sort) Output array built for this digit.`, null, {exponent: exp, outputArray: [...output]});
+    addStep(lm.buildOutputLoopEnd, currentArr, [], `(CS Pass ${passNum}) Output array built: [${output.join(', ')}].`, {exponent: exp, countArray: [...count], outputArray: [...output]});
 
-    // Copy the output array to arr[], so that arr[] now
-    // contains sorted numbers according to current digit
-    for (let i = 0; i < n; i++) {
+    // Copy the output array to arr[], so that arr[] now contains sorted numbers according to current digit
+    addStep(lm.copyOutputToArrLoopStart, currentArr, [], `(CS Pass ${passNum}) Copying sorted output back to main array.`, {exponent: exp, countArray: [...count], outputArray: [...output]});
+    for (let i = 0; i < countN; i++) {
       currentArr[i] = output[i];
+      // Add step for each element copy for very fine-grained view if needed, or just one after loop
     }
-    addStep(lm.copyOutputToArrLoop, currentArr, [], [], `(Counting Sort) Copied output back to main array for Pass ${passNum}. Array state after sorting by this digit.`, null, {exponent: exp});
-    addStep(lm.countingSortSubFuncEnd, currentArr, [], [], `(Counting Sort) Subroutine finished for exp=${exp}.`);
+    addStep(lm.assignToOriginalArr, currentArr, [], `(CS Pass ${passNum}) Main array updated: [${currentArr.join(', ')}].`, {exponent: exp, countArray: [...count], outputArray: [...output]}); // Using assignToOriginalArr for message context
+    addStep(lm.countingSortSubFuncEnd, currentArr, [], `(CS Pass ${passNum}) Counting Sort for exp=${exp} finished.`);
   }
 
   // --- Radix Sort Main Logic ---
@@ -119,11 +140,13 @@ export const generateRadixSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
 
   let passNumber = 1;
   for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {
-    addStep(lm.outerLoopExp, arr, [], [], `Radix Sort Pass ${passNumber}: Sorting by digit with exponent ${exp} (1s, 10s, 100s, etc.).`, null, {exponent: exp});
-    countingSortForRadix(arr, exp, passNumber);
+    addStep(lm.outerLoopExpStart, arr, [], [], `Radix Sort Pass ${passNumber}: Sorting by digit with exponent ${exp}.`, {exponent: exp});
+    countingSortForRadix(arr, exp, passNumber); // arr is modified in-place
+    addStep(lm.outerLoopExpEnd, arr, [], [], `Finished Radix Sort Pass ${passNumber}. Array: [${arr.join(', ')}].`, {exponent: exp});
     passNumber++;
   }
   
-  addStep(lm.radixSortFuncEnd, arr, [], [], "Radix Sort complete. Array is sorted.");
+  addStep(lm.returnArrRadix, arr, [], [], "Radix Sort complete. Array is sorted.");
+  addStep(lm.radixSortFuncEnd, arr, [], [], "Algorithm finished.");
   return localSteps;
 };

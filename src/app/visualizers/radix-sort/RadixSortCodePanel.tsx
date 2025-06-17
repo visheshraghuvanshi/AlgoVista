@@ -9,6 +9,120 @@ import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const RADIX_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "// Radix Sort (JavaScript - LSD, using Counting Sort as helper)", // Conceptual comment
+    "function radixSort(arr) {",                                // 1
+    "  if (arr.length === 0) return arr;",
+    "  const maxVal = Math.max(...arr);",                       // 2
+    "  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {", // 3
+    "    countingSortForRadix(arr, exp);",                      // 4
+    "  }",
+    "  return arr;",                                            // 6 (Adjusted mapping to RADIX_SORT_LINE_MAP)
+    "}",                                                        // 7
+    "",
+    "function countingSortForRadix(arr, exp) {",                 // 8
+    "  const n = arr.length;",                                  // 9
+    "  const output = new Array(n);",                           // 10
+    "  const count = new Array(10).fill(0);",                   // 11
+    "",
+    "  for (let i = 0; i < n; i++) {",                           // 12
+    "    const digit = Math.floor(arr[i] / exp) % 10;",         // 13
+    "    count[digit]++;",                                      // 14
+    "  }",                                                      // 15
+    "",
+    "  for (let i = 1; i < 10; i++) {",                          // 16
+    "    count[i] += count[i - 1];",                            // 17
+    "  }",                                                      // 18
+    "",
+    "  for (let i = n - 1; i >= 0; i--) {",                      // 19
+    "    const digit = Math.floor(arr[i] / exp) % 10;",         // 20
+    "    output[count[digit] - 1] = arr[i];",                   // 21
+    "    count[digit]--;",                                      // 22
+    "  }",                                                      // 23
+    "",
+    "  for (let i = 0; i < n; i++) {",                           // 24
+    "    arr[i] = output[i];",                                  // 25
+    "  }",                                                      // 26
+    "}",                                                        // 27
+  ],
+  Python: [
+    "def counting_sort_for_radix(arr, exp):",
+    "    n = len(arr)",
+    "    output = [0] * n",
+    "    count = [0] * 10",
+    "    for i in range(n):",
+    "        index = arr[i] // exp",
+    "        count[index % 10] += 1",
+    "    for i in range(1, 10):",
+    "        count[i] += count[i - 1]",
+    "    i = n - 1",
+    "    while i >= 0:",
+    "        index = arr[i] // exp",
+    "        output[count[index % 10] - 1] = arr[i]",
+    "        count[index % 10] -= 1",
+    "        i -= 1",
+    "    for i in range(n):",
+    "        arr[i] = output[i]",
+    "",
+    "def radix_sort(arr):",
+    "    if not arr: return arr",
+    "    max_val = max(arr)",
+    "    exp = 1",
+    "    while max_val // exp > 0:",
+    "        counting_sort_for_radix(arr, exp)",
+    "        exp *= 10",
+    "    return arr",
+  ],
+   Java: [
+    "import java.util.Arrays;",
+    "class RadixSort {",
+    "    static void countingSort(int arr[], int n, int exp) {",
+    "        int output[] = new int[n];",
+    "        int count[] = new int[10];",
+    "        Arrays.fill(count, 0);",
+    "        for (int i = 0; i < n; i++) count[(arr[i] / exp) % 10]++;",
+    "        for (int i = 1; i < 10; i++) count[i] += count[i - 1];",
+    "        for (int i = n - 1; i >= 0; i--) {",
+    "            output[count[(arr[i] / exp) % 10] - 1] = arr[i];",
+    "            count[(arr[i] / exp) % 10]--;",
+    "        }",
+    "        for (int i = 0; i < n; i++) arr[i] = output[i];",
+    "    }",
+    "    static void radixSort(int arr[]) {",
+    "        if (arr.length == 0) return;",
+    "        int maxVal = arr[0];",
+    "        for (int i = 1; i < arr.length; i++) if (arr[i] > maxVal) maxVal = arr[i];",
+    "        for (int exp = 1; maxVal / exp > 0; exp *= 10)",
+    "            countingSort(arr, arr.length, exp);",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::max_element",
+    "void countingSortForRadix(std::vector<int>& arr, int exp) {",
+    "    int n = arr.size();",
+    "    std::vector<int> output(n);",
+    "    std::vector<int> count(10, 0);",
+    "    for (int i = 0; i < n; i++) count[(arr[i] / exp) % 10]++;",
+    "    for (int i = 1; i < 10; i++) count[i] += count[i - 1];",
+    "    for (int i = n - 1; i >= 0; i--) {",
+    "        output[count[(arr[i] / exp) % 10] - 1] = arr[i];",
+    "        count[(arr[i] / exp) % 10]--;",
+    "    }",
+    "    for (int i = 0; i < n; i++) arr[i] = output[i];",
+    "}",
+    "void radixSort(std::vector<int>& arr) {",
+    "    if (arr.empty()) return;",
+    "    int maxVal = 0;",
+    "    if (!arr.empty()) maxVal = *std::max_element(arr.begin(), arr.end());",
+    "    for (int exp = 1; maxVal / exp > 0; exp *= 10)",
+    "        countingSortForRadix(arr, exp);",
+    "}",
+  ],
+};
+
 interface RadixSortCodePanelProps {
   codeSnippets: { [language: string]: string[] };
   currentLine: number | null;

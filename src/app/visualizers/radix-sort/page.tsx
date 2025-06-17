@@ -12,41 +12,45 @@ import type { AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { RADIX_SORT_LINE_MAP, generateRadixSortSteps } from './radix-sort-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // For auxiliary data display
 
 const RADIX_SORT_CODE_SNIPPETS = {
   JavaScript: [
-    "// Radix Sort (JavaScript - Conceptual, using Counting Sort as helper)",
-    "function countingSortForRadix(arr, exp) {",                 // Line 6 in RadixMap
-    "  const n = arr.length;",
-    "  const output = new Array(n);",                           // Line 7
-    "  const count = new Array(10).fill(0);",
-    "",
-    "  for (let i = 0; i < n; i++) {",                           // Line 8
-    "    count[Math.floor(arr[i] / exp) % 10]++;",              // Line 9
+    "// Radix Sort (JavaScript - LSD, using Counting Sort as helper)", 
+    "function radixSort(arr) {",                                
+    "  if (arr.length === 0) return arr;",
+    "  const maxVal = Math.max(...arr);",                       
+    "  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {", 
+    "    countingSortForRadix(arr, exp);",                      
     "  }",
+    "  return arr;",                                            
+    "}",                                                        
     "",
-    "  for (let i = 1; i < 10; i++) {",                          // Line 10
-    "    count[i] += count[i - 1];",                            // Line 11
-    "  }",
+    "function countingSortForRadix(arr, exp) {",                 
+    "  const n = arr.length;",                                  
+    "  const output = new Array(n);",                           
+    "  const count = new Array(10).fill(0);",                   
     "",
-    "  for (let i = n - 1; i >= 0; i--) {",                      // Line 12
-    "    output[count[Math.floor(arr[i] / exp) % 10] - 1] = arr[i];", // Line 13
-    "    count[Math.floor(arr[i] / exp) % 10]--;",              // Line 14
-    "  }",
+    "  for (let i = 0; i < n; i++) {",                           
+    "    const digit = Math.floor(arr[i] / exp) % 10;",         
+    "    count[digit]++;",                                      
+    "  }",                                                      
     "",
-    "  for (let i = 0; i < n; i++) {",                           // Line 15
-    "    arr[i] = output[i];",                                  // Line 16
-    "  }",                                                      // End of Counting Sort: Line 17
-    "}",
+    "  for (let i = 1; i < 10; i++) {",                          
+    "    count[i] += count[i - 1];",                            
+    "  }",                                                      
     "",
-    "function radixSort(arr) {",                                // Line 1
-    "  const maxVal = Math.max(...arr);",                       // Line 2
-    "  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {", // Line 3
-    "    countingSortForRadix(arr, exp);",                      // Line 4
-    "  }",
-    "  return arr;",                                            // Line 5
-    "}",
+    "  for (let i = n - 1; i >= 0; i--) {",                      
+    "    const digit = Math.floor(arr[i] / exp) % 10;",         
+    "    output[count[digit] - 1] = arr[i];",                   
+    "    count[digit]--;",                                      
+    "  }",                                                      
+    "",
+    "  for (let i = 0; i < n; i++) {",                           
+    "    arr[i] = output[i];",                                  
+    "  }",                                                      
+    "}",                                                        
   ],
   Python: [
     "def counting_sort_for_radix(arr, exp):",
@@ -103,7 +107,6 @@ const RADIX_SORT_CODE_SNIPPETS = {
   "C++": [
     "#include <vector>",
     "#include <algorithm> // For std::max_element",
-    "#include <iostream>  // For std::cout in counting sort (optional)",
     "void countingSortForRadix(std::vector<int>& arr, int exp) {",
     "    int n = arr.size();",
     "    std::vector<int> output(n);",
@@ -118,7 +121,8 @@ const RADIX_SORT_CODE_SNIPPETS = {
     "}",
     "void radixSort(std::vector<int>& arr) {",
     "    if (arr.empty()) return;",
-    "    int maxVal = *std::max_element(arr.begin(), arr.end());",
+    "    int maxVal = 0;",
+    "    if (!arr.empty()) maxVal = *std::max_element(arr.begin(), arr.end());",
     "    for (int exp = 1; maxVal / exp > 0; exp *= 10)",
     "        countingSortForRadix(arr, exp);",
     "}",
@@ -197,7 +201,8 @@ export default function RadixSortVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1); // Finish if only one step (e.g. error or empty array)
+
 
       if (newSteps.length > 0) {
         updateStateFromStep(0);
@@ -212,7 +217,7 @@ export default function RadixSortVisualizerPage() {
         setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
-        setIsPlaying(false); setIsFinished(false);
+        setIsPlaying(false); setIsFinished(true); // No steps to play
     }
   }, [inputValue, parseInput, updateStateFromStep]);
 
@@ -227,10 +232,6 @@ export default function RadixSortVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length -1) {
         setIsPlaying(false);
@@ -249,7 +250,7 @@ export default function RadixSortVisualizerPage() {
   };
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
       return;
@@ -266,7 +267,7 @@ export default function RadixSortVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
@@ -287,11 +288,9 @@ export default function RadixSortVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false);
-    setIsFinished(false);
-    if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-    }
-    generateSteps();
+    setIsFinished(false); // Allow playing new steps
+    setInputValue('170,45,75,90,802,24,2,66'); // Reset to default
+    // generateSteps will be called by useEffect due to inputValue change
   };
   
   const handleSpeedChange = (speedValue: number) => {
@@ -346,11 +345,12 @@ export default function RadixSortVisualizerPage() {
             />
              {auxiliaryData && (
                 <Card className="mt-4">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current Pass Info</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2">
+                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Current Pass Info</CardTitle></CardHeader>
+                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
                         {auxiliaryData.exponent !== undefined && <p><strong>Exponent (Digit Place):</strong> {auxiliaryData.exponent}</p>}
-                        {auxiliaryData.countArray && <p><strong>Count Array (for current digit):</strong> [{auxiliaryData.countArray.join(', ')}]</p>}
-                         {auxiliaryData.outputArray && <p><strong>Output Array (for current digit):</strong> [{auxiliaryData.outputArray.join(', ')}]</p>}
+                        {auxiliaryData.countArray && <p><strong>Count Array (Digit Frequencies):</strong> <span className="font-mono text-xs break-all">[{auxiliaryData.countArray.join(', ')}]</span></p>}
+                         {auxiliaryData.outputArray && <p><strong>Output Array (Current Pass):</strong> <span className="font-mono text-xs break-all">[{auxiliaryData.outputArray.join(', ')}]</span></p>}
+                         {auxiliaryData.currentDigitProcessing !== undefined && <p><strong>Processing Digit:</strong> {auxiliaryData.currentDigitProcessing}</p>}
                     </CardContent>
                 </Card>
             )}
