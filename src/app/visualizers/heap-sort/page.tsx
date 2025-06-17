@@ -5,15 +5,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { HeapSortCodePanel } from './HeapSortCodePanel'; 
+import { HeapSortCodePanel } from './HeapSortCodePanel';
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
 import type { AlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { HEAP_SORT_LINE_MAP, generateHeapSortSteps } from './heap-sort-logic';
+import { algorithmMetadata } from './metadata'; // Changed to local import
 
 const HEAP_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -161,28 +161,25 @@ const HEAP_SORT_CODE_SNIPPETS = {
   ],
 };
 
-const DEFAULT_ANIMATION_SPEED = 700; 
-const MIN_SPEED = 100; 
+const DEFAULT_ANIMATION_SPEED = 700;
+const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-const ALGORITHM_SLUG = 'heap-sort';
 
 export default function HeapSortVisualizerPage() {
   const { toast } = useToast();
-  
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-  
+
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
+
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [swappingIndices, setSwappingIndices] = useState<number[]>([]);
   const [sortedIndices, setSortedIndices] = useState<number[]>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
-  const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null); 
+  const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -191,16 +188,6 @@ export default function HeapSortVisualizerPage() {
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isAlgoImplemented = true;
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-    } else {
-      console.error("Algorithm not found:", ALGORITHM_SLUG);
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const parseInput = useCallback((value: string): number[] | null => {
     if (value.trim() === '') return [];
@@ -219,7 +206,7 @@ export default function HeapSortVisualizerPage() {
     }
     return parsed;
   }, [toast]);
-  
+
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
@@ -229,7 +216,7 @@ export default function HeapSortVisualizerPage() {
       setSortedIndices(currentS.sortedIndices);
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
-      setPivotActualIndex(currentS.pivotActualIndex || null); 
+      setPivotActualIndex(currentS.pivotActualIndex || null);
     }
   }, [steps]);
 
@@ -240,7 +227,7 @@ export default function HeapSortVisualizerPage() {
     }
     if (parsedData !== null) {
       let newSteps: AlgorithmStep[] = generateHeapSortSteps(parsedData);
-      
+
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
@@ -255,7 +242,7 @@ export default function HeapSortVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
-      } else { 
+      } else {
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
@@ -272,11 +259,11 @@ export default function HeapSortVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]); 
+  }, [generateSteps]);
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1) {
+    if (isPlaying && currentStepIndex < steps.length -1 ) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -309,7 +296,7 @@ export default function HeapSortVisualizerPage() {
       return;
     }
     setIsPlaying(true);
-    setIsFinished(false); 
+    setIsFinished(false);
   };
 
   const handlePause = () => {
@@ -324,7 +311,7 @@ export default function HeapSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
-    setIsPlaying(false); 
+    setIsPlaying(false);
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
     }
@@ -347,19 +334,12 @@ export default function HeapSortVisualizerPage() {
     }
     generateSteps();
   };
-  
+
   const handleSpeedChange = (speedValue: number) => {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps = {
-    title: "Heap Sort",
-    description: "A comparison-based sorting technique based on a Binary Heap data structure. In-place with O(n log n) complexity.",
-    timeComplexities: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
-    spaceComplexity: "O(1)",
-  };
-
-  if (!algorithm) {
+  if (!algorithmMetadata) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -367,7 +347,7 @@ export default function HeapSortVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for Heap Sort.
             </p>
         </main>
         <Footer />
@@ -375,23 +355,30 @@ export default function HeapSortVisualizerPage() {
     );
   }
 
+  const algoDetails: AlgorithmDetailsProps = {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithm.description}
+            {algorithmMetadata.description}
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <VisualizationPanel 
-              data={displayedData} 
+            <VisualizationPanel
+              data={displayedData}
               activeIndices={activeIndices}
               swappingIndices={swappingIndices}
               sortedIndices={sortedIndices}
@@ -400,13 +387,13 @@ export default function HeapSortVisualizerPage() {
             />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <HeapSortCodePanel 
-              codeSnippets={HEAP_SORT_CODE_SNIPPETS} 
+            <HeapSortCodePanel
+              codeSnippets={HEAP_SORT_CODE_SNIPPETS}
               currentLine={currentLine}
             />
           </div>
         </div>
-        
+
         <div className="w-full">
           <SortingControlsPanel
             onPlay={handlePlay}
@@ -419,12 +406,12 @@ export default function HeapSortVisualizerPage() {
             isFinished={isFinished}
             currentSpeed={animationSpeed}
             onSpeedChange={handleSpeedChange}
-            isAlgoImplemented={isAlgoImplemented} 
+            isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
           />
         </div>
-         <AlgorithmDetailsCard 
+         <AlgorithmDetailsCard
             title={algoDetails.title}
             description={algoDetails.description}
             timeComplexities={algoDetails.timeComplexities}
