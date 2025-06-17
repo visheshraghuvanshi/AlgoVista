@@ -8,12 +8,21 @@ export interface AlgorithmMetadata {
   category: AlgorithmCategory;
   difficulty: AlgorithmDifficulty;
   description: string;
-  longDescription?: string; // For individual page later
-  tags?: string[]; // Additional tags
+  longDescription?: string; 
+  tags?: string[]; 
   codeSnippets?: {
-    typescript?: string[];
-    python?: string[];
-    // other languages
+    [language: string]: string[]; // Allow any language key
   };
   pseudocode?: string[];
 }
+
+export type AlgorithmStep = {
+  array: number[];
+  activeIndices: number[]; 
+  swappingIndices: number[]; 
+  sortedIndices: number[]; 
+  currentLine: number | null;
+  message?: string; 
+  processingSubArrayRange?: [number, number] | null; 
+  pivotActualIndex?: number | null;
+};

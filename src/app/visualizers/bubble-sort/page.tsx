@@ -7,25 +7,12 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { CodePanel } from '@/components/algo-vista/code-panel';
 import { ControlsPanel } from '@/components/algo-vista/controls-panel';
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
+import { BUBBLE_SORT_LINE_MAP, generateBubbleSortSteps } from './bubble-sort-logic';
 
-const BUBBLE_SORT_LINE_MAP = { 
-  functionDeclaration: 1, getN: 2, declareSwappedVar: 3, doWhileStart: 4, setSwappedFalse: 5, forLoopStart: 6, compareComment: 7,  ifCondition: 8, swapComment: 9,  tempAssignment: 10, firstSwapAssign: 11, secondSwapAssign: 12, setSwappedTrue: 13, ifEnd: 14, forLoopEnd: 15, decrementN: 16, doWhileEndCondition: 17, returnArr: 18, functionEnd: 19,
-};
-
-type AlgorithmStep = {
-  array: number[];
-  activeIndices: number[]; 
-  swappingIndices: number[]; 
-  sortedIndices: number[]; 
-  currentLine: number | null;
-  message?: string; 
-  processingSubArrayRange?: [number, number] | null; 
-  pivotActualIndex?: number | null;
-};
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -88,82 +75,6 @@ export default function BubbleSortVisualizerPage() {
     }
     return parsed;
   }, [toast]);
-
-  const generateBubbleSortSteps = useCallback((arrToSort: number[]): AlgorithmStep[] => {
-    const localSteps: AlgorithmStep[] = [];
-    if (!arrToSort || arrToSort.length === 0) return localSteps;
-    const arr = [...arrToSort];
-    let n = arr.length;
-    let swapped;
-    const localSortedIndices: number[] = [];
-    const lm = BUBBLE_SORT_LINE_MAP;
-
-    const addStep = (line: number, active: number[] = [], swapping: number[] = [], currentArrState = [...arr], processingRange: [number,number] | null = null, pivotIdx: number | null = null) => {
-      localSteps.push({
-        array: currentArrState,
-        activeIndices: [...active],
-        swappingIndices: [...swapping],
-        sortedIndices: [...localSortedIndices].sort((a,b)=>a-b),
-        currentLine: line,
-        processingSubArrayRange: processingRange,
-        pivotActualIndex: pivotIdx
-      });
-    };
-
-    addStep(lm.functionDeclaration); 
-    if (n === 0) { 
-      addStep(lm.returnArr); 
-      addStep(lm.functionEnd); 
-      return localSteps;
-    }
-    
-    addStep(lm.getN); 
-    addStep(lm.declareSwappedVar);
-
-    do {
-      addStep(lm.doWhileStart); 
-      swapped = false;
-      addStep(lm.setSwappedFalse); 
-
-      for (let i = 0; i < n - 1; i++) {
-        addStep(lm.forLoopStart, [i, i + 1]); 
-        addStep(lm.compareComment, [i, i + 1]); 
-        addStep(lm.ifCondition, [i, i + 1]); 
-        if (arr[i] > arr[i + 1]) {
-          addStep(lm.swapComment, [i, i + 1], [i, i + 1]); 
-          addStep(lm.tempAssignment, [i, i + 1], [i, i + 1]); 
-          let temp = arr[i];
-          arr[i] = arr[i + 1];
-          addStep(lm.firstSwapAssign, [i, i + 1], [i, i + 1]); 
-          arr[i + 1] = temp;
-          addStep(lm.secondSwapAssign, [i, i + 1], [i, i + 1]); 
-          swapped = true;
-          addStep(lm.setSwappedTrue); 
-        }
-        addStep(lm.ifEnd); 
-      }
-      addStep(lm.forLoopEnd); 
-
-      if (n - 1 >= 0 && n -1 < arr.length) { 
-        localSortedIndices.push(n - 1);
-      }
-      
-      n--;
-      addStep(lm.decrementN); 
-    } while (swapped && n > 0); 
-    addStep(lm.doWhileEndCondition); 
-
-    const remainingUnsortedCount = arr.length - localSortedIndices.length;
-    for(let k = 0; k < remainingUnsortedCount; k++) { 
-        if(!localSortedIndices.includes(k)) localSortedIndices.push(k);
-    }
-    localSortedIndices.sort((a,b) => a-b);
-
-    addStep(lm.returnArr, [], [], [...arr], null, null); 
-    addStep(lm.functionEnd, [], [], [...arr], null, null); 
-    
-    return localSteps;
-  }, []);
   
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -184,10 +95,10 @@ export default function BubbleSortVisualizerPage() {
       setInitialData(parsedData);
       let newSteps: AlgorithmStep[] = [];
 
-      if (isAlgoImplemented) { // Bubble Sort specific logic
+      if (isAlgoImplemented && ALGORITHM_SLUG === 'bubble-sort') { 
         newSteps = generateBubbleSortSteps(parsedData);
       } else {
-        setDisplayedData(parsedData); // Show initial data if not implemented (though it is for this page)
+        setDisplayedData(parsedData); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
         setSteps([]); 
@@ -199,7 +110,7 @@ export default function BubbleSortVisualizerPage() {
         updateStateFromStep(0);
       } else if (!isAlgoImplemented) {
          setDisplayedData(parsedData); 
-      } else { // No steps generated for an implemented algo (e.g. empty input)
+      } else { 
         setSteps([]);
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -213,7 +124,7 @@ export default function BubbleSortVisualizerPage() {
         animationTimeoutRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, generateBubbleSortSteps, isAlgoImplemented]); 
+  }, [inputValue, parseInput, isAlgoImplemented]); 
 
 
   useEffect(() => {
@@ -249,7 +160,7 @@ export default function BubbleSortVisualizerPage() {
       setIsPlaying(false);
       return;
     }
-    if (!isAlgoImplemented) { // Should always be true here
+    if (!isAlgoImplemented) { 
       toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
@@ -270,7 +181,7 @@ export default function BubbleSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
-     if (!isAlgoImplemented) { // Should always be true here
+     if (!isAlgoImplemented) { 
       toast({ title: "Visualizer Not Active", description: "This algorithm's interactive visualizer is not implemented yet.", variant: "default" });
       return;
     }
@@ -302,7 +213,7 @@ export default function BubbleSortVisualizerPage() {
     const parsedData = parseInput(inputValue) || initialData; 
     let newSteps: AlgorithmStep[] = [];
 
-    if (isAlgoImplemented) { // Bubble Sort specific
+    if (isAlgoImplemented && ALGORITHM_SLUG === 'bubble-sort') { 
         newSteps = generateBubbleSortSteps(parsedData);
     }
 
@@ -383,7 +294,7 @@ export default function BubbleSortVisualizerPage() {
             isFinished={isFinished}
             currentSpeed={animationSpeed}
             onSpeedChange={handleSpeedChange}
-            isAlgoImplemented={isAlgoImplemented} // Will be true for this page
+            isAlgoImplemented={isAlgoImplemented} 
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
           />
