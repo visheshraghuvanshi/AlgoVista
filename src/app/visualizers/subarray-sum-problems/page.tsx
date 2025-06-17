@@ -13,12 +13,12 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
+import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel'; // Use SearchingControls for target sum input
 
 const SUBARRAY_SUM_CODE_SNIPPETS = {
   JavaScript: [
-    "// Example: Find subarray with given sum (positive numbers)",
-    "function findSubarrayWithSum(arr, targetSum) {",
+    "// Example 1: Find subarray with a given sum (handles positive numbers, Sliding Window)",
+    "function findSubarrayWithSumPositive(arr, targetSum) {",
     "  let currentSum = 0;",
     "  let start = 0;",
     "  for (let end = 0; end < arr.length; end++) {",
@@ -27,14 +27,30 @@ const SUBARRAY_SUM_CODE_SNIPPETS = {
     "      currentSum -= arr[start];",
     "      start++;",
     "    }",
-    "    if (currentSum === targetSum) {",
+    "    if (currentSum === targetSum && start <=end) { // Ensure non-empty subarray for sum 0",
     "      return arr.slice(start, end + 1); // Subarray found",
     "    }",
     "  }",
     "  return null; // No such subarray",
     "}",
     "",
-    "// Kadane's Algorithm (Max Subarray Sum) is another variant - see its dedicated page.",
+    "// Example 2: Find subarray with a given sum (handles negative numbers, Prefix Sum + HashMap)",
+    "function findSubarrayWithSumAny(arr, targetSum) {",
+    "  let currentSum = 0;",
+    "  const prefixSums = new Map(); // Stores {sum: index}",
+    "  prefixSums.set(0, -1); // Base case for subarray starting from index 0",
+    "  for (let i = 0; i < arr.length; i++) {",
+    "    currentSum += arr[i];",
+    "    if (prefixSums.has(currentSum - targetSum)) {",
+    "      return arr.slice(prefixSums.get(currentSum - targetSum) + 1, i + 1);",
+    "    }",
+    "    prefixSums.set(currentSum, i);",
+    "  }",
+    "  return null;",
+    "}",
+    "",
+    "// Kadane's Algorithm for Maximum Subarray Sum is another important variant.",
+    "// See its dedicated visualizer page for details.",
   ],
 };
 
@@ -54,6 +70,7 @@ export default function SubarraySumProblemsVisualizerPage() {
             title: "Conceptual Overview",
             description: `Subarray Sum Problems cover various techniques. Interactive visualization for specific variants coming soon.`,
             variant: "default",
+            duration: 5000,
         });
     } else {
       toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
@@ -62,9 +79,13 @@ export default function SubarraySumProblemsVisualizerPage() {
 
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "Varies (e.g., O(n))", average: "Varies", worst: "Varies (e.g., O(n²), O(n log n), O(n))" },
-    spaceComplexity: "Varies (e.g., O(1), O(n))",
+    description: algorithm.description, // Will use the detailed description from MOCK_ALGORITHMS
+    timeComplexities: { 
+      best: "Varies by problem & technique (e.g., O(n) for Kadane's or sliding window on positive numbers)", 
+      average: "Varies (e.g., O(n) for HashMap approach for any numbers)", 
+      worst: "Varies (e.g., O(n^2) for brute-force, O(n) for optimized methods)" 
+    },
+    spaceComplexity: "Varies (e.g., O(1) for Kadane's/basic sliding window, O(n) for prefix sum/HashMap approaches).",
   } : null;
 
   if (!isClient) {
@@ -114,23 +135,23 @@ export default function SubarraySumProblemsVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                This category covers various subarray sum problems. Interactive visualizers for specific variants (like finding a subarray with a given sum) are under construction.
-                Please check back later! Review the concept and example code below.
+                This category covers various subarray sum problems (e.g., find subarray with a given sum, max sum subarray). Interactive visualizers for specific variants are under construction.
+                Please check back later! Review the concept and example code below. (Note: Kadane's Algorithm has its own dedicated visualizer.)
             </p>
         </div>
         
-        <div className="lg:w-2/5 xl:w-1/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
+        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
+             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
                     <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Example Code (JS - Subarray with Given Sum)
+                        <Code2 className="mr-2 h-5 w-5" /> Example Code Snippets (JavaScript)
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
                     <pre className="font-code text-sm p-4">
                         {SUBARRAY_SUM_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground">
+                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
                             <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                             {index + 1}
                             </span>
@@ -150,7 +171,7 @@ export default function SubarraySumProblemsVisualizerPage() {
             onStep={() => {}}
             onReset={() => {}}
             onInputChange={() => {}}
-            inputValue={"(Under Construction)"}
+            inputValue={"(e.g., array for sum operations)"}
             onTargetValueChange={() => {}}
             targetValue={""}
             targetInputLabel="Example: Target Sum"

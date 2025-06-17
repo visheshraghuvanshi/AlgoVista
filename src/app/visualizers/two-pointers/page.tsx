@@ -17,7 +17,7 @@ import { SearchingControlsPanel } from '@/components/algo-vista/searching-contro
 
 const TWO_POINTERS_CODE_SNIPPETS = {
   JavaScript: [
-    "// Example: Find a pair with a given sum in a sorted array",
+    "// Example 1: Find a pair with a given sum in a SORTED array",
     "function findPairWithSum(sortedArr, targetSum) {",
     "  let left = 0;",
     "  let right = sortedArr.length - 1;",
@@ -26,12 +26,24 @@ const TWO_POINTERS_CODE_SNIPPETS = {
     "    if (currentSum === targetSum) {",
     "      return [sortedArr[left], sortedArr[right]]; // Pair found",
     "    } else if (currentSum < targetSum) {",
-    "      left++; // Need a larger sum",
-    "    } else {",
-    "      right--; // Need a smaller sum",
+    "      left++; // Need a larger sum, move left pointer",
+    "    } else { // currentSum > targetSum",
+    "      right--; // Need a smaller sum, move right pointer",
     "    }",
     "  }",
     "  return null; // No such pair found",
+    "}",
+    "",
+    "// Example 2: Reverse an array/string in-place",
+    "function reverseArray(arr) {",
+    "  let left = 0;",
+    "  let right = arr.length - 1;",
+    "  while (left < right) {",
+    "    [arr[left], arr[right]] = [arr[right], arr[left]]; // Swap",
+    "    left++;",
+    "    right--;",
+    "  }",
+    "  return arr;",
     "}",
   ],
 };
@@ -52,6 +64,7 @@ export default function TwoPointersVisualizerPage() {
             title: "Conceptual Overview",
             description: `The Two Pointers technique is versatile. Interactive visualization coming soon for specific examples.`,
             variant: "default",
+            duration: 5000,
         });
     } else {
       toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
@@ -60,9 +73,13 @@ export default function TwoPointersVisualizerPage() {
 
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" }, // For typical scenarios like pair sum in sorted array
-    spaceComplexity: "O(1)",
+    description: algorithm.description, // This will now be the detailed description from MOCK_ALGORITHMS
+    timeComplexities: { 
+      best: "Varies (e.g., O(n) for pair sum in sorted array, O(1) if target is immediately found)", 
+      average: "Varies (e.g., O(n))", 
+      worst: "Varies (e.g., O(n))" 
+    },
+    spaceComplexity: "Typically O(1) (in-place modification or constant extra space).",
   } : null;
 
   if (!isClient) {
@@ -112,23 +129,23 @@ export default function TwoPointersVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The Two Pointers technique applies to various problems. An interactive visualizer for specific applications (like finding pairs) is under construction.
+                The Two Pointers technique applies to various problems. An interactive visualizer for specific applications (like finding pairs or reversing arrays) is under construction.
                 Please check back later! In the meantime, review the concept and example code.
             </p>
         </div>
         
-        <div className="lg:w-2/5 xl:w-1/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
+        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
+             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
                     <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Example Code (JavaScript - Pair Sum)
+                        <Code2 className="mr-2 h-5 w-5" /> Example Code Snippets (JavaScript)
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
                     <pre className="font-code text-sm p-4">
                         {TWO_POINTERS_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground">
+                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
                             <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                             {index + 1}
                             </span>
@@ -148,10 +165,10 @@ export default function TwoPointersVisualizerPage() {
             onStep={() => {}}
             onReset={() => {}}
             onInputChange={() => {}}
-            inputValue={"(Under Construction)"}
+            inputValue={"(e.g., sorted array for pair sum)"}
             onTargetValueChange={() => {}}
             targetValue={""}
-            targetInputLabel="Example: Target Sum"
+            targetInputLabel="Example: Target Sum (for pair sum)"
             isPlaying={false}
             isFinished={true}
             currentSpeed={500}

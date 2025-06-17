@@ -17,12 +17,14 @@ import { SearchingControlsPanel } from '@/components/algo-vista/searching-contro
 
 const SLIDING_WINDOW_CODE_SNIPPETS = {
   JavaScript: [
-    "// Example: Max sum subarray of size k",
-    "function maxSumSubarray(arr, k) {",
-    "  if (k > arr.length) return -1; // Or throw error",
-    "  let maxSum = 0;",
+    "// Example: Maximum sum subarray of fixed size k",
+    "function maxSumSubarrayFixedSize(arr, k) {",
+    "  if (k <= 0 || k > arr.length) {",
+    "    return 0; // Or handle error appropriately",
+    "  }",
+    "  let maxSum = -Infinity;",
     "  let windowSum = 0;",
-    "  // Sum of first k elements",
+    "  // Calculate sum of first window",
     "  for (let i = 0; i < k; i++) {",
     "    windowSum += arr[i];",
     "  }",
@@ -33,6 +35,22 @@ const SLIDING_WINDOW_CODE_SNIPPETS = {
     "    maxSum = Math.max(maxSum, windowSum);",
     "  }",
     "  return maxSum;",
+    "}",
+    "",
+    "// Example: Smallest subarray with sum >= target (variable size window)",
+    "function smallestSubarrayWithSum(arr, targetSum) {",
+    "  let minLength = Infinity;",
+    "  let windowSum = 0;",
+    "  let windowStart = 0;",
+    "  for (let windowEnd = 0; windowEnd < arr.length; windowEnd++) {",
+    "    windowSum += arr[windowEnd];",
+    "    while (windowSum >= targetSum) {",
+    "      minLength = Math.min(minLength, windowEnd - windowStart + 1);",
+    "      windowSum -= arr[windowStart];",
+    "      windowStart++;",
+    "    }",
+    "  }",
+    "  return minLength === Infinity ? 0 : minLength;",
     "}",
   ],
 };
@@ -53,6 +71,7 @@ export default function SlidingWindowVisualizerPage() {
             title: "Conceptual Overview",
             description: `The Sliding Window technique is versatile. Interactive visualization coming soon for specific examples.`,
             variant: "default",
+            duration: 5000,
         });
     } else {
       toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
@@ -61,9 +80,13 @@ export default function SlidingWindowVisualizerPage() {
 
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" }, // For typical fixed-size window problems
-    spaceComplexity: "O(1)",
+    description: algorithm.description, // Will use the detailed description from MOCK_ALGORITHMS
+    timeComplexities: { 
+      best: "Varies (e.g., O(n) for fixed-size window, O(n) for many variable-size window problems)", 
+      average: "Varies (typically O(n))", 
+      worst: "Varies (typically O(n), but can be O(n*k) or O(n^2) if inner operations are costly)" 
+    },
+    spaceComplexity: "Typically O(1) or O(k) where k is alphabet size or window size if storing window elements.",
   } : null;
 
   if (!isClient) {
@@ -113,23 +136,23 @@ export default function SlidingWindowVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The Sliding Window technique applies to various problems. An interactive visualizer for specific applications is under construction.
+                The Sliding Window technique applies to various problems (e.g., max sum subarray of size k, smallest subarray with sum >= target). An interactive visualizer for specific applications is under construction.
                 Please check back later! In the meantime, review the concept and example code.
             </p>
         </div>
         
-        <div className="lg:w-2/5 xl:w-1/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
+        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
+             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
                     <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Example Code (JavaScript - Max Sum Subarray)
+                        <Code2 className="mr-2 h-5 w-5" /> Example Code Snippets (JavaScript)
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
                     <pre className="font-code text-sm p-4">
                         {SLIDING_WINDOW_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground">
+                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
                             <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                             {index + 1}
                             </span>
@@ -149,10 +172,10 @@ export default function SlidingWindowVisualizerPage() {
             onStep={() => {}}
             onReset={() => {}}
             onInputChange={() => {}}
-            inputValue={"(Under Construction)"}
+            inputValue={"(e.g., array for window operations)"}
             onTargetValueChange={() => {}}
             targetValue={""}
-            targetInputLabel="Example: Window Size (k)"
+            targetInputLabel="Example: Window Size (k) or Target Sum"
             isPlaying={false}
             isFinished={true}
             currentSpeed={500}
