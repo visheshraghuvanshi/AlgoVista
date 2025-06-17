@@ -12,13 +12,13 @@ import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual }
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DOUBLY_LL_LINE_MAPS, generateDoublyLinkedListSteps } from './doubly-linked-list-logic';
-import { algorithmMetadata } from './metadata'; // Changed from MOCK_ALGORITHMS
+import { algorithmMetadata } from './metadata'; 
 
 const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
 
-const DLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'deleteByValue', 'traverse'];
+const DLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition', 'traverse'];
 
 
 export default function DoublyLinkedListPage() {
@@ -26,6 +26,7 @@ export default function DoublyLinkedListPage() {
 
   const [initialListStr, setInitialListStr] = useState('10,20,30');
   const [inputValue, setInputValue] = useState('5');
+  const [positionValue, setPositionValue] = useState('1');
   const [selectedOperation, setSelectedOperation] = useState<LinkedListOperation>('init');
   
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
@@ -39,7 +40,7 @@ export default function DoublyLinkedListPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true); // Start finished as init state is static
+  const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -58,15 +59,28 @@ export default function DoublyLinkedListPage() {
     }
   }, [steps]);
   
-  const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string) => {
+  const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string, posOrSecondList?: string | number) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     let operationValueToUse: string | number | undefined = val;
     if (val && !isNaN(Number(val))) {
         operationValueToUse = Number(val);
     }
-    if (val === undefined && (op === 'insertHead' || op === 'insertTail' || op === 'deleteByValue')) {
+    
+    let positionToUse: number | undefined = undefined;
+    if (typeof posOrSecondList === 'number') {
+        positionToUse = posOrSecondList;
+    } else if (typeof posOrSecondList === 'string' && !isNaN(Number(posOrSecondList))) {
+        positionToUse = Number(posOrSecondList);
+    }
+
+    const currentOpDetails = ALL_OPERATIONS.find(details => details.value === op);
+    if (currentOpDetails?.needsValue && operationValueToUse === undefined) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
+        return;
+    }
+    if (currentOpDetails?.needsPosition && positionToUse === undefined) {
+        toast({ title: "Position Required", description: `Please enter a position for ${op}.`, variant: "destructive" });
         return;
     }
 
@@ -75,7 +89,7 @@ export default function DoublyLinkedListPage() {
         listStringToUse = initialListStr;
     }
 
-    const newSteps = generateDoublyLinkedListSteps(listStringToUse, op, operationValueToUse);
+    const newSteps = generateDoublyLinkedListSteps(listStringToUse, op, operationValueToUse, positionToUse);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -128,6 +142,7 @@ export default function DoublyLinkedListPage() {
     setInitialListStr(defaultInitial); 
     listStringForLogicRef.current = defaultInitial;
     setInputValue('5');
+    setPositionValue('1');
     setSelectedOperation('init');
     const initSteps = generateDoublyLinkedListSteps(defaultInitial, 'init');
     setSteps(initSteps);
@@ -143,14 +158,14 @@ export default function DoublyLinkedListPage() {
   }, []);
 
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  
+  const algoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
-  } : null;
-
-  if (!algorithmMetadata || !algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -163,16 +178,17 @@ export default function DoublyLinkedListPage() {
         </div>
         <LinkedListControlsPanel
           onPlay={handlePlay} onPause={handlePause} onStep={handleStep} onReset={handleReset}
-          onOperationChange={(op, val) => {
+          onOperationChange={(op, val, posOrSecondList) => {
              setSelectedOperation(op); 
-             handleOperationExecution(op, val);
+             handleOperationExecution(op, val, posOrSecondList);
           }}
           initialListValue={initialListStr} onInitialListValueChange={setInitialListStr}
           inputValue={inputValue} onInputValueChange={setInputValue}
+          positionValue={positionValue} onPositionValueChange={setPositionValue}
           selectedOperation={selectedOperation} onSelectedOperationChange={(op) => {
               setSelectedOperation(op);
               if (op === 'init') handleOperationExecution('init', initialListStr);
-              else if (op === 'traverse') handleOperationExecution('traverse');
+              else if (op === 'traverse') handleOperationExecution('traverse'); 
               else { 
                   setSteps([]); 
                   setCurrentStepIndex(0);

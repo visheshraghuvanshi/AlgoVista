@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
 
 export const SINGLY_LINKED_LIST_OPERATIONS_CODE: Record<string, string[]> = {
-  structure: [ // Added a common structure snippet
+  structure: [ 
     "class Node {",
     "  constructor(data) {",
     "    this.data = data;",
@@ -26,64 +26,88 @@ export const SINGLY_LINKED_LIST_OPERATIONS_CODE: Record<string, string[]> = {
     "}",
   ],
   insertHead: [
-    "// insertHead(data) {",              // Line 3 in SLL_LINE_MAPS
-    "  const newNode = new Node(data);",  // Line 4
-    "  newNode.next = this.head;",         // Line 5
-    "  this.head = newNode;",              // Line 6
-    "// }",                               // Line 7
+    "// insertHead(data) {",              
+    "  const newNode = new Node(data);",  
+    "  newNode.next = this.head;",         
+    "  this.head = newNode;",              
+    "// }",                               
   ],
   insertTail: [
-    "// insertTail(data) {",               // Line 1
-    "  const newNode = new Node(data);",   // Line 2
-    "  if (!this.head) {",                 // Line 3
-    "    this.head = newNode; return;",    // Line 4
+    "// insertTail(data) {",               
+    "  const newNode = new Node(data);",   
+    "  if (!this.head) {",                 
+    "    this.head = newNode; return;",    
     "  }",
-    "  let current = this.head;",          // Line 5
-    "  while (current.next) {",            // Line 6
-    "    current = current.next;",         // Line 7
+    "  let current = this.head;",          
+    "  while (current.next) {",            
+    "    current = current.next;",         
     "  }",
-    "  current.next = newNode;",           // Line 8
-    "// }",                                // Line 9
+    "  current.next = newNode;",           
+    "// }",                                
+  ],
+  insertAtPosition: [
+    "// insertAtPosition(data, position) {",
+    "  const newNode = new Node(data);",
+    "  if (position === 0) { /* Use insertHead logic */ return; }",
+    "  let current = this.head, prev = null, count = 0;",
+    "  while (current && count < position) {",
+    "    prev = current; current = current.next; count++;",
+    "  }",
+    "  if (prev) { prev.next = newNode; newNode.next = current; }",
+    "  else { /* Handle empty list or invalid position */ }",
+    "// }",
   ],
   deleteByValue: [
-    "// deleteByValue(data) {",               // Line 1
-    "  if (!this.head) return null;",       // Line 2
-    "  if (this.head.data === data) {",    // Line 3
-    "    this.head = this.head.next; return data;", // Line 4
+    "// deleteByValue(data) {",               
+    "  if (!this.head) return null;",       
+    "  if (this.head.data === data) {",    
+    "    this.head = this.head.next; return data;", 
     "  }",
-    "  let current = this.head, prev = null;", // Line 5
-    "  while (current && current.data !== data) {", // Line 6
-    "    prev = current; current = current.next;",   // Line 10 (conceptual for prev/current move)
+    "  let current = this.head, prev = null;", 
+    "  while (current && current.data !== data) {", 
+    "    prev = current; current = current.next;",   
     "  }",
-    "  if (current) {",                        // Line 7 (Conceptual: if found)
-    "    prev.next = current.next;",           // Line 8
-    "    return data;",                       // Line 9
+    "  if (current) {",                        
+    "    prev.next = current.next;",           
+    "    return data;",                       
     "  }",
-    "  return null;",                           // Line 11
-    "// }",                                    // Line 12
+    "  return null;",                           
+    "// }",                                    
+  ],
+  deleteAtPosition: [
+    "// deleteAtPosition(position) {",
+    "  if (!this.head || position < 0) return null;",
+    "  if (position === 0) { this.head = this.head.next; return; }",
+    "  let current = this.head, prev = null, count = 0;",
+    "  while (current && count < position) {",
+    "    prev = current; current = current.next; count++;",
+    "  }",
+    "  if (current && prev) { prev.next = current.next; }",
+    "  // else position out of bounds or list too short",
+    "// }",
   ],
    search: [
-    "// search(data) {",                       // Line 1
-    "  let current = this.head, index = 0;", // Line 2
-    "  while (current) {",                     // Line 3
-    "    if (current.data === data) {",      // Line 4
-    "      return { node: current, index };", // Line 5
+    "// search(data) {",                       
+    "  let current = this.head, index = 0;", 
+    "  while (current) {",                     
+    "    if (current.data === data) {",      
+    "      return { node: current, index };", 
     "    }",
-    "    current = current.next;",             // Line 6
-    "    index++;",                           // Line 7
+    "    current = current.next;",             
+    "    index++;",                           
     "  }",
-    "  return null;",                           // Line 8
-    "// }",                                    // Line 9
+    "  return null;",                           
+    "// }",                                    
   ],
   traverse: [
-    "// traverse() {",                         // Line 1
-    "  let current = this.head, result = [];",// Line 2
-    "  while (current) {",                     // Line 3
-    "    result.push(current.data);",         // Line 4
-    "    current = current.next;",             // Line 5
+    "// traverse() {",                         
+    "  let current = this.head, result = [];",
+    "  while (current) {",                     
+    "    result.push(current.data);",         
+    "    current = current.next;",             
     "  }",
-    "  return result;",                         // Line 6
-    "// }",                                    // Line 7
+    "  return result;",                         
+    "// }",                                    
   ],
   init: [
     "// Initializing a list from input values",
@@ -145,16 +169,14 @@ export function SinglyLinkedListCodePanel({ currentLine, currentOperation }: Sin
                 <div
                   key={`${effectiveOperation}-line-${index}`}
                   className={`px-2 py-0.5 rounded ${
-                    // Adjust line numbers for display based on currentOperation's map
                     index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
                   }`}
                   aria-current={index + 1 === currentLine ? "step" : undefined}
                 >
                   <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                    {/* This line number is relative to the snippet being displayed */}
                     {index + 1} 
                   </span>
-                  {line.startsWith("//") ? line : `    ${line}`} {/* Indent non-comment lines */}
+                  {line.startsWith("//") ? line : `    ${line}`} 
                 </div>
               ))}
             </pre>

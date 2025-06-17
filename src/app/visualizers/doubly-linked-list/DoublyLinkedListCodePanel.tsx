@@ -10,78 +10,107 @@ import { useToast } from "@/hooks/use-toast";
 import type { LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
 
 export const DOUBLY_LINKED_LIST_OPERATIONS_CODE: Record<string, string[]> = {
-  insertHead: [
-    "class Node { constructor(data) { this.data = data; this.next = null; this.prev = null; } }",
+  structure: [
+    "class Node {",
+    "  constructor(data) { this.data = data; this.next = null; this.prev = null; }",
+    "}",
     "class DoublyLinkedList {",
     "  constructor() { this.head = null; this.tail = null; }",
-    "  insertHead(data) {",
-    "    const newNode = new Node(data);",
-    "    if (!this.head) {",
-    "      this.head = newNode;",
-    "      this.tail = newNode;",
-    "    } else {",
-    "      newNode.next = this.head;",
-    "      this.head.prev = newNode;",
-    "      this.head = newNode;",
-    "    }",
-    "  }",
+    "  // ... operations below ...",
     "}",
+  ],
+  insertHead: [
+    "// insertHead(data) {",
+    "  const newNode = new Node(data);",
+    "  if (!this.head) {",
+    "    this.head = newNode;",
+    "    this.tail = newNode;",
+    "  } else {",
+    "    newNode.next = this.head;",
+    "    this.head.prev = newNode;",
+    "    this.head = newNode;",
+    "  }",
+    "// }",
   ],
   insertTail: [
-    "// ... (Node class and DLL constructor as above)",
-    "  insertTail(data) {",
-    "    const newNode = new Node(data);",
-    "    if (!this.tail) {",
-    "      this.head = newNode;",
-    "      this.tail = newNode;",
-    "    } else {",
-    "      newNode.prev = this.tail;",
-    "      this.tail.next = newNode;",
-    "      this.tail = newNode;",
-    "    }",
+    "// insertTail(data) {",
+    "  const newNode = new Node(data);",
+    "  if (!this.tail) {",
+    "    this.head = newNode;",
+    "    this.tail = newNode;",
+    "  } else {",
+    "    newNode.prev = this.tail;",
+    "    this.tail.next = newNode;",
+    "    this.tail = newNode;",
     "  }",
-    "}",
+    "// }",
+  ],
+  insertAtPosition: [
+    "// insertAtPosition(data, position) {",
+    "  const newNode = new Node(data);",
+    "  if (position === 0) { /* Use insertHead logic */ return; }",
+    "  let current = this.head; let count = 0;",
+    "  while (current && count < position) {",
+    "    current = current.next; count++;",
+    "  }",
+    "  if (current) { // Insert before current",
+    "    newNode.next = current;",
+    "    newNode.prev = current.prev;",
+    "    if (current.prev) current.prev.next = newNode;",
+    "    current.prev = newNode;",
+    "    // if newNode.prev is null, it's new head (handled by pos===0)",
+    "  } else if (count === position && !current && this.tail) { /* Insert at tail */",
+    "     /* Use insertTail logic */",
+    "  }",
+    "// }",
   ],
   deleteByValue: [
-    "// ... (Node class and DLL constructor as above)",
-    "  deleteByValue(data) {",
-    "    let current = this.head;",
-    "    while (current) {",
-    "      if (current.data === data) {",
-    "        if (current.prev) current.prev.next = current.next;",
-    "        else this.head = current.next; // Deleting head",
-    "        if (current.next) current.next.prev = current.prev;",
-    "        else this.tail = current.prev; // Deleting tail",
-    "        return data;",
-    "      }",
-    "      current = current.next;",
+    "// deleteByValue(data) {",
+    "  let current = this.head;",
+    "  while (current) {",
+    "    if (current.data === data) {",
+    "      if (current.prev) current.prev.next = current.next;",
+    "      else this.head = current.next; // Deleting head",
+    "      if (current.next) current.next.prev = current.prev;",
+    "      else this.tail = current.prev; // Deleting tail",
+    "      return data;",
     "    }",
-    "    return null; // Not found",
+    "    current = current.next;",
     "  }",
-    "}",
+    "  return null; // Not found",
+    "// }",
+  ],
+  deleteAtPosition: [
+    "// deleteAtPosition(position) {",
+    "  if (!this.head || position < 0) return null;",
+    "  let current = this.head; let count = 0;",
+    "  while (current && count < position) {",
+    "    current = current.next; count++;",
+    "  }",
+    "  if (current) { // Node at position found",
+    "    if (current.prev) current.prev.next = current.next;",
+    "    else this.head = current.next;",
+    "    if (current.next) current.next.prev = current.prev;",
+    "    else this.tail = current.prev;",
+    "    // return current.data;",
+    "  }",
+    "// }",
   ],
   traverse: [
-    "// ... (Node class and DLL constructor as above)",
-    "  traverseForward() {",
-    "    let current = this.head; const result = [];",
-    "    while (current) { result.push(current.data); current = current.next; }",
-    "    return result;",
-    "  }",
-    "  traverseBackward() {",
-    "    let current = this.tail; const result = [];",
-    "    while (current) { result.push(current.data); current = current.prev; }",
-    "    return result;",
-    "  }",
-    "}",
+    "// traverseForward() {",
+    "  let current = this.head; const result = [];",
+    "  while (current) { result.push(current.data); current = current.next; }",
+    "  return result;",
+    "// }",
+    "// traverseBackward() {",
+    "  let current = this.tail; const result = [];",
+    "  while (current) { result.push(current.data); current = current.prev; }",
+    "  return result;",
+    "// }",
   ],
    init: [
     "// Initializing a Doubly Linked List",
-    "function initializeList(values) {",
-    "  const list = new DoublyLinkedList();",
-    "  if (!values || values.length === 0) return list;",
-    "  for (const val of values) { list.insertTail(val); }",
-    "  return list;",
-    "}",
+    "// (See other operations for detailed logic)",
   ],
 };
 
@@ -94,21 +123,24 @@ export function DoublyLinkedListCodePanel({ currentLine, currentOperation }: Dou
   const { toast } = useToast();
   const effectiveOperation = currentOperation || 'init';
   const codeToDisplay = DOUBLY_LINKED_LIST_OPERATIONS_CODE[effectiveOperation] || DOUBLY_LINKED_LIST_OPERATIONS_CODE.init;
+  const structureCode = DOUBLY_LINKED_LIST_OPERATIONS_CODE.structure;
 
   const handleCopyCode = () => {
-    const codeString = codeToDisplay.join('\n');
-    if (codeString) {
-      navigator.clipboard.writeText(codeString)
-        .then(() => toast({ title: `Code for ${effectiveOperation} Copied!` }))
+     const fullCode = structureCode.join('\n') + '\n\n  ' + codeToDisplay.map(line => line.startsWith("//") ? line : `  ${line}`).join('\n  ');
+    if (fullCode) {
+      navigator.clipboard.writeText(fullCode)
+        .then(() => toast({ title: `DLL Code Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
     }
   };
+
+  const operationTitle = effectiveOperation.charAt(0).toUpperCase() + effectiveOperation.slice(1).replace(/([A-Z])/g, ' $1');
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-          <Code2 className="mr-2 h-5 w-5" /> Code: {effectiveOperation.replace(/([A-Z])/g, ' $1').trim()}
+          <Code2 className="mr-2 h-5 w-5" /> Code: {operationTitle}
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
           <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
@@ -116,12 +148,19 @@ export function DoublyLinkedListCodePanel({ currentLine, currentOperation }: Dou
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-          <pre className="font-code text-sm p-4">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap">
+             {structureCode.map((line, index) => (
+                 <div key={`dll-struct-line-${index}`} className={`px-2 py-0.5 rounded text-muted-foreground/70 opacity-70`}>
+                    <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                    {line}
+                 </div>
+              ))}
+              {effectiveOperation !== 'init' && <div className="my-2 border-b border-dashed border-muted-foreground/30"></div>}
             {codeToDisplay.map((line, index) => (
               <div key={`${effectiveOperation}-line-${index}`}
                 className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
-                {line}
+                 {line.startsWith("//") ? line : `    ${line}`}
               </div>
             ))}
           </pre>
@@ -130,3 +169,4 @@ export function DoublyLinkedListCodePanel({ currentLine, currentOperation }: Dou
     </Card>
   );
 }
+

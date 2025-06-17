@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListPlus, Trash2, SearchCode, Shuffle, GitMerge, LocateFixed } from "lucide-react";
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListPlus, Trash2, SearchCode, Shuffle, GitMerge, LocateFixed, ListOrdered, CornerDownLeft, CornerUpRight, Milestone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 
@@ -17,24 +17,23 @@ export type LinkedListOperation =
   | 'search' 
   | 'reverse'
   | 'detectCycle'
-  | 'merge' // For merging two sorted lists
+  | 'merge' 
   | 'traverse';
 
 export const ALL_OPERATIONS: { value: LinkedListOperation; label: string; icon?: React.ElementType, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
-  { value: 'init', label: 'Initialize/Set List', icon: ListPlus }, // Does not need extra value input here, uses initialListValue
-  { value: 'insertHead', label: 'Insert Head', icon: ListPlus, needsValue: true },
-  { value: 'insertTail', label: 'Insert Tail', icon: ListPlus, needsValue: true },
-  // { value: 'insertAtPosition', label: 'Insert At Position', icon: ListPlus, needsValue: true, needsPosition: true },
-  // { value: 'deleteHead', label: 'Delete Head', icon: Trash2 }, // No value needed
-  // { value: 'deleteTail', label: 'Delete Tail', icon: Trash2 }, // No value needed
+  { value: 'init', label: 'Initialize/Set List', icon: ListPlus },
+  { value: 'insertHead', label: 'Insert Head', icon: CornerUpRight, needsValue: true },
+  { value: 'insertTail', label: 'Insert Tail', icon: CornerDownLeft, needsValue: true },
+  { value: 'insertAtPosition', label: 'Insert At Position', icon: Milestone, needsValue: true, needsPosition: true },
+  // { value: 'deleteHead', label: 'Delete Head', icon: Trash2 }, 
+  // { value: 'deleteTail', label: 'Delete Tail', icon: Trash2 },
   { value: 'deleteByValue', label: 'Delete by Value', icon: Trash2, needsValue: true },
-  // { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
+  { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
   { value: 'search', label: 'Search Value', icon: SearchCode, needsValue: true },
   { value: 'traverse', label: 'Traverse List', icon: FastForward },
-  // The following are more specialized and might be handled by their own visualizers/control panels
-  // { value: 'reverse', label: 'Reverse List', icon: Shuffle },
-  // { value: 'detectCycle', label: 'Detect Cycle', icon: LocateFixed }, 
-  // { value: 'merge', label: 'Merge Two Lists', icon: GitMerge, needsSecondList: true },
+  // { value: 'reverse', label: 'Reverse List', icon: Shuffle }, // Example for future
+  // { value: 'detectCycle', label: 'Detect Cycle', icon: LocateFixed },  // Example for future
+  // { value: 'merge', label: 'Merge Two Lists', icon: GitMerge, needsSecondList: true }, // Example for future
 ];
 
 interface LinkedListControlsPanelProps {
@@ -42,15 +41,18 @@ interface LinkedListControlsPanelProps {
   onPause: () => void;
   onStep: () => void;
   onReset: () => void;
-  onOperationChange: (operation: LinkedListOperation, value?: string, secondListValue?: string, position?: number) => void;
+  onOperationChange: (operation: LinkedListOperation, value?: string, positionOrSecondList?: string | number) => void;
   
   initialListValue: string;
   onInitialListValueChange: (value: string) => void;
   
-  inputValue: string; // For single value inputs (insert, delete, search)
+  inputValue: string; 
   onInputValueChange: (value: string) => void;
+
+  positionValue?: string; // For insert/delete at position
+  onPositionValueChange?: (value: string) => void;
   
-  secondListValue?: string; // For merge operation
+  secondListValue?: string; 
   onSecondListValueChange?: (value: string) => void;
 
   selectedOperation: LinkedListOperation | null;
@@ -71,6 +73,7 @@ export function LinkedListControlsPanel({
   onPlay, onPause, onStep, onReset, onOperationChange,
   initialListValue, onInitialListValueChange,
   inputValue, onInputValueChange,
+  positionValue, onPositionValueChange,
   secondListValue, onSecondListValueChange,
   selectedOperation, onSelectedOperationChange,
   availableOperations,
@@ -80,11 +83,23 @@ export function LinkedListControlsPanel({
 
   const currentOpDetails = ALL_OPERATIONS.find(op => op.value === selectedOperation);
   const showValueInput = currentOpDetails?.needsValue;
+  const showPositionInput = currentOpDetails?.needsPosition;
   const showSecondListInput = currentOpDetails?.needsSecondList;
 
   const handleExecuteOperation = () => {
     if (selectedOperation) {
-      onOperationChange(selectedOperation, showValueInput ? inputValue : undefined, showSecondListInput ? secondListValue : undefined);
+      let secondaryArg: string | number | undefined = undefined;
+      if (showPositionInput && positionValue !== undefined) {
+        const pos = parseInt(positionValue, 10);
+        if (isNaN(pos)) {
+          alert("Position must be a number."); // Replace with toast if available
+          return;
+        }
+        secondaryArg = pos;
+      } else if (showSecondListInput) {
+        secondaryArg = secondListValue;
+      }
+      onOperationChange(selectedOperation, showValueInput ? inputValue : undefined, secondaryArg);
     }
   };
 
@@ -92,13 +107,14 @@ export function LinkedListControlsPanel({
     ? ALL_OPERATIONS.filter(op => availableOperations.includes(op.value))
     : ALL_OPERATIONS;
 
-  // Disable execute if operation doesn't need value OR if it does and value is empty
   const isExecuteDisabled = isPlaying || !isAlgoImplemented || !selectedOperation ||
     (showValueInput && inputValue.trim() === '') ||
+    (showPositionInput && (!positionValue || positionValue.trim() === '' || isNaN(parseInt(positionValue, 10)) )) ||
     (showSecondListInput && (!secondListValue || secondListValue.trim() === '')) ||
-    (selectedOperation === 'init'); // 'init' is handled by initialListValue change
+    (selectedOperation === 'init');
 
   const isValueInputRelevant = showValueInput && selectedOperation !== 'init';
+  const isPositionInputRelevant = showPositionInput && selectedOperation !== 'init';
 
   return (
     <Card className="shadow-xl rounded-xl">
@@ -121,7 +137,7 @@ export function LinkedListControlsPanel({
             />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="operationSelect" className="text-sm font-medium">Select Operation</Label>
             <Select 
@@ -156,8 +172,20 @@ export function LinkedListControlsPanel({
               />
             </div>
           )}
+          {isPositionInputRelevant && onPositionValueChange && (
+             <div className="space-y-2">
+                <Label htmlFor="positionInput" className="text-sm font-medium">Position (0-indexed)</Label>
+                <Input
+                    id="positionInput" type="number" value={positionValue}
+                    onChange={(e) => onPositionValueChange(e.target.value)}
+                    placeholder="Enter index"
+                    min="0"
+                    disabled={isPlaying || !isAlgoImplemented || !showPositionInput}
+                />
+             </div>
+          )}
           {showSecondListInput && onSecondListValueChange && (
-             <div className="space-y-2 md:col-span-2"> {/* Span to take full width if only this extra input */}
+             <div className="space-y-2 md:col-span-full lg:col-span-1">
                 <Label htmlFor="secondListInput" className="text-sm font-medium">Second List (for Merge)</Label>
                 <Input
                     id="secondListInput" type="text" value={secondListValue}

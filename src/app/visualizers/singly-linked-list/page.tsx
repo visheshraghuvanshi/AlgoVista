@@ -18,13 +18,14 @@ const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
 
-const SLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'deleteByValue', 'search', 'traverse'];
+const SLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition', 'search', 'traverse'];
 
 export default function SinglyLinkedListPage() {
   const { toast } = useToast();
 
   const [initialListStr, setInitialListStr] = useState('10,20,30');
   const [inputValue, setInputValue] = useState('5'); 
+  const [positionValue, setPositionValue] = useState('1'); // For position-based operations
   const [selectedOperation, setSelectedOperation] = useState<LinkedListOperation>('init');
   
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
@@ -37,7 +38,7 @@ export default function SinglyLinkedListPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true); // Start as finished until an operation generates steps
+  const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -55,27 +56,39 @@ export default function SinglyLinkedListPage() {
     }
   }, [steps]);
   
-  const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string) => {
+  const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string, posOrSecondList?: string | number) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     let operationValueToUse: string | number | undefined = val;
     if (val && !isNaN(Number(val))) {
         operationValueToUse = Number(val);
     }
-    if (val === undefined && (op === 'insertHead' || op === 'insertTail' || op === 'deleteByValue' || op === 'search')) {
+    
+    let positionToUse: number | undefined = undefined;
+    if (typeof posOrSecondList === 'number') {
+        positionToUse = posOrSecondList;
+    } else if (typeof posOrSecondList === 'string' && !isNaN(Number(posOrSecondList))) {
+        positionToUse = Number(posOrSecondList);
+    }
+
+    const currentOpDetails = ALL_OPERATIONS.find(details => details.value === op);
+    if (currentOpDetails?.needsValue && operationValueToUse === undefined) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
         return;
     }
+    if (currentOpDetails?.needsPosition && positionToUse === undefined) {
+        toast({ title: "Position Required", description: `Please enter a position for ${op}.`, variant: "destructive" });
+        return;
+    }
 
-    // For init or if the list is empty for insertHead, use initialListStr
-    // Otherwise, use the current state of the list derived from currentNodes for subsequent operations
+
     let listStringToUse = listStringForLogicRef.current;
     if (op === 'init') {
         listStringToUse = initialListStr;
     }
 
 
-    const newSteps = generateSinglyLinkedListSteps(listStringToUse, op, operationValueToUse);
+    const newSteps = generateSinglyLinkedListSteps(listStringToUse, op, operationValueToUse, positionToUse);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -84,12 +97,11 @@ export default function SinglyLinkedListPage() {
     if (newSteps.length > 0) {
       updateVisualStateFromStep(0);
       const lastStep = newSteps[newSteps.length - 1];
-      // Update the ref with the string representation of the list after the operation
       listStringForLogicRef.current = lastStep.nodes.map(n => n.value).join(',');
 
        if (lastStep.status === 'failure') {
         toast({ title: "Operation Failed", description: lastStep.message, variant: "destructive" });
-      } else if (lastStep.status === 'success' || (lastStep.message && op !== 'init')) { // Don't toast for init message
+      } else if (lastStep.status === 'success' || (lastStep.message && op !== 'init')) { 
         toast({ title: op.charAt(0).toUpperCase() + op.slice(1), description: lastStep.message });
       }
     } else {
@@ -97,14 +109,13 @@ export default function SinglyLinkedListPage() {
     }
   }, [toast, updateVisualStateFromStep, initialListStr]);
 
-  // Initial setup of the list or when initialListStr changes for 'init'
   useEffect(() => { 
-    listStringForLogicRef.current = initialListStr; // Update ref when input string changes
+    listStringForLogicRef.current = initialListStr; 
     if (selectedOperation === 'init') {
       handleOperationExecution('init', initialListStr);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialListStr]); // Only depends on initialListStr for 'init' case
+  }, [initialListStr]); 
 
 
   useEffect(() => {
@@ -141,11 +152,12 @@ export default function SinglyLinkedListPage() {
     if (nextStepIndex === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(true); // True because reset shows initial state
+    setIsPlaying(false); setIsFinished(true); 
     const defaultInitial = '10,20,30';
     setInitialListStr(defaultInitial); 
     listStringForLogicRef.current = defaultInitial;
     setInputValue('5');
+    setPositionValue('1');
     setSelectedOperation('init');
     const initSteps = generateSinglyLinkedListSteps(defaultInitial, 'init');
     setSteps(initSteps);
@@ -155,8 +167,8 @@ export default function SinglyLinkedListPage() {
     setCurrentLine(null);
   };
   
-  useEffect(() => { // Effect to handle initial display when component mounts or `initialListStr` changes
-    handleReset(); // Call reset to set up initial state
+  useEffect(() => { 
+    handleReset(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -184,21 +196,21 @@ export default function SinglyLinkedListPage() {
         </div>
         <LinkedListControlsPanel
           onPlay={handlePlay} onPause={handlePause} onStep={handleStep} onReset={handleReset}
-          onOperationChange={(op, val) => {
-             setSelectedOperation(op); // Set the operation type for code panel and logic
-             handleOperationExecution(op, val);
+          onOperationChange={(op, val, posOrSecondList) => {
+             setSelectedOperation(op); 
+             handleOperationExecution(op, val, posOrSecondList);
           }}
           initialListValue={initialListStr} onInitialListValueChange={setInitialListStr}
           inputValue={inputValue} onInputValueChange={setInputValue}
+          positionValue={positionValue} onPositionValueChange={setPositionValue}
           selectedOperation={selectedOperation} onSelectedOperationChange={(op) => {
               setSelectedOperation(op);
-              // Optionally, trigger an 'init' or clear steps if op changes to one not needing immediate execution
               if (op === 'init') handleOperationExecution('init', initialListStr);
-              else if (op === 'traverse') handleOperationExecution('traverse'); // Auto-execute traverse
+              else if (op === 'traverse') handleOperationExecution('traverse'); 
               else { 
-                  setSteps([]); // Clear steps for other ops until "Execute"
+                  setSteps([]); 
                   setCurrentStepIndex(0);
-                  updateVisualStateFromStep(0); // Update visual to current list from ref
+                  updateVisualStateFromStep(0); 
                   setIsFinished(true);
               }
           }}

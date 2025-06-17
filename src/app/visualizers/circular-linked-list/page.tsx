@@ -12,13 +12,13 @@ import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual }
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { CIRCULAR_LL_LINE_MAPS, generateCircularLinkedListSteps } from './circular-linked-list-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
 
-const CLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'traverse'];
+const CLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertAtPosition', 'deleteAtPosition', 'traverse'];
 
 
 export default function CircularLinkedListPage() {
@@ -26,6 +26,7 @@ export default function CircularLinkedListPage() {
 
   const [initialListStr, setInitialListStr] = useState('10,20,30');
   const [inputValue, setInputValue] = useState('5');
+  const [positionValue, setPositionValue] = useState('1');
   const [selectedOperation, setSelectedOperation] = useState<LinkedListOperation>('init');
   
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
@@ -56,15 +57,28 @@ export default function CircularLinkedListPage() {
     }
   }, [steps]);
   
-  const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string) => {
+  const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string, posOrSecondList?: string | number) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     let operationValueToUse: string | number | undefined = val;
     if (val && !isNaN(Number(val))) {
         operationValueToUse = Number(val);
     }
-    if (val === undefined && (op === 'insertHead')) { // Example operations requiring value
+    
+    let positionToUse: number | undefined = undefined;
+    if (typeof posOrSecondList === 'number') {
+        positionToUse = posOrSecondList;
+    } else if (typeof posOrSecondList === 'string' && !isNaN(Number(posOrSecondList))) {
+        positionToUse = Number(posOrSecondList);
+    }
+
+    const currentOpDetails = CLL_AVAILABLE_OPS.find(details => details === op); // Simplified check
+    if ((op === 'insertHead' || op === 'insertAtPosition') && operationValueToUse === undefined) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
+        return;
+    }
+    if ((op === 'insertAtPosition' || op === 'deleteAtPosition') && positionToUse === undefined) {
+        toast({ title: "Position Required", description: `Please enter a position for ${op}.`, variant: "destructive" });
         return;
     }
 
@@ -73,7 +87,7 @@ export default function CircularLinkedListPage() {
         listStringToUse = initialListStr;
     }
 
-    const newSteps = generateCircularLinkedListSteps(listStringToUse, op, operationValueToUse);
+    const newSteps = generateCircularLinkedListSteps(listStringToUse, op, operationValueToUse, positionToUse);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -105,13 +119,10 @@ export default function CircularLinkedListPage() {
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextStepIndex = currentStepIndex + 1;
-        setCurrentStepIndex(nextStepIndex);
-        updateVisualStateFromStep(nextStepIndex);
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false);
-      setIsFinished(true);
+      setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
@@ -141,9 +152,14 @@ export default function CircularLinkedListPage() {
     setInitialListStr(defaultInitial); 
     listStringForLogicRef.current = defaultInitial;
     setInputValue('5');
-    setSelectedOperation('init'); // This will trigger the useEffect for initialListStr
-    // The useEffect for initialListStr will call handleOperationExecution('init', ...)
-    // which in turn sets steps and updates the visual state.
+    setPositionValue('1');
+    setSelectedOperation('init');
+    const initSteps = generateCircularLinkedListSteps(defaultInitial, 'init');
+    setSteps(initSteps);
+    setCurrentStepIndex(0);
+    if (initSteps.length > 0) updateVisualStateFromStep(0); else setCurrentNodes([]);
+    setCurrentMessage("Visualizer Reset. List initialized with default values."); 
+    setCurrentLine(null);
   };
   
   useEffect(() => { 
@@ -151,14 +167,14 @@ export default function CircularLinkedListPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  
+  const algoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
-  } : null;
-
-  if (!algorithmMetadata || !algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -171,12 +187,13 @@ export default function CircularLinkedListPage() {
         </div>
         <LinkedListControlsPanel
           onPlay={handlePlay} onPause={handlePause} onStep={handleStep} onReset={handleReset}
-          onOperationChange={(op, val) => {
+          onOperationChange={(op, val, posOrSecondList) => {
              setSelectedOperation(op); 
-             handleOperationExecution(op, val);
+             handleOperationExecution(op, val, posOrSecondList);
           }}
           initialListValue={initialListStr} onInitialListValueChange={setInitialListStr}
           inputValue={inputValue} onInputValueChange={setInputValue}
+          positionValue={positionValue} onPositionValueChange={setPositionValue}
           selectedOperation={selectedOperation} onSelectedOperationChange={(op) => {
               setSelectedOperation(op);
               if (op === 'init') handleOperationExecution('init', initialListStr);
@@ -198,3 +215,4 @@ export default function CircularLinkedListPage() {
     </div>
   );
 }
+
