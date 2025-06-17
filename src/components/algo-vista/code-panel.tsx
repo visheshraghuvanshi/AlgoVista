@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
@@ -17,17 +17,32 @@ interface CodePanelProps {
 
 export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePanelProps) {
   const { toast } = useToast();
-  const languages = Object.keys(codeSnippets);
-  const initialLang = defaultLanguage && languages.includes(defaultLanguage) ? defaultLanguage : languages[0] || 'Info';
+
+  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  const initialLang = useMemo(() => {
+    return defaultLanguage && languages.includes(defaultLanguage) 
+           ? defaultLanguage 
+           : (languages[0] || 'Info');
+  }, [defaultLanguage, languages]);
+
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
 
+  // Effect to reset selectedLanguage to initialLang if initialLang itself changes (e.g. due to prop changes)
   useEffect(() => {
-    // If the currently selected language is no longer in the available languages (e.g., codeSnippets changed),
-    // then reset to the initial/default language.
-    if (!languages.includes(selectedLanguage)) {
-      setSelectedLanguage(initialLang);
+    setSelectedLanguage(initialLang);
+  }, [initialLang]);
+
+  // Effect to ensure selectedLanguage is valid if the list of available languages changes,
+  // or if the initialLang (which might have been set above) is somehow not in the list (e.g. empty codeSnippets).
+  useEffect(() => {
+    if (languages.length > 0 && !languages.includes(selectedLanguage)) {
+        // If current selected language is no longer valid, default to the (new) initialLang
+        setSelectedLanguage(initialLang);
+    } else if (languages.length === 0 && selectedLanguage !== 'Info') {
+        // If all languages are removed, default to 'Info'
+        setSelectedLanguage('Info');
     }
-  }, [codeSnippets, selectedLanguage, languages, initialLang]);
+  }, [selectedLanguage, languages, initialLang]);
 
 
   const handleCopyCode = () => {
@@ -71,7 +86,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
             </TabsList>
             {languages.map((lang) => (
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                <ScrollArea key={lang} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5"> {/* Added key={lang} here */}
                   <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
