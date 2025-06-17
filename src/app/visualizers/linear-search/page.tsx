@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { CodePanel } from '@/components/algo-vista/code-panel';
+import { LinearSearchCodePanel } from './LinearSearchCodePanel'; 
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
@@ -138,7 +138,7 @@ export default function LinearSearchVisualizerPage() {
     }
   }, [steps]);
 
-  const generateSteps = useCallback(() => {
+   const generateSteps = useCallback(() => {
     const parsedArray = parseInput(inputValue);
     const parsedTarget = parseTarget(targetValue);
 
@@ -164,6 +164,7 @@ export default function LinearSearchVisualizerPage() {
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
       } else {
+        // Reset to initial parsed array if no steps (e.g. empty input)
         setDisplayedData(parsedArray || []);
         setActiveIndices([]);
         setSwappingIndices([]);
@@ -173,9 +174,10 @@ export default function LinearSearchVisualizerPage() {
         setPivotActualIndex(null);
       }
     } else {
+      // Handle invalid input for array or target
       setSteps([]);
       setCurrentStepIndex(0);
-      setDisplayedData(parsedArray || []);
+      setDisplayedData(parsedArray || []); // Show potentially invalid array, or empty if null
       setActiveIndices([]);
       setSwappingIndices([]);
       setSortedIndices([]);
@@ -187,9 +189,10 @@ export default function LinearSearchVisualizerPage() {
     }
   }, [inputValue, targetValue, parseInput, parseTarget]);
 
+
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]);
+  }, [generateSteps]); // generateSteps itself is memoized and will run if its deps change
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -243,10 +246,6 @@ export default function LinearSearchVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // When resetting, we want to ensure input value is processed again from scratch
-    // and steps are regenerated based on the current inputValue and targetValue.
-    // The existing generateSteps already does this if inputValue or targetValue are stable.
-    // So, calling generateSteps directly is correct.
     generateSteps();
   };
 
@@ -288,10 +287,9 @@ export default function LinearSearchVisualizerPage() {
             />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <CodePanel
+            <LinearSearchCodePanel
               codeSnippets={LINEAR_SEARCH_CODE_SNIPPETS}
               currentLine={currentLine}
-              defaultLanguage={"JavaScript"}
             />
           </div>
         </div>

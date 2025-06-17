@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { CodePanel } from '@/components/algo-vista/code-panel';
+import { BinarySearchCodePanel } from './BinarySearchCodePanel'; 
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
@@ -94,7 +94,7 @@ export default function BinarySearchVisualizerPage() {
   const { toast } = useToast();
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
 
-  const [inputValue, setInputValue] = useState('1,2,3,4,5,6,7,8,9'); // Default to sorted
+  const [inputValue, setInputValue] = useState('1,2,3,4,5,6,7,8,9'); 
   const [targetValue, setTargetValue] = useState('7');
   
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
@@ -103,7 +103,7 @@ export default function BinarySearchVisualizerPage() {
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [swappingIndices, setSwappingIndices] = useState<number[]>([]);
-  const [sortedIndices, setSortedIndices] = useState<number[]>([]); // Repurposed for "found"
+  const [sortedIndices, setSortedIndices] = useState<number[]>([]); 
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
@@ -177,53 +177,64 @@ export default function BinarySearchVisualizerPage() {
     const parsedTarget = parseTarget(targetValue);
 
     if (parsedArray !== null && parsedTarget !== null) {
-      if (notifySort) { // If sorting happened due to direct input change, update inputValue
+      if (notifySort) { 
         setInputValue(parsedArray.join(','));
       }
       lastProcessedInputValueRef.current = parsedArray.join(',');
 
-
       const newSteps = generateBinarySearchSteps(parsedArray, parsedTarget);
       setSteps(newSteps);
       setCurrentStepIndex(0);
-      if (newSteps.length > 0) updateStateFromStep(0);
-      else setDisplayedData(parsedArray); 
       setIsPlaying(false);
       setIsFinished(false);
+
+      if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
+      } else {
+        setDisplayedData(parsedArray); 
+        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
+      }
     } else {
       setSteps([]);
+      setCurrentStepIndex(0);
       setDisplayedData(parsedArray || []);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
+      setIsPlaying(false);
+      setIsFinished(false);
     }
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-  }, [inputValue, targetValue, parseInput, parseTarget, updateStateFromStep]);
+  }, [inputValue, targetValue, parseInput, parseTarget, toast]); // Added toast to deps of generateSteps
 
 
   useEffect(() => {
-    // Generate steps only if target or relevant input aspects change
-    generateSteps(false); // Do not notify sort on initial load or target change
+    generateSteps(false); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetValue]);
+  }, [targetValue]); // Only targetValue, inputValue is handled by its own effect
 
   useEffect(() => {
-    // This effect specifically handles changes to `inputValue` from the user
-    // It will parse, potentially sort, update `inputValue` if sorted, and then generate steps
     if (inputValue !== lastProcessedInputValueRef.current) {
-        const parsedArray = parseInput(inputValue, true); // Notify sort if it happens
+        const parsedArray = parseInput(inputValue, true); 
         if (parsedArray) {
             const newInputValueStr = parsedArray.join(',');
             if (inputValue !== newInputValueStr) {
-                setInputValue(newInputValueStr); // This will trigger the generateSteps via its own dependency if needed
+                setInputValue(newInputValueStr); 
             } else {
-                 generateSteps(true); // Input was already sorted or empty, generate directly
+                 generateSteps(true); 
             }
              lastProcessedInputValueRef.current = newInputValueStr;
         } else {
-             generateSteps(true); // Handle invalid input by clearing steps
+             generateSteps(true);
         }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]); // Only re-run when inputValue changes from user or direct set
+  }, [inputValue, parseInput, parseTarget, toast]); // Using generateSteps in the effect that sets inputValue will cause a loop if generateSteps is also a dep
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -277,7 +288,7 @@ export default function BinarySearchVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps(true); // Allow sort notification on explicit reset
+    generateSteps(true); 
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -318,10 +329,9 @@ export default function BinarySearchVisualizerPage() {
             />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <CodePanel
+            <BinarySearchCodePanel
               codeSnippets={BINARY_SEARCH_CODE_SNIPPETS}
               currentLine={currentLine}
-              defaultLanguage={"JavaScript"}
             />
           </div>
         </div>

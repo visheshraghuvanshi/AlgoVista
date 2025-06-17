@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { CodePanel } from '@/components/algo-vista/code-panel';
+import { MergeSortCodePanel } from './MergeSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import type { AlgorithmMetadata } from '@/types';
 import type { AlgorithmStep } from '@/types';
@@ -146,7 +146,7 @@ export default function MergeSortVisualizerPage() {
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
-  const [initialData, setInitialData] = useState<number[]>([]);
+  // const [initialData, setInitialData] = useState<number[]>([]); // Not strictly needed
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -210,28 +210,41 @@ export default function MergeSortVisualizerPage() {
 
   const generateSteps = useCallback(() => {
     const parsedData = parseInput(inputValue);
+     if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+    }
     if (parsedData !== null) {
-      setInitialData(parsedData);
+      // setInitialData(parsedData); // Not strictly needed
       let newSteps: AlgorithmStep[] = generateMergeSortSteps(parsedData);
       
+      setSteps(newSteps);
+      setCurrentStepIndex(0);
+      setIsPlaying(false);
+      setIsFinished(false);
+
       if (newSteps.length > 0) {
-        setSteps(newSteps);
-        setCurrentStepIndex(0);
-        updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
       } else { 
-        setSteps([]);
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
       }
-      setIsPlaying(false);
-      setIsFinished(false);
+    } else {
+        setSteps([]);
+        setCurrentStepIndex(0);
+        setDisplayedData([]);
+        setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setIsPlaying(false); setIsFinished(false);
     }
-     if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
-    }
-  }, [inputValue, parseInput, updateStateFromStep]);
+  }, [inputValue, parseInput]);
 
   useEffect(() => {
     generateSteps();
@@ -279,7 +292,6 @@ export default function MergeSortVisualizerPage() {
     setIsPlaying(false);
     if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
-      animationTimeoutRef.current = null;
     }
   };
 
@@ -292,7 +304,6 @@ export default function MergeSortVisualizerPage() {
     setIsPlaying(false); 
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
-      animationTimeoutRef.current = null;
     }
 
     const nextStepIndex = currentStepIndex + 1;
@@ -310,7 +321,6 @@ export default function MergeSortVisualizerPage() {
     setIsFinished(false);
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
     }
     generateSteps();
   };
@@ -360,10 +370,9 @@ export default function MergeSortVisualizerPage() {
             />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <CodePanel 
+            <MergeSortCodePanel 
               codeSnippets={MERGE_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
-              defaultLanguage={"JavaScript"}
             />
           </div>
         </div>
