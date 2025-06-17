@@ -31,38 +31,42 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   }, [defaultLanguage, languages]);
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>(getEffectiveInitialLanguage());
+  const [userHasInteractedWithTabs, setUserHasInteractedWithTabs] = useState(false);
 
-  // Effect to update selectedLanguage if props (like codeSnippets or defaultLanguage) change,
-  // or if the current selectedLanguage becomes invalid.
+
   useEffect(() => {
+    // This effect ensures selectedLanguage is valid if codeSnippets/defaultLanguage props change.
+    // It should not run just because selectedLanguage itself was set.
     const newEffectiveInitialLang = getEffectiveInitialLanguage();
 
     if (languages.length === 0) {
-      // If there are no languages (e.g., codeSnippets is empty)
       if (selectedLanguage !== 'Info') {
         setSelectedLanguage('Info');
       }
-    } else {
-      // If there are languages
-      if (!languages.includes(selectedLanguage)) {
-        // If the current selectedLanguage is not in the new list of languages (e.g., it was removed)
-        // OR if selectedLanguage was 'Info' and now we have actual languages.
+    } else { // Languages are available
+      // If current selectedLanguage is no longer valid (e.g., was 'Info' and now we have langs, or was a lang that got removed)
+      // then reset to the new effective initial language.
+      // Or, if the user hasn't interacted and the defaultLanguage prop suggests a different initial language.
+      if (!languages.includes(selectedLanguage) || (selectedLanguage === 'Info' && newEffectiveInitialLang !== 'Info')) {
         setSelectedLanguage(newEffectiveInitialLang);
-      } else if (selectedLanguage === 'Info' && newEffectiveInitialLang !== 'Info') {
-         // This handles the specific case where it was 'Info' (due to no snippets initially)
-         // and now snippets are available, so we switch to the actual default/first language.
-        setSelectedLanguage(newEffectiveInitialLang);
+        setUserHasInteractedWithTabs(false); // Reset interaction if language context fundamentally changed
+      } else if (
+        !userHasInteractedWithTabs &&
+        defaultLanguage &&
+        languages.includes(defaultLanguage) &&
+        selectedLanguage !== defaultLanguage
+      ) {
+         // If user hasn't picked a tab yet, and the defaultLanguage from props is valid and different, sync to it.
+         // This handles cases where defaultLanguage prop might change, though less common for this app.
+        setSelectedLanguage(defaultLanguage);
       }
-      // If defaultLanguage prop itself changes and we want to reflect that:
-      // This case is implicitly handled if the current selectedLanguage is NOT newEffectiveInitialLang
-      // AND newEffectiveInitialLang is a valid language.
-      // However, if selectedLanguage is already a valid language from the list,
-      // and defaultLanguage prop changes to *another* valid language, this current logic
-      // might not force a switch unless selectedLanguage became invalid.
-      // For current use case, defaultLanguage prop is stable per algorithm page.
     }
-  }, [languages, defaultLanguage, selectedLanguage, getEffectiveInitialLanguage]);
+  }, [languages, defaultLanguage, getEffectiveInitialLanguage]); // Key change: selectedLanguage removed from deps
 
+  const handleSelectedLanguageChange = (lang: string) => {
+    setSelectedLanguage(lang);
+    setUserHasInteractedWithTabs(true);
+  };
 
   const handleCopyCode = () => {
     const codeToCopy = codeSnippets[selectedLanguage]?.join('\n') || '';
@@ -80,7 +84,10 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     }
   };
 
-  const currentCodeLines = selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
+  const currentCodeLines = useMemo(() => {
+    return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
+  }, [selectedLanguage, codeSnippets]);
+
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -94,8 +101,8 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
         </Button>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-        {languages.length > 0 ? (
-          <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
+        {languages.length > 1 ? (
+          <Tabs value={selectedLanguage} onValueChange={handleSelectedLanguageChange} className="flex flex-col flex-grow overflow-hidden">
             <TabsList className="mx-4 mb-1 self-start shrink-0">
               {languages.map((lang) => (
                 <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
@@ -128,7 +135,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={selectedLanguage} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            <ScrollArea key={selectedLanguage + "-scrollarea-single"} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4">
                 {currentCodeLines.map((line, index) => (
                   <div
@@ -144,7 +151,12 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
                     {line}
                   </div>
                 ))}
-                {currentCodeLines.length === 0 && <p className="text-muted-foreground p-4">No code available.</p>}
+                {currentCodeLines.length === 0 && selectedLanguage === 'Info' && (
+                    <p className="text-muted-foreground p-4">No code available, or visualizer not fully implemented.</p>
+                )}
+                 {currentCodeLines.length === 0 && selectedLanguage !== 'Info' && (
+                    <p className="text-muted-foreground p-4">Loading code for {selectedLanguage}...</p>
+                )}
               </pre>
             </ScrollArea>
           </div>
