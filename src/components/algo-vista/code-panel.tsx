@@ -22,6 +22,8 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
 
   useEffect(() => {
+    // If the currently selected language is no longer in the available languages (e.g., codeSnippets changed),
+    // then reset to the initial/default language.
     if (!languages.includes(selectedLanguage)) {
       setSelectedLanguage(initialLang);
     }
@@ -91,7 +93,6 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
             ))}
           </Tabs>
         ) : (
-          // Fallback for single "language" (e.g. Info panel)
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4">
@@ -118,5 +119,4 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     </Card>
   );
 }
-
     
