@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,20 +51,15 @@ const COIN_CHANGE_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'coin-change';
-
 export default function CoinChangeVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [coinsInput, setCoinsInput] = useState("1,2,5");
   const [amountInput, setAmountInput] = useState("11");
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
        toast({
             title: "Conceptual Overview",
             description: `Interactive Coin Change (DP table for min coins or ways) is currently under construction.`,
@@ -72,19 +67,37 @@ export default function CoinChangeVisualizerPage() {
             duration: 5000,
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for Coin Change Problem not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { best: "O(A*C)", average: "O(A*C)", worst: "O(A*C)" }, // A = amount, C = num coin types
-    spaceComplexity: "O(A)",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
-  if (!algorithm || !algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="p-4"><AlertTriangle /></main><Footer /></div>; }
+  if (!algoDetails) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
+            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
+            <p className="text-muted-foreground text-lg">
+              Could not load data for "coin-change".
+            </p>
+            <Button asChild size="lg" className="mt-8">
+                <Link href="/visualizers">Back to Visualizers</Link>
+            </Button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -92,7 +105,7 @@ export default function CoinChangeVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -102,7 +115,7 @@ export default function CoinChangeVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing DP table construction for min coins or number of ways, is currently under construction.
+                The interactive visualizer for {algorithmMetadata.title}, showing DP table construction for min coins or number of ways, is currently under construction.
                 Review the concepts and code below.
             </p>
         </div>
@@ -148,4 +161,3 @@ export default function CoinChangeVisualizerPage() {
     </div>
   );
 }
-    
