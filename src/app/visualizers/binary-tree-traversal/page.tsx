@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel';
 import { BinaryTreeTraversalCodePanel } from './BinaryTreeTraversalCodePanel';
 import { BinaryTreeControlsPanel } from './BinaryTreeControlsPanel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
@@ -142,7 +143,7 @@ export default function BinaryTreeTraversalPage() {
 
   useEffect(() => {
     generateAndSetSteps();
-  }, [generateAndSetSteps]); 
+  }, [treeInputValue, selectedTraversalType, toast, generateAndSetSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -200,8 +201,16 @@ export default function BinaryTreeTraversalPage() {
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
+  
+  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
+    title: algorithm.title,
+    description: algorithm.description,
+    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" }, // n is number of nodes
+    spaceComplexity: "O(h) for recursive stack, O(n) in worst case (skewed tree). Iterative can be O(w) where w is max width.",
+  } : null;
 
-  if (!algorithm) {
+
+  if (!algorithm || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -223,7 +232,6 @@ export default function BinaryTreeTraversalPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithm.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithm.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -261,6 +269,7 @@ export default function BinaryTreeTraversalPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
+        <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>

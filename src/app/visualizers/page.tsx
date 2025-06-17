@@ -164,7 +164,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Linked List Operations', 
     category: 'Linked List', 
     difficulty: 'Medium', 
-    description: 'Covers core operations (insertion, deletion, search, traversal) for Singly, Doubly, and Circular Linked Lists. Explores advanced topics like list reversal, cycle detection (e.g., Floyd\'s Tortoise and Hare algorithm), and merging two sorted lists. Emphasizes understanding node navigation, pointer manipulation, and the distinct properties and use cases of each list type.'
+    description: 'Covers core operations for various linked list types. For Singly Linked Lists: insertion, deletion, search, traversal, reversal, cycle detection (Floyd\'s Tortoise and Hare). For Doubly Linked Lists: similar operations, highlighting bidirectional advantages. For Circular Linked Lists: unique traversal and termination conditions. Includes merging two sorted lists, a common interview problem. Emphasizes understanding node navigation, pointer manipulation, and the distinct properties, advantages, and disadvantages of each list type, preparing for diverse applications.'
   },
 
   // SECTION V: Trees & Binary Trees
@@ -173,70 +173,70 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Binary Tree Traversal', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'Visualize Inorder, Preorder, and Postorder traversals for binary trees. Essential for understanding tree data structures.' 
+    description: 'Fundamental methods to visit all nodes in a binary tree. Inorder (Left-Root-Right) typically used for BSTs to get sorted order. Preorder (Root-Left-Right) useful for copying trees or prefix expressions. Postorder (Left-Right-Root) used for deleting trees or postfix expressions. Visualizing these recursive traversals is key to understanding tree manipulation.' 
   },
   { 
     slug: 'binary-search-tree', 
     title: 'Binary Search Tree (BST)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'Operations like insertion, deletion, search, find min/max in a Binary Search Tree. Understand its properties and advantages for searching.'
+    description: 'A node-based binary tree data structure which has the property: the left subtree of a node contains only nodes with keys lesser than the node’s key; the right subtree of a node contains only nodes with keys greater than the node’s key. Both the left and right subtrees must also be binary search trees. Operations include search, insert, delete, find min/max, successor/predecessor. Average time complexity for these operations is O(log n) if balanced, but O(n) in worst case (skewed tree).'
   },
   { 
     slug: 'avl-tree', 
     title: 'AVL Tree', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'A self-balancing Binary Search Tree. Visualize rotations (LL, RR, LR, RL) that maintain balance during insertions and deletions.'
+    description: 'The first self-balancing Binary Search Tree. It maintains a balance factor (height difference between left and right subtrees) of -1, 0, or 1 for every node. After insertions or deletions, if the balance factor is violated, tree rotations (LL, RR, LR, RL) are performed to restore balance, ensuring O(log n) time complexity for all operations.'
   },
   { 
     slug: 'red-black-tree', 
     title: 'Red-Black Tree', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'Another self-balancing Binary Search Tree that uses node coloring (red/black) to ensure balance and efficient operations.'
+    description: 'A self-balancing Binary Search Tree where each node has an extra bit for storing color (red or black). By enforcing properties regarding node coloring and path lengths, it maintains a balanced structure, guaranteeing O(log n) time for search, insert, and delete operations. Complex but widely used (e.g., in C++ STL map/set).'
   },
   { 
     slug: 'heap-operations', 
     title: 'Heap (Min/Max)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'Visualize operations like insert, delete-min/max, and heapify in a Min-Heap or Max-Heap. Foundation for Priority Queues and Heap Sort.'
+    description: 'A specialized tree-based data structure that satisfies the heap property: in a Max-Heap, for any given node C, if P is a parent node of C, then the key of P is greater than or equal to the key of C. In a Min-Heap, the key of P is less than or equal to the key of C. Primarily used for implementing Priority Queues. Operations include insert (O(log n)), delete-min/max (O(log n)), and heapify (O(n) to build from array, O(log n) for single node adjustment).'
   },
   { 
     slug: 'segment-tree', 
     title: 'Segment Tree (Conceptual)', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'A tree data structure for storing information about intervals or segments. Efficient for range queries and updates.'
+    description: 'A tree data structure for storing information about intervals or segments. Each node in the segment tree represents an interval. It allows querying which of the stored segments contain a given point, or what is the sum/min/max over a given range. Efficient for range queries (O(log n)) and updates (O(log n)). Often used in competitive programming.'
   },
   { 
     slug: 'trie', 
     title: 'Trie (Prefix Tree)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'A tree-like data structure used for efficient retrieval of keys in a dataset of strings. Visualize insertions and searches for prefixes.'
+    description: 'A tree-like data structure (k-ary tree) used for efficient retrieval of keys in a dataset of strings. Each node represents a character, and paths from the root to a node represent prefixes. Nodes can mark the end of a word. Useful for auto-completion, spell checking, and IP routing. Search, insert, and delete operations typically take O(L) time, where L is the length of the string.'
   },
   { 
     slug: 'huffman-coding', 
     title: 'Huffman Coding', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'An algorithm for lossless data compression. Visualize the construction of the Huffman Tree and encoding/decoding processes.'
+    description: 'A greedy algorithm for lossless data compression. It assigns variable-length codes to input characters, lengths of the assigned codes are based on the frequencies of corresponding characters. The most frequent character gets the smallest code and the least frequent character gets the largest code. It constructs a Huffman Tree (a binary tree where all leaves are input characters) to generate these codes.'
   },
   { 
     slug: 'lowest-common-ancestor', 
     title: 'Lowest Common Ancestor (LCA)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'Find the lowest common ancestor of two nodes in a binary tree or BST. Various approaches visualized.'
+    description: 'The Lowest Common Ancestor (LCA) of two nodes n1 and n2 in a tree is the lowest (i.e., deepest) node that has both n1 and n2 as descendants. Efficient algorithms exist for finding LCA in O(log N) or O(1) with preprocessing. Important in problems involving paths and relationships in trees.'
   },
   { 
     slug: 'tree-path-problems', 
     title: 'Tree Path Problems', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'A collection of problems related to finding paths in trees, such as path sum, diameter, or specific node-to-node paths.'
+    description: 'A collection of problems involving finding paths in trees. Examples include: finding a path between two nodes, finding the diameter of a tree (longest path), finding all paths that sum to a specific value, or checking if a path exists. Often solved using DFS or BFS traversal techniques.'
   },
 
   // SECTION VI: Graph Algorithms

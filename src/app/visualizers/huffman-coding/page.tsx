@@ -4,39 +4,115 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
-import { Construction } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Construction, Code2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const HUFFMAN_CODING_CODE_SNIPPETS = {
+  JavaScript: [
+    "// Conceptual Huffman Coding Steps",
+    "// 1. Calculate frequency of each character in the input string.",
+    "// Example: 'aabbc' -> a:2, b:2, c:1",
+    "",
+    "// 2. Create a leaf node for each character and its frequency.",
+    "// Add these nodes to a min-priority queue (min-heap based on frequency).",
+    "class HuffmanNode {",
+    "  constructor(char, freq, left = null, right = null) {",
+    "    this.char = char; this.freq = freq; this.left = left; this.right = right;",
+    "  }",
+    "}",
+    "",
+    "// 3. While the priority queue has more than one node:",
+    "//    a. Extract the two nodes with the minimum frequency (node1, node2).",
+    "//    b. Create a new internal node with frequency = node1.freq + node2.freq.",
+    "//    c. Make node1 its left child and node2 its right child (or vice-versa).",
+    "//    d. Add the new internal node back to the priority queue.",
+    "",
+    "// 4. The remaining node in the priority queue is the root of the Huffman Tree.",
+    "",
+    "// 5. Traverse the Huffman Tree to assign codes:",
+    "//    - Assign '0' to left branches, '1' to right branches (or vice-versa).",
+    "//    - The code for each character is the path from the root to the leaf node.",
+    "function generateHuffmanCodes(node, currentCode = '', codes = {}) {",
+    "  if (!node) return;",
+    "  if (node.char !== null) { // Leaf node",
+    "    codes[node.char] = currentCode;",
+    "    return codes;",
+    "  }",
+    "  generateHuffmanCodes(node.left, currentCode + '0', codes);",
+    "  generateHuffmanCodes(node.right, currentCode + '1', codes);",
+    "  return codes;",
+    "}",
+    "",
+    "// Example Usage:",
+    "// let root = buildHuffmanTree(frequencies);",
+    "// let huffmanCodes = generateHuffmanCodes(root);",
+  ],
+};
 
 const ALGORITHM_SLUG = 'huffman-coding';
 
-export default function PlaceholderVisualizerPage() {
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+export default function HuffmanCodingVisualizerPage() {
   const { toast } = useToast();
+  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    setAlgorithm(foundAlgorithm || null);
     if (foundAlgorithm) {
-        toast({ title: "Coming Soon!", description: `The visualizer for ${foundAlgorithm.title} is under construction.`, variant: "default" });
+      setAlgorithm(foundAlgorithm);
+       toast({
+            title: "Conceptual Overview",
+            description: `Interactive Huffman Coding visualization (tree building, code generation) is currently under construction.`,
+            variant: "default",
+            duration: 6000,
+        });
     } else {
-        toast({ title: "Error", description: `Algorithm data for "${ALGORITHM_SLUG}" not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  if (!algorithm) {
+  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
+    title: algorithm.title,
+    description: algorithm.description,
+    timeComplexities: { 
+      best: "O(n log n) due to priority queue operations (n = number of unique characters)", 
+      average: "O(n log n)", 
+      worst: "O(n log n)" 
+    },
+    spaceComplexity: "O(n) for storing characters, frequencies, and the Huffman tree.",
+  } : null;
+
+  if (!isClient) {
+    return (
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
+                <p className="text-muted-foreground">Loading visualizer...</p>
+            </main>
+            <Footer />
+        </div>
+    );
+  }
+
+  if (!algorithm || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Not Found</h1>
+            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load algorithm details for &quot;{ALGORITHM_SLUG}&quot;. It might be misconfigured.
+              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -50,27 +126,56 @@ export default function PlaceholderVisualizerPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center max-w-2xl mx-auto">
-          <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight mb-4">
-            {algorithm.title} Visualizer
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8 text-center">
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
+            {algorithm.title}
           </h1>
-          <p className="mt-6 text-xl text-muted-foreground mb-8">
-            The interactive visualizer for {algorithm.title} is currently under construction.
-            We&apos;re working hard to bring this feature to you soon!
-          </p>
-          <p className="mt-2 text-lg text-muted-foreground">{algorithm.description}</p>
-          <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90">
-            <Link href="/visualizers">
-              Back to All Visualizers
-            </Link>
-          </Button>
         </div>
+
+        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
+            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
+            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
+                Interactive Visualization Coming Soon!
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+                The interactive visualizer for {algorithm.title}, demonstrating frequency calculation, Huffman Tree construction, and code assignment, is currently under construction.
+                Please check back later! Review the concepts and code snippets below.
+            </p>
+        </div>
+        
+        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
+             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
+                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
+                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code Snippets (JavaScript)
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
+                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
+                    <pre className="font-code text-sm p-4">
+                        {HUFFMAN_CODING_CODE_SNIPPETS.JavaScript.map((line, index) => (
+                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
+                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                            {index + 1}
+                            </span>
+                            {line}
+                        </div>
+                        ))}
+                    </pre>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+        </div>
+
+        <div className="w-full max-w-md mx-auto my-4 p-4 border rounded-lg shadow-md">
+            <Label htmlFor="huffmanInput" className="text-sm font-medium">Conceptual Input (e.g., string for frequencies)</Label>
+            <Input id="huffmanInput" type="text" placeholder="Example: aabbbc" className="mt-1" disabled />
+            <Button className="mt-2 w-full" disabled>Generate Huffman Tree (Coming Soon)</Button>
+        </div>
+        <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-
-    
