@@ -1,4 +1,5 @@
 
+
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -34,7 +35,7 @@ export type ArrayAlgorithmStep = {
   message?: string;
   processingSubArrayRange?: [number, number] | null;
   pivotActualIndex?: number | null;
-  auxiliaryData?: Record<string, string | number | null>; // For Kadane's, Segment Tree query result etc.
+  auxiliaryData?: Record<string, string | number | null | object>; 
 };
 
 // For graph-based algorithms
@@ -92,12 +93,13 @@ export interface BinaryTreeEdgeVisual {
 export interface TreeAlgorithmStep {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[];
+  traversalPath: (string | number)[]; // For path highlighting or display
   currentLine: number | null;
   message?: string;
-  currentProcessingNodeId?: string | null;
-  auxiliaryData?: Record<string, string | number | null>;
+  currentProcessingNodeId?: string | null; // ID of the node currently being processed/visited
+  auxiliaryData?: Record<string, string | number | null>; // For additional info if needed
 }
+
 
 // Types for Linked List Visualizations
 export interface LinkedListNodeVisual {
@@ -136,4 +138,5 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Graph algorithm pages will use GraphAlgorithmStep directly.
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
+
 

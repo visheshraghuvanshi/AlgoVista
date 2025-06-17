@@ -1,104 +1,122 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2 } from 'lucide-react';
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from "@/components/ui/slider";
 
-const TOWER_OF_HANOI_CODE_SNIPPETS = {
-  JavaScript: [
-    "function towerOfHanoi(n, sourcePeg, auxiliaryPeg, targetPeg) {",
-    "  if (n === 1) {",
-    "    // Move disk 1 from source to target",
-    "    console.log(`Move disk 1 from ${sourcePeg} to ${targetPeg}`);",
-    "    return;",
-    "  }",
-    "  // Move top n-1 disks from source to auxiliary, using target as auxiliary",
-    "  towerOfHanoi(n - 1, sourcePeg, targetPeg, auxiliaryPeg);",
-    "  // Move the nth disk from source to target",
-    "  console.log(`Move disk ${n} from ${sourcePeg} to ${targetPeg}`);",
-    "  // Move the n-1 disks from auxiliary to target, using source as auxiliary",
-    "  towerOfHanoi(n - 1, auxiliaryPeg, sourcePeg, targetPeg);",
-    "}",
-    "",
-    "// Example call:",
-    "// towerOfHanoi(3, 'A', 'B', 'C');"
-  ],
-};
+import { algorithmMetadata } from './metadata';
+import { TowerOfHanoiCodePanel } from './TowerOfHanoiCodePanel';
+import { TowerOfHanoiVisualizationPanel } from './TowerOfHanoiVisualizationPanel';
+import { generateTowerOfHanoiSteps, type TowerOfHanoiStep, TOWER_OF_HANOI_LINE_MAP } from './tower-of-hanoi-logic';
 
-const ALGORITHM_SLUG = 'tower-of-hanoi';
+const DEFAULT_ANIMATION_SPEED = 800;
+const MIN_SPEED = 200;
+const MAX_SPEED = 2000;
+const DEFAULT_NUM_DISKS = 3;
+const MAX_DISKS_FOR_VIS = 6; // Performance degrades quickly
 
 export default function TowerOfHanoiVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-  const [isClient, setIsClient] = useState(false);
-  const [numDisks, setNumDisks] = useState(3);
+  
+  const [numDisks, setNumDisks] = useState(DEFAULT_NUM_DISKS);
+  const [steps, setSteps] = useState<TowerOfHanoiStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<TowerOfHanoiStep | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const handleNumDisksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = parseInt(e.target.value, 10);
+    if (isNaN(val)) val = 1;
+    val = Math.max(1, Math.min(val, MAX_DISKS_FOR_VIS)); // Clamp between 1 and MAX_DISKS_FOR_VIS
+    setNumDisks(val);
+  };
+
+  const generateNewSteps = useCallback(() => {
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    if (numDisks < 1 || numDisks > MAX_DISKS_FOR_VIS) {
+        toast({title: "Invalid Disk Count", description: `Please enter between 1 and ${MAX_DISKS_FOR_VIS} disks.`, variant: "destructive"});
+        return;
+    }
+    const newSteps = generateTowerOfHanoiSteps(numDisks);
+    setSteps(newSteps);
+    setCurrentStepIndex(0);
+    setCurrentStep(newSteps[0] || null);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+  }, [numDisks, toast]);
 
   useEffect(() => {
-    setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-       toast({
-            title: "Conceptual Overview",
-            description: `Interactive Tower of Hanoi visualization is under construction. Review concepts and code.`,
-            variant: "default",
-            duration: 5000,
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
+    generateNewSteps();
+  }, [generateNewSteps]); // Regenerate steps when numDisks changes
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description, // Use longDescription
-    timeComplexities: { 
-      best: "O(2^n)", 
-      average: "O(2^n)", 
-      worst: "O(2^n)" 
-    },
-    spaceComplexity: "O(n) for recursion stack depth.",
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) {
+      setCurrentStep(steps[stepIndex]);
+    }
+  }, [steps]);
+
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextIdx = currentStepIndex + 1;
+        setCurrentStepIndex(nextIdx);
+        updateVisualStateFromStep(nextIdx);
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false);
+      setIsFinished(true);
+    }
+    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+
+  const handlePlay = () => {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
+      toast({ title: "Simulation Finished", description: "Reset to run again or change disk count.", variant: "default" });
+      setIsPlaying(false); return;
+    }
+    setIsPlaying(true); setIsFinished(false);
+  };
+  const handlePause = () => setIsPlaying(false);
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    setIsPlaying(false);
+    const nextIdx = currentStepIndex + 1;
+    setCurrentStepIndex(nextIdx);
+    updateVisualStateFromStep(nextIdx);
+    if (nextIdx === steps.length - 1) setIsFinished(true);
+  };
+  const handleReset = () => {
+    setIsPlaying(false);
+    setIsFinished(true); // New steps will set this
+    generateNewSteps();
+  };
+  
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!isClient) {
-    return (
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-                <p className="text-muted-foreground">Loading visualizer...</p>
-            </main>
-            <Footer />
-        </div>
-    );
-  }
-
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-            <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
-            </p>
-            <Button asChild size="lg" className="mt-8">
-                <Link href="/visualizers">Back to Visualizers</Link>
-            </Button>
-        </main>
+        <main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main>
         <Footer />
       </div>
     );
@@ -110,54 +128,48 @@ export default function TowerOfHanoiVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
-
-        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
-            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                Interactive Visualization Coming Soon!
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing disk movements between pegs, is currently under construction.
-                Please check back later! Review the concepts and code snippets below.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
+            <TowerOfHanoiVisualizationPanel step={currentStep} />
+          </div>
+          <div className="lg:w-2/5 xl:w-1/3">
+            <TowerOfHanoiCodePanel currentLine={currentStep?.currentLine ?? null} />
+          </div>
         </div>
         
-        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code (JavaScript)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
-                    <pre className="font-code text-sm p-4">
-                        {TOWER_OF_HANOI_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
-                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                            {index + 1}
-                            </span>
-                            {line}
-                        </div>
-                        ))}
-                    </pre>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="w-full max-w-xs mx-auto my-4 p-4 border rounded-lg shadow-md">
-            <Label htmlFor="numDisksInput" className="text-sm font-medium">Number of Disks (e.g., 3-5)</Label>
-            <Input id="numDisksInput" type="number" value={numDisks} onChange={(e) => setNumDisks(Math.min(Math.max(1, parseInt(e.target.value) || 1), 8))} className="mt-1" disabled />
-            <Button className="mt-2 w-full" disabled>Start Simulation (Coming Soon)</Button>
-        </div>
+        <Card className="shadow-xl rounded-xl mb-6">
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Setup</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div className="space-y-1">
+                    <Label htmlFor="numDisksInput" className="text-sm font-medium">Number of Disks (1-{MAX_DISKS_FOR_VIS})</Label>
+                    <Input id="numDisksInput" type="number" value={numDisks} onChange={handleNumDisksChange} min="1" max={MAX_DISKS_FOR_VIS} disabled={isPlaying} />
+                </div>
+                 <Button onClick={generateNewSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Start / Reset Simulation</Button>
+            </div>
+            <div className="flex items-center justify-start pt-4 border-t">
+                {/* Reset button is now combined with Start for simplicity */}
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex gap-2">
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+              </div>
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl">Animation Speed</Label>
+                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-    

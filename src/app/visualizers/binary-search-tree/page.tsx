@@ -8,7 +8,6 @@ import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-trav
 import { BinarySearchTreeCodePanel } from './BinarySearchTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
@@ -17,6 +16,7 @@ import {
   type BSTOperationType,
   BST_OPERATION_LINE_MAPS,
 } from './binary-search-tree-logic';
+import { algorithmMetadata } from './metadata'; // Changed to local import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,11 +29,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
-const ALGORITHM_SLUG = 'binary-search-tree';
 
 export default function BinarySearchTreePage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+  // Algorithm metadata is now imported directly
 
   const [treeInputValue, setTreeInputValue] = useState('50,30,70,20,40,60,80');
   const [operationValue, setOperationValue] = useState('25'); // For insert, delete, search
@@ -51,19 +50,13 @@ export default function BinarySearchTreePage() {
 
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(isFinished);
+  const [isFinished, setIsFinished] = useState(true); // Start as finished until an operation
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const bstStructureRef = useRef<{ rootId: string | null, nodes: Map<string, { id: string; value: number, leftId: string | null, rightId: string | null }> }>({ rootId: null, nodes: new Map() });
 
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-  }, [toast]);
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -89,29 +82,27 @@ export default function BinarySearchTreePage() {
       }
     }
     
-    // For 'build', we always use treeInputValue.
-    // For other ops, we operate on the current bstStructureRef.current
     const initialValuesForBuild = selectedOperation === 'build' ? treeInputValue : undefined;
 
     if (selectedOperation === 'structure') {
         // Just show the current tree structure if available, or placeholder
-        const { visualNodes, visualEdges } = generateBSTSteps(bstStructureRef, 'build', undefined, treeInputValue)[0] || {nodes: [], edges:[]}; // get initial layout
-        setCurrentNodes(visualNodes);
-        setCurrentEdges(visualEdges);
-        setCurrentLine(null); // No specific line for just showing structure
+        const { nodes: visualNodes, edges: visualEdges } = (generateBSTSteps(bstStructureRef, 'build', undefined, bstStructureRef.current.nodes.size > 0 ? Array.from(bstStructureRef.current.nodes.values()).map(n => n.value).join(',') : treeInputValue )[0]) || {nodes: [], edges:[]}; 
+        setCurrentNodes(visualNodes || []);
+        setCurrentEdges(visualEdges || []);
+        setCurrentLine(null);
         setCurrentPath([]);
         setCurrentProcessingNodeId(null);
         setCurrentMessage("Displaying current tree structure. Select an operation.");
-        setSteps([]); // Clear steps as this isn't an operation with steps
+        setSteps([]); 
         setIsPlaying(false);
-        setIsFinished(true); // No animation
+        setIsFinished(true); 
         return;
     }
 
 
     const newSteps = generateBSTSteps(
       bstStructureRef,
-      selectedOperation as BSTOperationType, // Cast as structure is handled above
+      selectedOperation as BSTOperationType, 
       valueForOp,
       initialValuesForBuild 
     );
@@ -126,7 +117,7 @@ export default function BinarySearchTreePage() {
         const lastStep = newSteps[newSteps.length - 1];
         if(lastStep.message?.toLowerCase().includes("error")){
              toast({ title: "Operation Info", description: lastStep.message, variant: "destructive" });
-        } else if (lastStep.message) {
+        } else if (lastStep.message && (selectedOperation !== 'build' || newSteps.length > 1) && selectedOperation !== 'structure') {
              toast({ title: selectedOperation.toUpperCase(), description: lastStep.message, variant: "default", duration: 2000 });
         }
     } else {
@@ -135,20 +126,28 @@ export default function BinarySearchTreePage() {
     }
   }, [treeInputValue, selectedOperation, operationValue, toast, updateStateFromStep]);
 
-  useEffect(() => { // Initial build when component mounts or treeInputValue changes
+  useEffect(() => { // Initial build when component mounts
     bstStructureRef.current = { rootId: null, nodes: new Map() }; 
-    handleGenerateSteps(); 
+    setSelectedOperation('build'); // Set to build to trigger initial tree construction
+    // handleGenerateSteps will be called by selectedOperation change below
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [treeInputValue]); 
+  }, []); 
 
-  useEffect(() => { // Regenerate steps if operation type changes (excluding initial build effect)
-    if (selectedOperation !== 'build' && selectedOperation !== 'structure') {
+  useEffect(() => { // Regenerate steps if operation type changes or inputs for build change
+    if (selectedOperation === 'build') {
         handleGenerateSteps();
-    } else if (selectedOperation === 'structure') { // Handle direct switch to 'structure'
+    } else if (selectedOperation !== 'structure') { // For insert, search, delete
+        // only trigger if op value changes, not treeInputValue
+        // The `handleGenerateSteps` for these ops uses bstStructureRef.current
+        // which is updated by the build operation itself.
+        // This call might be redundant if build already updated or if value didn't change.
+        // For now, keep it to ensure steps are generated if opValue changes after a build.
+        handleGenerateSteps();
+    } else if (selectedOperation === 'structure') { 
         handleGenerateSteps();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOperation]);
+  }, [selectedOperation, treeInputValue, operationValue]); // Include operationValue to regen on its change for relevant ops
 
 
   useEffect(() => {
@@ -183,25 +182,21 @@ export default function BinarySearchTreePage() {
   };
   const handleResetTreeStructure = () => { 
     setIsPlaying(false); setIsFinished(false);
-    bstStructureRef.current = { rootId: null, nodes: new Map() }; // Clear internal structure
-    setTreeInputValue('50,30,70,20,40,60,80'); // Reset input string, triggers build via useEffect
-    setSelectedOperation('build'); // Default to build to show the reset tree
+    bstStructureRef.current = { rootId: null, nodes: new Map() }; 
+    setTreeInputValue('50,30,70,20,40,60,80'); 
+    setSelectedOperation('build'); 
     setCurrentMessage("Tree structure reset. Building from default values.");
     // handleGenerateSteps will be triggered by treeInputValue or selectedOperation change
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "O(log n) for Search, Insert, Delete (balanced tree)", 
-      average: "O(log n) for Search, Insert, Delete", 
-      worst: "O(n) for Search, Insert, Delete (skewed tree)" 
-    },
-    spaceComplexity: "O(h) for recursive calls (h=height), O(n) in worst case (skewed tree). O(n) for storage.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -212,7 +207,7 @@ export default function BinarySearchTreePage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithm.title}</h1>
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -278,4 +273,3 @@ export default function BinarySearchTreePage() {
     </div>
   );
 }
-
