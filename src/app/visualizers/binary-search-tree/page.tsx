@@ -141,7 +141,7 @@ export default function BinarySearchTreePage() {
         // The `handleGenerateSteps` for these ops uses bstStructureRef.current
         // which is updated by the build operation itself.
         // This call might be redundant if build already updated or if value didn't change.
-        // For now, keep it to ensure steps are generated if opValue changes after a build.
+        // For now, keep it to ensure steps are generated if opValue changes after a relevant op.
         handleGenerateSteps();
     } else if (selectedOperation === 'structure') { 
         handleGenerateSteps();
@@ -212,7 +212,7 @@ export default function BinarySearchTreePage() {
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
+            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges || []} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <BinarySearchTreeCodePanel currentLine={currentLine} selectedOperation={selectedOperation} />
@@ -273,3 +273,4 @@ export default function BinarySearchTreePage() {
     </div>
   );
 }
+

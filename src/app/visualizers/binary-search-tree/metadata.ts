@@ -15,3 +15,4 @@ export const algorithmMetadata: AlgorithmMetadata = {
   },
   spaceComplexity: "O(n) for storing the tree. O(h) for recursion stack during operations (h=height of tree), which is O(log n) for balanced trees and O(n) for skewed trees.",
 };
+

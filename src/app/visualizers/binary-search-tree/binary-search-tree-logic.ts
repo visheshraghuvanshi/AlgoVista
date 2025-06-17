@@ -264,12 +264,13 @@ export const generateBSTSteps = (
   }
 
   // ----- Operation Dispatch -----
-  bstNodeIdCounter = 0; // Reset ID counter for deterministic IDs per operation run
+  bstNodeIdCounter = Array.from(workingNodes.keys()).reduce((max, id) => Math.max(max, parseInt(id.split('-').pop() || '0')), 0) + 1;
   
   if (operation === 'build') {
     const valuesToInsert = parseBSTInput(initialValuesString || "");
     rootId = null; 
     workingNodes.clear();
+    bstNodeIdCounter = 0; // Reset for fresh build
     operationLineMap = BST_OPERATION_LINE_MAPS.insert; // Use insert's line map for build steps
     addStep(null, `Building tree from: ${valuesToInsert.join(', ')}`);
     if (valuesToInsert.length > 0) {
@@ -295,11 +296,9 @@ export const generateBSTSteps = (
     }
     addStep(null, `${operation} ${value} complete.`);
   } else {
-     // No value for build, or for operations that don't need it (not covered here yet)
      addStep(null, `Operation ${operation} initiated (no value).`);
   }
 
-  // Update the ref with the final state of the tree for the next operation
   currentBSTRef.current = { rootId, nodes: workingNodes };
   return localSteps;
 };

@@ -81,3 +81,4 @@ export const generateShellSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
   addStep(lm.functionEnd, arr, [], [], "Shell Sort finished");
   return localSteps;
 };
+

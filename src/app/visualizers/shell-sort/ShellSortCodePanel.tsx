@@ -114,3 +114,4 @@ export function ShellSortCodePanel({ codeSnippets, currentLine }: ShellSortCodeP
     </Card>
   );
 }
+
