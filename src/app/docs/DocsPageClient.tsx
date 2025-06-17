@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Menu, Search, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetTrigger } from "@/components/ui/sheet"; // Added SheetTrigger
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { docsContentBySlug } from '@/lib/docs-content'; // Import actual content
+import { docsContentBySlug } from '@/lib/docs-content'; 
 import Link from 'next/link';
 
 // Actual client-side search function
@@ -44,11 +44,9 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // If search results contain only one item, could navigate directly, or just show list
     if (searchResults.length > 0) {
-      // For now, just keeps results displayed. Navigation can be added if needed.
-      if(isSearchModalOpen) setIsSearchModalOpen(true); // Keep modal open on mobile after submit
-      else setIsDesktopSearchFocused(true); // Keep desktop dropdown open
+      if(isSearchModalOpen) setIsSearchModalOpen(true); 
+      else setIsDesktopSearchFocused(true); 
     }
   };
   
@@ -69,9 +67,9 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
   }
 
   const onSearchResultClick = () => {
-    closeSearchModal(); // Close mobile modal
-    setIsDesktopSearchFocused(false); // Close desktop dropdown
-    setSearchQuery(''); // Clear search query
+    closeSearchModal(); 
+    setIsDesktopSearchFocused(false); 
+    setSearchQuery(''); 
     setSearchResults([]);
   }
 
@@ -190,3 +188,4 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
     </div>
   );
 }
+
