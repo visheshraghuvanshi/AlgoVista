@@ -201,8 +201,8 @@ export default function KadanesAlgorithmVisualizerPage() {
             />
              {auxiliaryData && (
                 <Card className="mt-4">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Algorithm State</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex justify-around">
+                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Algorithm State</CardTitle></CardHeader>
+                    <CardContent className="text-sm flex justify-around p-3">
                         <p><strong>Current Max Ending Here:</strong> {auxiliaryData.currentMax?.toString()}</p>
                         <p><strong>Max Sum So Far:</strong> {auxiliaryData.maxSoFar?.toString()}</p>
                     </CardContent>

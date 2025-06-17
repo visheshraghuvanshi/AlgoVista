@@ -6,16 +6,18 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { BucketSortVisualizationPanel } from './BucketSortVisualizationPanel';
 import { BucketSortCodePanel } from './BucketSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { BucketSortStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Rows } from 'lucide-react'; // Using Rows as an icon for buckets
-import { BUCKET_SORT_LINE_MAP, generateBucketSortSteps } from './bucket-sort-logic';
+import { AlertTriangle, Rows, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react'; // Using Rows as an icon for buckets
+import { generateBucketSortSteps } from './bucket-sort-logic';
 import { algorithmMetadata } from './metadata'; 
 import { BUCKET_SORT_CODE_SNIPPETS } from './BucketSortCodePanel'; // Import snippets
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -97,7 +99,7 @@ export default function BucketSortVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]); // Re-generate steps when input or numBuckets changes
+  }, [generateSteps]); 
 
 
   useEffect(() => {
@@ -132,7 +134,7 @@ export default function BucketSortVisualizerPage() {
     if (!isNaN(val) && val > 0 && val <= 10) {
         setNumBuckets(val);
     } else if (e.target.value === "") {
-        setNumBuckets(DEFAULT_NUM_BUCKETS); // Or some other default/previous valid
+        setNumBuckets(DEFAULT_NUM_BUCKETS); 
     }
   };
 
@@ -179,9 +181,8 @@ export default function BucketSortVisualizerPage() {
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
     }
-    setInputValue('29,25,3,49,9,37,21,43'); // Reset input value
-    setNumBuckets(DEFAULT_NUM_BUCKETS); // Reset num buckets
-    // generateSteps will be called by useEffect due to input/numBuckets change
+    setInputValue('29,25,3,49,9,37,21,43'); 
+    setNumBuckets(DEFAULT_NUM_BUCKETS); 
   };
   
   const handleSpeedChange = (speedValue: number) => {
@@ -283,7 +284,7 @@ export default function BucketSortVisualizerPage() {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                 {!isPlaying ? (
-                  <Button onClick={handlePlay} disabled={commonPlayDisabled} aria-label="Play algorithm animation" className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
+                  <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || !isAlgoImplemented} aria-label="Play algorithm animation" className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
                     <Play className="mr-2 h-5 w-5" /> Play
                   </Button>
                 ) : (
@@ -291,7 +292,7 @@ export default function BucketSortVisualizerPage() {
                     <Pause className="mr-2 h-5 w-5" /> Pause
                   </Button>
                 )}
-                <Button onClick={handleStep} variant="outline" disabled={commonStepDisabled} aria-label="Step forward in algorithm animation" size="lg">
+                <Button onClick={handleStep} variant="outline" disabled={isPlaying || isFinished || steps.length <=1 || !isAlgoImplemented} aria-label="Step forward in algorithm animation" size="lg">
                   <SkipForward className="mr-2 h-5 w-5" /> Step
                 </Button>
               </div>
@@ -322,6 +323,4 @@ export default function BucketSortVisualizerPage() {
   );
 }
 
-// Helper for commonPlayDisabled logic, not directly used if SortingControlsPanel manages this
-const commonPlayDisabled = isFinished || inputValue.trim() === '' || !isAlgoImplemented;
-const commonStepDisabled = isPlaying || isFinished || inputValue.trim() === '' || !isAlgoImplemented;
+

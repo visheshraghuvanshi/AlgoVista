@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -10,7 +11,7 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { COCKTAIL_SORT_LINE_MAP, generateCocktailSortSteps } from './cocktail-sort-logic';
+import { generateCocktailSortSteps } from './cocktail-sort-logic';
 import { algorithmMetadata } from './metadata';
 
 const COCKTAIL_SORT_CODE_SNIPPETS = {
@@ -27,7 +28,7 @@ const COCKTAIL_SORT_CODE_SNIPPETS = {
     "      }",                                             // 9
     "    }",                                               // 10
     "    if (!swapped) break;",                            // 11 
-    "    // If no swaps, array is sorted",                 // 12 (conceptually)
+    "    // If no swaps, array is sorted",                 // 12 (conceptually part of break line)
     "    swapped = false;",                                // 13
     "    end--;",                                          // 14
     "    // Backward pass",
@@ -302,6 +303,13 @@ export default function CocktailSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
+
   if (!algorithmMetadata) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -327,7 +335,7 @@ export default function CocktailSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description}
+            {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
 
@@ -378,3 +386,4 @@ export default function CocktailSortVisualizerPage() {
     </div>
   );
 }
+

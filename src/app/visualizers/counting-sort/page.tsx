@@ -11,89 +11,9 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import type { CountingSortStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { COUNTING_SORT_LINE_MAP, generateCountingSortSteps } from './counting-sort-logic';
+import { generateCountingSortSteps } from './counting-sort-logic';
 import { algorithmMetadata } from './metadata'; 
-
-const COUNTING_SORT_CODE_SNIPPETS = {
-  JavaScript: [
-    "function countingSort(arr) {",                       // 1
-    "  if (arr.length === 0) return arr;",                // 2
-    "  const maxVal = Math.max(...arr);",                 // 3
-    "  const count = new Array(maxVal + 1).fill(0);",     // 4
-    "  for (let i = 0; i < arr.length; i++) {",            // 5
-    "    count[arr[i]]++;",                               // 6
-    "  }",
-    "  for (let i = 1; i <= maxVal; i++) {",               // 7
-    "    count[i] += count[i - 1];",                      // 8
-    "  }",
-    "  const output = new Array(arr.length);",            // 9
-    "  for (let i = arr.length - 1; i >= 0; i--) {",       // 10
-    "    output[count[arr[i]] - 1] = arr[i];",            // 11
-    "    count[arr[i]]--;",                               // 12
-    "  }",
-    "  for (let i = 0; i < arr.length; i++) {",            // 13
-    "    arr[i] = output[i];",                            // 14
-    "  }",
-    "  return arr;",                                      // 15
-    "}",                                                  // 16
-  ],
-   Python: [
-    "def counting_sort(arr):",
-    "    if not arr: return arr",
-    "    max_val = max(arr)",
-    "    count = [0] * (max_val + 1)",
-    "    output = [0] * len(arr)",
-    "    for num in arr:",
-    "        count[num] += 1",
-    "    for i in range(1, max_val + 1):",
-    "        count[i] += count[i-1]",
-    "    # Iterate from end for stability (though not strictly needed for numbers)",
-    "    for i in range(len(arr) - 1, -1, -1):", 
-    "        output[count[arr[i]] - 1] = arr[i]",
-    "        count[arr[i]] -= 1",
-    "    for i in range(len(arr)):",
-    "        arr[i] = output[i]",
-    "    return arr",
-  ],
-  Java: [
-    "import java.util.Arrays;",
-    "class CountingSort {",
-    "    public static void sort(int[] arr) {",
-    "        if (arr.length == 0) return;",
-    "        int maxVal = 0;",
-    "        for(int num : arr) if(num > maxVal) maxVal = num;",
-    "        int[] count = new int[maxVal + 1];",
-    "        // Initialize count array with all zeros - default for new int[]",
-    "        int[] output = new int[arr.length];",
-    "        for (int num : arr) { count[num]++; }",
-    "        for (int i = 1; i <= maxVal; i++) { count[i] += count[i-1]; }",
-    "        for (int i = arr.length - 1; i >= 0; i--) {",
-    "            output[count[arr[i]] - 1] = arr[i];",
-    "            count[arr[i]]--;",
-    "        }",
-    "        System.arraycopy(output, 0, arr, 0, arr.length);",
-    "    }",
-    "}",
-  ],
-  "C++": [
-    "#include <vector>",
-    "#include <algorithm> // For std::max_element, std::fill",
-    "void countingSort(std::vector<int>& arr) {",
-    "    if (arr.empty()) return;",
-    "    int maxVal = 0;",
-    "    if (!arr.empty()) maxVal = *std::max_element(arr.begin(), arr.end());",
-    "    std::vector<int> count(maxVal + 1, 0);",
-    "    std::vector<int> output(arr.size());",
-    "    for (int num : arr) { count[num]++; }",
-    "    for (int i = 1; i <= maxVal; ++i) { count[i] += count[i-1]; }",
-    "    for (int i = arr.size() - 1; i >= 0; --i) {",
-    "        output[count[arr[i]] - 1] = arr[i];",
-    "        count[arr[i]]--;",
-    "    }",
-    "    arr = output;",
-    "}",
-  ],
-};
+import { COUNTING_SORT_CODE_SNIPPETS } from './CountingSortCodePanel';
 
 const DEFAULT_ANIMATION_SPEED = 600; 
 const MIN_SPEED = 100; 
@@ -127,7 +47,7 @@ export default function CountingSortVisualizerPage() {
       toast({ title: "Invalid Input", description: "Please enter comma-separated non-negative integers.", variant: "destructive" });
       return null;
     }
-    if (parsed.some(n => n < 0 || n > 99)) { // Counting sort typically for non-negative, and small range for viz
+    if (parsed.some(n => n < 0 || n > 99)) { 
        toast({ title: "Input out of range", description: "Please enter numbers between 0 and 99 for visualization.", variant: "destructive" });
       return null;
     }
@@ -280,7 +200,7 @@ export default function CountingSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description} (Note: Input numbers must be non-negative and relatively small for effective visualization of count array).
+            {algorithmMetadata.description} (Note: Input numbers must be non-negative for this visualization).
           </p>
         </div>
 
@@ -318,3 +238,4 @@ export default function CountingSortVisualizerPage() {
     </div>
   );
 }
+

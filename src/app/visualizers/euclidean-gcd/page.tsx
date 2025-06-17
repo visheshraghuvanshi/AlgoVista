@@ -17,19 +17,21 @@ import { Slider } from "@/components/ui/slider";
 
 import { EuclideanGcdCodePanel } from './EuclideanGcdCodePanel';
 import { EuclideanGcdVisualizationPanel } from './EuclideanGcdVisualizationPanel';
-import { generateEuclideanGcdSteps, type EuclideanGcdStep, EUCLIDEAN_GCD_LINE_MAP } from './euclidean-gcd-logic';
+import { generateEuclideanGcdSteps, type EuclideanGcdStep } from './euclidean-gcd-logic';
 
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
+const DEFAULT_BASE = "48";
+const DEFAULT_EXPONENT = "18"; // Renaming from problem context - GCD takes two numbers, not base/exp
 
 export default function EuclideanGcdVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   
-  const [numberAInput, setNumberAInput] = useState("48");
-  const [numberBInput, setNumberBInput] = useState("18");
+  const [numberAInput, setNumberAInput] = useState(DEFAULT_BASE); // Use A for first number
+  const [numberBInput, setNumberBInput] = useState(DEFAULT_EXPONENT); // Use B for second number
 
   const [steps, setSteps] = useState<EuclideanGcdStep[]>([]);
   const [currentStep, setCurrentStep] = useState<EuclideanGcdStep | null>(null);
@@ -57,11 +59,11 @@ export default function EuclideanGcdVisualizerPage() {
     const numB = parseInt(numberBInput, 10);
 
     if (isNaN(numA) || isNaN(numB)) {
-      toast({ title: "Invalid Input", description: "Please enter valid integer numbers.", variant: "destructive" });
+      toast({ title: "Invalid Input", description: "Both inputs must be valid integers.", variant: "destructive" });
       return;
     }
     if (numA <= 0 || numB <= 0) {
-        toast({ title: "Invalid Input", description: "Please enter positive integers.", variant: "destructive" });
+        toast({ title: "Invalid Input", description: "Please enter positive integers for GCD.", variant: "destructive" });
         return;
     }
 
@@ -69,25 +71,25 @@ export default function EuclideanGcdVisualizerPage() {
     const newSteps = generateEuclideanGcdSteps(numA, numB);
     setSteps(newSteps);
     setCurrentStepIndex(0);
+    setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateVisualStateFromStep(0);
-    else setCurrentStep(null);
-
-  }, [numberAInput, numberBInput, toast, updateVisualStateFromStep]);
+  }, [numberAInput, numberBInput, toast]);
   
-  useEffect(() => { // Initial calculation on load
+  useEffect(() => { 
     handleCalculateGcd();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleCalculateGcd]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        const nextIdx = currentStepIndex + 1;
+        setCurrentStepIndex(nextIdx);
+        updateVisualStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
@@ -96,13 +98,17 @@ export default function EuclideanGcdVisualizerPage() {
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false);
+    const nextIdx = currentStepIndex + 1;
+    setCurrentStepIndex(nextIdx);
+    updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(true);
-    setNumberAInput("48"); setNumberBInput("18");
-    handleCalculateGcd(); // Recalculate with default values
+    setIsPlaying(false);
+    setIsFinished(true);
+    setNumberAInput(DEFAULT_BASE);
+    setNumberBInput(DEFAULT_EXPONENT);
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -113,15 +119,7 @@ export default function EuclideanGcdVisualizerPage() {
   };
 
   if (!isClient) { 
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground">Loading visualizer...</p>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>;
   }
 
   return (
@@ -157,7 +155,7 @@ export default function EuclideanGcdVisualizerPage() {
                     <Label htmlFor="numberBInput">Number B</Label>
                     <Input id="numberBInput" type="number" value={numberBInput} onChange={e => setNumberBInput(e.target.value)} placeholder="e.g., 18" disabled={isPlaying} />
                 </div>
-                <Button onClick={handleCalculateGcd} disabled={isPlaying} className="w-full md:w-auto self-end">Calculate GCD</Button>
+                <Button onClick={handleCalculateGcd} disabled={isPlaying} className="w-full self-end">Calculate GCD</Button>
             </div>
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset</Button>

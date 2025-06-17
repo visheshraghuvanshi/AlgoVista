@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -288,7 +289,7 @@ export default function SlidingWindowVisualizerPage() {
             {auxiliaryData && (
                 <Card className="mt-4">
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2">
+                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
                         {Object.entries(auxiliaryData).map(([key, value]) => {
                              if (key === 'foundSubarrayIndices') return null; // Don't display this in text
                             return (
@@ -318,7 +319,7 @@ export default function SlidingWindowVisualizerPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="maxSumFixedK">Max Sum Subarray (Fixed Size K)</SelectItem>
-                    <SelectItem value="minLengthSumTarget">Min Length Subarray (Sum >= Target)</SelectItem>
+                    <SelectItem value="minLengthSumTarget">Min Length Subarray (Sum &gt;= Target)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -359,3 +360,4 @@ export default function SlidingWindowVisualizerPage() {
     </div>
   );
 }
+

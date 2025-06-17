@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -234,9 +235,6 @@ export default function DutchNationalFlagVisualizerPage() {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     setInputValue('0,1,2,0,1,1,2,0,2,1,0'); // Reset to default or trigger generateSteps if inputValue is a dependency
-    // generateSteps will be called by useEffect due to inputValue change if it's a dependency of generateSteps or its own useEffect.
-    // If generateSteps is not automatically called, explicitly call it:
-    // generateSteps(); // if inputValue was already default, this ensures regeneration.
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -313,3 +311,4 @@ export default function DutchNationalFlagVisualizerPage() {
     </div>
   );
 }
+

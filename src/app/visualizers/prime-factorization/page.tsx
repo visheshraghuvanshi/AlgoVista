@@ -98,13 +98,6 @@ export default function PrimeFactorizationVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(true);
     setNumberInput(DEFAULT_NUMBER_TO_FACTOR.toString());
-    // handleFactorize will be called by numberInput change if it's a dependency of its useEffect
-    // For direct call after input reset:
-    const num = parseInt(DEFAULT_NUMBER_TO_FACTOR.toString(), 10);
-    const newSteps = generatePrimeFactorizationSteps(num);
-    setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -180,3 +173,4 @@ export default function PrimeFactorizationVisualizerPage() {
     </div>
   );
 }
+
