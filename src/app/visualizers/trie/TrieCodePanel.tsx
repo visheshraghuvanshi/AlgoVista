@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -219,11 +220,32 @@ export function TrieCodePanel({ currentLine, selectedOperation }: TrieCodePanelP
     let fullCode = "";
     if (effectiveOp !== 'structure') {
         const baseStructure = structureCode.join('\n');
-        const operationIndented = opCodeString.split('\n').map(line => `    ${line}`).join('\n'); // Indent op methods
+        // Indent operation methods correctly based on language syntax
+        const indent = (selectedLanguage === "Python") ? "    " : "  "; // Python uses 4 spaces, others 2 for methods
+        const operationIndented = opCodeString.split('\n').map(line => {
+            // Avoid indenting comments or preprocessor directives at the start of the operation snippet block
+            if (line.trim().startsWith("#") || line.trim().startsWith("//")) return line;
+            return `${indent}${line}`;
+        }).join('\n');
+        
         if (selectedLanguage === "JavaScript" || selectedLanguage === "Java" || selectedLanguage === "C++") {
-            fullCode = `${baseStructure}\n${operationIndented}\n}`; // Close class
+            // Find the last line of structure code to insert operation methods before the class closing brace
+            let lastStructBraceIndex = -1;
+            for(let i = structureCode.length -1; i >= 0; i--) {
+                if(structureCode[i].trim() === "}") {
+                    lastStructBraceIndex = i;
+                    break;
+                }
+            }
+            if(lastStructBraceIndex !== -1) {
+                fullCode = structureCode.slice(0, lastStructBraceIndex).join('\n') + 
+                           "\n" + operationIndented + "\n" + 
+                           structureCode.slice(lastStructBraceIndex).join('\n');
+            } else { // Fallback if no closing brace found (should not happen with current snippets)
+                fullCode = `${baseStructure}\n${operationIndented}\n}`; 
+            }
         } else if (selectedLanguage === "Python") {
-             fullCode = `${baseStructure}\n${operationIndented}`; // Python uses indentation
+             fullCode = `${baseStructure}\n${operationIndented}`; 
         }
     } else {
         fullCode = structureCode.join('\n');
@@ -258,7 +280,7 @@ export function TrieCodePanel({ currentLine, selectedOperation }: TrieCodePanelP
             ))}
           </TabsList>
           <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-            <pre className="font-code text-sm p-4 whitespace-pre-wrap">
+            <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
               {effectiveOp !== 'structure' && structureCode.length > 0 && (
                 <>
                   {structureCode.map((line, index) => (
@@ -277,7 +299,7 @@ export function TrieCodePanel({ currentLine, selectedOperation }: TrieCodePanelP
                 >
                   <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                     {/* Line numbers relative to the specific operation snippet for highlighting */}
-                    {index + 1 + (effectiveOp !== 'structure' ? structureCode.length +1 : 0) } 
+                    {index + 1 + (effectiveOp !== 'structure' && structureCode.length > 0 ? structureCode.length + 1 : 0) } 
                   </span>
                   {line}
                 </div>
@@ -289,3 +311,4 @@ export function TrieCodePanel({ currentLine, selectedOperation }: TrieCodePanelP
     </Card>
   );
 }
+

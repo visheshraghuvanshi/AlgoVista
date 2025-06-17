@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Menu, Search, ZoomIn, ZoomOut, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { useRouter } from 'next/navigation'; // For redirecting to search page if needed
+import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
 
 // Simple in-memory search (replace with actual search if needed)
 const searchDocs = (query: string) => {
@@ -29,6 +30,7 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
   const router = useRouter();
 
   useEffect(() => {
+    // Client-side only effect for font size adjustment
     document.documentElement.style.fontSize = `${fontSize * 16}px`; // Assuming base is 16px
     return () => {
       document.documentElement.style.fontSize = ''; // Reset on unmount
@@ -38,12 +40,7 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // In a real app, you might navigate to a search results page or display results here.
-      // For now, we'll just log and conceptually show results.
       setSearchResults(searchDocs(searchQuery));
-      // If you had a dedicated search page:
-      // router.push(`/docs/search?q=${encodeURIComponent(searchQuery)}`);
-      // setIsSearchModalOpen(false); // Close modal after search
     }
   };
   
@@ -70,21 +67,20 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
 
       {/* Sheet for Mobile Sidebar Navigation and its Trigger */}
       <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-        {/* Main content area which includes the trigger visually */}
         <div className="lg:pl-64 xl:pl-72 flex-1">
           <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Fixed top-right utilities including the SheetTrigger */}
             <div className="fixed top-4 right-4 lg:top-6 lg:right-6 z-50 flex items-center space-x-2">
               <Button variant="ghost" size="icon" onClick={openSearchModal} className="lg:hidden" aria-label="Open search"> <Search /> </Button>
               <ThemeToggle />
-              {/* SheetTrigger is now a descendant of the Sheet component */}
+              {/* Font size adjusters - conceptual, can be enhanced */}
+              {/* <Button variant="outline" size="icon" onClick={() => setFontSize(prev => Math.max(0.8, prev - 0.1))} aria-label="Decrease font size"><ZoomOut className="h-4 w-4" /></Button> */}
+              {/* <Button variant="outline" size="icon" onClick={() => setFontSize(prev => Math.min(1.5, prev + 0.1))} aria-label="Increase font size"><ZoomIn className="h-4 w-4" /></Button> */}
               <SheetTrigger asChild className="lg:hidden">
                  <Button variant="outline" size="icon" aria-label="Open navigation menu"> <Menu /> </Button>
               </SheetTrigger>
             </div>
             
-             {/* Desktop Search - in top right area of main content */}
-            <div className="hidden lg:block fixed top-4 right-24 xl:right-32 z-40 max-w-xs">
+            <div className="hidden lg:block fixed top-4 right-24 xl:right-32 z-40 max-w-xs"> {/* Adjusted right positioning */}
               <form onSubmit={handleSearch} className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -95,7 +91,6 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
                       onChange={(e) => setSearchQuery(e.target.value)}
                   />
               </form>
-               {/* Simple search results display for desktop, refine later */}
               {searchQuery && searchResults.length > 0 && (
                   <div className="absolute mt-1 w-full bg-popover border rounded-md shadow-lg p-2 text-sm max-h-60 overflow-y-auto">
                       {searchResults.map(res => <a key={res.title} href={res.href} className="block p-1 hover:bg-accent">{res.title}</a>)}
@@ -109,11 +104,15 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
           </main>
         </div>
 
-        {/* Mobile Sidebar Content (SheetContent) */}
-        <SheetContent side="left" className="w-72 p-0 pt-12 lg:hidden bg-background z-[60]">
-          <DocsSidebar onLinkClick={onSidebarLinkClick} />
+        <SheetContent side="left" className="w-72 p-0 flex flex-col lg:hidden bg-background z-[60]">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="font-headline text-xl text-primary dark:text-accent">AlgoVista Docs</SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1"> {/* Ensures sidebar itself is scrollable if content overflows */}
+            <DocsSidebar onLinkClick={onSidebarLinkClick} />
+          </ScrollArea>
         </SheetContent>
-      </Sheet> {/* End of Sheet for Mobile Sidebar Navigation */}
+      </Sheet>
 
 
        {/* Fullscreen Search Modal for Mobile */}
