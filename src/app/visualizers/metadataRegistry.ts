@@ -127,7 +127,7 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
   // Trees
   binaryTreeTraversalMeta,
   binarySearchTreeMeta,
-  avlTreeMeta, // Added AVL Tree
+  avlTreeMeta, 
   redBlackTreeMeta,
   heapOperationsMeta,
   segmentTreeMeta,
@@ -187,3 +187,4 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
     // Then by title within category
     return a.title.localeCompare(b.title);
 });
+

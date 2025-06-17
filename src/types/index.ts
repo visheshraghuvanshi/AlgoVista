@@ -1,4 +1,5 @@
 
+
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -99,7 +100,7 @@ export interface TreeAlgorithmStep {
   currentLine: number | null;
   message?: string;
   currentProcessingNodeId?: string | null; // ID of the node currently being processed/visited
-  auxiliaryData?: Record<string, string | number | null>; // For additional info if needed
+  auxiliaryData?: Record<string, string | number | null | undefined | string[] | {weight: number, value: number}[] | {u:number, v:number, weight:number}[]>; // For additional info if needed (e.g. LCA result, RBT properties)
 }
 
 
@@ -303,3 +304,4 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
     
+

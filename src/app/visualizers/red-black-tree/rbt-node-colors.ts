@@ -11,3 +11,4 @@ export const RBT_TEXT_COLORS = {
     BLACK_TEXT: "hsl(var(--primary-foreground))", 
     FOUND_HIGHLIGHT_TEXT: "hsl(var(--accent-foreground))",
 };
+
