@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -30,19 +29,80 @@ export const KADANES_ALGORITHM_CODE_SNIPPETS_REFINED = {
     "  return arr.length === 0 ? 0 : maxSoFar;",                  // 12 (returnMaxSoFar)
     "}",                                                          // 13 (functionEnd)
   ],
-   Python: [ // Simplified Python to match JS structure for line mapping
+   Python: [
     "def kadanes_algorithm(arr):",
     "    if not arr: return 0",
     "    max_so_far = -float('inf')",
     "    current_max = 0",
+    "    # Optional: To handle all negative numbers correctly if max subarray can't be empty",
+    "    # max_element = -float('inf')", 
     "    for x in arr:",
+    "        # max_element = max(max_element, x) # Keep track of max single element",
     "        current_max += x",
     "        if current_max > max_so_far:",
     "            max_so_far = current_max",
     "        if current_max < 0:",
     "            current_max = 0",
-    "    if max_so_far == -float('inf'): return max(arr) if arr else 0",
-    "    return max_so_far",
+    "    # If max_so_far remained -inf (or 0 from reset if problem allows empty subarray for sum 0)",
+    "    # and array was not empty, it means all elements were negative.",
+    "    # Standard Kadane's might return 0 for all negatives if empty subarray allowed.",
+    "    # If it must be non-empty, and all negative, return largest negative element.",
+    "    if max_so_far == -float('inf') and arr: return max(arr)",
+    "    return max_so_far if arr else 0",
+  ],
+  Java: [
+    "public class KadaneAlgorithm {",
+    "    public static int maxSubArraySum(int[] arr) {",
+    "        if (arr.length == 0) return 0;",
+    "        int maxSoFar = Integer.MIN_VALUE;",
+    "        int currentMax = 0;",
+    "        boolean allNegative = true;",
+    "        int maxElement = Integer.MIN_VALUE;",
+    "",
+    "        for (int x : arr) {",
+    "            if (x >= 0) allNegative = false;",
+    "            maxElement = Math.max(maxElement, x);",
+    "            currentMax += x;",
+    "            if (currentMax > maxSoFar) {",
+    "                maxSoFar = currentMax;",
+    "            }",
+    "            if (currentMax < 0) {",
+    "                currentMax = 0;",
+    "            }",
+    "        }",
+    "        // If maxSoFar is still MIN_VALUE or became 0 due to reset and all elements were negative,",
+    "        // return the largest single element if the problem requires a non-empty subarray.",
+    "        // Standard Kadane often returns 0 if all are negative and empty subarray sum is allowed.",
+    "        if (allNegative) return maxElement;",
+    "        return maxSoFar > 0 ? maxSoFar : (arr.length > 0 ? maxElement : 0);",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::max",
+    "#include <limits>    // For std::numeric_limits",
+    "int maxSubArraySum(const std::vector<int>& arr) {",
+    "    if (arr.empty()) return 0;",
+    "    int maxSoFar = std::numeric_limits<int>::min();",
+    "    int currentMax = 0;",
+    "    bool allNegative = true;",
+    "    int maxElement = std::numeric_limits<int>::min();",
+    "",
+    "    for (int x : arr) {",
+    "        if (x >= 0) allNegative = false;",
+    "        maxElement = std::max(maxElement, x);",
+    "        currentMax += x;",
+    "        if (currentMax > maxSoFar) {",
+    "            maxSoFar = currentMax;",
+    "        }",
+    "        if (currentMax < 0) {",
+    "            currentMax = 0;",
+    "        }",
+    "    }",
+    "    if (allNegative) return maxElement;", // If all negative, return largest element
+    "    return maxSoFar > 0 ? maxSoFar : (arr.size() > 0 ? maxElement : 0);",
+    "}",
   ],
 };
 
@@ -152,4 +212,3 @@ export function KadanesAlgorithmCodePanel({ codeSnippets, currentLine }: Kadanes
     </Card>
   );
 }
-

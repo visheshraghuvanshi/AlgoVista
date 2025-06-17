@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,39 +19,144 @@ import { SlidingWindowCodePanel } from './SlidingWindowCodePanel';
 import { generateMaxSumFixedKSteps, generateMinLengthSumTargetSteps, SLIDING_WINDOW_LINE_MAPS } from './sliding-window-logic';
 import type { SlidingWindowProblemType } from './sliding-window-logic';
 
-const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, string[]> = {
-  maxSumFixedK: [
-    "function maxSumSubarrayFixedK(arr, k) {",        // 1
-    "  if (k <= 0 || k > arr.length) return 0;",      // 2
-    "  let maxSum = -Infinity;",                       // 3
-    "  let windowSum = 0;",                            // 4
-    "  for (let i = 0; i < k; i++) {",                 // 5
-    "    windowSum += arr[i];",                         // 6
-    "  }",
-    "  maxSum = windowSum;",                           // 7
-    "  for (let i = k; i < arr.length; i++) {",        // 8
-    "    windowSum += arr[i] - arr[i - k];",          // 9
-    "    maxSum = Math.max(maxSum, windowSum);",       // 10
-    "  }",
-    "  return maxSum;",                                 // 11
-    "}",                                               // 12
-  ],
-  minLengthSumTarget: [
-    "function minLengthSubarraySumTarget(arr, target) {", // 1
-    "  let minLength = Infinity;",                      // 2
-    "  let windowSum = 0;",                             // 3
-    "  let windowStart = 0;",                           // 4
-    "  for (let windowEnd = 0; windowEnd < arr.length; windowEnd++) {", // 5
-    "    windowSum += arr[windowEnd];",                  // 6
-    "    while (windowSum >= target) {",                // 7
-    "      minLength = Math.min(minLength, windowEnd - windowStart + 1);", // 8
-    "      windowSum -= arr[windowStart];",              // 9
-    "      windowStart++;",                              // 10
-    "    }",
-    "  }",
-    "  return minLength === Infinity ? 0 : minLength;", // 11
-    "}",                                                // 12
-  ],
+const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<string, string[]>> = {
+  maxSumFixedK: {
+    JavaScript: [
+      "function maxSumSubarrayFixedK(arr, k) {",        // 1
+      "  if (k <= 0 || k > arr.length) return 0;",      // 2
+      "  let maxSum = -Infinity;",                       // 3
+      "  let windowSum = 0;",                            // 4
+      "  for (let i = 0; i < k; i++) {",                 // 5
+      "    windowSum += arr[i];",                         // 6
+      "  }",
+      "  maxSum = windowSum;",                           // 7
+      "  for (let i = k; i < arr.length; i++) {",        // 8
+      "    windowSum += arr[i] - arr[i - k];",          // 9
+      "    maxSum = Math.max(maxSum, windowSum);",       // 10
+      "  }",
+      "  return maxSum;",                                 // 11
+      "}",                                               // 12
+    ],
+    Python: [
+      "def max_sum_subarray_fixed_k(arr, k):",
+      "    if k <= 0 or k > len(arr): return 0",
+      "    max_sum = float('-inf')",
+      "    window_sum = 0",
+      "    for i in range(k):",
+      "        window_sum += arr[i]",
+      "    max_sum = window_sum",
+      "    for i in range(k, len(arr)):",
+      "        window_sum += arr[i] - arr[i-k]",
+      "        max_sum = max(max_sum, window_sum)",
+      "    return max_sum if max_sum != float('-inf') else 0",
+    ],
+    Java: [
+      "public class SlidingWindow {",
+      "    public static int maxSumSubarrayFixedK(int[] arr, int k) {",
+      "        if (k <= 0 || k > arr.length) return 0;",
+      "        int maxSum = Integer.MIN_VALUE;",
+      "        int windowSum = 0;",
+      "        for (int i = 0; i < k; i++) {",
+      "            windowSum += arr[i];",
+      "        }",
+      "        maxSum = windowSum;",
+      "        for (int i = k; i < arr.length; i++) {",
+      "            windowSum += arr[i] - arr[i - k];",
+      "            maxSum = Math.max(maxSum, windowSum);",
+      "        }",
+      "        return maxSum == Integer.MIN_VALUE ? 0 : maxSum;",
+      "    }",
+      "}",
+    ],
+    "C++": [
+      "#include <vector>",
+      "#include <numeric>      // std::accumulate",
+      "#include <algorithm>    // std::max",
+      "#include <limits>       // std::numeric_limits",
+      "int maxSumSubarrayFixedK(const std::vector<int>& arr, int k) {",
+      "    if (k <= 0 || k > arr.size()) return 0;",
+      "    int maxSum = std::numeric_limits<int>::min();",
+      "    int windowSum = 0;",
+      "    for (int i = 0; i < k; ++i) {",
+      "        windowSum += arr[i];",
+      "    }",
+      "    maxSum = windowSum;",
+      "    for (int i = k; i < arr.size(); ++i) {",
+      "        windowSum += arr[i] - arr[i - k];",
+      "        maxSum = std::max(maxSum, windowSum);",
+      "    }",
+      "    return maxSum == std::numeric_limits<int>::min() ? 0 : maxSum;",
+      "}",
+    ],
+  },
+  minLengthSumTarget: {
+    JavaScript: [
+      "function minLengthSubarraySumTarget(arr, target) {", // 1
+      "  let minLength = Infinity;",                      // 2
+      "  let windowSum = 0;",                             // 3
+      "  let windowStart = 0;",                           // 4
+      "  for (let windowEnd = 0; windowEnd < arr.length; windowEnd++) {", // 5
+      "    windowSum += arr[windowEnd];",                  // 6
+      "    while (windowSum >= target) {",                // 7
+      "      minLength = Math.min(minLength, windowEnd - windowStart + 1);", // 8
+      "      windowSum -= arr[windowStart];",              // 9
+      "      windowStart++;",                              // 10
+      "    }",
+      "  }",
+      "  return minLength === Infinity ? 0 : minLength;", // 11
+      "}",                                                // 12
+    ],
+    Python: [
+      "def min_length_subarray_sum_target(arr, target):",
+      "    min_length = float('inf')",
+      "    window_sum = 0",
+      "    window_start = 0",
+      "    for window_end in range(len(arr)):",
+      "        window_sum += arr[window_end]",
+      "        while window_sum >= target:",
+      "            min_length = min(min_length, window_end - window_start + 1)",
+      "            window_sum -= arr[window_start]",
+      "            window_start += 1",
+      "    return min_length if min_length != float('inf') else 0",
+    ],
+    Java: [
+      "public class SlidingWindow {",
+      "    public static int minLengthSubarraySumTarget(int[] arr, int target) {",
+      "        int minLength = Integer.MAX_VALUE;",
+      "        int windowSum = 0;",
+      "        int windowStart = 0;",
+      "        for (int windowEnd = 0; windowEnd < arr.length; windowEnd++) {",
+      "            windowSum += arr[windowEnd];",
+      "            while (windowSum >= target) {",
+      "                minLength = Math.min(minLength, windowEnd - windowStart + 1);",
+      "                windowSum -= arr[windowStart];",
+      "                windowStart++;",
+      "            }",
+      "        }",
+      "        return minLength == Integer.MAX_VALUE ? 0 : minLength;",
+      "    }",
+      "}",
+    ],
+    "C++": [
+      "#include <vector>",
+      "#include <algorithm> // std::min",
+      "#include <limits>    // std::numeric_limits",
+      "int minLengthSubarraySumTarget(const std::vector<int>& arr, int target) {",
+      "    int minLength = std::numeric_limits<int>::max();",
+      "    int windowSum = 0;",
+      "    int windowStart = 0;",
+      "    for (int windowEnd = 0; windowEnd < arr.size(); ++windowEnd) {",
+      "        windowSum += arr[windowEnd];",
+      "        while (windowSum >= target) {",
+      "            minLength = std::min(minLength, windowEnd - windowStart + 1);",
+      "            windowSum -= arr[windowStart];",
+      "            windowStart++;",
+      "        }",
+      "    }",
+      "    return minLength == std::numeric_limits<int>::max() ? 0 : minLength;",
+      "}",
+    ],
+  },
 };
 
 
@@ -186,7 +290,7 @@ export default function SlidingWindowVisualizerPage() {
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
                     <CardContent className="text-sm flex flex-wrap justify-around gap-2">
                         {Object.entries(auxiliaryData).map(([key, value]) => {
-                            if(key === 'foundSubarrayIndices') return null; // Don't display this in text
+                             if (key === 'foundSubarrayIndices') return null; // Don't display this in text
                             return (
                                 <p key={key}><strong>{key.replace(/([A-Z])/g, ' $1').trim()}:</strong> {value?.toString()}</p>
                             )
@@ -255,4 +359,3 @@ export default function SlidingWindowVisualizerPage() {
     </div>
   );
 }
-    

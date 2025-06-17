@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -50,6 +49,51 @@ const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
     "            arr[mid], arr[high] = arr[high], arr[mid]",
     "            high -= 1",
     "    return arr",
+  ],
+  Java: [
+    "public class DutchNationalFlag {",
+    "    public static void sort(int[] arr) {",
+    "        int low = 0, mid = 0;",
+    "        int high = arr.length - 1;",
+    "        int temp;",
+    "        while (mid <= high) {",
+    "            switch (arr[mid]) {",
+    "                case 0:",
+    "                    temp = arr[low]; arr[low] = arr[mid]; arr[mid] = temp;",
+    "                    low++; mid++;",
+    "                    break;",
+    "                case 1:",
+    "                    mid++;",
+    "                    break;",
+    "                case 2:",
+    "                    temp = arr[mid]; arr[mid] = arr[high]; arr[high] = temp;",
+    "                    high--;",
+    "                    break;",
+    "            }",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::swap",
+    "void dutchNationalFlagSort(std::vector<int>& arr) {",
+    "    int low = 0, mid = 0;",
+    "    int high = arr.size() - 1;",
+    "    while (mid <= high) {",
+    "        switch (arr[mid]) {",
+    "            case 0:",
+    "                std::swap(arr[low++], arr[mid++]);",
+    "                break;",
+    "            case 1:",
+    "                mid++;",
+    "                break;",
+    "            case 2:",
+    "                std::swap(arr[mid], arr[high--]);",
+    "                break;",
+    "        }",
+    "    }",
+    "}",
   ],
 };
 
@@ -269,4 +313,3 @@ export default function DutchNationalFlagVisualizerPage() {
     </div>
   );
 }
-

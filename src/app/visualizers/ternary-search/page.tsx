@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -8,7 +7,7 @@ import { VisualizationPanel } from '@/components/algo-vista/visualization-panel'
 import { TernarySearchCodePanel } from './TernarySearchCodePanel'; 
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { TERNARY_SEARCH_LINE_MAP, generateTernarySearchSteps } from './ternary-search-logic';
@@ -21,16 +20,16 @@ const TERNARY_SEARCH_CODE_SNIPPETS = {
     "  while (left <= right) {",                              // 3
     "    let mid1 = left + Math.floor((right - left) / 3);",   // 4
     "    let mid2 = right - Math.floor((right - left) / 3);",  // 5
-    "    if (sortedArr[mid1] === target) return mid1;",        // 6 & 7
-    "    if (sortedArr[mid2] === target) return mid2;",        // 8 & 9
+    "    if (sortedArr[mid1] === target) return mid1;",        // 6 & 7 (Combined for if+return)
+    "    if (sortedArr[mid2] === target) return mid2;",        // 8 & 9 (Combined for if+return)
     "    if (target < sortedArr[mid1]) {",                    // 10
     "      right = mid1 - 1;",                                // 11
     "    } else if (target > sortedArr[mid2]) {",             // 12
     "      left = mid2 + 1;",                                 // 13
-    "    } else {",
+    "    } else {",                                           // (else block for between mid1 and mid2)
     "      left = mid1 + 1; right = mid2 - 1;",               // 14
-    "    }",
-    "  }",                                                    // 15
+    "    }",                                                 // (end of else)
+    "  }",                                                    // 15 (end of while)
     "  return -1;",                                           // 16
     "}",                                                      // 17
   ],
@@ -52,6 +51,50 @@ const TERNARY_SEARCH_CODE_SNIPPETS = {
     "            left = mid1 + 1",
     "            right = mid2 - 1",
     "    return -1",
+  ],
+  Java: [
+    "public class TernarySearch {",
+    "    public static int search(int[] sortedArr, int target) {",
+    "        int left = 0, right = sortedArr.length - 1;",
+    "        while (left <= right) {",
+    "            int mid1 = left + (right - left) / 3;",
+    "            int mid2 = right - (right - left) / 3;",
+    "            if (sortedArr[mid1] == target) return mid1;",
+    "            if (sortedArr[mid2] == target) return mid2;",
+    "            if (target < sortedArr[mid1]) {",
+    "                right = mid1 - 1;",
+    "            } else if (target > sortedArr[mid2]) {",
+    "                left = mid2 + 1;",
+    "            } else {",
+    "                left = mid1 + 1;",
+    "                right = mid2 - 1;",
+    "            }",
+    "        }",
+    "        return -1;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::min, std::max if needed",
+    "int ternarySearch(const std::vector<int>& sortedArr, int target) {",
+    "    int left = 0, right = sortedArr.size() - 1;",
+    "    while (left <= right) {",
+    "        int mid1 = left + (right - left) / 3;",
+    "        int mid2 = right - (right - left) / 3;",
+    "        if (sortedArr[mid1] == target) return mid1;",
+    "        if (sortedArr[mid2] == target) return mid2;",
+    "        if (target < sortedArr[mid1]) {",
+    "            right = mid1 - 1;",
+    "        } else if (target > sortedArr[mid2]) {",
+    "            left = mid2 + 1;",
+    "        } else {",
+    "            left = mid1 + 1;",
+    "            right = mid2 - 1;",
+    "        }",
+    "    }",
+    "    return -1;",
+    "}",
   ],
 };
 
@@ -143,7 +186,7 @@ export default function TernarySearchVisualizerPage() {
 
     if (parsedArray !== null && parsedTarget !== null) {
       if (notifySort) { 
-        setInputValue(parsedArray.join(','));
+        setInputValue(parsedArray.join(',')); 
       }
       lastProcessedInputValueRef.current = parsedArray.join(',');
 

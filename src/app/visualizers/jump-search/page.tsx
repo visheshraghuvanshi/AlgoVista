@@ -17,25 +17,27 @@ import { algorithmMetadata } from './metadata';
 const JUMP_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
     "function jumpSearch(sortedArr, target) {",                 // 1
-    "  const n = sortedArr.length; if (n === 0) return -1;",    // 2
-    "  let blockSize = Math.floor(Math.sqrt(n));",              // 3
-    "  let prev = 0;",                                          // 4
-    "  let step = blockSize;",                                  // 5
+    "  const n = sortedArr.length; if (n === 0) return -1;",    // 2&3 (Combined for n=0)
+    "  let blockSize = Math.floor(Math.sqrt(n));",              // 4
+    "  let prev = 0;",                                          // 5
+    "  let step = blockSize;",                                  // 6 (Conceptual for block end)
     "  // Finding the block where element is present (if it is)",
-    "  while (sortedArr[Math.min(step, n) - 1] < target) {",    // 6 & 7
-    "    prev = step;",                                         // 8
-    "    step += blockSize;",                                   // 9
-    "    if (prev >= n) return -1;",                             // 10
+    "  while (sortedArr[Math.min(step, n) - 1] < target) {",    // 7 (Loop Condition)
+    "    // Element at block end < target",                       // 8 (Block Check)
+    "    prev = step;",                                         // 9
+    "    step += blockSize;",                                   // 10
+    "    if (prev >= n) return -1;",                             // 11
     "  }",
     "  // Doing a linear search for target in block beginning with prev.",
-    "  while (sortedArr[prev] < target) {",                     // 11 & 12
-    "    prev++;",                                               // 13
-    "    if (prev === Math.min(step, n)) return -1;",            // 14
+    "  while (sortedArr[prev] < target) {",                     // 12 (Linear Search Loop)
+    "    // Element at prev < target",                            // 13 (Linear Element Check)
+    "    prev++;",                                               // 14
+    "    if (prev === Math.min(step, n)) return -1;",            // 15 (Linear Boundary Check)
     "  }",
     "  // If element is found",
-    "  if (prev < n && sortedArr[prev] === target) return prev;",// 15 & 16 (added prev < n check)
-    "  return -1;",                                             // 17
-    "}",                                                        // 18
+    "  if (prev < n && sortedArr[prev] === target) return prev;",// 16 (Final Check) & 17 (Return Found)
+    "  return -1;",                                             // 18 (Return Not Found)
+    "}",                                                        // 19 (Function End)
   ],
   Python: [
     "import math",
@@ -57,6 +59,52 @@ const JUMP_SEARCH_CODE_SNIPPETS = {
     "    if prev < n and sorted_arr[prev] == target:",
     "        return prev",
     "    return -1",
+  ],
+  Java: [
+    "import java.lang.Math;",
+    "public class JumpSearch {",
+    "    public static int search(int[] sortedArr, int target) {",
+    "        int n = sortedArr.length;",
+    "        if (n == 0) return -1;",
+    "        int blockSize = (int) Math.floor(Math.sqrt(n));",
+    "        int prev = 0;",
+    "        int step = blockSize;",
+    "        while (sortedArr[Math.min(step, n) - 1] < target) {",
+    "            prev = step;",
+    "            step += blockSize;",
+    "            if (prev >= n) return -1;",
+    "        }",
+    "        while (sortedArr[prev] < target) {",
+    "            prev++;",
+    "            if (prev == Math.min(step, n)) return -1;",
+    "        }",
+    "        if (prev < n && sortedArr[prev] == target) return prev;",
+    "        return -1;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <cmath>   // For std::sqrt, std::floor",
+    "#include <algorithm> // For std::min",
+    "int jumpSearch(const std::vector<int>& sortedArr, int target) {",
+    "    int n = sortedArr.size();",
+    "    if (n == 0) return -1;",
+    "    int blockSize = static_cast<int>(std::floor(std::sqrt(n)));",
+    "    int prev = 0;",
+    "    int step = blockSize;",
+    "    while (sortedArr[std::min(step, n) - 1] < target) {",
+    "        prev = step;",
+    "        step += blockSize;",
+    "        if (prev >= n) return -1;",
+    "    }",
+    "    while (sortedArr[prev] < target) {",
+    "        prev++;",
+    "        if (prev == std::min(step, n)) return -1;",
+    "    }",
+    "    if (prev < n && sortedArr[prev] == target) return prev;",
+    "    return -1;",
+    "}",
   ],
 };
 
@@ -255,6 +303,12 @@ export default function JumpSearchVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
 
   if (!algorithmMetadata) {
     return (
@@ -319,15 +373,9 @@ export default function JumpSearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
-         <AlgorithmDetailsCard 
-            title={algorithmMetadata.title}
-            description={algorithmMetadata.longDescription || algorithmMetadata.description}
-            timeComplexities={algorithmMetadata.timeComplexities!}
-            spaceComplexity={algorithmMetadata.spaceComplexity!}
-        />
+         {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
-

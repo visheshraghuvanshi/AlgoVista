@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -49,6 +48,43 @@ const TWO_POINTERS_CODE_SNIPPETS = {
     "        else:",
     "            right -= 1",
     "    return None",
+  ],
+  Java: [
+    "import java.util.Arrays;",
+    "public class TwoPointers {",
+    "    public int[] findPairWithSum(int[] sortedArr, int targetSum) {",
+    "        int left = 0, right = sortedArr.length - 1;",
+    "        while (left < right) {",
+    "            int currentSum = sortedArr[left] + sortedArr[right];",
+    "            if (currentSum == targetSum) {",
+    "                return new int[]{sortedArr[left], sortedArr[right]};",
+    "            } else if (currentSum < targetSum) {",
+    "                left++;",
+    "            } else {",
+    "                right--;",
+    "            }",
+    "        }",
+    "        return null; // Or new int[0];",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <utility> // For std::pair, or just return std::vector<int>",
+    "std::vector<int> findPairWithSum(const std::vector<int>& sortedArr, int targetSum) {",
+    "    int left = 0, right = sortedArr.size() - 1;",
+    "    while (left < right) {",
+    "        int currentSum = sortedArr[left] + sortedArr[right];",
+    "        if (currentSum == targetSum) {",
+    "            return {sortedArr[left], sortedArr[right]};",
+    "        } else if (currentSum < targetSum) {",
+    "            left++;",
+    "        } else {",
+    "            right--;",
+    "        }",
+    "    }",
+    "    return {}; // Return empty vector if not found",
+    "}",
   ],
 };
 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -114,4 +113,3 @@ export function JumpSearchCodePanel({ codeSnippets, currentLine }: JumpSearchCod
     </Card>
   );
 }
-

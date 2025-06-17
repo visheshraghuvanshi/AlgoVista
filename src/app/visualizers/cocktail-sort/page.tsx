@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -65,6 +64,62 @@ const COCKTAIL_SORT_CODE_SNIPPETS = {
     "                swapped = True",
     "        start += 1",
     "    return arr",
+  ],
+  Java: [
+    "public class CocktailSort {",
+    "    void cocktailSort(int arr[]) {",
+    "        boolean swapped = true;",
+    "        int start = 0;",
+    "        int end = arr.length - 1;",
+    "        while (swapped) {",
+    "            swapped = false;",
+    "            for (int i = start; i < end; ++i) {",
+    "                if (arr[i] > arr[i + 1]) {",
+    "                    int temp = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = temp;",
+    "                    swapped = true;",
+    "                }",
+    "            }",
+    "            if (!swapped) break;",
+    "            swapped = false;",
+    "            end = end - 1;",
+    "            for (int i = end - 1; i >= start; --i) {",
+    "                if (arr[i] > arr[i + 1]) {",
+    "                    int temp = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = temp;",
+    "                    swapped = true;",
+    "                }",
+    "            }",
+    "            start = start + 1;",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::swap",
+    "void cocktailSort(std::vector<int>& arr) {",
+    "    bool swapped = true;",
+    "    int start = 0;",
+    "    int end = arr.size() - 1;",
+    "    while (swapped) {",
+    "        swapped = false;",
+    "        for (int i = start; i < end; ++i) {",
+    "            if (arr[i] > arr[i + 1]) {",
+    "                std::swap(arr[i], arr[i + 1]);",
+    "                swapped = true;",
+    "            }",
+    "        }",
+    "        if (!swapped) break;",
+    "        swapped = false;",
+    "        end = end - 1;",
+    "        for (int i = end - 1; i >= start; --i) {",
+    "            if (arr[i] > arr[i + 1]) {",
+    "                std::swap(arr[i], arr[i + 1]);",
+    "                swapped = true;",
+    "            }",
+    "        }",
+    "        start = start + 1;",
+    "    }",
+    "}",
   ],
 };
 
@@ -323,4 +378,3 @@ export default function CocktailSortVisualizerPage() {
     </div>
   );
 }
-
