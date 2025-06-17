@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
-import { LinkedListCycleDetectionCodePanel } from './LinkedListCycleDetectionCodePanel'; 
+import { LinkedListCycleDetectionCodePanel } from './LinkedListCycleDetectionCodePanel';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,26 +14,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateCycleDetectionSteps, CYCLE_DETECTION_LINE_MAP } from './linked-list-cycle-detection-logic';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 
-const ALGORITHM_SLUG = 'linked-list-cycle-detection';
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1800;
 
 export default function LinkedListCycleDetectionPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
 
   const [initialListStr, setInitialListStr] = useState('1,2,3,4,5,6');
   const [cycleConnectsTo, setCycleConnectsTo] = useState('3'); // Value where tail connects to form cycle
-  
+
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
+
   const [currentNodes, setCurrentNodes] = useState<LinkedListNodeVisual[]>([]);
   const [currentHeadId, setCurrentHeadId] = useState<string | null>(null);
   const [currentAuxPointers, setCurrentAuxPointers] = useState<Record<string, string | null>>({});
@@ -46,12 +44,6 @@ export default function LinkedListCycleDetectionPage() {
   const [isFinished, setIsFinished] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-  }, [toast]);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -64,10 +56,10 @@ export default function LinkedListCycleDetectionPage() {
       if (currentS.isCycleDetected !== undefined) setIsCycleActuallyDetected(currentS.isCycleDetected);
     }
   }, [steps]);
-  
+
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    
+
     const cycleTarget = cycleConnectsTo.trim() === '' ? undefined : (isNaN(Number(cycleConnectsTo)) ? cycleConnectsTo : Number(cycleConnectsTo));
 
     const newSteps = generateCycleDetectionSteps(initialListStr, cycleTarget);
@@ -102,23 +94,23 @@ export default function LinkedListCycleDetectionPage() {
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4,5,6'); setCycleConnectsTo('3');
-    handleGenerateSteps(); // Regenerate with default values
+    handleGenerateSteps();
   };
-  
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description,
-    timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" },
-    spaceComplexity: "O(1)",
+
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithm || !algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  if (!algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithm.title}</h1></div>
+        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="singly" /></div>
           <div className="lg:w-2/5 xl:w-1/3"><LinkedListCycleDetectionCodePanel currentLine={currentLine} /></div>
@@ -139,7 +131,9 @@ export default function LinkedListCycleDetectionPage() {
              <Button onClick={handleGenerateSteps} disabled={isPlaying}>Generate/Reset List & Steps</Button>
              {isFinished && <p className={`font-bold text-lg mt-2 ${isCycleActuallyDetected ? 'text-green-500' : 'text-red-500'}`}>{isCycleActuallyDetected ? 'Cycle Detected!' : 'No Cycle Found.'}</p>}
             <div className="flex items-center justify-start pt-4 border-t">
-                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset All</Button>
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying} aria-label="Reset visualization and inputs">
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset All
+                </Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
