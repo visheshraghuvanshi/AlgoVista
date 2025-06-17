@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -7,7 +8,6 @@ import { BinaryTreeVisualizationPanel } from '@/components/algo-vista/BinaryTree
 import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
@@ -19,6 +19,7 @@ import {
   // getFinalRBTreeGraph, // This helper might not be strictly needed if logic modifies ref or returns final state
 } from './red-black-tree-logic';
 import type { RBTOperationType } from './RedBlackTreeCodePanel';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,11 +32,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const DEFAULT_ANIMATION_SPEED = 1200;
 const MIN_SPEED = 200;
 const MAX_SPEED = 3000;
-const ALGORITHM_SLUG = 'red-black-tree';
 
 export default function RedBlackTreePage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
 
   const [initialArrayInput, setInitialArrayInput] = useState('10,20,30,5,15,25,35,1,8');
   const [operationValue, setOperationValue] = useState('22'); 
@@ -59,10 +58,6 @@ export default function RedBlackTreePage() {
   const rbtRef = useRef<RBTreeGraph>(createInitialRBTreeGraph());
 
   useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    
     handleOperation('build', initialArrayInput);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
@@ -170,18 +165,14 @@ export default function RedBlackTreePage() {
     handleOperation('build', defaultInitialArray);
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "O(log n) for Search, Insert, Delete", 
-      average: "O(log n) for Search, Insert, Delete", 
-      worst: "O(log n) for Search, Insert, Delete (guaranteed)" 
-    },
-    spaceComplexity: "O(n) for storage. O(log n) for recursion stack if recursive implementations are used.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -192,12 +183,12 @@ export default function RedBlackTreePage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithm.title}</h1>
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
+            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges || []} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <RedBlackTreeCodePanel currentLine={currentLine} selectedOperation={selectedOperation} />
@@ -265,4 +256,3 @@ export default function RedBlackTreePage() {
     </div>
   );
 }
-

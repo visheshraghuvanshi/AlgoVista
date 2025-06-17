@@ -6,7 +6,6 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,12 +18,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { SegmentTreeCodePanel } from './SegmentTreeCodePanel';
 import { generateSegmentTreeSteps, SEGMENT_TREE_LINE_MAP, type SegmentTreeOperation } from './segment-tree-logic';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 // Re-using SortingControlsPanel for basic animation controls
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
 
-const ALGORITHM_SLUG = 'segment-tree';
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -32,7 +31,6 @@ const MAX_SPEED = 2000;
 
 export default function SegmentTreeVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   const [inputValue, setInputValue] = useState("1,3,5,7,9,11"); // For initial array
@@ -64,10 +62,7 @@ export default function SegmentTreeVisualizerPage() {
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-  }, [toast]);
+  }, []);
 
   const parseInput = useCallback((value: string): number[] | null => {
     if (value.trim() === '') return [];
@@ -142,7 +137,7 @@ export default function SegmentTreeVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) updateStateFromStep(0);
-    else { setDisplayedData(operation === 'build' ? [] : segmentTreeArrayRef.current); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); }
+    else { setDisplayedData(selectedOperation === 'build' ? [] : segmentTreeArrayRef.current); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); }
 
   }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast, updateStateFromStep]);
 
@@ -185,19 +180,15 @@ export default function SegmentTreeVisualizerPage() {
     // handleExecuteOperation will be called by useEffect
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "Build: O(N), Query: O(log N), Update: O(log N)", 
-      average: "Build: O(N), Query: O(log N), Update: O(log N)", 
-      worst: "Build: O(N), Query: O(log N), Update: O(log N)" 
-    },
-    spaceComplexity: "O(N) for the tree structure.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container p-4"><p>Loading...</p></main><Footer /></div>; }
-  if (!algorithm || !algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container p-4"><AlertTriangle /></main><Footer /></div>; }
+  if (!algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container p-4"><AlertTriangle /></main><Footer /></div>; }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -205,7 +196,7 @@ export default function SegmentTreeVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
             Visualizing array representation: Build, Query (Sum), Update.
