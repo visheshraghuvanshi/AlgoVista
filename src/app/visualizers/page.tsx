@@ -251,11 +251,11 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
   },
   { 
     slug: 'segment-tree', 
-    title: 'Segment Tree (Conceptual)', 
+    title: 'Segment Tree', 
     category: 'Trees', 
     difficulty: 'Hard', 
     description: 'A tree for storing information about intervals or segments. Allows efficient range queries (sum, min, max) and point updates in O(log n) time.',
-    longDescription: 'A Segment Tree is a versatile tree data structure used for storing information about intervals or segments and performing efficient range queries and updates. Each node in the segment tree typically represents an interval [L, R]. Leaf nodes represent individual elements of an array, and internal nodes represent the union (or aggregate like sum, min, max) of their children\'s intervals. Common operations include: `build` (construct the tree from an array, O(n)), `query` (find sum/min/max over a range [L, R], O(log n)), and `update` (change the value of an element and update affected tree nodes, O(log n)). They are particularly useful for problems requiring frequent range queries on dynamic data.'
+    longDescription: 'A Segment Tree is a versatile tree data structure used for storing information about intervals or segments and performing efficient range queries and updates. Each node in the segment tree typically represents an interval [L, R]. Leaf nodes represent individual elements of an array, and internal nodes represent the union (or aggregate like sum, min, max) of their children\'s intervals. Common operations include: `build` (construct the tree from an array, O(n)), `query` (find sum/min/max over a range [L, R], O(log n)), and `update` (change the value of an element and update affected tree nodes, O(log n)). They are particularly useful for problems requiring frequent range queries on dynamic data. The iterative (array-based) implementation is common, using an array of size 2*N (or 4*N for 1-based indexing or recursive versions) where N is the size of the input array. Leaf nodes are at indices N to 2N-1, and internal nodes are at indices 1 to N-1. A node at index `p` has children `2*p` and `2*p+1`, and its parent is `p/2`.'
   },
   { 
     slug: 'trie', 
@@ -321,7 +321,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Hard', 
     description: 'Finds shortest paths from a single source vertex to all other vertices in a weighted digraph. Can handle negative edge weights and detect negative cycles.',
-    longDescription: "The Bellman-Ford algorithm computes shortest paths from a single source vertex to all of the other vertices in a weighted digraph. Unlike Dijkstra's algorithm, Bellman-Ford can handle graphs with negative edge weights. It works by iteratively relaxing all edges in the graph |V|-1 times, where |V| is the number of vertices. After |V|-1 iterations, if there are no negative-weight cycles reachable from the source, the shortest paths are found. A final iteration can be performed to detect negative-weight cycles: if any distance is further reduced, a negative cycle exists. Time complexity is O(VE). It's slower than Dijkstra's but more versatile due to its ability to handle negative weights and detect negative cycles."
+    longDescription: "The Bellman-Ford algorithm computes shortest paths from a single source vertex to all of the other vertices in a weighted digraph. Unlike Dijkstra's algorithm, Bellman-Ford can handle graphs with negative edge weights. It works by iteratively relaxing all edges in the graph |V|-1 times, where |V| is the number of vertices. An edge (u, v) with weight w is relaxed if `dist[u] + w < dist[v]`, in which case `dist[v]` is updated and `prev[v]` is set to `u`. After |V|-1 iterations, if there are no negative-weight cycles reachable from the source, the shortest paths are found. A final, |V|-th iteration can be performed to detect negative-weight cycles: if any distance is further reduced during this iteration, a negative cycle exists and the reported distances may not be meaningful shortest paths (as they can be infinitely reduced). Time complexity is O(VE). It's slower than Dijkstra's but more versatile due to its ability to handle negative weights and detect negative cycles. Initialization involves setting distance to source as 0 and all other distances to infinity."
   },
   { 
     slug: 'floyd-warshall', 
@@ -329,7 +329,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Hard', 
     description: 'An algorithm for finding shortest paths in a weighted graph with positive or negative edge weights (but no negative cycles). Computes all-pairs shortest paths.',
-    longDescription: "The Floyd-Warshall algorithm is a dynamic programming algorithm for finding the shortest paths between all pairs of vertices in a weighted directed graph. It can handle positive or negative edge weights but assumes no negative-weight cycles. The algorithm considers all possible intermediate vertices for each pair of source and destination vertices. It initializes a distance matrix with direct edge weights (or infinity if no direct edge). Then, for each vertex k, it updates the shortest path from i to j by checking if path i -> k -> j is shorter than the current path i -> j. The time complexity is O(V^3). It's suitable for dense graphs where V is relatively small."
+    longDescription: "The Floyd-Warshall algorithm is a dynamic programming algorithm for finding the shortest paths between all pairs of vertices in a weighted directed graph. It can handle positive or negative edge weights but assumes no negative-weight cycles. The algorithm considers all possible intermediate vertices for each pair of source (i) and destination (j) vertices. It initializes a distance matrix `dist[i][j]` with direct edge weights (or infinity if no direct edge, and 0 if i=j). Then, for each vertex `k` (from 0 to V-1), it updates the shortest path from `i` to `j` by checking if path `i -> k -> j` is shorter than the current path `i -> j`. That is, `dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])`. After iterating through all possible `k` values, the `dist` matrix contains all-pairs shortest paths. The time complexity is O(V^3). It's suitable for dense graphs where V is relatively small. A predecessor matrix can also be maintained to reconstruct the paths. Negative cycles can be detected by checking if `dist[i][i]` becomes negative for any `i` after the algorithm completes."
   },
   { 
     slug: 'prims-algorithm', 
@@ -337,7 +337,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Hard', 
     description: 'A greedy algorithm that finds a minimum spanning tree (MST) for a weighted undirected graph. It builds the MST by iteratively adding the cheapest edge connecting a vertex in the MST to a vertex outside it.',
-    longDescription: "Prim's algorithm is a greedy algorithm used to find a Minimum Spanning Tree (MST) for a connected, weighted, undirected graph. An MST is a subgraph that connects all vertices with the minimum possible total edge weight. Prim's algorithm starts with an arbitrary vertex and grows the MST one edge at a time. In each step, it finds the minimum-weight edge that connects a vertex currently in the MST to a vertex not yet in the MST, and adds this edge (and the new vertex) to the MST. This process is repeated until all vertices are included. A priority queue is often used to efficiently find the minimum-weight edge. Time complexity is typically O(E log V) with a binary heap or O(E + V log V) with a Fibonacci heap."
+    longDescription: "Prim's algorithm is a greedy algorithm used to find a Minimum Spanning Tree (MST) for a connected, weighted, undirected graph. An MST is a subgraph that connects all vertices with the minimum possible total edge weight. Prim's algorithm starts with an arbitrary vertex and grows the MST one edge at a time. It maintains a set of vertices already in the MST. In each step, it finds the minimum-weight edge that connects a vertex currently in the MST to a vertex not yet in the MST, and adds this edge (and the new vertex) to the MST. This process is repeated until all vertices are included. A priority queue is often used to efficiently find the minimum-weight edge connecting to the current MST. Key values for nodes not in MST are their minimum edge weight to a node in MST. Time complexity is typically O(E log V) with a binary heap for the priority queue, or O(V^2) using an adjacency matrix representation and simple linear scan for the min edge."
   },
   { 
     slug: 'kruskals-algorithm', 
@@ -345,7 +345,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Hard', 
     description: 'A greedy algorithm that finds a minimum spanning tree (MST) for a connected, undirected graph. It sorts all edges by weight and adds edges to the MST if they don\'t form a cycle with already included edges, using a Disjoint Set Union (DSU) data structure to check for cycles.',
-    longDescription: "Kruskal's algorithm is another greedy algorithm for finding a Minimum Spanning Tree (MST) of a connected, weighted, undirected graph. It works by first sorting all the edges in the graph by their weights in non-decreasing order. Then, it iterates through the sorted edges, adding an edge to the MST if and only if adding it does not form a cycle with the edges already included in the MST. A Disjoint Set Union (DSU) data structure (also known as Union-Find) is typically used to efficiently detect and prevent cycles. The algorithm terminates when |V|-1 edges have been added to the MST. Time complexity is dominated by edge sorting, O(E log E), or O(E log V) if E is close to V^2. DSU operations are nearly constant time on average (O(α(V)) where α is the inverse Ackermann function)."
+    longDescription: "Kruskal's algorithm is another greedy algorithm for finding a Minimum Spanning Tree (MST) of a connected, weighted, undirected graph. It works by first sorting all the edges in the graph by their weights in non-decreasing order. Then, it iterates through the sorted edges. For each edge (u, v), it checks if adding it to the current MST would form a cycle. This check is efficiently done using a Disjoint Set Union (DSU) data structure (also known as Union-Find). If vertices `u` and `v` are already in the same set (i.e., connected), adding edge (u,v) would form a cycle, so it's skipped. Otherwise, the edge is added to the MST, and `u` and `v` are unioned in the DSU structure. The algorithm terminates when |V|-1 edges have been added to the MST. Time complexity is dominated by edge sorting, O(E log E) or O(E log V). DSU operations (find and union with path compression and union by rank/size) are nearly constant time on average (O(α(V)) where α is the inverse Ackermann function)."
   },
   { 
     slug: 'topological-sort', 
@@ -353,7 +353,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Medium', 
     description: 'A linear ordering of vertices such that for every directed edge from vertex u to vertex v, u comes before v in the ordering. Applicable only to Directed Acyclic Graphs (DAGs).',
-    longDescription: "Topological Sort is an algorithm for finding a linear ordering of nodes in a Directed Acyclic Graph (DAG) such that for every directed edge from node `u` to node `v`, node `u` comes before node `v` in the ordering. If the graph contains a cycle, it has no topological sorting. One common approach is Kahn's algorithm (using in-degrees): 1. Compute in-degrees of all nodes. 2. Initialize a queue with all nodes having an in-degree of 0. 3. While the queue is not empty: dequeue a node `u`, add it to the topological sort, and for each neighbor `v` of `u`, decrement `v`'s in-degree. If `v`'s in-degree becomes 0, enqueue `v`. Another approach uses DFS: perform DFS and add nodes to the result in the reverse order of their finishing times. Time complexity for both is O(V+E)."
+    longDescription: "Topological Sort is an algorithm for finding a linear ordering of nodes in a Directed Acyclic Graph (DAG) such that for every directed edge from node `u` to node `v`, node `u` comes before node `v` in the ordering. If the graph contains a cycle, it has no topological sorting. One common approach is Kahn's algorithm (BFS-based): 1. Compute in-degrees of all nodes (number of incoming edges). 2. Initialize a queue with all nodes having an in-degree of 0. 3. While the queue is not empty: dequeue a node `u`, add it to the topological sort result. For each neighbor `v` of `u`: decrement `v`'s in-degree. If `v`'s in-degree becomes 0, enqueue `v`. 4. If the count of nodes in the sorted list does not match the total number of nodes in the graph, a cycle exists. Another approach uses DFS: perform DFS. The topological sort is the reverse of the order in which nodes finish their DFS processing (i.e., after all their descendants have been processed). Time complexity for both is O(V+E)."
   },
   { 
     slug: 'graph-cycle-detection', 
@@ -361,7 +361,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Medium', 
     description: 'Algorithms to detect cycles in both directed and undirected graphs. For undirected graphs, DFS can check for back-edges to visited ancestors (not parent). For directed graphs, DFS can check for back-edges to nodes currently in the recursion stack.',
-    longDescription: "Cycle detection in graphs involves determining if a graph contains a sequence of vertices starting and ending at the same vertex. For **undirected graphs**, a cycle exists if a DFS traversal encounters a visited vertex that is not the parent of the current vertex in the DFS tree. For **directed graphs**, a cycle exists if DFS encounters a visited vertex that is currently in the recursion stack (an ancestor in the DFS tree). This indicates a back-edge. BFS can also be used for cycle detection in undirected graphs by checking if a visited node is encountered that is not the parent. For directed graphs using Kahn's algorithm for topological sort, if the count of visited nodes in the topological sort is less than the total number of nodes, then the graph has a cycle. Time complexity is typically O(V+E)."
+    longDescription: "Cycle detection in graphs involves determining if a graph contains a sequence of vertices starting and ending at the same vertex. For **undirected graphs**, a cycle exists if a DFS traversal encounters a visited vertex that is not the parent of the current vertex in the DFS tree. Alternatively, a DSU structure can be used: if two vertices of an edge are already in the same set, adding the edge forms a cycle. For **directed graphs**, a cycle exists if DFS encounters a visited vertex that is currently in the recursion stack (an ancestor in the DFS tree). This indicates a back-edge. BFS cannot directly detect cycles in directed graphs as easily. Kahn's algorithm for topological sort can also detect cycles in directed graphs: if the final sorted list contains fewer nodes than the graph, a cycle is present. Time complexity for DFS/BFS based detection is typically O(V+E)."
   },
   { 
     slug: 'connected-components', 
@@ -369,7 +369,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Graphs', 
     difficulty: 'Medium', 
     description: 'Algorithms (using BFS or DFS) to find all connected components in an undirected graph. For directed graphs, this usually refers to finding Strongly Connected Components (SCCs).',
-    longDescription: "In an **undirected graph**, a connected component is a subgraph in which any two vertices are connected to each other by paths, and which is connected to no additional vertices in the supergraph. Finding all connected components can be done by performing BFS or DFS starting from an arbitrary unvisited vertex, marking all reachable vertices as part of one component, and repeating this process until all vertices are visited. For **directed graphs**, the concept is more nuanced, often referring to Strongly Connected Components (SCCs). An SCC is a subgraph where every vertex is reachable from every other vertex within that subgraph. Algorithms like Kosaraju's algorithm or Tarjan's algorithm (both DFS-based) are used to find SCCs. Time complexity for finding connected components or SCCs is typically O(V+E)."
+    longDescription: "In an **undirected graph**, a connected component is a subgraph in which any two vertices are connected to each other by paths, and which is connected to no additional vertices in the supergraph. Finding all connected components can be done by performing BFS or DFS starting from an arbitrary unvisited vertex, marking all reachable vertices as part of one component, and repeating this process until all vertices are visited. For **directed graphs**, the concept is more nuanced, often referring to Strongly Connected Components (SCCs). An SCC is a subgraph where every vertex is reachable from every other vertex within that subgraph. Algorithms like Kosaraju's algorithm (two DFS passes: one on original graph to get finishing times, one on transpose graph processing in reverse finishing order) or Tarjan's algorithm (single DFS pass using low-link values and a stack) are used to find SCCs. Time complexity for finding connected components or SCCs is typically O(V+E)."
   },
 
   // SECTION VII: Recursion & Backtracking
@@ -420,42 +420,60 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: '0/1 Knapsack Problem', 
     category: 'Dynamic Programming', 
     difficulty: 'Medium', 
-    description: 'Given a set of items, each with a weight and a value, determine the number of each item to include in a collection so that the total weight is less than or equal to a given limit and the total value is as large as possible.'
+    description: 'Given items with weights and values, select items to maximize total value within a weight capacity. Each item can be taken once or not at all.',
+    longDescription: 'The 0/1 Knapsack problem is a classic optimization problem. Given a set of items, each with a specific weight and a corresponding value, the goal is to determine which items to include in a collection (a "knapsack") so that the total weight of the items does not exceed a given capacity, and the total value of the items is maximized. The "0/1" property means that for each item, you either take the entire item or you don\'t take it at all; you cannot take a fraction of an item.\n\nThis problem is typically solved using dynamic programming. The DP state `dp[i][w]` usually represents the maximum value that can be obtained using the first `i` items with a maximum weight capacity of `w`.\nThe recurrence relation is: `dp[i][w] = max(dp[i-1][w], value[i] + dp[i-1][w - weight[i]])` if `weight[i] <= w`. The first term considers not including the i-th item, and the second term considers including it. Base cases are usually `dp[0][w] = 0` (no items, no value) and `dp[i][0] = 0` (no capacity, no value).\nThe final answer is found in `dp[num_items][capacity]`. A 2D DP table of size (num_items+1) x (capacity+1) is used. Time complexity is O(N*W) where N is the number of items and W is the knapsack capacity. Space complexity is O(N*W), which can be optimized to O(W) using only two rows or a single row of the DP table if only the maximum value is needed (not the items themselves). To reconstruct the items chosen, the full DP table or backtracking is needed.',
+    timeComplexities: { best: "O(N*W)", average: "O(N*W)", worst: "O(N*W)" }, // N items, W capacity
+    spaceComplexity: "O(N*W), can be O(W)"
   },
   { 
     slug: 'longest-common-subsequence', 
     title: 'Longest Common Subsequence (LCS)', 
     category: 'Dynamic Programming', 
     difficulty: 'Medium', 
-    description: 'Find the longest subsequence common to all sequences in a set of sequences (often two sequences). Visualizes the DP table construction.'
+    description: 'Find the longest subsequence common to two given sequences (strings or arrays).',
+    longDescription: 'The Longest Common Subsequence (LCS) problem is to find the longest subsequence present in two given sequences (e.g., strings or arrays) in the same relative order, but not necessarily contiguous. For example, the LCS of "AGGTAB" and "GXTXAYB" is "GTAB" (length 4).\n\nThis is solved using dynamic programming. Let the two sequences be X of length m and Y of length n. Create a 2D DP table `dp[m+1][n+1]`. `dp[i][j]` stores the length of the LCS of `X[0...i-1]` and `Y[0...j-1]`.\nThe recurrence relation is:\n- If `X[i-1] == Y[j-1]`, then `dp[i][j] = 1 + dp[i-1][j-1]` (characters match, so LCS increases by 1).\n- If `X[i-1] != Y[j-1]`, then `dp[i][j] = max(dp[i-1][j], dp[i][j-1])` (characters don\'t match, so LCS is the max of LCS without X[i-1] or LCS without Y[j-1]).\nBase cases are `dp[0][j] = 0` and `dp[i][0] = 0`.\nThe length of the LCS is `dp[m][n]`. The actual subsequence can be reconstructed by backtracking through the DP table starting from `dp[m][n]`. Time complexity is O(m*n). Space complexity is O(m*n), optimizable to O(min(m,n)) if only length is needed.',
+    timeComplexities: { best: "O(m*n)", average: "O(m*n)", worst: "O(m*n)" }, // m, n are lengths of sequences
+    spaceComplexity: "O(m*n), can be O(min(m,n))"
   },
   { 
     slug: 'longest-increasing-subsequence', 
     title: 'Longest Increasing Subsequence (LIS)', 
     category: 'Dynamic Programming', 
     difficulty: 'Medium', 
-    description: 'Find the length of the longest subsequence of a given sequence such that all elements of the subsequence are sorted in increasing order.'
+    description: 'Find the length of the longest subsequence of a given sequence such that all elements of the subsequence are sorted in increasing order.',
+    longDescription: 'The Longest Increasing Subsequence (LIS) problem is to find the length of the longest subsequence of a given sequence (array of numbers) in which the subsequence\'s elements are sorted in strictly increasing order. For example, for `[10, 9, 2, 5, 3, 7, 101, 18]`, the LIS is `[2, 3, 7, 101]` or `[2, 5, 7, 101]`, so the length is 4.\n\nThis can be solved using dynamic programming. A common DP approach: `dp[i]` stores the length of the LIS ending at index `i` and including `arr[i]`. To calculate `dp[i]`, iterate `j` from `0` to `i-1`. If `arr[i] > arr[j]`, then `dp[i] = max(dp[i], 1 + dp[j])`. Initialize all `dp[i]` to 1 (as each element itself is an LIS of length 1). The maximum value in the `dp` array is the length of the LIS. Time complexity for this approach is O(N^2). Space complexity is O(N).\n\nA more efficient O(N log N) approach exists using patience sorting or binary search. It maintains a list of the smallest ending elements of all active increasing subsequences of varying lengths. When processing `arr[i]`, if `arr[i]` is greater than all ending elements, extend the longest subsequence. Otherwise, find the smallest ending element that is greater than or equal to `arr[i]` and replace it with `arr[i]` (to potentially start a new, better LIS of that length).',
+    timeComplexities: { best: "O(N log N)", average: "O(N log N)", worst: "O(N^2) or O(N log N)" }, // N is array length
+    spaceComplexity: "O(N)"
   },
   { 
     slug: 'edit-distance', 
-    title: 'Edit Distance (Levenshtein Distance)', 
+    title: 'Edit Distance', 
     category: 'Dynamic Programming', 
     difficulty: 'Medium', 
-    description: 'Measures the similarity between two strings by counting the minimum number of single-character edits (insertions, deletions, or substitutions) required to change one word into the other.'
+    description: 'Measures similarity between two strings by counting minimum edits (insert, delete, substitute) to change one into another (Levenshtein Distance).',
+    longDescription: 'Edit Distance (often Levenshtein Distance) quantifies the similarity between two strings by counting the minimum number of single-character edits required to change one string into the other. The allowed edits are insertion, deletion, and substitution.\n\nThis is solved using dynamic programming. Let the strings be `s1` (length m) and `s2` (length n). Create a DP table `dp[m+1][n+1]`. `dp[i][j]` will store the edit distance between the first `i` characters of `s1` and the first `j` characters of `s2`.\nBase cases: `dp[i][0] = i` (cost of deleting `i` characters from `s1` to get an empty string) and `dp[0][j] = j` (cost of inserting `j` characters into an empty string to get `s2[0...j-1]`).\nRecurrence relation for `dp[i][j]`:\n- If `s1[i-1] == s2[j-1]`, then `dp[i][j] = dp[i-1][j-1]` (no cost if characters match).\n- If `s1[i-1] != s2[j-1]`, then `dp[i][j] = 1 + min(dp[i-1][j],      // Deletion from s1\n                                             dp[i][j-1],      // Insertion into s1\n                                             dp[i-1][j-1]     // Substitution\n                                            )`. (Cost of 1 for the operation, plus cost from previous state).\nThe edit distance between `s1` and `s2` is `dp[m][n]`. Time complexity is O(m*n). Space complexity is O(m*n), optimizable to O(min(m,n)).',
+    timeComplexities: { best: "O(m*n)", average: "O(m*n)", worst: "O(m*n)" }, // m, n are string lengths
+    spaceComplexity: "O(m*n), can be O(min(m,n))"
   },
   { 
     slug: 'matrix-chain-multiplication', 
     title: 'Matrix Chain Multiplication', 
     category: 'Dynamic Programming', 
     difficulty: 'Hard', 
-    description: 'Determine the optimal parenthesization of a product of N matrices to minimize the number of scalar multiplications.'
+    description: 'Determine the optimal parenthesization for multiplying a chain of N matrices to minimize total scalar multiplications.',
+    longDescription: 'The Matrix Chain Multiplication problem asks for the most efficient way (minimum number of scalar multiplications) to multiply a sequence of matrices. The order of multiplication matters significantly. For example, if we have matrices A (10x30), B (30x5), C (5x60), (AB)C costs (10*30*5) + (10*5*60) = 1500 + 3000 = 4500 multiplications, while A(BC) costs (30*5*60) + (10*30*60) = 9000 + 18000 = 27000 multiplications.\n\nThis is a classic dynamic programming problem. Let `p` be an array where `p[i-1] x p[i]` are the dimensions of matrix `A_i`. `dp[i][j]` stores the minimum number of scalar multiplications needed to compute the product `A_i * A_{i+1} * ... * A_j`.\nThe recurrence relation involves finding an optimal split point `k` (where `i <= k < j`):\n`dp[i][j] = min_{i <= k < j} (dp[i][k] + dp[k+1][j] + p[i-1]*p[k]*p[j])`\nThe base cases are `dp[i][i] = 0` (cost of multiplying a single matrix is 0).\nThe DP table is filled for increasing chain lengths. The final answer is `dp[1][n]`, where `n` is the number of matrices. Time complexity is O(N^3) due to three nested loops (for chain length, start index `i`, and split point `k`). Space complexity is O(N^2) for the DP table.',
+    timeComplexities: { best: "O(N^3)", average: "O(N^3)", worst: "O(N^3)" }, // N is number of matrices
+    spaceComplexity: "O(N^2)"
   },
   { 
     slug: 'coin-change', 
     title: 'Coin Change Problem', 
     category: 'Dynamic Programming', 
     difficulty: 'Medium', 
-    description: 'Given a value N, if we want to make change for N cents, and we have infinite supply of each of S = { S1, S2, .. , Sm} valued coins, how many ways can we make the change?'
+    description: 'Find the minimum number of coins (or total ways) to make a given amount using a set of coin denominations, assuming infinite supply of each coin.',
+    longDescription: 'The Coin Change problem has two main variations:\n1.  **Minimum Coins**: Find the minimum number of coins needed to make a specific amount, given a set of coin denominations (with infinite supply of each).\n    DP approach: `dp[i]` stores the minimum number of coins to make amount `i`. \n    Recurrence: `dp[i] = min(dp[i], 1 + dp[i - coin_value])` for each `coin_value <= i`.\n    Base case: `dp[0] = 0`. Initialize `dp` values to infinity. Time: O(Amount * NumCoins), Space: O(Amount).\n2.  **Number of Ways**: Find the total number of distinct ways to make change for an amount using the given coin denominations.\n    DP approach: `dp[i]` stores the number of ways to make amount `i`.\n    Recurrence (for each coin `c`): `dp[i] = dp[i] + dp[i - c]` (if `i >= c`). This counts permutations if coins are processed in an outer loop. To count combinations, iterate through coins one by one, and for each coin, update the `dp` table for all amounts it can contribute to: `for coin in coins: for amount from coin to target_amount: dp[amount] += dp[amount - coin]`.\n    Base case: `dp[0] = 1` (one way to make amount 0: use no coins).\n    Time: O(Amount * NumCoins), Space: O(Amount).\nThis visualizer typically focuses on one variant, often the minimum coins problem.',
+    timeComplexities: { best: "O(A*C)", average: "O(A*C)", worst: "O(A*C)" }, // A=amount, C=num coin types
+    spaceComplexity: "O(A)"
   },
 
   // SECTION IX: Math & Logic Algorithms
@@ -701,4 +719,5 @@ export default function VisualizersPage() {
     
 
     
+
 
