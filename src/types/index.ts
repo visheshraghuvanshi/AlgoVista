@@ -16,7 +16,8 @@ export interface AlgorithmMetadata {
   pseudocode?: string[];
 }
 
-export type AlgorithmStep = {
+// For array-based algorithms (sorting, searching)
+export type ArrayAlgorithmStep = {
   array: number[];
   activeIndices: number[]; 
   swappingIndices: number[]; 
@@ -26,4 +27,43 @@ export type AlgorithmStep = {
   processingSubArrayRange?: [number, number] | null; 
   pivotActualIndex?: number | null;
 };
+
+// For graph-based algorithms
+export interface GraphNode {
+  id: string;
+  label: string;
+  x: number; // For layout
+  y: number; // For layout
+  color: string; // To indicate state: e.g., default, visiting, visited, in_queue/stack
+  isStartNode?: boolean;
+  distance?: number | string; // For algorithms like Dijkstra
+}
+
+export interface GraphEdge {
+  id: string; // e.g., "sourceId-targetId"
+  source: string; // source node id
+  target: string; // target node id
+  color: string; // To indicate state: e.g., default, traversed
+  weight?: number; // For weighted graphs
+  isDirected?: boolean; // Default to undirected unless specified
+}
+
+export interface GraphAlgorithmStep {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  auxiliaryData?: { // Flexible structure for queue, stack, distances, etc.
+    type: 'queue' | 'stack' | 'set' | 'distances' | 'path';
+    label: string;
+    values: string[] | { [key: string]: string | number };
+  }[];
+  currentLine: number | null;
+  message?: string;
+}
+
+// Union type if needed, or components can just expect one type.
+// For now, page components will manage which step type they use.
+
+// Alias for clarity in component props
+export type AlgorithmStep = ArrayAlgorithmStep; // For sorting/searching pages
+// Graph algorithm pages will use GraphAlgorithmStep directly.
 

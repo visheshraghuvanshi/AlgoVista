@@ -18,7 +18,6 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Sorting', 
     difficulty: 'Easy', 
     description: 'A simple comparison-based sorting algorithm where adjacent elements are repeatedly compared and swapped if they are in the wrong order.',
-    // codeSnippets removed
   },
   { 
     slug: 'insertion-sort', 
@@ -26,7 +25,6 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Sorting', 
     difficulty: 'Easy', 
     description: 'Builds the final sorted array one item at a time by repeatedly taking the next item and inserting it into its correct position within the sorted portion.',
-    // codeSnippets removed
   },
   { 
     slug: 'merge-sort', 
@@ -34,7 +32,6 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Sorting', 
     difficulty: 'Medium', 
     description: 'A divide-and-conquer algorithm that divides the array into halves, sorts them, and then merges them back together.',
-    // codeSnippets removed
   },
   { 
     slug: 'quick-sort', 
@@ -42,7 +39,6 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Sorting', 
     difficulty: 'Medium', 
     description: 'A highly efficient divide-and-conquer sorting algorithm that picks an element as a pivot and partitions the array around the pivot.',
-    // codeSnippets removed
   },
   { 
     slug: 'heap-sort', 
@@ -50,12 +46,11 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Sorting', 
     difficulty: 'Hard', 
     description: 'A comparison-based sorting technique based on a Binary Heap data structure.',
-    // codeSnippets removed
   },
   { slug: 'linear-search', title: 'Linear Search', category: 'Searching', difficulty: 'Easy', description: 'Sequentially checks each element of the list until a match is found or the whole list has been searched.' },
   { slug: 'binary-search', title: 'Binary Search', category: 'Searching', difficulty: 'Easy', description: 'Efficiently finds an item from a sorted list of items by repeatedly dividing the search interval in half.' },
-  { slug: 'bfs', title: 'Breadth-First Search (BFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing or searching tree or graph data structures, exploring neighbors first.' },
-  { slug: 'dfs', title: 'Depth-First Search (DFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing or searching tree or graph data structures, exploring as far as possible along each branch.' },
+  { slug: 'bfs', title: 'Breadth-First Search (BFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing graph data structures by exploring all neighbor nodes at the present depth prior to moving on to nodes at the next depth level.' },
+  { slug: 'dfs', title: 'Depth-First Search (DFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing graph data structures by exploring as far as possible along each branch before backtracking.' },
   { slug: 'dijkstra', title: 'Dijkstra\'s Algorithm', category: 'Graph', difficulty: 'Hard', description: 'Finds the shortest paths between nodes in a graph, which may represent, for example, road networks.' },
   { slug: 'binary-tree-traversal', title: 'Binary Tree Traversal', category: 'Tree', difficulty: 'Medium', description: 'Covers Inorder, Preorder, and Postorder traversals for binary trees.' },
   { slug: 'linked-list-operations', title: 'Linked List Operations', category: 'Data Structures', difficulty: 'Easy', description: 'Visualize insertion, deletion, and search in singly linked lists.'},
