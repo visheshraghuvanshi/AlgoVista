@@ -31,7 +31,7 @@ export function Footer() {
         <div className="mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} AlgoVista. All rights reserved.</p>
           <a
-            href="https://github.com" // Replace with actual GitHub link later
+            href="https://github.com/visheshraghuvanshi/AlgoVista" 
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center hover:text-foreground transition-colors mt-2 md:mt-0"

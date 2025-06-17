@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -8,7 +9,8 @@ import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const RADIX_SORT_CODE_SNIPPETS = {
+// Moved from page.tsx and expanded
+export const RADIX_SORT_CODE_SNIPPETS = {
   JavaScript: [
     "// Radix Sort (JavaScript - LSD, using Counting Sort as helper)", 
     "function radixSort(arr) {",                                
@@ -123,13 +125,12 @@ const RADIX_SORT_CODE_SNIPPETS = {
 };
 
 interface RadixSortCodePanelProps {
-  codeSnippets: { [language: string]: string[] };
   currentLine: number | null;
 }
 
-export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodePanelProps) {
+export function RadixSortCodePanel({ currentLine }: RadixSortCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  const languages = useMemo(() => Object.keys(RADIX_SORT_CODE_SNIPPETS), [codeSnippets]);
   
   const initialLanguage = languages.length > 0 && languages.includes("JavaScript") ? "JavaScript" : (languages.length > 0 ? languages[0] : "Info");
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
@@ -147,23 +148,23 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
   };
 
   const handleCopyCode = () => {
-    const codeToCopy = codeSnippets[selectedLanguage]?.join('\n') || '';
+    const codeToCopy = RADIX_SORT_CODE_SNIPPETS[selectedLanguage]?.join('\n') || '';
     if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => {
-          toast({ title: `${selectedLanguage} Code Copied!`, description: "The code has been copied to your clipboard." });
+          toast({ title: `${selectedLanguage} Radix Sort Code Copied!` });
         })
         .catch(err => {
-          toast({ title: "Copy Failed", description: "Could not copy code to clipboard.", variant: "destructive" });
+          toast({ title: "Copy Failed", variant: "destructive" });
         });
     } else {
-        toast({ title: "No Code to Copy", description: "No code available for selected language.", variant: "default" });
+        toast({ title: "No Code to Copy", variant: "default" });
     }
   };
 
   const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
-  }, [selectedLanguage, codeSnippets]);
+    return selectedLanguage === 'Info' ? [] : (RADIX_SORT_CODE_SNIPPETS[selectedLanguage] || []);
+  }, [selectedLanguage]);
 
   const tabValue = languages.includes(selectedLanguage) 
                    ? selectedLanguage 
@@ -173,7 +174,7 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> Code
+            <Code2 className="mr-2 h-5 w-5" /> Radix Sort Code
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
@@ -194,9 +195,9 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
                 <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
-                    {(codeSnippets[lang] || []).map((line, index) => (
+                    {(RADIX_SORT_CODE_SNIPPETS[lang] || []).map((line, index) => (
                       <div
-                        key={`${lang}-line-${index}`}
+                        key={`${lang}-radix-line-${index}`}
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
                           index + 1 === currentLine && lang === tabValue ? "bg-accent text-accent-foreground" : "text-foreground"
                         }`}
@@ -215,7 +216,7 @@ export function RadixSortCodePanel({ codeSnippets, currentLine }: RadixSortCodeP
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>

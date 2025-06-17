@@ -40,8 +40,8 @@ export default function ContactPage() {
                 For general project updates and discussions, please visit our GitHub page.
               </p>
               <Button asChild size="lg" className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90">
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-                  <Github className="mr-2 h-5 w-5" /> Visit GitHub (Soon!)
+                <a href="https://github.com/visheshraghuvanshi/AlgoVista" target="_blank" rel="noopener noreferrer">
+                  <Github className="mr-2 h-5 w-5" /> Visit GitHub
                 </a>
               </Button>
             </div>
@@ -56,3 +56,4 @@ export default function ContactPage() {
     </div>
   );
 }
+

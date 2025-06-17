@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { RadixSortCodePanel } from './RadixSortCodePanel'; 
+import { RadixSortCodePanel, RADIX_SORT_CODE_SNIPPETS } from './RadixSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmStep } from '@/types';
@@ -12,8 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { RADIX_SORT_LINE_MAP, generateRadixSortSteps } from './radix-sort-logic';
 import { algorithmMetadata } from './metadata'; 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // For auxiliary data display
-import { RADIX_SORT_CODE_SNIPPETS } from './RadixSortCodePanel';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; 
 
 
 const DEFAULT_ANIMATION_SPEED = 700; 
@@ -38,8 +38,8 @@ export default function RadixSortVisualizerPage() {
   const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
 
 
-  const [isPlaying, setIsPlaying] = useState(isPlaying);
-  const [isFinished, setIsFinished] = useState(isFinished);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);

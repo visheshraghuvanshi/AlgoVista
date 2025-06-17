@@ -105,13 +105,13 @@ export default function AboutPage() {
             AlgoVista is envisioned as an open-source project. We believe in the power of community collaboration to build the best learning tools. We welcome contributions, feedback, and suggestions!
           </p>
            <a
-            href="https://github.com" 
+            href="https://github.com/visheshraghuvanshi/AlgoVista" 
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-accent-foreground bg-accent hover:bg-accent/90 dark:text-accent-foreground dark:bg-primary dark:hover:bg-primary/90"
           >
             <Github className="h-5 w-5 mr-2" />
-            View on GitHub (Soon!)
+            View on GitHub
           </a>
         </section>
       </main>
@@ -144,3 +144,4 @@ function TechListItem({ name, description }: { name: string, description: string
     </li>
   );
 }
+

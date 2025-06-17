@@ -5,84 +5,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { ShellSortCodePanel } from './ShellSortCodePanel'; 
+import { ShellSortCodePanel, SHELL_SORT_CODE_SNIPPETS } from './ShellSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { SHELL_SORT_LINE_MAP, generateShellSortSteps } from './shell-sort-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
-
-const SHELL_SORT_CODE_SNIPPETS = {
-  JavaScript: [
-    "function shellSort(arr) {",                            // 1
-    "  let n = arr.length;",                               // 2
-    "  // Start with a big gap, then reduce the gap",
-    "  for (let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)) {", // 3
-    "    // Do a gapped insertion sort for this gap size.",
-    "    for (let i = gap; i < n; i += 1) {",            // 4
-    "      let temp = arr[i];",                           // 5
-    "      let j;",
-    "      for (j = i; j >= gap && arr[j - gap] > temp; j -= gap) {", // 6 & 7
-    "        arr[j] = arr[j - gap];",                     // 8
-    "      }",
-    "      arr[j] = temp;",                                // 9
-    "    }",                                               // 10
-    "  }",                                                 // 11
-    "  return arr;",                                       // 12
-    "}",                                                   // 13
-  ],
-  Python: [
-    "def shell_sort(arr):",
-    "    n = len(arr)",
-    "    gap = n // 2",
-    "    while gap > 0:",
-    "        for i in range(gap, n):",
-    "            temp = arr[i]",
-    "            j = i",
-    "            while j >= gap and arr[j - gap] > temp:",
-    "                arr[j] = arr[j - gap]",
-    "                j -= gap",
-    "            arr[j] = temp",
-    "        gap //= 2",
-    "    return arr",
-  ],
-  Java: [
-    "public class ShellSort {",
-    "    public static void sort(int[] arr) {",
-    "        int n = arr.length;",
-    "        for (int gap = n / 2; gap > 0; gap /= 2) {",
-    "            for (int i = gap; i < n; i++) {",
-    "                int temp = arr[i];",
-    "                int j;",
-    "                for (j = i; j >= gap && arr[j - gap] > temp; j -= gap) {",
-    "                    arr[j] = arr[j - gap];",
-    "                }",
-    "                arr[j] = temp;",
-    "            }",
-    "        }",
-    "    }",
-    "}",
-  ],
-  "C++": [
-    "#include <vector>",
-    "#include <algorithm> // For std::swap if used, though direct assignment is common",
-    "void shellSort(std::vector<int>& arr) {",
-    "    int n = arr.size();",
-    "    for (int gap = n / 2; gap > 0; gap /= 2) {",
-    "        for (int i = gap; i < n; ++i) {",
-    "            int temp = arr[i];",
-    "            int j;",
-    "            for (j = i; j >= gap && arr[j - gap] > temp; j -= gap) {",
-    "                arr[j] = arr[j - gap];",
-    "            }",
-    "            arr[j] = temp;",
-    "        }",
-    "    }",
-    "}",
-  ],
-};
+import { algorithmMetadata } from './metadata'; 
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -294,6 +224,9 @@ export default function ShellSortVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {steps[currentStepIndex]?.message || algorithmMetadata.description} (Current Gap: {steps[currentStepIndex]?.auxiliaryData?.gap || 'N/A'})
+          </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">

@@ -125,8 +125,8 @@ export default function DocsPage() {
                 </ul>
                 <div className="pt-2">
                      <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90">
-                        <a href="https://github.com" target="_blank" rel="noopener noreferrer"> 
-                            <Github className="mr-2 h-4 w-4" /> Visit AlgoVista on GitHub (Link Coming Soon!)
+                        <a href="https://github.com/visheshraghuvanshi/AlgoVista" target="_blank" rel="noopener noreferrer"> 
+                            <Github className="mr-2 h-4 w-4" /> Visit AlgoVista on GitHub
                         </a>
                     </Button>
                 </div>
