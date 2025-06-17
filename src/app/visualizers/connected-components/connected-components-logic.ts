@@ -2,67 +2,109 @@
 import type { GraphAlgorithmStep, GraphNode, GraphEdge } from '@/types';
 import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; // Reuse parser
 
-export const CONNECTED_COMPONENTS_LINE_MAP = {
-  mainFuncStart: 1,
-  initVisited: 2,
-  initComponents: 3,
-  getNodes: 4,
-  mainLoopNodes: 5,
-  checkIfNotVisited: 6,
-  initCurrentComponent: 7,
-  callDfs: 8,
-  addComponentToList: 9,
-  dfsFuncStart: 10,
-  dfsMarkVisited: 11,
-  dfsAddComponent: 12,
-  dfsLoopNeighbors: 13,
-  dfsCheckNeighborNotVisited: 14,
-  dfsRecursiveCall: 15,
-  returnComponents: 16,
+export const CONNECTED_COMPONENTS_LINE_MAP_UNDIRECTED = {
+  mainFuncStart: 1, initVisited: 2, initComponents: 3, getNodes: 4,
+  mainLoopNodes: 5, checkIfNotVisited: 6, initCurrentComponent: 7, callDfs: 8, addComponentToList: 9,
+  dfsFuncStart: 10, dfsMarkVisited: 11, dfsAddComponent: 12, dfsLoopNeighbors: 13,
+  dfsCheckNeighborNotVisited: 14, dfsRecursiveCall: 15, returnComponents: 16,
 };
+
+export const CONNECTED_COMPONENTS_LINE_MAP_DIRECTED_KOSARAJU = {
+  mainFuncStart: 1,
+  initVisited1: 2,
+  initFinishStack: 3,
+  firstDfsLoop: 4, 
+  dfs1FuncStart: 5,
+  dfs1MarkVisited: 6,
+  dfs1LoopNeighbors: 7,
+  dfs1CheckNeighborNotVisited: 8,
+  dfs1RecursiveCall: 9,
+  dfs1PushToStack: 10,
+  computeTransposeStart: 11, 
+  computeTransposeLoopU: 12,
+  computeTransposeLoopV: 13, 
+  initVisited2: 14,
+  initSccsList: 15,
+  secondDfsLoopOuter: 16, 
+  popFromStack: 17,
+  checkNodeNotVisitedOuter2: 18,
+  initCurrentScc: 19,
+  callDfs2: 20, 
+  addSccToList: 21,
+  dfs2FuncStart: 22,
+  dfs2MarkVisited: 23,
+  dfs2AddNodeToScc: 24,
+  dfs2LoopNeighborsTranspose: 25,
+  dfs2CheckNeighborNotVisitedInner: 26,
+  dfs2RecursiveCallInner: 27,
+  returnSccs: 28,
+};
+
 
 const NODE_COLORS = {
   default: "hsl(var(--secondary))",
   visitingDfs: "hsl(var(--primary))",
   visitedCurrentComponent: "hsl(var(--accent))",
   visitedOtherComponent: "hsl(var(--muted-foreground))",
-  componentColors: [ // Cycle through these for different components
+  sccColors: [ 
     "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))", "hsl(var(--chart-5))",
+    "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--ring))",
+    "hsl(var(--destructive))", "hsl(var(--blue-500))", "hsl(var(--green-500))", "hsl(var(--yellow-500))"
   ],
 };
 
 const EDGE_COLORS = {
   default: "hsl(var(--muted-foreground))",
   traversedDfs: "hsl(var(--primary))",
+  transpose: "hsl(var(--purple-500))", 
 };
 
-// Wrapper to ensure consistent node list even if some nodes are only targets
-function parseGraphInput(input: string): { nodes: { id: string; label: string }[]; adj: Map<string, string[]> } | null {
-    const parsed = baseParseGraphInput(input);
-    if (!parsed) return null;
+interface ParsedGraphForSCC {
+  numNodes: number;
+  adj: Map<number, number[]>; 
+  adjT?: Map<number, number[]>; 
+  nodeLabelToIdx: Map<string, number>;
+  nodeIdxToLabel: Map<number, string>;
+  initialNodes: {id:string, label:string}[]; 
+}
 
-    const allNodeIds = new Set<string>(parsed.nodes.map(n => n.id));
-    parsed.adj.forEach(neighbors => {
+function parseGraphForSCC(input: string): ParsedGraphForSCC | null {
+    const parsedBase = baseParseGraphInput(input);
+    if (!parsedBase) return null;
+
+    const allNodeIds = new Set<string>();
+    parsedBase.nodes.forEach(n => allNodeIds.add(n.id));
+    parsedBase.adj.forEach((neighbors, sourceNodeId) => {
+        allNodeIds.add(sourceNodeId);
         neighbors.forEach(n => allNodeIds.add(n));
     });
     
-    const finalNodes = Array.from(allNodeIds).map(id => ({ id, label: id })).sort((a,b) => a.id.localeCompare(b.id));
-    finalNodes.forEach(node => {
-        if (!parsed.adj.has(node.id)) {
-            parsed.adj.set(node.id, []); // Ensure all nodes are in adj map
-        }
+    const nodeLabels = Array.from(allNodeIds).sort((a,b) => a.localeCompare(b));
+    const nodeLabelToIdx = new Map(nodeLabels.map((label, index) => [label, index]));
+    const nodeIdxToLabel = new Map(nodeLabels.map((label, index) => [index, label]));
+    const numNodes = nodeLabels.length;
+
+    const adjNumeric = new Map<number, number[]>();
+    for (let i = 0; i < numNodes; i++) adjNumeric.set(i, []); 
+
+    parsedBase.adj.forEach((neighbors, sourceLabel) => {
+        const sourceIdx = nodeLabelToIdx.get(sourceLabel)!;
+        // Ensure adjNumeric.get(sourceIdx) exists before pushing
+        if (!adjNumeric.has(sourceIdx)) adjNumeric.set(sourceIdx, []);
+        adjNumeric.get(sourceIdx)!.push(...neighbors.map(nLabel => nodeLabelToIdx.get(nLabel)!));
     });
-    return { nodes: finalNodes, adj: parsed.adj };
+    
+    const initialNodes = nodeLabels.map(label => ({ id: label, label }));
+    return { numNodes, adj: adjNumeric, nodeLabelToIdx, nodeIdxToLabel, initialNodes };
 }
 
 
-function calculateCircularLayout(nodes: { id: string; label: string }[], svgWidth: number, svgHeight: number, radiusMultiplier: number = 0.8): GraphNode[] {
+function calculateCircularLayout(nodes: { id: string; label: string }[], svgWidth: number, svgHeight: number): GraphNode[] {
   const numNodes = nodes.length;
   if (numNodes === 0) return [];
   const centerX = svgWidth / 2;
   const centerY = svgHeight / 2;
-  const layoutRadius = Math.min(svgWidth, svgHeight) / 2 * radiusMultiplier;
+  const layoutRadius = Math.min(svgWidth, svgHeight) / 2 * 0.8;
   return nodes.map((node, index) => {
     const angle = (index / numNodes) * 2 * Math.PI - (Math.PI /2);
     return {
@@ -74,126 +116,218 @@ function calculateCircularLayout(nodes: { id: string; label: string }[], svgWidt
   });
 }
 
-export const generateConnectedComponentsSteps = (graphInput: string): GraphAlgorithmStep[] => {
+export const generateConnectedComponentsSteps = (graphInput: string, isDirected: boolean): GraphAlgorithmStep[] => {
   const localSteps: GraphAlgorithmStep[] = [];
-  const parsedData = parseGraphInput(graphInput);
+  const parsedData = parseGraphForSCC(graphInput); 
+
   if (!parsedData) {
     localSteps.push({ nodes: [], edges: [], currentLine: null, message: "Invalid graph input." });
     return localSteps;
   }
-
-  const { nodes: initialNodeData, adj } = parsedData;
-  if (initialNodeData.length === 0) {
+  
+  const { numNodes, adj: adjNumericOriginal, nodeLabelToIdx, nodeIdxToLabel, initialNodes } = parsedData;
+  
+  if (numNodes === 0) {
     localSteps.push({ nodes: [], edges: [], currentLine: null, message: "Graph is empty." });
     return localSteps;
   }
 
-  let graphNodes = calculateCircularLayout(initialNodeData, 500, 300);
-  const graphEdges: GraphEdge[] = [];
-  adj.forEach((neighbors, sourceId) => {
-    neighbors.forEach(targetId => {
-      if (!graphEdges.some(e => (e.source === sourceId && e.target === targetId) || (e.source === targetId && e.target === sourceId))) {
-        graphEdges.push({ id: `${sourceId}-${targetId}`, source: sourceId, target: targetId, color: EDGE_COLORS.default });
-      }
+  let graphNodesVisual = calculateCircularLayout(initialNodes, 500, 300);
+  
+  const buildGraphEdgesVisual = (currentAdjMap: Map<number, number[]>, isTranspose = false) => {
+    const edgesVisual: GraphEdge[] = [];
+    const addedEdgesForUndirected = new Set<string>();
+    currentAdjMap.forEach((neighbors, u_idx) => {
+        const u_label = nodeIdxToLabel.get(u_idx)!;
+        neighbors.forEach(v_idx => {
+            const v_label = nodeIdxToLabel.get(v_idx)!;
+            const edgeId1 = `${u_label}-${v_label}`;
+            const edgeId2 = `${v_label}-${u_label}`;
+            if(isDirected || !addedEdgesForUndirected.has(edgeId1) && !addedEdgesForUndirected.has(edgeId2)) {
+                 edgesVisual.push({
+                    id: isTranspose ? `T-${edgeId1}` : edgeId1, 
+                    source: u_label, target: v_label, 
+                    color: isTranspose ? EDGE_COLORS.transpose : EDGE_COLORS.default, 
+                    isDirected
+                });
+                if(!isDirected){ addedEdgesForUndirected.add(edgeId1); addedEdgesForUndirected.add(edgeId2); }
+            }
+        });
     });
-  });
+    return edgesVisual;
+  };
+  let currentGraphEdgesVisual = buildGraphEdgesVisual(adjNumericOriginal, false);
 
-  const visited = new Set<string>();
-  const components: string[][] = [];
+
+  const visited = new Array(numNodes).fill(false);
   let componentColorIndex = 0;
-  const nodeComponentMap = new Map<string, number>(); // node_id -> component_index
+  const nodeComponentMap = new Map<number, number>(); 
 
   const addStep = (
-    line: number,
+    lineMap: Record<string, number>, 
+    lineKey: keyof typeof lineMap,
     message: string,
-    activeNodeId?: string | null,
-    activeEdgeId?: string | null,
-    dfsStackForDisplay?: string[]
+    auxiliaryDataUpdates?: Record<string, any>, // Store specific aux data like finishStack, sccs, current component
+    activeNode_idx?: number,
+    activeEdge_uv_indices?: [number, number],
+    useTransposeVisuals?: boolean
   ) => {
-    const stepNodes = graphNodes.map(n => {
+    const stepNodes = graphNodesVisual.map(gn => {
+      const nodeIdx = nodeLabelToIdx.get(gn.id)!;
       let color = NODE_COLORS.default;
-      if (visited.has(n.id)) {
-          if (nodeComponentMap.has(n.id)) {
-              color = NODE_COLORS.componentColors[nodeComponentMap.get(n.id)! % NODE_COLORS.componentColors.length];
-          } else {
-             color = NODE_COLORS.visitedCurrentComponent; // Visited in current DFS but component not finalized
-          }
+      if (nodeComponentMap.has(nodeIdx)) {
+          color = NODE_COLORS.sccColors[nodeComponentMap.get(nodeIdx)! % NODE_COLORS.sccColors.length];
+      } else if (auxiliaryDataUpdates?.finishStack?.includes(nodeIdx) && isDirected) { // Highlight nodes in finish stack differently
+          color = NODE_COLORS.visitedOtherComponent;
+      } else if (visited[nodeIdx]) {
+          color = NODE_COLORS.visitedCurrentComponent; 
       }
-      if (activeNodeId === n.id) color = NODE_COLORS.visitingDfs;
-      return { ...n, color };
+      if (activeNode_idx === nodeIdx) color = NODE_COLORS.visitingDfs;
+      return { ...gn, color };
     });
 
-    const stepEdges = graphEdges.map(e => ({
-      ...e,
-      color: (e.id === activeEdgeId || `${e.target}-${e.source}` === activeEdgeId) ? EDGE_COLORS.traversedDfs : EDGE_COLORS.default
-    }));
+    const currentEdgesToDisplay = useTransposeVisuals && parsedData.adjT 
+                                ? buildGraphEdgesVisual(parsedData.adjT, true) 
+                                : currentGraphEdgesVisual;
+
+    const stepEdgesCloned = currentEdgesToDisplay.map(e => ({...e, color: e.color || EDGE_COLORS.default}));
+    if(activeEdge_uv_indices) {
+        const uLabel = nodeIdxToLabel.get(activeEdge_uv_indices[0])!;
+        const vLabel = nodeIdxToLabel.get(activeEdge_uv_indices[1])!;
+        const edgeIdToFind = useTransposeVisuals ? `T-${uLabel}-${vLabel}` : `${uLabel}-${vLabel}`;
+        const edge = stepEdgesCloned.find(e => e.id === edgeIdToFind);
+        if(edge) edge.color = EDGE_COLORS.traversedDfs;
+    }
     
-    const auxDataDisplay = [
-        { type: 'set' as 'set', label: 'Visited Globally', values: Array.from(visited).sort() },
-        { type: 'set' as 'set', label: 'Components Found', values: components.map((c,i) => `C${i+1}: {${c.join(',')}}`) }
+    let currentAuxData: GraphAlgorithmStep['auxiliaryData'] = [
+        { type: 'set', label: 'Visited', values: initialNodes.filter(n => visited[nodeLabelToIdx.get(n.id)!]).map(n => n.id).sort() },
     ];
-    if (dfsStackForDisplay && dfsStackForDisplay.length > 0) {
-        auxDataDisplay.unshift({type: 'stack' as 'stack', label: 'DFS Stack', values: [...dfsStackForDisplay].reverse()});
+    if (auxiliaryDataUpdates) {
+        if(auxiliaryDataUpdates.finishStack) currentAuxData.push({type:'stack', label:'Finish Order (Stack Top)', values: auxiliaryDataUpdates.finishStack.map((idx:number)=>nodeIdxToLabel.get(idx)!).reverse()});
+        if(auxiliaryDataUpdates.sccsList) currentAuxData.push({type:'set', label:'SCCs Found', values: auxiliaryDataUpdates.sccsList});
+        if(auxiliaryDataUpdates.currentComponentList) currentAuxData.push({type:'set', label:'Current Component', values: [auxiliaryDataUpdates.currentComponentList]});
     }
 
-
     localSteps.push({
-      nodes: stepNodes,
-      edges: stepEdges,
-      currentLine: line,
-      message,
-      auxiliaryData: auxDataDisplay,
+      nodes: stepNodes, edges: stepEdgesCloned, currentLine: lineMap[lineKey], message, auxiliaryData: currentAuxData,
     });
   };
 
-  addStep(CONNECTED_COMPONENTS_LINE_MAP.mainFuncStart, "Finding Connected Components.");
-  addStep(CONNECTED_COMPONENTS_LINE_MAP.initVisited, "Initialize 'visited' set (empty).");
-  addStep(CONNECTED_COMPONENTS_LINE_MAP.initComponents, "Initialize 'components' list (empty).");
-  addStep(CONNECTED_COMPONENTS_LINE_MAP.getNodes, `Graph nodes: [${initialNodeData.map(n => n.id).join(', ')}].`);
 
-  function dfs(nodeId: string, currentComponent: string[], dfsStack: string[]) {
-    dfsStack.push(nodeId);
-    addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsFuncStart, `DFS started for component from node ${nodeId}. Stack: [${dfsStack.join(',')}]`, nodeId);
-    visited.add(nodeId);
-    nodeComponentMap.set(nodeId, components.length); // Tentatively assign to current component being built
-    addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsMarkVisited, `Marked ${nodeId} as visited. Stack: [${dfsStack.join(',')}]`, nodeId);
-    currentComponent.push(nodeId);
-    addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsAddComponent, `Added ${nodeId} to current component. Current component: [${currentComponent.join(',')}]. Stack: [${dfsStack.join(',')}]`, nodeId);
+  if (!isDirected) { 
+    const lmUndirected = CONNECTED_COMPONENTS_LINE_MAP_UNDIRECTED;
+    const components: string[][] = [];
+    addStep(lmUndirected, 'mainFuncStart', "Finding Connected Components (Undirected DFS).");
+    
+    function dfsUndirected(u_idx: number, currentComponent: string[]) {
+        const u_label = nodeIdxToLabel.get(u_idx)!;
+        addStep(lmUndirected, 'dfsFuncStart', `DFS from ${u_label}.`, {components: components.map((c,i)=>`C${i+1}:{${c.join(',')}}`) }, u_idx);
+        visited[u_idx] = true;
+        nodeComponentMap.set(u_idx, components.length);
+        currentComponent.push(u_label);
+        addStep(lmUndirected, 'dfsMarkVisited', `Marked ${u_label} visited. Added to component.`, {components: components.map((c,i)=>`C${i+1}:{${c.join(',')}}`), currentComponentList: currentComponent.join(',') }, u_idx);
 
-    const neighbors = adj.get(nodeId) || [];
-    for (const neighbor of neighbors) {
-      addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsLoopNeighbors, `Checking neighbor ${neighbor} of ${nodeId}. Stack: [${dfsStack.join(',')}]`, nodeId, `${nodeId}-${neighbor}`);
-      addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsCheckNeighborNotVisited, `Is ${neighbor} visited? Stack: [${dfsStack.join(',')}]`, nodeId, `${nodeId}-${neighbor}`);
-      if (!visited.has(neighbor)) {
-        addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsRecursiveCall, `No. Recursive DFS call for ${neighbor}. Stack: [${dfsStack.join(',')}]`, neighbor, `${nodeId}-${neighbor}`);
-        dfs(neighbor, currentComponent, dfsStack);
-         addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsRecursiveCall, `Returned from DFS for ${neighbor}. Stack: [${dfsStack.join(',')}]`, nodeId, `${nodeId}-${neighbor}`);
-      } else {
-         addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsCheckNeighborNotVisited, `Yes, ${neighbor} already visited. Stack: [${dfsStack.join(',')}]`, nodeId, `${nodeId}-${neighbor}`);
-      }
+        for (const v_idx of adjNumericOriginal.get(u_idx) || []) {
+            addStep(lmUndirected, 'dfsLoopNeighbors', `Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label}.`, {components: components.map((c,i)=>`C${i+1}:{${c.join(',')}}`), currentComponentList: currentComponent.join(',') }, u_idx, [u_idx, v_idx]);
+            if (!visited[v_idx]) {
+                addStep(lmUndirected, 'dfsCheckNeighborNotVisited', `${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {components: components.map((c,i)=>`C${i+1}:{${c.join(',')}}`), currentComponentList: currentComponent.join(',') }, u_idx, [u_idx, v_idx]);
+                dfsUndirected(v_idx, currentComponent);
+            }
+        }
     }
-    dfsStack.pop();
-    addStep(CONNECTED_COMPONENTS_LINE_MAP.dfsFuncStart, `Finished DFS for node ${nodeId}. Stack: [${dfsStack.join(',')}]`, nodeId); // Re-using line map for end of DFS for a node
-  }
-
-  for (const node of initialNodeData) {
-    addStep(CONNECTED_COMPONENTS_LINE_MAP.mainLoopNodes, `Main loop: considering node ${node.id}.`);
-    addStep(CONNECTED_COMPONENTS_LINE_MAP.checkIfNotVisited, `Is ${node.id} visited?`);
-    if (!visited.has(node.id)) {
-      addStep(CONNECTED_COMPONENTS_LINE_MAP.initCurrentComponent, `No. Start new component search from ${node.id}.`);
-      const currentComponent: string[] = [];
-      const dfsStack: string[] = [];
-      addStep(CONNECTED_COMPONENTS_LINE_MAP.callDfs, `Call DFS for ${node.id}.`);
-      dfs(node.id, currentComponent, dfsStack);
-      components.push(currentComponent);
-      // Update component map for all nodes in this newly found component
-      currentComponent.forEach(nId => nodeComponentMap.set(nId, components.length - 1));
-      componentColorIndex++;
-      addStep(CONNECTED_COMPONENTS_LINE_MAP.addComponentToList, `Component found: [${currentComponent.join(', ')}]. Added to components list.`);
-    } else {
-       addStep(CONNECTED_COMPONENTS_LINE_MAP.checkIfNotVisited, `Yes, ${node.id} already visited (part of component ${nodeComponentMap.get(node.id)! + 1}).`);
+    for (let i = 0; i < numNodes; i++) {
+        addStep(lmUndirected, 'mainLoopNodes', `Main loop: node ${nodeIdxToLabel.get(i)!}. Visited: ${visited[i]}.`, {components: components.map((c,idx)=>`C${idx+1}:{${c.join(',')}}`) }, i);
+        if (!visited[i]) {
+            const currentComponent: string[] = [];
+            addStep(lmUndirected, 'checkIfNotVisited', `Node ${nodeIdxToLabel.get(i)!} not visited. Start new component DFS.`, {components: components.map((c,idx)=>`C${idx+1}:{${c.join(',')}}`) }, i);
+            dfsUndirected(i, currentComponent);
+            components.push(currentComponent);
+            addStep(lmUndirected, 'addComponentToList', `Component found: [${currentComponent.join(', ')}].`, {components: components.map((c,idx)=>`C${idx+1}:{${c.join(',')}}`) }, i);
+        }
     }
+    addStep(lmUndirected, 'returnComponents', `All nodes processed. Found ${components.length} components.`, {components: components.map((c,i)=>`C${i+1}:{${c.join(',')}}`) });
+
+  } else { 
+    const lmDirected = CONNECTED_COMPONENTS_LINE_MAP_DIRECTED_KOSARAJU;
+    const finishStack: number[] = [];
+    addStep(lmDirected, 'mainFuncStart', "Kosaraju's for SCCs. Step 1: DFS for finishing times.", {finishStack: []});
+
+    function dfs1(u_idx: number) {
+        const u_label = nodeIdxToLabel.get(u_idx)!;
+        addStep(lmDirected, 'dfs1FuncStart', `DFS1 from ${u_label}.`, {finishStack: [...finishStack]} , u_idx);
+        visited[u_idx] = true;
+        addStep(lmDirected, 'dfs1MarkVisited', `DFS1: Marked ${u_label} visited.`, {finishStack: [...finishStack]} , u_idx);
+        for (const v_idx of adjNumericOriginal.get(u_idx) || []) {
+            addStep(lmDirected, 'dfs1LoopNeighbors', `DFS1: Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label}.`, {finishStack: [...finishStack]} , u_idx, [u_idx, v_idx]);
+            if (!visited[v_idx]) {
+                 addStep(lmDirected, 'dfs1CheckNeighborNotVisited', `DFS1: ${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {finishStack: [...finishStack]} , u_idx, [u_idx, v_idx]);
+                dfs1(v_idx);
+            }
+        }
+        finishStack.push(u_idx);
+        addStep(lmDirected, 'dfs1PushToStack', `DFS1: Finished ${u_label}, pushed to stack.`, {finishStack: [...finishStack]} , u_idx);
+    }
+    for (let i = 0; i < numNodes; i++) {
+         addStep(lmDirected, 'firstDfsLoop', `DFS1 Main Loop: node ${nodeIdxToLabel.get(i)!}. Visited: ${visited[i]}`, {finishStack: [...finishStack]} , i);
+        if (!visited[i]) dfs1(i);
+    }
+    addStep(lmDirected, 'firstDfsLoop', "DFS1 complete. Finish stack created.", {finishStack: [...finishStack] });
+
+    addStep(lmDirected, 'computeTransposeStart', "Step 2: Compute Transpose Graph.", {finishStack: [...finishStack]});
+    const adjTranspose = new Map<number, number[]>();
+    for(let i=0; i<numNodes; ++i) adjTranspose.set(i, []);
+    adjNumericOriginal.forEach((neighbors, u_idx) => {
+         addStep(lmDirected, 'computeTransposeLoopU', `Transposing edges from node ${nodeIdxToLabel.get(u_idx)!}.`, {finishStack: [...finishStack]} , u_idx);
+        neighbors.forEach(v_idx => {
+            (adjTranspose.get(v_idx) || []).push(u_idx);
+            addStep(lmDirected, 'computeTransposeLoopV', `Added transpose edge ${nodeIdxToLabel.get(v_idx)!} -> ${nodeIdxToLabel.get(u_idx)!}.`, {finishStack: [...finishStack]} , u_idx, [v_idx, u_idx]);
+        });
+    });
+    parsedData.adjT = adjTranspose; 
+    addStep(lmDirected, 'computeTransposeStart', "Transpose graph computed. Switching visualization to Transpose Graph.", {finishStack: [...finishStack]}, undefined, undefined, true);
+
+
+    visited.fill(false);
+    nodeComponentMap.clear(); 
+    const sccs: string[][] = [];
+    componentColorIndex = 0;
+    addStep(lmDirected, 'initVisited2', "Step 3: DFS on Transpose. Visited array reset.", {finishStack: [...finishStack], sccsList: []}, undefined, undefined, true);
+    
+    function dfs2(u_idx: number, currentSCCList: string[]) {
+        const u_label = nodeIdxToLabel.get(u_idx)!;
+        addStep(lmDirected, 'dfs2FuncStart', `DFS2 from ${u_label}.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, undefined, true);
+        visited[u_idx] = true;
+        nodeComponentMap.set(u_idx, sccs.length); 
+        currentSCCList.push(u_label);
+        addStep(lmDirected, 'dfs2MarkVisited', `DFS2: Marked ${u_label} visited. Added to current SCC.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, undefined, true);
+        for (const v_idx of adjTranspose.get(u_idx) || []) {
+             addStep(lmDirected, 'dfs2LoopNeighborsTranspose', `DFS2: Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label} in transpose.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, [u_idx, v_idx], true);
+            if (!visited[v_idx]) {
+                 addStep(lmDirected, 'dfs2CheckNeighborNotVisitedInner', `DFS2: ${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, [u_idx, v_idx], true);
+                dfs2(v_idx, currentSCCList);
+            }
+        }
+    }
+    const stackCopyForIteration = [...finishStack]; // Iterate over a copy as original stack is modified
+    while (stackCopyForIteration.length > 0) {
+        const u_idx = stackCopyForIteration.pop()!; // Process in order of decreasing finish times
+        const u_label_iter = nodeIdxToLabel.get(u_idx)!;
+        addStep(lmDirected, 'popFromStack', `Popped ${u_label_iter} from stack. Visited: ${visited[u_idx]}.`, {finishStack: stackCopyForIteration.map(idx=>nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`) }, u_idx, undefined, true);
+        if (!visited[u_idx]) {
+            const currentSCC: string[] = [];
+            addStep(lmDirected, 'initCurrentScc', `Node ${u_label_iter} not visited. Start DFS2 for new SCC.`, {finishStack: stackCopyForIteration.map(idx=>nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`) }, u_idx, undefined, true);
+            dfs2(u_idx, currentSCC);
+            sccs.push(currentSCC);
+            currentSCC.forEach(nodeLabel => {
+                const nodeNumericId = nodeLabelToIdx.get(nodeLabel)!;
+                nodeComponentMap.set(nodeNumericId, componentColorIndex);
+            });
+            componentColorIndex++;
+            addStep(lmDirected, 'addSccToList', `SCC found: [${currentSCC.join(', ')}].`, {finishStack: stackCopyForIteration.map(idx=>nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`) }, u_idx, undefined, true);
+        }
+    }
+    addStep(lmDirected, 'returnSccs', `Kosaraju's complete. Found ${sccs.length} SCCs.`, {sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`) }, undefined, undefined, true);
   }
-  addStep(CONNECTED_COMPONENTS_LINE_MAP.returnComponents, `All nodes processed. Found ${components.length} connected components.`);
   return localSteps;
 };
+

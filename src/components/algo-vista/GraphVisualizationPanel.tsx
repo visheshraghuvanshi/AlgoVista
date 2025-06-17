@@ -15,8 +15,13 @@ const SVG_WIDTH = 500;
 const SVG_HEIGHT = 300; 
 const NODE_RADIUS = 15;
 
-// Define the specific color string used for 'inQueue' and 'start' states
 const ACCENT_BACKGROUND_COLOR = "hsl(var(--accent))";
+const EDGE_COLOR_DEFAULT = "hsl(var(--muted-foreground))";
+const EDGE_COLOR_RELAXED = "hsl(var(--primary))";
+const EDGE_COLOR_TRANSPOSE = "hsl(var(--purple-500))"; // Ensure this color exists or define it
+const EDGE_COLOR_CONSIDERED = "hsl(var(--accent))";
+const EDGE_COLOR_IN_MST = "hsl(var(--primary))"; // Same as relaxed, or make distinct
+
 
 export function GraphVisualizationPanel({
   nodes,
@@ -39,26 +44,34 @@ export function GraphVisualizationPanel({
             <svg width="100%" height="100%" viewBox={viewBox} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <marker
-                    id="arrowhead"
-                    markerWidth="6" // Adjusted for better visibility
-                    markerHeight="4" // Adjusted for better visibility
-                    refX="5" // Adjusted so arrow tip is at the edge of the node circle
-                    refY="2"
-                    orient="auto"
-                    markerUnits="strokeWidth"
-                >
-                    <path d="M0,0 L0,4 L6,2 z" fill="hsl(var(--muted-foreground))" />
+                    id="arrowhead-default"
+                    markerWidth="6" markerHeight="4" refX="5" refY="2"
+                    orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,4 L6,2 z" fill={EDGE_COLOR_DEFAULT} />
+                </marker>
+                <marker
+                    id="arrowhead-primary" 
+                    markerWidth="6" markerHeight="4" refX="5" refY="2"
+                    orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,4 L6,2 z" fill={EDGE_COLOR_RELAXED} />
+                </marker>
+                <marker
+                    id="arrowhead-transpose"
+                    markerWidth="6" markerHeight="4" refX="5" refY="2"
+                    orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,4 L6,2 z" fill={EDGE_COLOR_TRANSPOSE} /> 
                 </marker>
                  <marker
-                    id="arrowhead-relaxed" // Specific arrowhead for relaxed edges
-                    markerWidth="6"
-                    markerHeight="4"
-                    refX="5"
-                    refY="2"
-                    orient="auto"
-                    markerUnits="strokeWidth"
-                >
-                    <path d="M0,0 L0,4 L6,2 z" fill="hsl(var(--primary))" />
+                    id="arrowhead-considered" 
+                    markerWidth="6" markerHeight="4" refX="5" refY="2"
+                    orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,4 L6,2 z" fill={EDGE_COLOR_CONSIDERED} />
+                </marker>
+                 <marker
+                    id="arrowhead-inMST" // Renamed from relaxed for clarity if needed
+                    markerWidth="6" markerHeight="4" refX="5" refY="2"
+                    orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,4 L6,2 z" fill={EDGE_COLOR_IN_MST} />
                 </marker>
               </defs>
               <g>
@@ -67,12 +80,18 @@ export function GraphVisualizationPanel({
                   const targetNode = nodes.find(n => n.id === edge.target);
                   if (!sourceNode || !targetNode) return null;
 
-                  // Calculate angle for arrow direction
                   const angle = Math.atan2(targetNode.y - sourceNode.y, targetNode.x - sourceNode.x);
-                  // Adjust target x,y for arrowhead not to overlap node
                   const adjustedTargetX = targetNode.x - NODE_RADIUS * Math.cos(angle);
                   const adjustedTargetY = targetNode.y - NODE_RADIUS * Math.sin(angle);
                   
+                  let markerUrl;
+                  const strokeColor = edge.color || EDGE_COLOR_DEFAULT;
+                  if (strokeColor === EDGE_COLOR_RELAXED || strokeColor === EDGE_COLOR_IN_MST) markerUrl = "url(#arrowhead-primary)";
+                  else if (strokeColor === EDGE_COLOR_TRANSPOSE) markerUrl = "url(#arrowhead-transpose)";
+                  else if (strokeColor === EDGE_COLOR_CONSIDERED) markerUrl = "url(#arrowhead-considered)";
+                  else markerUrl = "url(#arrowhead-default)";
+
+
                   return (
                     <line
                       key={edge.id}
@@ -80,9 +99,9 @@ export function GraphVisualizationPanel({
                       y1={sourceNode.y}
                       x2={edge.isDirected ? adjustedTargetX : targetNode.x}
                       y2={edge.isDirected ? adjustedTargetY : targetNode.y}
-                      stroke={edge.color || "hsl(var(--muted-foreground))"}
+                      stroke={strokeColor}
                       strokeWidth="2"
-                      markerEnd={edge.isDirected ? (edge.color === "hsl(var(--primary))" ? "url(#arrowhead-relaxed)" : "url(#arrowhead)") : undefined}
+                      markerEnd={edge.isDirected ? markerUrl : undefined}
                     />
                   );
                 })}
@@ -92,11 +111,10 @@ export function GraphVisualizationPanel({
                     if (!sourceNode || !targetNode) return null;
                     
                     if (edge.weight !== undefined) {
-                        // Position weight along the edge, slightly offset
                         const midX = (sourceNode.x + targetNode.x) / 2;
                         const midY = (sourceNode.y + targetNode.y) / 2;
                         const angle = Math.atan2(targetNode.y - sourceNode.y, targetNode.x - sourceNode.x);
-                        const offsetX = Math.sin(angle) * 8; // Offset perpendicular to the edge
+                        const offsetX = Math.sin(angle) * 8; 
                         const offsetY = -Math.cos(angle) * 8;
 
                        return ( <text
@@ -160,9 +178,11 @@ export function GraphVisualizationPanel({
                  <p className="font-code break-all">{data.values.join(', ') || '(empty)'}</p>
               ) : (
                 <div className="font-code">
-                  {Object.entries(data.values).map(([key, value]) => (
-                    <div key={key}>{key}: {value === Infinity ? "\u221E" : value.toString()}</div>
-                  ))}
+                  {typeof data.values === 'object' && data.values !== null ? 
+                    Object.entries(data.values).map(([key, value]) => (
+                      <div key={key}>{key}: {value === Infinity ? "\u221E" : String(value)}</div>
+                    )) : String(data.values)
+                  }
                 </div>
               )}
             </div>
@@ -172,3 +192,4 @@ export function GraphVisualizationPanel({
     </Card>
   );
 }
+

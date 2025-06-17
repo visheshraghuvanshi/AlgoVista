@@ -11,9 +11,11 @@ import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
 import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
 import { ConnectedComponentsCodePanel } from './ConnectedComponentsCodePanel';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, SigmaSquare } from 'lucide-react'; // SigmaSquare for components
-import { generateConnectedComponentsSteps } from './connected-components-logic'; // Specific logic
-import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; // Re-use parser for now
+import { AlertTriangle, SigmaSquare } from 'lucide-react';
+import { generateConnectedComponentsSteps } from './connected-components-logic';
+import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; 
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 
 const DEFAULT_ANIMATION_SPEED = 800;
@@ -23,8 +25,9 @@ const MAX_SPEED = 2000;
 export default function ConnectedComponentsVisualizerPage() {
   const { toast } = useToast();
   
-  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0;3:4;4:5;5:3;6'); // Example with multiple components
-  const [startNodeValue, setStartNodeValue] = useState('0'); // Optional for CC, traversal starts from any unvisited
+  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0;3:4;4:5;5:3;6'); 
+  const [startNodeValue, setStartNodeValue] = useState('0'); 
+  const [isDirected, setIsDirected] = useState(false);
   
   const [steps, setSteps] = useState<GraphAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -57,7 +60,6 @@ export default function ConnectedComponentsVisualizerPage() {
   const generateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    // Using baseParseGraphInput, connected-components-logic has its own wrapper if needed.
     const parsedData = baseParseGraphInput(graphInputValue); 
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Format: 'node:neighbor1,neighbor2;...'", variant: "destructive" });
@@ -70,8 +72,7 @@ export default function ConnectedComponentsVisualizerPage() {
         return;
     }
 
-
-    const newSteps = generateConnectedComponentsSteps(graphInputValue); // Logic handles parsing internally
+    const newSteps = generateConnectedComponentsSteps(graphInputValue, isDirected);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -84,17 +85,22 @@ export default function ConnectedComponentsVisualizerPage() {
       }
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
-      setCurrentEdges([]);
+      // Construct edges from adj map if needed for display, even if no steps
+      const edgesFromAdj: GraphEdge[] = [];
+      parsedData.adj.forEach((neighbors, sourceId) => {
+        neighbors.forEach(targetId => edgesFromAdj.push({id: `${sourceId}-${targetId}`, source:sourceId, target:targetId, color: 'grey', isDirected}));
+      });
+      setCurrentEdges(edgesFromAdj);
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
     }
-  }, [graphInputValue, toast, updateStateFromStep]);
+  }, [graphInputValue, isDirected, toast, updateStateFromStep]);
 
 
   useEffect(() => {
     generateSteps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue]); // Re-generate if graph input changes
+  }, [graphInputValue, isDirected]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -111,7 +117,7 @@ export default function ConnectedComponentsVisualizerPage() {
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
   const handleGraphInputChange = (value: string) => setGraphInputValue(value);
-  const handleStartNodeChange = (value: string) => setStartNodeValue(value); // Not strictly used by CC logic but control is generic
+  const handleStartNodeChange = (value: string) => setStartNodeValue(value);
 
   const handlePlay = () => {
     if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
@@ -143,8 +149,10 @@ export default function ConnectedComponentsVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
+    setGraphInputValue('0:1;1:2;2:0;3:4;4:5;5:3;6');
+    setIsDirected(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    // generateSteps will be called by useEffect due to input changes
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -183,6 +191,15 @@ export default function ConnectedComponentsVisualizerPage() {
             {currentMessage}
           </p>
         </div>
+        <div className="flex items-center space-x-2 mb-4 justify-center">
+          <Switch
+            id="directed-toggle"
+            checked={isDirected}
+            onCheckedChange={setIsDirected}
+            disabled={isPlaying}
+          />
+          <Label htmlFor="directed-toggle">Directed Graph (for SCCs)</Label>
+        </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
             <GraphVisualizationPanel
@@ -194,6 +211,7 @@ export default function ConnectedComponentsVisualizerPage() {
           <div className="lg:w-2/5 xl:w-1/3">
             <ConnectedComponentsCodePanel
               currentLine={currentLine}
+              graphType={isDirected ? 'directed' : 'undirected'}
             />
           </div>
         </div>
@@ -205,8 +223,7 @@ export default function ConnectedComponentsVisualizerPage() {
             onReset={handleReset}
             onGraphInputChange={handleGraphInputChange}
             graphInputValue={graphInputValue}
-            onStartNodeChange={handleStartNodeChange}
-            startNodeValue={startNodeValue}
+            showStartNodeInput={false} // Not strictly needed, DFS starts from all unvisited
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -214,8 +231,9 @@ export default function ConnectedComponentsVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            graphInputPlaceholder="e.g., 0:1;1:2;3:4 (undirected graph)"
-            startNodeInputPlaceholder="Start Node (optional for CC)"
+            graphInputPlaceholder="e.g., 0:1;1:2;3:4 (undirected or directed)"
+            onExecute={generateSteps}
+            executeButtonText={isDirected ? "Find SCCs" : "Find Components"}
           />
         </div>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -224,3 +242,4 @@ export default function ConnectedComponentsVisualizerPage() {
     </div>
   );
 }
+
