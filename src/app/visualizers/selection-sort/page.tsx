@@ -25,11 +25,11 @@ const SELECTION_SORT_CODE_SNIPPETS = {
     "        min_idx = j;",                        // 7
     "      }",                                     // 8
     "    }",                                       // 9
-    "    // Swap arr[i] and arr[min_idx]",
-    "    [arr[i], arr[min_idx]] = [arr[min_idx], arr[i]];", // 10
-    "  }",                                         // 11
-    "  return arr;",                               // 12
-    "}",                                           // 13
+    "    // Swap arr[i] and arr[min_idx]",          // 10 (Comment line)
+    "    [arr[i], arr[min_idx]] = [arr[min_idx], arr[i]];", // 11 (Actual Swap)
+    "  }",                                         // 12
+    "  return arr;",                               // 13
+    "}",                                           // 14
   ],
   Python: [
     "def selection_sort(arr):",
@@ -39,8 +39,47 @@ const SELECTION_SORT_CODE_SNIPPETS = {
     "        for j in range(i + 1, n):",
     "            if arr[j] < arr[min_idx]:",
     "                min_idx = j",
+    "        # Swap the found minimum element with the first element",
     "        arr[i], arr[min_idx] = arr[min_idx], arr[i]",
     "    return arr",
+  ],
+  Java: [
+    "public class SelectionSort {",
+    "    public static void sort(int[] arr) {",
+    "        int n = arr.length;",
+    "        for (int i = 0; i < n - 1; i++) {",
+    "            int min_idx = i;",
+    "            for (int j = i + 1; j < n; j++) {",
+    "                if (arr[j] < arr[min_idx]) {",
+    "                    min_idx = j;",
+    "                }",
+    "            }",
+    "            // Swap the found minimum element with the first element",
+    "            int temp = arr[min_idx];",
+    "            arr[min_idx] = arr[i];",
+    "            arr[i] = temp;",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::swap",
+    "void selectionSort(std::vector<int>& arr) {",
+    "    int n = arr.size();",
+    "    for (int i = 0; i < n - 1; ++i) {",
+    "        int min_idx = i;",
+    "        for (int j = i + 1; j < n; ++j) {",
+    "            if (arr[j] < arr[min_idx]) {",
+    "                min_idx = j;",
+    "            }",
+    "        }",
+    "        // Swap the found minimum element with the first element",
+    "        if (min_idx != i) {", // Optimization to avoid self-swap
+    "            std::swap(arr[i], arr[min_idx]);",
+    "        }",
+    "    }",
+    "}",
   ],
 };
 
@@ -141,7 +180,7 @@ export default function SelectionSortVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]);
+  }, [generateSteps]); 
 
 
   useEffect(() => {
@@ -253,7 +292,7 @@ export default function SelectionSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description}
+            {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
 
@@ -304,3 +343,4 @@ export default function SelectionSortVisualizerPage() {
     </div>
   );
 }
+

@@ -8,14 +8,15 @@ export const BINARY_SEARCH_LINE_MAP = {
   calculateMid: 4,
   checkMidEqualsTarget: 5,
   returnFoundMid: 6,
-  checkTargetGreater: 7,
+  checkTargetGreater: 7, // This corresponds to the "else if (sortedArr[mid] < target)"
   updateLow: 8,
-  elseBlock: 9,
+  elseBlock: 9, // This corresponds to the "else" part
   updateHigh: 10,
-  whileLoopEnd: 11,
-  returnNotFound: 12,
-  functionEnd: 13,
-  arraySortComment: 14, // Line for initial sort step if added
+  // Line 11 is the closing brace for the inner "else"
+  whileLoopEnd: 12, // This is the closing brace for the while loop
+  returnNotFound: 13,
+  functionEnd: 14,
+  arraySortComment: 15, // "Note: Input array must be sorted."
 };
 
 export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: number): AlgorithmStep[] => {
@@ -45,9 +46,6 @@ export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: n
     });
   };
   
-  // Optional: Add a step to show the array is sorted if sorting is done by this function
-  // addStep(lm.arraySortComment, [], [], null, "Array must be sorted for Binary Search.");
-
   addStep(lm.functionDeclaration, [], [], null, "Start Binary Search");
 
   if (n === 0) {
@@ -60,7 +58,9 @@ export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: n
   let high = n - 1;
   addStep(lm.initLowHigh, [low, high], [], [low, high], `Initialize low=${low}, high=${high}`);
 
-  while (low <= high) {
+  let iteration = 0; // Safety break
+  while (low <= high && iteration < n + 5) {
+    iteration++;
     addStep(lm.whileLoopStart, [low, high], [], [low, high], `Searching. low=${low}, high=${high}`);
     const mid = Math.floor(low + (high - low) / 2);
     addStep(lm.calculateMid, [low, mid, high], [], [low, high], `Calculate mid = ${mid}. arr[mid]=${arr[mid]}`);
@@ -68,7 +68,7 @@ export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: n
     addStep(lm.checkMidEqualsTarget, [low, mid, high], [], [low, high], `Is arr[mid] (${arr[mid]}) === target (${target})?`);
     if (arr[mid] === target) {
       addStep(lm.returnFoundMid, [mid], [mid], [low, high], `Target ${target} found at index ${mid}.`);
-      addStep(lm.functionEnd, [], [mid]);
+      addStep(lm.functionEnd, [], [mid]); // Use functionEnd, not arraySortComment here
       return localSteps;
     }
 
@@ -84,6 +84,7 @@ export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: n
   }
   addStep(lm.whileLoopEnd, [low,high], [], [low, high], `Loop finished. low (${low}) > high (${high}).`);
   addStep(lm.returnNotFound, [], [], null, `Target ${target} not found.`);
-  addStep(lm.functionEnd);
+  addStep(lm.functionEnd); // Use functionEnd, not arraySortComment here
   return localSteps;
 };
+
