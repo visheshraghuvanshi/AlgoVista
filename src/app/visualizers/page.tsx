@@ -404,7 +404,158 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
         ],
     }
   },
-  { slug: 'heap-sort', title: 'Heap Sort', category: 'Sorting', difficulty: 'Hard', description: 'A comparison-based sorting technique based on a Binary Heap data structure.' },
+  { 
+    slug: 'heap-sort', 
+    title: 'Heap Sort', 
+    category: 'Sorting', 
+    difficulty: 'Hard', 
+    description: 'A comparison-based sorting technique based on a Binary Heap data structure.',
+    codeSnippets: {
+      JavaScript: [
+        "function heapSort(arr) {",                            // 1
+        "  let n = arr.length;",                               // 2
+        "  // Build heap (rearrange array)",
+        "  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {", // 3
+        "    heapify(arr, n, i);",                             // 4
+        "  }",                                                 // 5
+        "  // One by one extract an element from heap",
+        "  for (let i = n - 1; i > 0; i--) {",                 // 6
+        "    // Move current root to end",
+        "    [arr[0], arr[i]] = [arr[i], arr[0]];",            // 7
+        "    // arr[i] is now sorted (implicitly visualized)",  // 8
+        "    // call max heapify on the reduced heap",
+        "    heapify(arr, i, 0);",                             // 9
+        "  }",                                                 // 10
+        "  return arr;",                                       // 11
+        "}",                                                   // 12
+        "function heapify(arr, n, i) {",                       // 13
+        "  let largest = i;",                                  // 14
+        "  let l = 2 * i + 1;",                                // 15
+        "  let r = 2 * i + 2;",                                // 16
+        "  // If left child is larger than root",
+        "  if (l < n && arr[l] > arr[largest]) {",             // 17
+        "    largest = l;",                                  // 18
+        "  }",                                                 // 19
+        "  // If right child is larger than largest so far",
+        "  if (r < n && arr[r] > arr[largest]) {",             // 20
+        "    largest = r;",                                  // 21
+        "  }",                                                 // 22
+        "  // If largest is not root",
+        "  if (largest !== i) {",                              // 23
+        "    [arr[i], arr[largest]] = [arr[largest], arr[i]];",// 24
+        "    // Recursively heapify the affected sub-tree",
+        "    heapify(arr, n, largest);",                       // 25
+        "  }",                                                 // 26
+        "}",                                                   // 27
+      ],
+      Python: [
+        "def heap_sort(arr):",
+        "    n = len(arr)",
+        "    # Build a maxheap.",
+        "    for i in range(n // 2 - 1, -1, -1):",
+        "        heapify(arr, n, i)",
+        "    # One by one extract elements",
+        "    for i in range(n - 1, 0, -1):",
+        "        arr[i], arr[0] = arr[0], arr[i]  # swap",
+        "        heapify(arr, i, 0)",
+        "    return arr",
+        "",
+        "def heapify(arr, n, i):",
+        "    largest = i  # Initialize largest as root",
+        "    l = 2 * i + 1  # left = 2*i + 1",
+        "    r = 2 * i + 2  # right = 2*i + 2",
+        "    # See if left child of root exists and is",
+        "    # greater than root",
+        "    if l < n and arr[l] > arr[largest]:",
+        "        largest = l",
+        "    # See if right child of root exists and is",
+        "    # greater than root",
+        "    if r < n and arr[r] > arr[largest]:",
+        "        largest = r",
+        "    # Change root, if needed",
+        "    if largest != i:",
+        "        arr[i], arr[largest] = arr[largest], arr[i]  # swap",
+        "        # Heapify the root.",
+        "        heapify(arr, n, largest)",
+      ],
+      Java: [
+        "public class HeapSort {",
+        "    public void sort(int arr[]) {",
+        "        int n = arr.length;",
+        "        // Build heap (rearrange array)",
+        "        for (int i = n / 2 - 1; i >= 0; i--)",
+        "            heapify(arr, n, i);",
+        "        // One by one extract an element from heap",
+        "        for (int i = n - 1; i > 0; i--) {",
+        "            // Move current root to end",
+        "            int temp = arr[0];",
+        "            arr[0] = arr[i];",
+        "            arr[i] = temp;",
+        "            // call max heapify on the reduced heap",
+        "            heapify(arr, i, 0);",
+        "        }",
+        "    }",
+        "    // To heapify a subtree rooted with node i which is",
+        "    // an index in arr[]. n is size of heap",
+        "    void heapify(int arr[], int n, int i) {",
+        "        int largest = i; // Initialize largest as root",
+        "        int l = 2 * i + 1; // left = 2*i + 1",
+        "        int r = 2 * i + 2; // right = 2*i + 2",
+        "        // If left child is larger than root",
+        "        if (l < n && arr[l] > arr[largest])",
+        "            largest = l;",
+        "        // If right child is larger than largest so far",
+        "        if (r < n && arr[r] > arr[largest])",
+        "            largest = r;",
+        "        // If largest is not root",
+        "        if (largest != i) {",
+        "            int swap = arr[i];",
+        "            arr[i] = arr[largest];",
+        "            arr[largest] = swap;",
+        "            // Recursively heapify the affected sub-tree",
+        "            heapify(arr, n, largest);",
+        "        }",
+        "    }",
+        "}",
+      ],
+      "C++": [
+        "#include <vector>",
+        "#include <algorithm> // For std::swap",
+        "// To heapify a subtree rooted with node i which is an index in arr[].",
+        "// n is size of heap.",
+        "void heapify(std::vector<int>& arr, int n, int i) {",
+        "    int largest = i; // Initialize largest as root",
+        "    int l = 2 * i + 1; // left = 2*i + 1",
+        "    int r = 2 * i + 2; // right = 2*i + 2",
+        "    // If left child is larger than root",
+        "    if (l < n && arr[l] > arr[largest])",
+        "        largest = l;",
+        "    // If right child is larger than largest so far",
+        "    if (r < n && arr[r] > arr[largest])",
+        "        largest = r;",
+        "    // If largest is not root",
+        "    if (largest != i) {",
+        "        std::swap(arr[i], arr[largest]);",
+        "        // Recursively heapify the affected sub-tree",
+        "        heapify(arr, n, largest);",
+        "    }",
+        "}",
+        "void heapSort(std::vector<int>& arr) {",
+        "    int n = arr.size();",
+        "    // Build heap (rearrange array)",
+        "    for (int i = n / 2 - 1; i >= 0; i--)",
+        "        heapify(arr, n, i);",
+        "    // One by one extract an element from heap",
+        "    for (int i = n - 1; i > 0; i--) {",
+        "        // Move current root to end",
+        "        std::swap(arr[0], arr[i]);",
+        "        // call max heapify on the reduced heap",
+        "        heapify(arr, i, 0);",
+        "    }",
+        "}",
+      ],
+    }
+  },
   { slug: 'linear-search', title: 'Linear Search', category: 'Searching', difficulty: 'Easy', description: 'Sequentially checks each element of the list until a match is found or the whole list has been searched.' },
   { slug: 'binary-search', title: 'Binary Search', category: 'Searching', difficulty: 'Easy', description: 'Efficiently finds an item from a sorted list of items by repeatedly dividing the search interval in half.' },
   { slug: 'bfs', title: 'Breadth-First Search (BFS)', category: 'Graph', difficulty: 'Medium', description: 'An algorithm for traversing or searching tree or graph data structures, exploring neighbors first.' },
@@ -579,3 +730,4 @@ export default function VisualizersPage() {
     </div>
   );
 }
+
