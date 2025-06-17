@@ -65,19 +65,21 @@ export default function StackQueueVisualizerPage() {
       initialStepMessage = `${selectedStructure.charAt(0).toUpperCase() + selectedStructure.slice(1)} is empty.`;
     }
 
-    setCurrentStep({
+    const initialStepData: StackQueueAlgorithmStep = {
         array: [...parsed],
         activeIndices: [], swappingIndices: [], sortedIndices: [],
         currentLine: null, message: initialStepMessage,
         topIndex: selectedStructure === 'stack' ? (parsed.length > 0 ? parsed.length - 1 : -1) : undefined,
         frontIndex: selectedStructure === 'queue' ? (parsed.length > 0 ? 0 : -1) : undefined,
         rearIndex: selectedStructure === 'queue' ? (parsed.length > 0 ? parsed.length - 1 : -1) : undefined,
-        operationType: selectedStructure
-    });
-    setSteps([]); 
+        operationType: selectedStructure,
+        lastOperation: "Initialize",
+        processedValue: parsed.join(', ') || "empty"
+    };
+    setCurrentStep(initialStepData);
+    setSteps([initialStepData]); 
     setIsFinished(true);
     setCurrentStepIndex(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValuesInput, selectedStructure]);
 
 
@@ -89,7 +91,6 @@ export default function StackQueueVisualizerPage() {
 
   const handleInitialValuesChange = (value: string) => {
     setInitialValuesInput(value);
-    // initializeStructure will be called due to dependency on initialValuesInput in its own useEffect
   };
   
   const updateStateFromStep = useCallback((stepIndex: number) => {
@@ -107,7 +108,7 @@ export default function StackQueueVisualizerPage() {
 
     const needsValue = (selectedStructure === 'stack' && selectedStackOp === 'push') || (selectedStructure === 'queue' && selectedQueueOp === 'enqueue');
     if (needsValue && opValue?.toString().trim() === "") {
-        toast({title: "Input Needed", description: "Please provide a value.", variant: "destructive"});
+        toast({title: "Input Needed", description: "Please provide a value for this operation.", variant: "destructive"});
         return;
     }
 
@@ -128,6 +129,17 @@ export default function StackQueueVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) updateStateFromStep(0);
+    else { // If no steps (e.g., error in logic or op not changing state)
+        setCurrentStep({ // Show current state
+            array: [...dataStructureRef.current],
+            activeIndices: [], swappingIndices: [], sortedIndices: [],
+            currentLine: null, message: "Operation did not produce new steps or state.",
+            topIndex: selectedStructure === 'stack' ? (dataStructureRef.current.length > 0 ? dataStructureRef.current.length - 1 : -1) : undefined,
+            frontIndex: selectedStructure === 'queue' ? (dataStructureRef.current.length > 0 ? 0 : -1) : undefined,
+            rearIndex: selectedStructure === 'queue' ? (dataStructureRef.current.length > 0 ? dataStructureRef.current.length - 1 : -1) : undefined,
+            operationType: selectedStructure
+        });
+    }
   };
 
   useEffect(() => {
@@ -155,22 +167,8 @@ export default function StackQueueVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(true);
     setInitialValuesInput("10,20,30");
-    // initializeStructure will be called by initialValuesInput change.
+    initializeStructure(); // This will use the new initialValuesInput due to state update cycle
     setOperationValueInput("40");
-    // Setting selectedStructure will also trigger initializeStructure if it changes.
-    // If it doesn't change, initializeStructure needs to be called manually after inputs are set.
-     const parsed = parseValues("10,20,30");
-     dataStructureRef.current = parsed;
-     setCurrentStep({
-        array: [...parsed],
-        activeIndices: [], swappingIndices: [], sortedIndices: [],
-        currentLine: null, message: `${selectedStructure.charAt(0).toUpperCase() + selectedStructure.slice(1)} reset to default.`,
-        topIndex: selectedStructure === 'stack' ? (parsed.length > 0 ? parsed.length - 1 : -1) : undefined,
-        frontIndex: selectedStructure === 'queue' ? (parsed.length > 0 ? 0 : -1) : undefined,
-        rearIndex: selectedStructure === 'queue' ? (parsed.length > 0 ? parsed.length - 1 : -1) : undefined,
-        operationType: selectedStructure
-    });
-    setSteps([]);
   };
 
   const algoDetails: AlgorithmDetailsProps = {
@@ -219,7 +217,8 @@ export default function StackQueueVisualizerPage() {
                 <Label htmlFor="structureType">Structure Type</Label>
                 <Select value={selectedStructure} onValueChange={(val) => {
                     setSelectedStructure(val as StructureType);
-                    initializeStructure(); // Re-initialize when structure type changes
+                    // dataStructureRef.current = parseValues(initialValuesInput); // Ensure ref is updated
+                    initializeStructure(); 
                 }} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -264,7 +263,7 @@ export default function StackQueueVisualizerPage() {
             <Button onClick={handleExecuteOperation} disabled={isPlaying}>Execute Operation</Button>
 
             <div className="flex items-center justify-start pt-4 border-t">
-              <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Controls & Data</Button>
+              <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Structure & Controls</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
@@ -286,4 +285,3 @@ export default function StackQueueVisualizerPage() {
     </div>
   );
 }
-    
