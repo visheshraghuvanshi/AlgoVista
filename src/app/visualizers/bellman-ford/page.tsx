@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Changed from MOCK_ALGORITHMS
 import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
@@ -18,21 +18,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const BELLMAN_FORD_CODE_SNIPPETS = {
   JavaScript: [
     "// Bellman-Ford Algorithm (Conceptual)",
-    "function bellmanFord(graph, startNode) {",
-    "  const numVertices = graph.getVertices().length; // Assuming graph API",
+    "function bellmanFord(graph, numVertices, startNode) { // graph as list of edges {u,v,weight}",
     "  const distances = {};",
     "  const predecessors = {};",
     "",
-    "  // Step 1: Initialize distances from start to all other vertices as INFINITY",
-    "  for (const vertex of graph.getVertices()) {",
-    "    distances[vertex] = Infinity;",
-    "    predecessors[vertex] = null;",
+    "  // Step 1: Initialize distances",
+    "  for (let i = 0; i < numVertices; i++) { // Assuming vertices are 0 to N-1",
+    "    distances[i] = Infinity;",
+    "    predecessors[i] = null;",
     "  }",
     "  distances[startNode] = 0;",
     "",
     "  // Step 2: Relax all edges |V| - 1 times",
     "  for (let i = 0; i < numVertices - 1; i++) {",
-    "    for (const edge of graph.getEdges()) { // Assuming edge = {u, v, weight}",
+    "    for (const edge of graph) { // edge = {u, v, weight}",
     "      if (distances[edge.u] !== Infinity && distances[edge.u] + edge.weight < distances[edge.v]) {",
     "        distances[edge.v] = distances[edge.u] + edge.weight;",
     "        predecessors[edge.v] = edge.u;",
@@ -41,10 +40,10 @@ const BELLMAN_FORD_CODE_SNIPPETS = {
     "  }",
     "",
     "  // Step 3: Check for negative-weight cycles",
-    "  for (const edge of graph.getEdges()) {",
+    "  for (const edge of graph) {",
     "    if (distances[edge.u] !== Infinity && distances[edge.u] + edge.weight < distances[edge.v]) {",
     "      // Negative cycle detected",
-    "      return { error: 'Graph contains a negative-weight cycle' };",
+    "      return { error: 'Graph contains a negative-weight cycle', distances, predecessors };",
     "    }",
     "  }",
     "  return { distances, predecessors };",
@@ -52,38 +51,29 @@ const BELLMAN_FORD_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'bellman-ford';
-
 export default function BellmanFordVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
+  // Algorithm metadata is now directly imported
+  // const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-       toast({
-            title: "Conceptual Overview",
-            description: `Interactive Bellman-Ford visualization is under construction. Review concepts and code below.`,
-            variant: "default",
-            duration: 5000,
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
+    // No need to find algorithm from MOCK_ALGORITHMS anymore
+    // setAlgorithm(foundAlgorithm);
+    toast({
+        title: "Conceptual Overview",
+        description: `Interactive Bellman-Ford visualization is under construction. Review concepts and code below.`,
+        variant: "default",
+        duration: 5000,
+    });
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "O(VE)", 
-      average: "O(VE)", 
-      worst: "O(VE)" 
-    },
-    spaceComplexity: "O(V) for storing distances and predecessors.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
@@ -98,7 +88,7 @@ export default function BellmanFordVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -106,7 +96,7 @@ export default function BellmanFordVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for &quot;{algorithmMetadata.slug}&quot;.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -123,7 +113,7 @@ export default function BellmanFordVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -133,7 +123,7 @@ export default function BellmanFordVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, showing iterative edge relaxations and negative cycle detection, is under construction.
+                The interactive visualizer for {algorithmMetadata.title}, showing iterative edge relaxations and negative cycle detection, is under construction.
                 Please check back later! Review the concepts and code snippets below.
             </p>
         </div>
@@ -169,7 +159,7 @@ export default function BellmanFordVisualizerPage() {
             onStep={() => {}}
             onReset={() => {}}
             onGraphInputChange={() => {}}
-            graphInputValue={"(e.g., node:neighbor(weight);...)"}
+            graphInputValue={"(Input as Edge List: u,v,weight;...)"}
             onStartNodeChange={() => {}}
             startNodeValue={""}
             isPlaying={false}
@@ -179,7 +169,8 @@ export default function BellmanFordVisualizerPage() {
             isAlgoImplemented={false}
             minSpeed={100}
             maxSpeed={2000}
-            graphInputPlaceholder="e.g., 0:1(4),2(-1);1:2(2)... (handles negative w)"
+            graphInputPlaceholder="e.g., 0-1(4);0-2(-1);1-2(2)... (handles negative w)"
+            startNodeInputPlaceholder="Start Node ID"
           />
         </div>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -188,5 +179,3 @@ export default function BellmanFordVisualizerPage() {
     </div>
   );
 }
-
-    
