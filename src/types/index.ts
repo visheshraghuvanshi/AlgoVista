@@ -296,6 +296,50 @@ export interface HuffmanStep extends Omit<TreeAlgorithmStep, 'traversalPath'> {
   currentPathForCode?: string; // Path from root to current node during code generation
 }
 
+// Trie Specific Types
+export interface TrieNodeInternal {
+  id: string; 
+  char: string | null; 
+  isEndOfWord: boolean;
+  children: Map<string, string>; 
+  parentId?: string | null; 
+  depth?: number; 
+  x?: number; 
+  y?: number; 
+  visualColor?: string;
+}
+
+export interface TrieNodeVisual {
+  id: string;
+  label: string; 
+  x: number;
+  y: number;
+  isEndOfWord: boolean;
+  color: string; 
+  textColor?: string;
+}
+
+export interface TrieEdgeVisual {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  color?: string;
+}
+export interface TrieStep extends Omit<AlgorithmStep, 'array' | 'swappingIndices' | 'sortedIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
+  nodes: TrieNodeVisual[]; 
+  edges: TrieEdgeVisual[];
+  operation: 'insert' | 'search' | 'startsWith' | 'init';
+  currentWord?: string;
+  currentCharIndex?: number;
+  currentNodeId?: string | null; 
+  pathTakenIds?: string[]; 
+  message: string;
+  found?: boolean; 
+  auxiliaryData?: {
+    insertedWords?: string[];
+  }
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
@@ -304,4 +348,3 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
     
-
