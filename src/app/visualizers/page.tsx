@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -238,8 +237,8 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Red-Black Tree', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'A self-balancing BST using node coloring (red/black) and specific rules to maintain balance, guaranteeing O(log n) performance. Found in many standard libraries.',
-    longDescription: 'A Red-Black Tree is another type of self-balancing Binary Search Tree. Each node stores an extra bit representing its "color" (red or black). Specific rules govern these colors to ensure the tree remains approximately balanced during insertions and deletions. These rules include: 1. Every node is either red or black. 2. The root is black. 3. All leaves (NIL nodes) are black. 4. If a node is red, then both its children are black. 5. Every simple path from a given node to any of its descendant leaves contains the same number of black nodes. These properties ensure that the longest path from root to leaf is no more than twice as long as the shortest path, keeping the tree height O(log n) and guaranteeing O(log n) performance for search, insert, and delete. Rebalancing involves rotations and recoloring.'
+    description: 'A self-balancing BST using node coloring (red/black) and specific rules to maintain balance, guaranteeing O(log n) performance. Widely used in system software.',
+    longDescription: 'A Red-Black Tree is a type of self-balancing Binary Search Tree where each node stores an extra bit for denoting its color (red or black). By constraining the way nodes can be colored on any path from the root to a leaf, Red-Black Trees ensure that no path is more than twice as long as any other, so the tree remains approximately balanced. Key properties: 1. Every node is either red or black. 2. The root is black. 3. All leaves (NIL/sentinel nodes) are black. 4. If a node is red, then both its children are black. 5. Every simple path from a given node to any of its descendant leaves contains the same number of black nodes. Insertions and deletions may violate these properties, leading to "fixup" operations involving recoloring and rotations (left and right) to restore balance. These operations ensure O(log n) time complexity for search, insert, and delete. The complexity of the fixup logic, especially for deletion, is notable.'
   },
   { 
     slug: 'heap-operations', 
@@ -263,7 +262,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     category: 'Trees', 
     difficulty: 'Medium', 
     description: 'A tree for efficient string retrieval (e.g., auto-completion). Each node represents a character; paths from root form prefixes. O(L) for search/insert (L=word length).',
-    longDescription: 'A Trie, also known as a prefix tree or digital tree, is a tree-like data structure that stores a dynamic set of strings. Each node represents a character, and the path from the root to a node represents a prefix. A special marker (e.g., `isEndOfWord` flag) in a node can indicate the end of a complete word. Tries are highly efficient for operations like word insertion, search, and prefix-based search (e.g., "find all words starting with \'pre\'"). The time complexity for these operations is O(L), where L is the length of the string, independent of the number of strings stored. Space complexity can be high if the alphabet size is large and strings don\'t share many common prefixes.'
+    longDescription: 'A Trie, also known as a prefix tree or digital tree, is a tree-like data structure that stores a dynamic set of strings. Each node represents a character, and the path from the root to a node represents a prefix. A special marker (e.g., isEndOfWord flag) in a node can indicate the end of a complete word. Tries are highly efficient for operations like word insertion, search, and prefix-based search (e.g., "find all words starting with \'pre\'"). The time complexity for these operations is O(L), where L is the length of the string, independent of the number of strings stored. Space complexity can be high if the alphabet size is large and strings don\'t share many common prefixes.'
   },
   { 
     slug: 'huffman-coding', 
@@ -683,9 +682,5 @@ export default function VisualizersPage() {
   );
 }
     
-
-    
-
-
 
     

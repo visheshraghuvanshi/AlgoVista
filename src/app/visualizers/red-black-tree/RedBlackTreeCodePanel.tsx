@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -7,9 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { RBT_LINE_MAP } from './red-black-tree-logic'; // For consistency, though not directly used for snippet keys here
+import { RBT_LINE_MAP } from './red-black-tree-logic'; 
 
-type RBTOperationType = 'insert' | 'search' | 'delete' | 'structure'; // 'delete' is conceptual
+export type RBTOperationType = 'insert' | 'search' | 'delete' | 'structure';
 
 const RBT_CODE_SNIPPETS: Record<RBTOperationType, string[]> = {
   structure: [
@@ -31,7 +30,7 @@ const RBT_CODE_SNIPPETS: Record<RBTOperationType, string[]> = {
     "}",
   ],
   insert: [
-    "// Insert Operation (Conceptual - combines BST insert & fixup)",
+    "// Insert Operation",
     "insert(value) { // Line Map Start: " + RBT_LINE_MAP.insertFuncStart,
     "  let node = new RBTNode(value, RED, this.NIL, this.NIL, this.NIL);",
     "  // Standard BST insert logic...",
@@ -45,7 +44,6 @@ const RBT_CODE_SNIPPETS: Record<RBTOperationType, string[]> = {
     "  if (y === this.NIL) this.root = node;",
     "  else if (node.value < y.value) y.left = node;",
     "  else y.right = node;",
-    "  // New node is RED, color already set. Left/Right children are NIL.",
     "  this.insertFixup(node); // Line " + RBT_LINE_MAP.callInsertFixup,
     "} // Line " + RBT_LINE_MAP.insertFuncEnd,
     "",
@@ -53,15 +51,15 @@ const RBT_CODE_SNIPPETS: Record<RBTOperationType, string[]> = {
     "  while (z.parent.color === RED) { // Line " + RBT_LINE_MAP.fixupLoopStart,
     "    if (z.parent === z.parent.parent.left) { // Line " + RBT_LINE_MAP.fixupParentIsLeftChild,
     "      let y = z.parent.parent.right; // Uncle // Line " + RBT_LINE_MAP.fixupUncleIsRightChild,
-    "      if (y.color === RED) { // Case 1 // Line " + RBT_LINE_MAP.fixupCase1UncleRed,
+    "      if (y.color === RED) { // Case 1: Uncle is RED // Line " + RBT_LINE_MAP.fixupCase1UncleRed,
     "        z.parent.color = BLACK; y.color = BLACK; // Line " + (RBT_LINE_MAP.fixupCase1RecolorParent) + "-" + (RBT_LINE_MAP.fixupCase1RecolorUncle),
     "        z.parent.parent.color = RED; // Line " + RBT_LINE_MAP.fixupCase1RecolorGrandparent,
     "        z = z.parent.parent; // Line " + RBT_LINE_MAP.fixupCase1MoveZUp,
-    "      } else {",
-    "        if (z === z.parent.right) { // Case 2 // Line " + RBT_LINE_MAP.fixupCase2Triangle,
+    "      } else { // Uncle is BLACK",
+    "        if (z === z.parent.right) { // Case 2: z is right child (triangle) // Line " + RBT_LINE_MAP.fixupCase2Triangle,
     "          z = z.parent; this.rotateLeft(z); // Line " + (RBT_LINE_MAP.fixupCase2MoveZToParent) + "-" + (RBT_LINE_MAP.fixupCase2RotateParent),
     "        }",
-    "        // Case 3",
+    "        // Case 3: z is left child (line)",
     "        z.parent.color = BLACK; // Line " + RBT_LINE_MAP.fixupCase3RecolorParent,
     "        z.parent.parent.color = RED; // Line " + RBT_LINE_MAP.fixupCase3RecolorGrandparent,
     "        this.rotateRight(z.parent.parent); // Line " + RBT_LINE_MAP.fixupCase3RotateGrandparent,
@@ -77,7 +75,6 @@ const RBT_CODE_SNIPPETS: Record<RBTOperationType, string[]> = {
     "  this.root.color = BLACK; // Line " + RBT_LINE_MAP.fixupRootRecolor,
     "} // Line " + RBT_LINE_MAP.fixupFuncEnd,
     "",
-    "// Rotations (Conceptual - line numbers approximate)",
     "rotateLeft(x) { /* ... complex pointer changes ... */ } // Lines " + RBT_LINE_MAP.rotateLeftStart + "-" + RBT_LINE_MAP.rotateLeftEnd,
     "rotateRight(y) { /* ... complex pointer changes ... */ } // Lines " + RBT_LINE_MAP.rotateRightStart + "-49",
   ],
@@ -99,19 +96,39 @@ const RBT_CODE_SNIPPETS: Record<RBTOperationType, string[]> = {
   ],
   delete: [
     "// Delete Operation (Conceptual - Highly Complex)",
+    "// Involves standard BST delete, then a 'deleteFixup' routine.",
     "delete(value) {",
-    "  // 1. Standard BST delete to find node to remove (z).",
-    "  // 2. Handle cases based on children of z (0, 1, or 2).",
-    "  //    If z has two children, replace z with successor, then delete successor.",
-    "  // 3. Let y be the node actually removed or moved, x be its child that takes its place.",
-    "  // 4. If y was BLACK, call deleteFixup(x) to restore R-B properties.",
+    "  // 1. Find node z to be deleted (standard BST search).",
+    "  // 2. Identify node y (node actually removed or spliced out).",
+    "  //    If z has < 2 children, y is z.",
+    "  //    If z has 2 children, y is z's successor (min in right subtree).",
+    "  //    Replace z's data with y's data if y is successor, then y becomes target for removal.",
+    "  // 3. Identify node x (child of y that replaces y, could be NIL).",
+    "  // 4. Perform splice: link x to y's parent.",
+    "  // 5. If y.color was BLACK, R-B properties might be violated.",
+    "  //    Call deleteFixup(x) to restore properties.",
+    "  //    (Pass x because its \"extra blackness\" or redness needs fixing).",
     "}",
+    "",
     "deleteFixup(x) {",
-    "  // While x is not root and x is BLACK:",
-    "  //   Complex cases involving sibling (w) of x, w's children's colors.",
-    "  //   Perform recolorings and rotations to fix violations.",
-    "  //   (Several distinct cases for when x is left or right child)",
-    "  // x.color = BLACK (at the end)",
+    "  // Loop while x is not root AND x is BLACK (double black problem).",
+    "  // (If x is RED, simply color it BLACK and properties are restored).",
+    "  while (x !== this.root && x.color === BLACK) {",
+    "    if (x === x.parent.left) { // x is left child",
+    "      let w = x.parent.right; // w is sibling of x",
+    "      // Case 1: w is RED",
+    "      //   Recolor w to BLACK, x.parent to RED. RotateLeft(x.parent). Update w.",
+    "      // Case 2: w is BLACK, both w.children are BLACK",
+    "      //   Recolor w to RED. Move x up to x.parent. Loop.",
+    "      // Case 3: w is BLACK, w.left is RED, w.right is BLACK",
+    "      //   Recolor w.left to BLACK, w to RED. RotateRight(w). Update w.",
+    "      // Case 4: w is BLACK, w.right is RED",
+    "      //   Recolor w to x.parent.color, x.parent to BLACK, w.right to BLACK. RotateLeft(x.parent). Set x to root (terminate).",
+    "    } else { // x is right child (symmetric cases)",
+    "      // Similar logic with left/right swapped for rotations and child checks.",
+    "    }",
+    "  }",
+    "  x.color = BLACK; // Ensure x (or root if loop terminated there) is BLACK.",
     "}",
   ],
 };
@@ -128,7 +145,14 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
   const operationLabel = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1);
 
   const handleCopyCode = () => {
-    const codeString = codeToDisplay.join('\n');
+    let codeString = "";
+    if (selectedOperation === 'insert' || selectedOperation === 'search' || selectedOperation === 'delete') {
+        // Prepend structure for context, then the specific operation
+        codeString = RBT_CODE_SNIPPETS.structure.join('\n') + '\n\n' + codeToDisplay.join('\n');
+    } else {
+        codeString = codeToDisplay.join('\n');
+    }
+
     if (codeString) {
       navigator.clipboard.writeText(codeString)
         .then(() => toast({ title: `${operationLabel} Code Copied!` }))
@@ -149,9 +173,9 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
           <pre className="font-code text-sm p-4">
-            {selectedOperation !== 'structure' && selectedOperation !== 'delete' && (
+            {selectedOperation !== 'structure' && (
                 <>
-                    {RBT_CODE_SNIPPETS.structure.slice(0, 12).map((line,index)=>( // Show structure for context
+                    {RBT_CODE_SNIPPETS.structure.map((line,index)=>(
                         <div key={`struct-line-${index}`} className="px-2 py-0.5 rounded text-muted-foreground/70 opacity-70 whitespace-pre-wrap">
                              <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
                              {line}
@@ -163,7 +187,10 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
             {codeToDisplay.map((line, index) => (
               <div key={`${operationLabel}-line-${index}`}
                 className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
-                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                {/* For insert/search, line numbers are absolute from RBT_LINE_MAP. For structure/delete (conceptual), they are relative to snippet. */}
+                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                  { (selectedOperation === 'insert' || selectedOperation === 'search') ? currentLine && Object.values(RBT_LINE_MAP).includes(currentLine) ? currentLine : (index +1) : (index+1) }
+                </span>
                 {line}
               </div>
             ))}
@@ -174,3 +201,4 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
     </Card>
   );
 }
+

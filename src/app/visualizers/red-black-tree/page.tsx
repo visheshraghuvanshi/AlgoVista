@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
+import { BinaryTreeVisualizationPanel } from '@/components/algo-vista/BinaryTreeVisualizationPanel'; // Updated path
 import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
@@ -17,19 +16,19 @@ import {
   type RBTreeGraph,
   NIL_ID,
   createInitialRBTreeGraph,
-  getFinalRBTreeGraph,
+  // getFinalRBTreeGraph, // This helper might not be strictly needed if logic modifies ref or returns final state
 } from './red-black-tree-logic';
-import type { RBTOperationType } from './RedBlackTreeCodePanel'; // Corrected import if type is in CodePanel
+import type { RBTOperationType } from './RedBlackTreeCodePanel';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Cog, PlusCircle, Search } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Cog, PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const DEFAULT_ANIMATION_SPEED = 1200; // RBT ops can be complex
+const DEFAULT_ANIMATION_SPEED = 1200;
 const MIN_SPEED = 200;
 const MAX_SPEED = 3000;
 const ALGORITHM_SLUG = 'red-black-tree';
@@ -38,8 +37,8 @@ export default function RedBlackTreePage() {
   const { toast } = useToast();
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
 
-  const [initialArrayInput, setInitialArrayInput] = useState('10,20,30,5,15');
-  const [operationValue, setOperationValue] = useState('25'); 
+  const [initialArrayInput, setInitialArrayInput] = useState('10,20,30,5,15,25,35,1,8');
+  const [operationValue, setOperationValue] = useState('22'); 
   const [selectedOperation, setSelectedOperation] = useState<RBTOperationType>('insert');
   
   const [steps, setSteps] = useState<TreeAlgorithmStep[]>([]);
@@ -64,7 +63,6 @@ export default function RedBlackTreePage() {
     if (foundAlgorithm) setAlgorithm(foundAlgorithm);
     else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
     
-    // Initial build when component mounts
     handleOperation('build', initialArrayInput);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
@@ -83,7 +81,7 @@ export default function RedBlackTreePage() {
   
   const handleOperation = useCallback((
       opType: 'build' | 'insert' | 'search', 
-      primaryValue?: string, // For build: initial array string; for insert/search: single value string
+      primaryValue?: string,
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
@@ -92,9 +90,14 @@ export default function RedBlackTreePage() {
 
     if (opType === 'build') {
         valuesForBuild = primaryValue || initialArrayInput;
-        rbtRef.current = createInitialRBTreeGraph(); // Reset tree for build
+        rbtRef.current = createInitialRBTreeGraph(); 
     } else if (opType === 'insert' || opType === 'search') {
-        valueForOp = parseInt(primaryValue || operationValue, 10);
+        const opValStr = primaryValue || operationValue;
+        if (opValStr.trim() === "") {
+            toast({ title: "Input Missing", description: "Please enter a value for the operation.", variant: "destructive" });
+            return;
+        }
+        valueForOp = parseInt(opValStr, 10);
         if (isNaN(valueForOp)) {
             toast({ title: "Invalid Value", description: "Please enter a numeric value for the operation.", variant: "destructive" });
             return;
@@ -105,7 +108,7 @@ export default function RedBlackTreePage() {
       opType,
       valuesForBuild,
       valueForOp,
-      rbtRef.current 
+      rbtRef.current // Pass the current state of the tree for insert/search
     );
     
     setSteps(newSteps);
@@ -115,39 +118,17 @@ export default function RedBlackTreePage() {
 
     if (newSteps.length > 0) {
         updateStateFromStep(0);
-        // Update rbtRef with the final state of the tree from the logic
-        // (generateRBTreeSteps should ideally return the final RBTreeGraph state or the logic modifies the passed ref)
-        // For now, we assume generateRBTreeSteps directly modifies rbtRef.current if it's passed and mutated inside.
-        // A safer way is for generateRBTreeSteps to return the new graph state.
-        // Let's assume logic.ts returns steps and the final graph state could be inferred or explicitly returned by logic.ts
-        // For simplicity, if build, we reset. If insert/search, logic modifies the ref.
-        // This part might need refinement based on how generateRBTreeSteps manages state.
-        // After steps are generated, the RBT structure used to generate them is in rbtRef.current
-        // For this example, we trust generateRBTreeSteps to have updated rbtRef.current *if* it was intended to.
-        // However, to ensure consistency, we should get the final state from the last step or a dedicated function.
-        
-        // Simulate getting final graph state from the last step (or a helper from logic.ts)
-        // This assumes the last step's node/edge data can reconstruct the RBT graph state.
-        // A better way: const {steps: newSteps, finalGraph} = generateRBTreeSteps(...); rbtRef.current = finalGraph;
-        // For now, if opType is build or insert, we update the ref with the new state
-        // search does not modify the tree.
-
-        // If logic modifies rbtRef.current directly (by passing and mutating it), this line might not be needed
-        // or should be a deep copy from the last step if it's the source of truth for visuals.
-        // rbtRef.current = getFinalRBTreeGraph(rbtRef.current); // Ensure the ref is updated if logic returns new state
-        
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
-        if (lastStepMsg) {
+        if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { // Avoid toast for initial build display
             const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
             toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 3000 });
         }
-
     } else {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialArrayInput, operationValue, toast, updateStateFromStep]); // Removed selectedOperation to avoid re-triggering from its own change
+  }, [initialArrayInput, operationValue, toast, updateStateFromStep]);
+
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -181,13 +162,12 @@ export default function RedBlackTreePage() {
   };
   const handleResetControls = () => { 
     setIsPlaying(false); setIsFinished(true);
-    rbtRef.current = createInitialRBTreeGraph();
-    setInitialArrayInput('10,20,30,5,15');
-    setOperationValue('25');
+    const defaultInitialArray = '10,20,30,5,15,25,35,1,8';
+    setInitialArrayInput(defaultInitialArray);
+    setOperationValue('22');
     setSelectedOperation('insert');
-    setCurrentMessage("RBT Reset. Build a new tree or select an operation.");
-    // Trigger initial build with default values
-    handleOperation('build', '10,20,30,5,15');
+    setCurrentMessage("RBT Reset. Building new tree with default values.");
+    handleOperation('build', defaultInitialArray);
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
@@ -274,7 +254,7 @@ export default function RedBlackTreePage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              Interactive visualization for **Insert** and **Search** operations are available. Delete is conceptual.
+              Interactive visualization for **Insert** and **Search** operations are available. Delete is conceptual and not interactive.
               NIL nodes are logical and not visually rendered for clarity.
             </p>
           </CardContent>
@@ -285,3 +265,4 @@ export default function RedBlackTreePage() {
     </div>
   );
 }
+
