@@ -19,45 +19,54 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const { toast } = useToast();
 
   const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
-  
-  const initialLang = useMemo(() => {
-    return defaultLanguage && languages.includes(defaultLanguage) 
-           ? defaultLanguage 
-           : (languages[0] || 'Info');
+
+  const getEffectiveInitialLanguage = useCallback(() => {
+    if (defaultLanguage && languages.includes(defaultLanguage)) {
+      return defaultLanguage;
+    }
+    if (languages.length > 0) {
+      return languages[0];
+    }
+    return 'Info'; // Fallback if no languages or snippets
   }, [defaultLanguage, languages]);
 
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(getEffectiveInitialLanguage());
 
+  // Effect to update selectedLanguage if props (like codeSnippets or defaultLanguage) change,
+  // or if the current selectedLanguage becomes invalid.
   useEffect(() => {
-    // This effect ensures that if initialLang (derived from props) changes,
-    // selectedLanguage is updated to reflect it.
-    // This is important if codeSnippets or defaultLanguage props change after initial mount.
-    if (selectedLanguage !== initialLang) {
-      setSelectedLanguage(initialLang);
-    }
-  }, [initialLang, selectedLanguage]);
+    const newEffectiveInitialLang = getEffectiveInitialLanguage();
 
-  useEffect(() => {
-    // This effect ensures selectedLanguage remains valid if 'languages' array changes
-    // or if the current selectedLanguage is 'Info' and actual languages become available.
-    if (!languages.includes(selectedLanguage)) {
-      if (languages.length > 0) {
-        // If current lang is invalid, pick the new initialLang (which could be default or first)
-        setSelectedLanguage(initialLang); 
-      } else if (selectedLanguage !== 'Info') {
-        // All languages removed, current isn't 'Info', so set to 'Info'
+    if (languages.length === 0) {
+      // If there are no languages (e.g., codeSnippets is empty)
+      if (selectedLanguage !== 'Info') {
         setSelectedLanguage('Info');
       }
-    } else if (selectedLanguage === 'Info' && languages.length > 0 && initialLang !== 'Info') {
-      // Was 'Info', but now actual languages are available and initialLang reflects one
-      setSelectedLanguage(initialLang);
+    } else {
+      // If there are languages
+      if (!languages.includes(selectedLanguage)) {
+        // If the current selectedLanguage is not in the new list of languages (e.g., it was removed)
+        // OR if selectedLanguage was 'Info' and now we have actual languages.
+        setSelectedLanguage(newEffectiveInitialLang);
+      } else if (selectedLanguage === 'Info' && newEffectiveInitialLang !== 'Info') {
+         // This handles the specific case where it was 'Info' (due to no snippets initially)
+         // and now snippets are available, so we switch to the actual default/first language.
+        setSelectedLanguage(newEffectiveInitialLang);
+      }
+      // If defaultLanguage prop itself changes and we want to reflect that:
+      // This case is implicitly handled if the current selectedLanguage is NOT newEffectiveInitialLang
+      // AND newEffectiveInitialLang is a valid language.
+      // However, if selectedLanguage is already a valid language from the list,
+      // and defaultLanguage prop changes to *another* valid language, this current logic
+      // might not force a switch unless selectedLanguage became invalid.
+      // For current use case, defaultLanguage prop is stable per algorithm page.
     }
-  }, [selectedLanguage, languages, initialLang]);
+  }, [languages, defaultLanguage, selectedLanguage, getEffectiveInitialLanguage]);
 
 
   const handleCopyCode = () => {
     const codeToCopy = codeSnippets[selectedLanguage]?.join('\n') || '';
-    if (codeToCopy) {
+    if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => {
           toast({ title: `${selectedLanguage} Code Copied!`, description: "The code has been copied to your clipboard." });
@@ -71,7 +80,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     }
   };
 
-  const currentCodeLines = codeSnippets[selectedLanguage] || [];
+  const currentCodeLines = selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -79,13 +88,13 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Code
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0}>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
           Copy
         </Button>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-        {languages.length > 1 ? (
+        {languages.length > 0 ? (
           <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
             <TabsList className="mx-4 mb-1 self-start shrink-0">
               {languages.map((lang) => (
@@ -96,7 +105,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
             </TabsList>
             {languages.map((lang) => (
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea key={lang} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
@@ -119,7 +128,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={selectedLanguage} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5"> {/* Added key here */}
+            <ScrollArea key={selectedLanguage} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4">
                 {currentCodeLines.map((line, index) => (
                   <div
