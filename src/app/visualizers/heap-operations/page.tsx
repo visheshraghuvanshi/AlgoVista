@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -139,7 +138,7 @@ export default function HeapOperationsPage() {
     if (newSteps.length > 0) {
         updateStateFromStep(0);
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
-        if (lastStepMsg && opType !== 'buildMinHeap' && opType !== 'classDefinition' && newSteps.length > 1) {
+        if (lastStepMsg && opType !== 'buildMinHeap' && opType !== 'classDefinition' && newSteps.length > 1) { // Avoid toast for initial build display
             const opDisplay = opType.replace(/([A-Z])/g, ' $1').trim();
             toast({ title: `${opDisplay}`, description: lastStepMsg, variant: "default", duration: 3000 });
         } else if (opType === 'buildMinHeap' && newSteps.length > 1 && lastStepMsg) {
@@ -223,7 +222,7 @@ export default function HeapOperationsPage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Heap Operations</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; Heap Operations</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
@@ -251,7 +250,7 @@ export default function HeapOperationsPage() {
                 Execute {selectedOperation.replace(/([A-Z])/g, ' $1').trim()}
             </Button>
             <div className="flex items-center justify-start pt-4 border-t">
-              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Heap & Controls</Button>
+              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Heap &amp; Controls</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
@@ -277,4 +276,3 @@ export default function HeapOperationsPage() {
     </div>
   );
 }
-

@@ -1,4 +1,3 @@
-
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
 
 export type HeapOperationType = 'buildMinHeap' | 'insertMinHeap' | 'extractMin' | 'classDefinition';
@@ -152,7 +151,7 @@ export const generateHeapSteps = (
     let path = [index];
     while (index > 0 && currentHeapArray[index] < currentHeapArray[parentIndex]) {
       path.push(parentIndex);
-      addStep(lineMap.whileLoop, `While ${index} > 0 and arr[${index}] (${currentHeapArray[index]}) < arr[${parentIndex}] (${currentHeapArray[parentIndex]})`, index, [], [...path]);
+      addStep(lineMap.whileLoop, `While ${index} > 0 && arr[${index}] (${currentHeapArray[index]}) < arr[${parentIndex}] (${currentHeapArray[parentIndex]})`, index, [], [...path]);
       
       addStep(lineMap.swap, `Swap arr[${index}] (${currentHeapArray[index]}) with arr[${parentIndex}] (${currentHeapArray[parentIndex]})`, parentIndex, [index, parentIndex], [...path]);
       [currentHeapArray[index], currentHeapArray[parentIndex]] = [currentHeapArray[parentIndex], currentHeapArray[index]];
@@ -280,4 +279,3 @@ export const generateHeapSteps = (
   }
   return localSteps;
 };
-

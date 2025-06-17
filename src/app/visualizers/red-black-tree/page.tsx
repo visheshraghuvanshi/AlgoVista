@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/components/algo-vista/BinaryTreeVisualizationPanel'; // Updated path
+import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel'; // Updated path
 import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
@@ -196,7 +196,7 @@ export default function RedBlackTreePage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & RBT Operations</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; RBT Operations</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
@@ -226,7 +226,7 @@ export default function RedBlackTreePage() {
             </div>
             
             <div className="flex items-center justify-start pt-4 border-t">
-              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Tree & Controls</Button>
+              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Tree &amp; Controls</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
@@ -256,3 +256,4 @@ export default function RedBlackTreePage() {
     </div>
   );
 }
+

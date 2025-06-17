@@ -1,4 +1,3 @@
-
 import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
 
 export const TRAVERSAL_TYPES = {
@@ -231,4 +230,3 @@ export const generateTraversalSteps = (
   addStep(null, lineMap.funcEnd, `${traversalType} traversal complete. Final path: ${traversalPath.join(', ')}`);
   return localSteps;
 };
-

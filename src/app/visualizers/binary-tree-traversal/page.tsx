@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -21,32 +20,6 @@ import {
 } from './binary-tree-traversal-logic';
 import { algorithmMetadata } from './metadata'; // Corrected import
 
-const TRAVERSAL_CODE_SNIPPETS: Record<TraversalType, string[]> = {
-  [TRAVERSAL_TYPES.INORDER]: [
-    "function inorder(node) {",
-    "  if (node === null) return;",
-    "  inorder(node.left);",
-    "  visit(node);",
-    "  inorder(node.right);",
-    "}",
-  ],
-  [TRAVERSAL_TYPES.PREORDER]: [
-    "function preorder(node) {",
-    "  if (node === null) return;",
-    "  visit(node);",
-    "  preorder(node.left);",
-    "  preorder(node.right);",
-    "}",
-  ],
-  [TRAVERSAL_TYPES.POSTORDER]: [
-    "function postorder(node) {",
-    "  if (node === null) return;",
-    "  postorder(node.left);",
-    "  postorder(node.right);",
-    "  visit(node);",
-    "}",
-  ],
-};
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
@@ -63,7 +36,7 @@ export default function BinaryTreeTraversalPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [currentNodes, setCurrentNodes] = useState<BinaryTreeNodeVisual[]>([]);
-  const [currentEdges, setCurrentEdges] = useState<BinaryTreeEdgeVisual[]>([]);
+  const [currentEdges, setCurrentEdges] = useState<TreeAlgorithmStep['edges']>([]);
   const [currentTraversalPath, setCurrentTraversalPath] = useState<(string | number)[]>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentProcessingNodeId, setCurrentProcessingNodeId] = useState<string|null>(null);
@@ -208,7 +181,7 @@ export default function BinaryTreeTraversalPage() {
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
           <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
           <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{algorithmMetadata.slug}&quot;.</p>
+          <p className="text-muted-foreground text-lg">Could not load data for &quot;{algorithmMetadata?.slug || 'Binary Tree Traversals'}&quot;.</p>
         </main>
         <Footer />
       </div>
@@ -235,7 +208,6 @@ export default function BinaryTreeTraversalPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <BinaryTreeTraversalCodePanel
-              codeSnippets={TRAVERSAL_CODE_SNIPPETS}
               currentLine={currentLine}
               selectedTraversalType={selectedTraversalType}
             />

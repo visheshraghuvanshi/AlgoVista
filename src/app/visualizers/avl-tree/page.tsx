@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/components/algo-vista/BinaryTreeVisualizationPanel';
+import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
 import { AVLTreeCodePanel } from './AVLTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
@@ -129,13 +128,13 @@ export default function AVLTreeVisualizerPage() {
   const handleInsertValue = () => processOperation('insert');
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length - 1) {
+    if (isPlaying &amp;&amp; currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
       }, animationSpeed);
-    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+    } else if (isPlaying &amp;&amp; currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
       setIsFinished(true);
     }
@@ -191,7 +190,7 @@ export default function AVLTreeVisualizerPage() {
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
+            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges || []} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <AVLTreeCodePanel currentLine={currentLine} />
@@ -199,7 +198,7 @@ export default function AVLTreeVisualizerPage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & AVL Tree Operations</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; AVL Tree Operations</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
@@ -215,7 +214,7 @@ export default function AVLTreeVisualizerPage() {
             </div>
             
             <div className="flex items-center justify-start pt-4 border-t">
-              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Controls & Tree</Button>
+              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Controls &amp; Tree</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
@@ -241,3 +240,4 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
+

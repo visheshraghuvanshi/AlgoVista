@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -25,9 +24,9 @@ interface BinaryTreeControlsPanelProps {
   isFinished: boolean;
   currentSpeed: number;
   onSpeedChange: (speed: number) => void;
+  isAlgoImplemented: boolean;
   minSpeed: number;
   maxSpeed: number;
-  isAlgoImplemented: boolean;
 }
 
 export function BinaryTreeControlsPanel({
@@ -108,7 +107,7 @@ export function BinaryTreeControlsPanel({
             <Button
                 onClick={onReset}
                 variant="outline"
-                disabled={isPlaying && isAlgoImplemented}
+                disabled={isPlaying}
                 aria-label="Reset algorithm and input"
             >
                 <RotateCcw className="mr-2 h-4 w-4" /> Reset Data & Algorithm

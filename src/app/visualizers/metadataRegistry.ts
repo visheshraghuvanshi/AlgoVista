@@ -1,4 +1,3 @@
-
 import type { AlgorithmMetadata } from '@/types';
 
 // Fundamentals
@@ -187,4 +186,3 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
     // Then by title within category
     return a.title.localeCompare(b.title);
 });
-    
