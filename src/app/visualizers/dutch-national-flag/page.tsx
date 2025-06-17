@@ -12,7 +12,7 @@ import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DUTCH_NATIONAL_FLAG_LINE_MAP, generateDutchNationalFlagSteps } from './dutch-national-flag-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
   JavaScript: [
@@ -119,16 +119,16 @@ export default function DutchNationalFlagVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         updateStateFromStep(0);
-      } else {
+      } else { 
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
       }
-    } else {
+    } else { 
       setSteps([]); setCurrentStepIndex(0);
       setDisplayedData([]);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -140,8 +140,7 @@ export default function DutchNationalFlagVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]); 
+  }, [generateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -149,10 +148,6 @@ export default function DutchNationalFlagVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -164,7 +159,7 @@ export default function DutchNationalFlagVisualizerPage() {
   const handleInputChange = (value: string) => setInputValue(value);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -177,7 +172,7 @@ export default function DutchNationalFlagVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps.", variant: "default" });
       return;
     }
@@ -194,7 +189,10 @@ export default function DutchNationalFlagVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    setInputValue('0,1,2,0,1,1,2,0,2,1,0'); // Reset to default or trigger generateSteps if inputValue is a dependency
+    // generateSteps will be called by useEffect due to inputValue change if it's a dependency of generateSteps or its own useEffect.
+    // If generateSteps is not automatically called, explicitly call it:
+    // generateSteps(); // if inputValue was already default, this ensures regeneration.
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -228,6 +226,7 @@ export default function DutchNationalFlagVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -270,3 +269,4 @@ export default function DutchNationalFlagVisualizerPage() {
     </div>
   );
 }
+

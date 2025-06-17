@@ -24,19 +24,18 @@ export const DUTCH_NATIONAL_FLAG_LINE_MAP = {
 
 export const generateDutchNationalFlagSteps = (arrInput: number[]): AlgorithmStep[] => {
   const localSteps: AlgorithmStep[] = [];
-  // Ensure arr contains only 0, 1, 2. Filter out others or throw error.
-  // For visualization, we assume valid input, or the component can pre-process.
-  const arr = [...arrInput].filter(num => [0,1,2].includes(num));
+  // Ensure arr contains only 0, 1, 2. Filter out others.
+  // This function assumes valid input (0,1,2) as filtering is done in page.tsx
+  const arr = [...arrInput];
   const n = arr.length;
   const lm = DUTCH_NATIONAL_FLAG_LINE_MAP;
 
-  // sortedIndices will track finalized 0s and 2s regions
   let sortedZerosEnd = -1;
   let sortedTwosStart = n;
 
   const addStep = (
     line: number,
-    active: number[] = [], // Current low, mid, high pointers
+    activePtrs: {low: number, mid: number, high: number} | null = null,
     swapping: number[] = [],
     message: string = "",
     currentArrState = [...arr]
@@ -45,72 +44,72 @@ export const generateDutchNationalFlagSteps = (arrInput: number[]): AlgorithmSte
     for(let k=0; k <= sortedZerosEnd; k++) currentSortedIndices.push(k);
     for(let k=sortedTwosStart; k < n; k++) currentSortedIndices.push(k);
     
+    // Active indices for visualization are the pointers l, m, h
+    const activeDisplayIndices = activePtrs ? [activePtrs.low, activePtrs.mid, activePtrs.high].filter(idx => idx >=0 && idx < n) : [];
+
     localSteps.push({
       array: currentArrState,
-      activeIndices: active.filter(idx => idx >=0 && idx < n),
+      activeIndices: activeDisplayIndices,
       swappingIndices: swapping,
       sortedIndices: currentSortedIndices.sort((a,b)=>a-b),
       currentLine: line,
       message,
-      processingSubArrayRange: [sortedZerosEnd + 1, sortedTwosStart - 1], // The 'unknown' or '1s' region
-      pivotActualIndex: null, // Not a typical pivot algorithm like QuickSort
+      // Show the 'unknown' region between low and high (exclusive of low, inclusive of high for processing)
+      processingSubArrayRange: activePtrs ? [activePtrs.low, activePtrs.high] : null, 
+      pivotActualIndex: null, 
     });
   };
 
-  addStep(lm.functionDeclaration, [], [], "Start Dutch National Flag Sort (for 0s, 1s, 2s).");
+  addStep(lm.functionDeclaration, null, [], "Start Dutch National Flag Sort (for 0s, 1s, 2s).");
 
   if (n === 0) {
-    addStep(lm.returnArr, [], [], "Array is empty.");
+    addStep(lm.returnArr, null, [], "Array is empty.");
     addStep(lm.functionEnd);
     return localSteps;
   }
   
   let low = 0, mid = 0, high = n - 1;
-  addStep(lm.initLowMidHigh, [low, mid, high], [], `Initialize low=${low}, mid=${mid}, high=${high}.`);
+  addStep(lm.initLowMidHigh, {low,mid,high}, [], `Initialize low=${low}, mid=${mid}, high=${high}.`);
 
-  let iteration = 0; // Safety break for visualization
-  while (mid <= high && iteration < n * 3) { // Max operations roughly 2*n swaps/pointer moves
+  let iteration = 0; 
+  while (mid <= high && iteration < n * 3 + 5) { 
     iteration++;
-    addStep(lm.whileMidLEHigh, [low, mid, high], [], `mid (${mid}) <= high (${high}). Current element arr[${mid}]=${arr[mid]}.`);
+    addStep(lm.whileMidLEHigh, {low,mid,high}, [], `mid (${mid}) <= high (${high}). Current element arr[${mid}]=${arr[mid]}.`);
     
     const currentMidVal = arr[mid];
-    let swapped = false;
 
     if (currentMidVal === 0) {
-      addStep(lm.switchCase0, [low, mid, high], [], `arr[${mid}] is 0.`);
-      addStep(lm.swapLowMid, [low, mid], [low, mid], `Swap arr[${low}] (${arr[low]}) with arr[${mid}] (${arr[mid]}).`);
+      addStep(lm.switchCase0, {low,mid,high}, [low,mid], `arr[${mid}] is 0. Swap arr[${low}] (${arr[low]}) with arr[${mid}] (${arr[mid]}).`);
       [arr[low], arr[mid]] = [arr[mid], arr[low]];
-      swapped = true;
-      addStep(lm.swapLowMid, [low, mid], [], `Swapped.`);
+      addStep(lm.swapLowMid, {low,mid,high}, [low,mid], `Swapped.`);
       
-      sortedZerosEnd = low; // The element at 'low' is now a confirmed 0
+      sortedZerosEnd = low; 
       low++; mid++;
-      addStep(lm.incrementLowMid, [low, mid, high], [], `Increment low to ${low}, mid to ${mid}.`);
-      addStep(lm.breakCase0);
+      addStep(lm.incrementLowMid, {low,mid,high}, [], `Increment low to ${low}, mid to ${mid}.`);
+      addStep(lm.breakCase0, {low,mid,high});
     } else if (currentMidVal === 1) {
-      addStep(lm.switchCase1, [low, mid, high], [], `arr[${mid}] is 1.`);
+      addStep(lm.switchCase1, {low,mid,high}, [mid], `arr[${mid}] is 1. No swap needed.`);
       mid++;
-      addStep(lm.incrementMid, [low, mid, high], [], `Increment mid to ${mid}.`);
-      addStep(lm.breakCase1);
+      addStep(lm.incrementMid, {low,mid,high}, [mid-1], `Increment mid to ${mid}.`);
+      addStep(lm.breakCase1, {low,mid,high});
     } else { // currentMidVal === 2
-      addStep(lm.switchCase2, [low, mid, high], [], `arr[${mid}] is 2.`);
-      addStep(lm.swapMidHigh, [mid, high], [mid, high], `Swap arr[${mid}] (${arr[mid]}) with arr[${high}] (${arr[high]}).`);
+      addStep(lm.switchCase2, {low,mid,high}, [mid,high], `arr[${mid}] is 2. Swap arr[${mid}] (${arr[mid]}) with arr[${high}] (${arr[high]}).`);
       [arr[mid], arr[high]] = [arr[high], arr[mid]];
-      swapped = true;
-      addStep(lm.swapMidHigh, [mid, high], [], `Swapped.`);
+      addStep(lm.swapMidHigh, {low,mid,high}, [mid,high], `Swapped.`);
       
-      sortedTwosStart = high; // The element at 'high' is now a confirmed 2
+      sortedTwosStart = high; 
       high--;
-      addStep(lm.decrementHigh, [low, mid, high], [], `Decrement high to ${high}.`);
-      addStep(lm.breakCase2);
+      addStep(lm.decrementHigh, {low,mid,high}, [], `Decrement high to ${high}.`);
+      addStep(lm.breakCase2, {low,mid,high});
     }
-    addStep(lm.endSwitch, [low, mid, high], [], `End of switch for arr[${swapped ? (currentMidVal === 0 ? low-1 : mid) : mid-1}].`);
+    addStep(lm.endSwitch, {low,mid,high}, [], `End of decisions for arr[${mid-1 >= low ? mid-1 : low}].`);
   }
-  addStep(lm.whileLoopEnd, [low, mid, high], [], `Loop finished. mid=${mid}, high=${high}.`);
+  addStep(lm.whileLoopEnd, {low,mid,high}, [], `Loop finished. mid=${mid}, high=${high}.`);
   
   // Final pass to mark all as sorted
   const finalSorted = Array.from({length: n}, (_,k)=>k);
-  addStep(lm.returnArr, [], [], "Array is sorted.", finalSorted);
-  addStep(lm.functionEnd, [], [], "", finalSorted);
+  addStep(lm.returnArr, null, [], "Array is sorted.", finalSorted);
+  addStep(lm.functionEnd, null, [], "", finalSorted);
   return localSteps;
 };
+

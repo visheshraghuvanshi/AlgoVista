@@ -5,60 +5,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { KadanesAlgorithmCodePanel } from './KadanesAlgorithmCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel'; // Using SortingControls as it's an array input problem
+import { KadanesAlgorithmCodePanel, KADANES_ALGORITHM_CODE_SNIPPETS_REFINED } from './KadanesAlgorithmCodePanel'; 
+import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { KADANES_ALGORITHM_LINE_MAP, generateKadanesAlgorithmSteps } from './kadanes-algorithm-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
-
-const KADANES_ALGORITHM_CODE_SNIPPETS = {
-  JavaScript: [
-    "function kadanesAlgorithm(arr) {",                            // 1
-    "  let maxSoFar = -Infinity; // Or arr[0] if arr not empty",  // 2
-    "  let currentMax = 0;",                                      // 3
-    "  // let start = 0, end = 0, currentStart = 0;",              // 4,5,6 (Optional: for tracking subarray indices)
-    "  for (let i = 0; i < arr.length; i++) {",                   // 7
-    "    currentMax += arr[i];",                                 // 8
-    "    if (currentMax > maxSoFar) {",                           // 9
-    "      maxSoFar = currentMax;",                               // 10
-    "      // start = currentStart; end = i;",                     // 11 (Optional)
-    "    }",
-    "    if (currentMax < 0) {",                                  // 12
-    "      currentMax = 0;",                                      // 13
-    "      // currentStart = i + 1;",                              // 14 (Optional)
-    "    }",
-    "  }",                                                        // 15
-    "  // Handle empty or all-negative array if maxSoFar remained -Infinity",
-    "  if (maxSoFar === -Infinity && arr.length > 0) return Math.max(...arr);", // 16
-    "  return arr.length === 0 ? 0 : maxSoFar;",                  // 17
-    "}",                                                          // 18
-  ],
-  Python: [
-    "def kadanes_algorithm(arr):",
-    "    if not arr: return 0",
-    "    max_so_far = -float('inf')",
-    "    current_max = 0",
-    "    # For tracking subarray (optional)",
-    "    # start_idx, end_idx = 0, 0",
-    "    # current_start_idx = 0",
-    "    for i, x in enumerate(arr):",
-    "        current_max += x",
-    "        if current_max > max_so_far:",
-    "            max_so_far = current_max",
-    "            # start_idx = current_start_idx",
-    "            # end_idx = i",
-    "        if current_max < 0:",
-    "            current_max = 0",
-    "            # current_start_idx = i + 1",
-    "    # If all numbers are negative, max_so_far will be the largest negative",
-    "    # This check ensures we return that, or 0 if problem requires it for all negs.",
-    "    if max_so_far == -float('inf'): return max(arr) # or specific value like 0",
-    "    return max_so_far",
-  ],
-};
+import { algorithmMetadata } from './metadata'; 
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -79,6 +33,8 @@ export default function KadanesAlgorithmVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
+  const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
+
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -111,6 +67,7 @@ export default function KadanesAlgorithmVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
   }, [steps]);
   
@@ -126,20 +83,20 @@ export default function KadanesAlgorithmVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <=1);
 
       if (newSteps.length > 0) {
         updateStateFromStep(0);
       } else { 
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       }
     } else { 
       setSteps([]); setCurrentStepIndex(0);
       setDisplayedData([]);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-      setProcessingSubArrayRange(null); setPivotActualIndex(null);
+      setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       setIsPlaying(false); setIsFinished(false);
     }
   }, [inputValue, parseInput, updateStateFromStep]);
@@ -147,8 +104,7 @@ export default function KadanesAlgorithmVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]); 
+  }, [generateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -156,10 +112,6 @@ export default function KadanesAlgorithmVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -171,7 +123,7 @@ export default function KadanesAlgorithmVisualizerPage() {
   const handleInputChange = (value: string) => setInputValue(value);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -184,7 +136,7 @@ export default function KadanesAlgorithmVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps.", variant: "default" });
       return;
     }
@@ -201,7 +153,7 @@ export default function KadanesAlgorithmVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    setInputValue('-2,1,-3,4,-1,2,1,-5,4'); // Resets input, useEffect will call generateSteps
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -235,6 +187,7 @@ export default function KadanesAlgorithmVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -246,10 +199,19 @@ export default function KadanesAlgorithmVisualizerPage() {
               processingSubArrayRange={processingSubArrayRange} 
               pivotActualIndex={pivotActualIndex}
             />
+             {auxiliaryData && (
+                <Card className="mt-4">
+                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Algorithm State</CardTitle></CardHeader>
+                    <CardContent className="text-sm flex justify-around">
+                        <p><strong>Current Max Ending Here:</strong> {auxiliaryData.currentMax?.toString()}</p>
+                        <p><strong>Max Sum So Far:</strong> {auxiliaryData.maxSoFar?.toString()}</p>
+                    </CardContent>
+                </Card>
+            )}
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <KadanesAlgorithmCodePanel
-              codeSnippets={KADANES_ALGORITHM_CODE_SNIPPETS}
+              codeSnippets={KADANES_ALGORITHM_CODE_SNIPPETS_REFINED}
               currentLine={currentLine}
             />
           </div>

@@ -8,6 +8,44 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { KADANES_ALGORITHM_LINE_MAP } from './kadanes-algorithm-logic';
+
+
+// Adjusted JavaScript snippet to match the refined KADANES_ALGORITHM_LINE_MAP
+export const KADANES_ALGORITHM_CODE_SNIPPETS_REFINED = {
+  JavaScript: [
+    "function kadanesAlgorithm(arr) {",                            // 1 (functionDeclaration)
+    "  let maxSoFar = -Infinity;",                                // 2 (initMaxSoFar_NegativeInfinity)
+    "  let currentMax = 0;",                                      // 3 (initCurrentMax_Zero)
+    "  for (let i = 0; i < arr.length; i++) {",                   // 4 (loopStart)
+    "    currentMax += arr[i];",                                 // 5 (addToCurrentMax)
+    "    if (currentMax > maxSoFar) {",                           // 6 (checkCurrentMaxGreaterThanMaxSoFar)
+    "      maxSoFar = currentMax;",                               // 7 (updateMaxSoFar)
+    "    }",
+    "    if (currentMax < 0) {",                                  // 8 (checkCurrentMaxNegative)
+    "      currentMax = 0;",                                      // 9 (resetCurrentMax)
+    "    }",
+    "  }",                                                        // 10 (loopEnd)
+    "  if (maxSoFar === -Infinity && arr.length > 0) return Math.max(...arr);", // 11 (handleAllNegativeOrEmpty)
+    "  return arr.length === 0 ? 0 : maxSoFar;",                  // 12 (returnMaxSoFar)
+    "}",                                                          // 13 (functionEnd)
+  ],
+   Python: [ // Simplified Python to match JS structure for line mapping
+    "def kadanes_algorithm(arr):",
+    "    if not arr: return 0",
+    "    max_so_far = -float('inf')",
+    "    current_max = 0",
+    "    for x in arr:",
+    "        current_max += x",
+    "        if current_max > max_so_far:",
+    "            max_so_far = current_max",
+    "        if current_max < 0:",
+    "            current_max = 0",
+    "    if max_so_far == -float('inf'): return max(arr) if arr else 0",
+    "    return max_so_far",
+  ],
+};
+
 
 interface KadanesAlgorithmCodePanelProps {
   codeSnippets: { [language: string]: string[] };
@@ -114,3 +152,4 @@ export function KadanesAlgorithmCodePanel({ codeSnippets, currentLine }: Kadanes
     </Card>
   );
 }
+
