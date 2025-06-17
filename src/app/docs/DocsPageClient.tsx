@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header'; // Import the main header
 import { DocsSidebar } from '@/components/docs/DocsSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/theme-toggle';
+// Removed ThemeToggle import from here as it's now only in the global header
 import { Menu, Search, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -89,7 +89,7 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
             {/* Docs Specific Top Bar - sticky below the global Header */}
             {/* Adjusted top to 4rem (h-16) to stick below the global header */}
             <header className="sticky top-16 z-30 flex items-center justify-between lg:justify-end h-16 px-4 sm:px-6 lg:px-8 border-b bg-background/80 backdrop-blur-sm">
-              <div className="flex items-center gap-x-3 md:gap-x-4 ml-auto">
+              <div className="flex items-center gap-x-3 md:gap-x-4 ml-auto"> {/* Adjusted to ml-auto to push content to the right */}
                 {/* Desktop Search */}
                 <div className="hidden lg:block relative">
                   <form onSubmit={handleSearchSubmit}>
@@ -123,7 +123,7 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
                 <Button variant="ghost" size="icon" onClick={openSearchModal} className="lg:hidden" aria-label="Open search">
                   <Search className="h-5 w-5" />
                 </Button>
-                <ThemeToggle />
+                {/* Redundant ThemeToggle removed from here */}
                 {/* Mobile Menu Trigger */}
                 <SheetTrigger asChild className="lg:hidden">
                   <Button variant="outline" size="icon" aria-label="Open navigation menu">
@@ -192,4 +192,3 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
     </div>
   );
 }
-
