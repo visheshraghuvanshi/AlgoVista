@@ -12,7 +12,7 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DFS_LINE_MAP, generateDfsSteps, parseGraphInput } from './dfs-logic';
-import { algorithmMetadata } from './metadata'; // Changed to local import
+import { algorithmMetadata } from './metadata'; 
 
 const DFS_CODE_SNIPPETS = {
   JavaScript: [
@@ -49,8 +49,67 @@ const DFS_CODE_SNIPPETS = {
     "            # Process node u",
     "            # Add unvisited neighbors (iterate reversed to mimic recursion)",
     "            for v in reversed(graph.get(u, [])):",
-    "                if v not in visited:",
-    "                    stack.append(v)",
+    "                # if v not in visited: # Not strictly needed if check on pop",
+    "                stack.append(v)",
+    "    # return visited # or path",
+  ],
+  Java: [
+    "import java.util.*;",
+    "public class DFS {",
+    "    public void dfsIterative(Map<Integer, List<Integer>> graph, int startNode) {",
+    "        Stack<Integer> stack = new Stack<>();",
+    "        Set<Integer> visited = new HashSet<>();",
+    "        stack.push(startNode);",
+    "        while (!stack.isEmpty()) {",
+    "            int u = stack.pop();",
+    "            if (!visited.contains(u)) {",
+    "                visited.add(u);",
+    "                // Process node u",
+    "                System.out.print(u + \" \");",
+    "                List<Integer> neighbors = graph.getOrDefault(u, Collections.emptyList());",
+    "                // Add unvisited neighbors to stack (reverse order for typical DFS path)",
+    "                for (int i = neighbors.size() - 1; i >= 0; i--) {",
+    "                    int v = neighbors.get(i);",
+    "                    if (!visited.contains(v)) {",
+    "                        stack.push(v);",
+    "                    }",
+    "                }",
+    "            }",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <iostream>",
+    "#include <vector>",
+    "#include <stack>",
+    "#include <set>",
+    "#include <map>",
+    "#include <algorithm> // For std::reverse for neighbors",
+    "void dfsIterative(const std::map<int, std::vector<int>>& graph, int startNode) {",
+    "    std::stack<int> s;",
+    "    std::set<int> visited;",
+    "    s.push(startNode);",
+    "    while (!s.empty()) {",
+    "        int u = s.top();",
+    "        s.pop();",
+    "        if (visited.find(u) == visited.end()) {",
+    "            visited.insert(u);",
+    "            // Process node u",
+    "            std::cout << u << \" \";",
+    "            auto it = graph.find(u);",
+    "            if (it != graph.end()) {",
+    "                std::vector<int> neighbors = it->second;",
+    "                std::reverse(neighbors.begin(), neighbors.end()); // To mimic recursive DFS stack order",
+    "                for (int v : neighbors) {",
+    "                    if (visited.find(v) == visited.end()) {",
+    "                        s.push(v);",
+    "                    }",
+    "                }",
+    "            }",
+    "        }",
+    "    }",
+    "}",
   ],
 };
 
@@ -60,7 +119,6 @@ const MAX_SPEED = 2000;
 
 export default function DfsVisualizerPage() {
   const { toast } = useToast();
-  // algorithmMetadata is now imported directly
 
   const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:0,3;2:0,4;3:1;4:2,5;5:4'); 
   const [startNodeValue, setStartNodeValue] = useState('0');
@@ -146,10 +204,6 @@ export default function DfsVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -197,7 +251,7 @@ export default function DfsVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  if (!algorithmMetadata) { // Changed from `!algorithm`
+  if (!algorithmMetadata) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -226,7 +280,7 @@ export default function DfsVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">

@@ -65,7 +65,7 @@ export function DfsCodePanel({ codeSnippets, currentLine, defaultLanguage = "Jav
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> Code
+            <Code2 className="mr-2 h-5 w-5" /> DFS Code
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
