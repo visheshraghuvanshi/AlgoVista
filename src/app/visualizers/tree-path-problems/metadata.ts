@@ -3,15 +3,16 @@ import type { AlgorithmMetadata } from '@/types';
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'tree-path-problems',
-  title: 'Tree Path Problems',
+  title: 'Tree Path Sum (Root-to-Leaf)',
   category: 'Trees',
   difficulty: 'Medium',
-  description: 'Covers various problems related to finding or analyzing paths in trees, such as path sum, diameter, or specific node-to-node paths.',
-  longDescription: 'Tree Path Problems involve algorithms that explore or analyze paths within tree data structures. Common examples include:\n\n- **Path Sum**: Determining if a root-to-leaf path exists that sums to a target value, or finding all such paths.\n- **Tree Diameter**: Finding the longest path between any two nodes in a tree. This path may or may not pass through the root.\n- **Lowest Common Ancestor (LCA)**: Finding the lowest node that has two given nodes as descendants (covered in its own visualizer).\n- **All Paths from Root to Leaf**: Enumerating all possible paths from the root node to every leaf node.\n\nThese problems often utilize Depth-First Search (DFS) traversal as a core technique to explore paths. Variations can involve binary trees, N-ary trees, and can include constraints on path properties (e.g., sum, length, specific node inclusion). Understanding how to traverse trees and accumulate path information is key to solving these types of problems.',
+  description: 'Finds if a root-to-leaf path exists in a binary tree such that the sum of node values along the path equals a given target sum.',
+  longDescription: 'The Root-to-Leaf Path Sum problem is a common tree traversal challenge. Given a binary tree and a target sum, the goal is to determine if there exists a path from the root node to any leaf node where the sum of the values of the nodes along that path equals the target sum. A leaf node is a node with no children.\\n\\nAlgorithm Steps (DFS-based Recursive Approach):\\n1. If the current node is null (empty tree or end of a branch), return false (no path here).\\n2. Subtract the current node\'s value from the target sum to get the remaining sum needed from its children.\\n3. If the current node is a leaf node (no left and no right child):\\n   a. Check if the remaining sum is zero (i.e., current node\'s value equals what was needed). If so, a path is found, return true.\\n   b. Otherwise, this leaf path doesn\'t match, return false.\\n4. If not a leaf node, recursively call the function for the left child with the remaining sum.\\n5. If the left child call returns true, a path is found, so return true.\\n6. Otherwise, recursively call the function for the right child with the remaining sum.\\n7. Return the result of the right child call.\\n\\nThis approach systematically explores all root-to-leaf paths. The interactive visualizer demonstrates this DFS traversal, showing the current path being explored and the sum accumulated so far.',
   timeComplexities: {
-    best: "Varies (e.g., O(N) for many DFS-based path problems)",
-    average: "Varies (e.g., O(N))",
-    worst: "Varies (e.g., O(N))",
+    best: "O(N) in the best case (path found quickly).",
+    average: "O(N) as it visits each node at most once.",
+    worst: "O(N) as it visits each node at most once.",
   },
-  spaceComplexity: "O(H) for recursion stack (H = height of tree), O(N) in worst case (skewed tree). Some problems might require O(N) for storing paths.",
+  spaceComplexity: "O(H) for recursion stack, where H is the height of the tree. In the worst case (skewed tree), H can be N.",
 };
+    
