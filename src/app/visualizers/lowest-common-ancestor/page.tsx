@@ -8,7 +8,7 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2, LocateFixed, Binary, PlayCircle } from 'lucide-react'; // Added PlayCircle
+import { AlertTriangle, Construction, Code2, LocateFixed, Binary, PlayCircle } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +19,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
 import { parseTreeInput, buildTreeNodesAndEdges } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
-// Logic for LCA will be conceptual or simple path finding for now
-// import { generateLCASteps } from './lca-logic.ts'; // Assuming lca-logic.ts will exist for future animation
 
 interface TreeNodeForLCA {
     id: string;
@@ -77,6 +75,16 @@ const LCA_CODE_SNIPPETS: Record<string, string[]> = {
     "    if (leftLCA != null && rightLCA != null) return root;",
     "    return (leftLCA != null) ? leftLCA : rightLCA;",
     "}",
+    "",
+    "// LCA in a BST (Iterative)",
+    "public TreeNode lowestCommonAncestorBST(TreeNode root, TreeNode p, TreeNode q) {",
+    "    while (root != null) {",
+    "        if (p.val < root.val && q.val < root.val) root = root.left;",
+    "        else if (p.val > root.val && q.val > root.val) root = root.right;",
+    "        else return root;",
+    "    }",
+    "    return null;",
+    "}"
   ],
   "C++": [
     "// LCA in a Binary Tree (Recursive)",
@@ -88,6 +96,16 @@ const LCA_CODE_SNIPPETS: Record<string, string[]> = {
     "    if (leftLCA && rightLCA) return root;",
     "    return leftLCA ? leftLCA : rightLCA;",
     "}",
+    "",
+    "// LCA in a BST (Iterative)",
+    "TreeNode* lowestCommonAncestorBST(TreeNode* root, TreeNode* p, TreeNode* q) {",
+    "    while (root) {",
+    "        if (p->val < root->val && q->val < root->val) root = root->left;",
+    "        else if (p->val > root->val && q->val > root->val) root = root->right;",
+    "        else return root;",
+    "    }",
+    "    return nullptr;",
+    "}",
   ],
 };
 
@@ -96,14 +114,14 @@ export default function LCAVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   
-  const [treeInputValue, setTreeInputValue] = useState("5,3,8,1,4,7,9,null,2"); // Added a null for structure
+  const [treeInputValue, setTreeInputValue] = useState("5,3,8,1,4,7,9,null,2"); 
   const [nodePValue, setNodePValue] = useState("1");
   const [nodeQValue, setNodeQValue] = useState("4");
   
   const [treeNodes, setTreeNodes] = useState<BinaryTreeNodeVisual[]>([]);
   const [treeEdges, setTreeEdges] = useState<TreeAlgorithmStep['edges']>([]);
   const [lcaResult, setLcaResult] = useState<string | number | null>(null);
-  const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]); // Store IDs for highlighting
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]); 
 
   useEffect(() => {
     setIsClient(true);
@@ -130,7 +148,9 @@ export default function LCAVisualizerPage() {
       const { nodes, edges, rootId } = buildTreeNodesAndEdges(parsedValues);
       setTreeNodes(nodes);
       setTreeEdges(edges);
-      return { nodesMap: new Map(nodes.map(n => [n.id, {id: n.id, value: n.value!, leftId: n.leftId || null, rightId: n.rightId || null}])), rootIdFromBuild: rootId };
+      // Create a simplified map for LCA logic (value, leftId, rightId)
+      const nodesMapForLca = new Map(nodes.map(n => [n.id, {id: n.id, value: n.value!, leftId: n.leftId || null, rightId: n.rightId || null}]));
+      return { nodesMap: nodesMapForLca, rootIdFromBuild: rootId };
     } catch (error: any) {
       toast({ title: "Error Building Tree", description: error.message, variant: "destructive" });
       setTreeNodes([]); setTreeEdges([]);
@@ -140,7 +160,7 @@ export default function LCAVisualizerPage() {
 
   useEffect(() => {
     buildTreeVisualization();
-    setLcaResult(null); // Clear LCA result when tree input changes
+    setLcaResult(null); 
     setHighlightedNodeIds([]);
   }, [buildTreeVisualization]);
 
@@ -150,6 +170,7 @@ export default function LCAVisualizerPage() {
     if (!node) return null;
 
     currentPath.push(node.id);
+    // Use == for loose comparison as targetValue might be string "1" and node.value number 1
     if (node.value == targetValue) return [...currentPath];
 
     if (node.leftId) {
@@ -166,7 +187,7 @@ export default function LCAVisualizerPage() {
 
   const handleFindLCA = () => {
     setLcaResult(null); setHighlightedNodeIds([]);
-    const treeData = buildTreeVisualization(); // Rebuild/get current tree map and root
+    const treeData = buildTreeVisualization(); 
     if (!treeData || treeNodes.length === 0 || !treeData.rootIdFromBuild) {
       toast({ title: "No Tree", description: "Please ensure a valid tree structure is visualized.", variant: "destructive" });
       return;
@@ -194,7 +215,7 @@ export default function LCAVisualizerPage() {
       toast({ title: "Node(s) Not Found", description: `${missingNodes.join(' and ')} not found in the tree.`, variant: "destructive" });
       return;
     }
-    if (!pathP || !pathQ) { // Should be caught by above, but as a fallback
+    if (!pathP || !pathQ) { 
       toast({ title: "Path Not Found", description: `Could not find path to one or both nodes (P: ${pVal}, Q: ${qVal}). Ensure they exist in the tree.`, variant: "destructive" });
       return;
     }
@@ -216,10 +237,10 @@ export default function LCAVisualizerPage() {
       const highlights = [lcaNodeId];
       if(pNodeVisual) highlights.push(pNodeVisual.id);
       if(qNodeVisual) highlights.push(qNodeVisual.id);
-      setHighlightedNodeIds(highlights);
+      setHighlightedNodeIds(Array.from(new Set(highlights))); // Ensure unique IDs
       toast({ title: "LCA Found", description: `LCA of P='${pVal}' and Q='${qVal}' is node '${lcaNodeData?.value}'. Nodes P, Q, and LCA are highlighted.`, duration: 6000 });
     } else {
-      toast({ title: "LCA Not Found", description: "Could not determine LCA.", variant: "destructive" });
+      toast({ title: "LCA Not Found", description: "Could not determine LCA (e.g., root is null or other issue).", variant: "destructive" });
     }
   };
 
@@ -327,3 +348,5 @@ export default function LCAVisualizerPage() {
   );
 }
 
+
+    

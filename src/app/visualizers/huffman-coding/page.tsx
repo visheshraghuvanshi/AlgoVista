@@ -22,7 +22,7 @@ interface HuffmanNode {
   freq: number;
   left?: HuffmanNode | null;
   right?: HuffmanNode | null;
-  id?: string; // For potential future visualization
+  id?: string; 
 }
 
 let huffmanNodeIdCounter = 0;
@@ -93,16 +93,26 @@ const HUFFMAN_CODING_CODE_SNIPPETS: Record<string, string[]> = {
     "    @Override public int compareTo(HuffmanNode other) { return this.frequency - other.frequency; }",
     "}",
     "public class HuffmanCoding {",
-    "  // public Map<Character, Integer> calculateFrequencies(String text) { ... }",
-    "  // public HuffmanNode buildTree(Map<Character, Integer> freqMap) {",
-    "  //   PriorityQueue<HuffmanNode> pq = new PriorityQueue<>();",
-    "  //   for (Map.Entry<Character, Integer> entry : freqMap.entrySet()) {",
-    "  //     pq.add(new HuffmanNode(entry.getKey(), entry.getValue()));",
-    "  //   }",
-    "  //   while (pq.size() > 1) { ... combine nodes ... }",
-    "  //   return pq.poll();",
-    "  // }",
-    "  // public void generateCodes(HuffmanNode root, String code, Map<Character, String> huffmanCodes) { ... }",
+    "  public Map<Character, Integer> calculateFrequencies(String text) { /* ... */ }",
+    "  public HuffmanNode buildTree(Map<Character, Integer> freqMap) {",
+    "    PriorityQueue<HuffmanNode> pq = new PriorityQueue<>();",
+    "    for (Map.Entry<Character, Integer> entry : freqMap.entrySet()) {",
+    "      pq.add(new HuffmanNode(entry.getKey(), entry.getValue()));",
+    "    }",
+    "    while (pq.size() > 1) {",
+    "        HuffmanNode left = pq.poll(); HuffmanNode right = pq.poll();",
+    "        HuffmanNode internal = new HuffmanNode('\\0', left.frequency + right.frequency);",
+    "        internal.left = left; internal.right = right;",
+    "        pq.add(internal);",
+    "    }",
+    "    return pq.poll();",
+    "  }",
+    "  public void generateCodes(HuffmanNode root, String code, Map<Character, String> huffmanCodes) {",
+    "    if (root == null) return;",
+    "    if (root.character != '\\0') { huffmanCodes.put(root.character, code.isEmpty() ? \"0\" : code); return; }",
+    "    generateCodes(root.left, code + \"0\", huffmanCodes);",
+    "    generateCodes(root.right, code + \"1\", huffmanCodes);",
+    "  }",
     "}",
   ],
   "C++": [
@@ -117,8 +127,8 @@ const HUFFMAN_CODING_CODE_SNIPPETS: Record<string, string[]> = {
     "    HuffmanNode(char d, unsigned f) : data(d), freq(f), left(nullptr), right(nullptr) {}",
     "};",
     "struct compare { bool operator()(HuffmanNode* l, HuffmanNode* r) { return (l->freq > r->freq); } };",
-    "// void buildHuffmanTree(std::map<char, unsigned> freq, std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, compare>& pq) { ... }",
-    "// void generateCodes(HuffmanNode* root, std::string str, std::map<char, std::string>& codes) { ... }",
+    "// HuffmanNode* buildHuffmanTree(std::map<char, unsigned> freq) { /* ... */ }",
+    "// void generateCodes(HuffmanNode* root, std::string str, std::map<char, std::string>& codes) { /* ... */ }",
   ],
 };
 
@@ -129,7 +139,7 @@ export default function HuffmanCodingVisualizerPage() {
   const [inputText, setInputText] = useState("ABBCBCADEFGH");
   const [frequencies, setFrequencies] = useState<Record<string, number>>({});
   const [huffmanCodes, setHuffmanCodes] = useState<Record<string, string>>({});
-  const [huffmanTreeString, setHuffmanTreeString] = useState<string>(""); // Textual representation
+  const [huffmanTreeString, setHuffmanTreeString] = useState<string>(""); 
 
   useEffect(() => {
     setIsClient(true);
@@ -146,7 +156,7 @@ export default function HuffmanCodingVisualizerPage() {
   }, [toast]);
   
   const generateHuffmanData = () => {
-    huffmanNodeIdCounter = 0; // Reset ID for tree visualization
+    huffmanNodeIdCounter = 0; 
     if (!inputText.trim()) {
       toast({ title: "Input Empty", description: "Please enter a string to encode.", variant: "destructive"});
       setFrequencies({}); setHuffmanCodes({}); setHuffmanTreeString("");
@@ -161,13 +171,13 @@ export default function HuffmanCodingVisualizerPage() {
 
     const pq: HuffmanNode[] = Object.entries(freqs)
       .map(([char, freq]) => ({ char, freq, left: null, right: null, id: `node-${char}-${huffmanNodeIdCounter++}` }))
-      .sort((a, b) => a.freq - b.freq || a.char!.localeCompare(b.char!)); // Stable sort
+      .sort((a, b) => a.freq - b.freq || a.char!.localeCompare(b.char!)); 
 
-    if (pq.length === 0) { // Should not happen if inputText is not empty
+    if (pq.length === 0) { 
         setHuffmanCodes({}); setHuffmanTreeString("No characters to encode.");
         return;
     }
-     if (pq.length === 1) { // Handle single unique character case
+     if (pq.length === 1) { 
         const singleCharNode = pq[0];
         setHuffmanCodes({ [singleCharNode.char!]: "0" });
         setHuffmanTreeString(`( ${singleCharNode.char}:${singleCharNode.freq} )`);
@@ -177,7 +187,7 @@ export default function HuffmanCodingVisualizerPage() {
 
 
     while (pq.length > 1) {
-      pq.sort((a, b) => a.freq - b.freq || (a.id && b.id ? a.id.localeCompare(b.id) : 0)); // Re-sort if priorities are equal for determinism
+      pq.sort((a, b) => a.freq - b.freq || (a.id && b.id ? a.id.localeCompare(b.id) : 0)); 
       const left = pq.shift()!;
       const right = pq.shift()!;
       const internalNode: HuffmanNode = { 
@@ -191,7 +201,6 @@ export default function HuffmanCodingVisualizerPage() {
     }
     const treeRoot = pq[0] || null;
     
-    // Generate textual tree representation (simplified)
     const generateTreeString = (node: HuffmanNode | null | undefined, prefix = "", isLeft = true): string => {
         if (!node) return "";
         let str = prefix;
@@ -208,7 +217,8 @@ export default function HuffmanCodingVisualizerPage() {
         for(let i=0; i < children.length; i++){
             const child = children[i];
             const isLastChild = i === children.length -1;
-            str += generateTreeString(child, prefix + (isLeft && prefix ? "│   " : "    "), !isLastChild || children.length === 1 && node.left === child);
+            // Determine if the current child is the left child for the next prefix
+            str += generateTreeString(child, prefix + (isLeft && prefix.endsWith("├── ") ? "│   " : (isLeft ? "    " : "    ") ) , node.left === child && node.right !== null);
         }
         return str;
     };
@@ -363,4 +373,6 @@ export default function HuffmanCodingVisualizerPage() {
     </div>
   );
 }
+    
+
     
