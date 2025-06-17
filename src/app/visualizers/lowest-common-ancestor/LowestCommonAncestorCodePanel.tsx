@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LCA_LINE_MAP } from './lca-logic'; // Import the line map
+import { LCA_LINE_MAP } from './lca-logic'; 
 
 // Conceptual LCA code (Path finding variant for general binary tree)
 export const LCA_CODE_SNIPPETS: Record<string, string[]> = {
@@ -38,6 +38,12 @@ export const LCA_CODE_SNIPPETS: Record<string, string[]> = {
   ],
   Python: [
     "# LCA in a Binary Tree (Path-finding approach)",
+    "class TreeNode: # Conceptual Node class",
+    "    def __init__(self, value):",
+    "        self.val = value",
+    "        self.left = None",
+    "        self.right = None",
+    "",
     "def find_path(root, target_value, path):",
     "    if not root: return False",
     "    path.append(root) # Store node object or value",
@@ -48,36 +54,40 @@ export const LCA_CODE_SNIPPETS: Record<string, string[]> = {
     "    path.pop()",
     "    return False",
     "",
-    "def lowest_common_ancestor(root, p_val, q_val):",
+    "def lowest_common_ancestor(root, p_node_val, q_node_val):",
     "    path_p, path_q = [], []",
-    "    p_found = find_path(root, p_val, path_p)",
-    "    q_found = find_path(root, q_val, path_q)",
+    "    # Assume p_node and q_node are values to find, not node objects",
+    "    p_found = find_path(root, p_node_val, path_p)",
+    "    q_found = find_path(root, q_node_val, path_q)",
     "    if not p_found or not q_found: return None",
     "",
     "    lca_node = None",
     "    i = 0",
-    "    while i < len(path_p) and i < len(path_q) and path_p[i] == path_q[i]:",
+    "    # Compare paths by node objects if path stores them, or by value if values",
+    "    while i < len(path_p) and i < len(path_q) and path_p[i].val == path_q[i].val:",
     "        lca_node = path_p[i]",
     "        i += 1",
     "    return lca_node",
   ],
   Java: [
     "import java.util.*;",
-    "// class TreeNode { int val; TreeNode left, right; /*...*/ }",
+    "// class TreeNode { int val; TreeNode left, right; TreeNode(int x) { val = x; } }",
     "class Solution {",
     "    private boolean findPath(TreeNode root, int targetValue, List<TreeNode> path) {",
     "        if (root == null) return false;",
     "        path.add(root);",
     "        if (root.val == targetValue) return true;",
-    "        if (findPath(root.left, targetValue, path)) return true;",
-    "        if (findPath(root.right, targetValue, path)) return true;",
-    "        path.remove(path.size() - 1);",
+    "        if (root.left != null && findPath(root.left, targetValue, path)) return true;",
+    "        if (root.right != null && findPath(root.right, targetValue, path)) return true;",
+    "        path.remove(path.size() - 1); // Backtrack",
     "        return false;",
     "    }",
     "    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {",
     "        List<TreeNode> pathP = new ArrayList<>();",
     "        List<TreeNode> pathQ = new ArrayList<>();",
+    "        // Assuming p and q are nodes whose values we need to find paths for",
     "        if (!findPath(root, p.val, pathP) || !findPath(root, q.val, pathQ)) return null;",
+    "",
     "        TreeNode lca = null; int i = 0;",
     "        while (i < pathP.size() && i < pathQ.size() && pathP.get(i) == pathQ.get(i)) {",
     "            lca = pathP.get(i); i++;",
@@ -88,19 +98,23 @@ export const LCA_CODE_SNIPPETS: Record<string, string[]> = {
   ],
   "C++": [
     "#include <vector>",
-    "// struct TreeNode { int val; TreeNode *left, *right; /*...*/ };",
+    "#include <algorithm>",
+    "// struct TreeNode { int val; TreeNode *left, *right; TreeNode(int x) : val(x), left(nullptr), right(nullptr) {} };",
     "bool findPath(TreeNode* root, int targetValue, std::vector<TreeNode*>& path) {",
     "    if (!root) return false;",
     "    path.push_back(root);",
     "    if (root->val == targetValue) return true;",
-    "    if (findPath(root->left, targetValue, path)) return true;",
-    "    if (findPath(root->right, targetValue, path)) return true;",
-    "    path.pop_back();",
+    "    if (root->left && findPath(root->left, targetValue, path)) return true;",
+    "    if (root->right && findPath(root->right, targetValue, path)) return true;",
+    "    path.pop_back(); // Backtrack",
     "    return false;",
     "}",
+    "",
     "TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {",
     "    std::vector<TreeNode*> pathP, pathQ;",
+    "    // Assuming p and q are nodes whose values we need to find paths for",
     "    if (!findPath(root, p->val, pathP) || !findPath(root, q->val, pathQ)) return nullptr;",
+    "",
     "    TreeNode* lca = nullptr; int i = 0;",
     "    while (i < pathP.size() && i < pathQ.size() && pathP[i] == pathQ[i]) {",
     "        lca = pathP[i]; i++;",
@@ -137,33 +151,37 @@ export function LowestCommonAncestorCodePanel({ currentLine }: LowestCommonAnces
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
           <Code2 className="mr-2 h-5 w-5" /> LCA Code (Path-finding)
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={codeToDisplay.length === 0}>
-          <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
-        </Button>
+        <div className="flex items-center gap-2">
+            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5"> 
+                    {languages.map(lang => (
+                        <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
+                            {lang}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={codeToDisplay.length === 0}>
+                <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-        <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
-          <TabsList className="mx-4 mb-1 self-start shrink-0">
-            {languages.map((lang) => (
-              <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
-                {lang}
-              </TabsTrigger>
+        <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+            {codeToDisplay.map((line, index) => (
+              <div
+                key={`lca-${selectedLanguage}-line-${index}`}
+                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                {line}
+              </div>
             ))}
-          </TabsList>
-          <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-            <pre className="font-code text-sm p-4">
-              {codeToDisplay.map((line, index) => (
-                <div
-                  key={`lca-${selectedLanguage}-line-${index}`}
-                  className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
-                  <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
-                  {line}
-                </div>
-              ))}
-            </pre>
-          </ScrollArea>
-        </Tabs>
+          </pre>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
 }
+
+    

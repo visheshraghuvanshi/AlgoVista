@@ -1,142 +1,408 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BSTOperationType } from './binary-search-tree-logic';
 import { BST_OPERATION_LINE_MAPS } from './binary-search-tree-logic';
 
-
-export const BST_CODE_SNIPPETS_MAP: Record<BSTOperationType | 'structure', string[]> = {
-  structure: [
-    "class Node {",                            // 1
-    "  constructor(value) {",                  // 2
-    "    this.value = value;",                 // 3
-    "    this.left = null;",                   // 4
-    "    this.right = null;",                  // 5
-    "  }",                                     // 6
-    "}",                                       // 7
-    "class BinarySearchTree {",                // 8
-    "  constructor() { this.root = null; }",   // 9
-    "  // ... operations below ...",           // 10
-    "}",                                       // 11
-  ],
-  insert: [
-    "insert(value) {", // Main function wrapper   // 1
-    "  this.root = this._insertRec(this.root, value);", // 2
-    "}", 
-    "_insertRec(node, value) {", // Recursive helper // 3
-    "  if (node === null) return new Node(value);", // 4
-    "  if (value < node.value) {",                 // 5
-    "    node.left = this._insertRec(node.left, value);", // 6
-    "  } else if (value > node.value) {",          // 7
-    "    node.right = this._insertRec(node.right, value);", // 8
-    "  }",
-    "  return node;", // Return unchanged (or new) node pointer // 9
-    "}",
-  ],
-  search: [
-    "search(value) {", // Main function wrapper  // 1
-    "  return this._searchRec(this.root, value);", // 2
-    "}",
-    "_searchRec(node, value) {", // Recursive helper // 3
-    "  if (node === null || node.value === value) return node;", // 4
-    "  if (value < node.value) {",                 // 5
-    "    return this._searchRec(node.left, value);", // 6
-    "  } else {",                                  // 7
-    "    return this._searchRec(node.right, value);", // 8
-    "  }",
-    "}",
-  ],
-  delete: [
-    "delete(value) {", // Main function wrapper // 1
-    "  this.root = this._deleteRec(this.root, value);", // 2
-    "}",
-    "_deleteRec(node, value) {", // Recursive helper // 3
-    "  if (node === null) return null;",         // 4
-    "  if (value < node.value) {",              // 5
-    "    node.left = this._deleteRec(node.left, value);", // 6
-    "  } else if (value > node.value) {",       // 7
-    "    node.right = this._deleteRec(node.right, value);", // 8
-    "  } else { // Node to delete found",         // 9
-    "    // Case 1 & 2: Node with 0 or 1 child",
-    "    if (node.left === null) {",            // 10
-    "      return node.right;",                 // 11
-    "    }",
-    "    if (node.right === null) {",           // 12
-    "      return node.left;",                  // 13
-    "    }",
-    "    // Case 3: Node with two children",      // 14
-    "    // Get inorder successor (smallest in right subtree)",
-    "    let successor = this._minValueNode(node.right);", // 15
-    "    node.value = successor.value;",       // 16
-    "    // Delete the inorder successor",
-    "    node.right = this._deleteRec(node.right, successor.value);", // 17
-    "  }",
-    "  return node;",                           // 18
-    "}",
-    "_minValueNode(node) { // Helper for delete // 19
-    "  while (node.left !== null) { node = node.left; }", // 20
-    "  return node;",                           // 21
-    "}",
-  ],
-  build: [ // Build uses insert, so often shown with insert code
-    "// Build Tree by repeated insertions:",
-    "// For each value in input:",
-    "//   tree.insert(value);",
-    "// (See 'insert' tab for insertion logic details)",
-  ]
+// Combined structure and operations into one map for easier language switching
+export const BST_CODE_SNIPPETS_ALL_LANG: Record<BSTOperationType | 'structure', Record<string, string[]>> = {
+  structure: {
+    JavaScript: [
+      "class Node {",
+      "  constructor(value) {",
+      "    this.value = value; this.left = null; this.right = null;",
+      "  }",
+      "}",
+      "class BinarySearchTree {",
+      "  constructor() { this.root = null; }",
+      "  // ... operations below ...",
+      "}",
+    ],
+    Python: [
+      "class Node:",
+      "    def __init__(self, value):",
+      "        self.value = value",
+      "        self.left = None",
+      "        self.right = None",
+      "",
+      "class BinarySearchTree:",
+      "    def __init__(self):",
+      "        self.root = None",
+      "    # ... operations below ...",
+    ],
+    Java: [
+      "class Node {",
+      "    int value;",
+      "    Node left, right;",
+      "    public Node(int item) {",
+      "        value = item;",
+      "        left = right = null;",
+      "    }",
+      "}",
+      "class BinarySearchTree {",
+      "    Node root;",
+      "    BinarySearchTree() { root = null; }",
+      "    // ... operations below ...",
+      "}",
+    ],
+    "C++": [
+      "struct Node {",
+      "    int value;",
+      "    Node *left, *right;",
+      "    Node(int item) : value(item), left(nullptr), right(nullptr) {}",
+      "};",
+      "class BinarySearchTree {",
+      "public:",
+      "    Node *root;",
+      "    BinarySearchTree() : root(nullptr) {}",
+      "    // ... operations below ...",
+      "};",
+    ],
+  },
+  insert: {
+    JavaScript: [
+      "insert(value) {",
+      "  this.root = this._insertRec(this.root, value);",
+      "}",
+      "_insertRec(node, value) {",
+      "  if (node === null) return new Node(value);",
+      "  if (value < node.value) {",
+      "    node.left = this._insertRec(node.left, value);",
+      "  } else if (value > node.value) {",
+      "    node.right = this._insertRec(node.right, value);",
+      "  }",
+      "  return node;",
+      "}",
+    ],
+    Python: [
+      "    def insert(self, value):",
+      "        self.root = self._insert_rec(self.root, value)",
+      "    ",
+      "    def _insert_rec(self, node, value):",
+      "        if node is None:",
+      "            return Node(value)",
+      "        if value < node.value:",
+      "            node.left = self._insert_rec(node.left, value)",
+      "        elif value > node.value:",
+      "            node.right = self._insert_rec(node.right, value)",
+      "        return node",
+    ],
+    Java: [
+      "    public void insert(int value) {",
+      "        root = _insertRec(root, value);",
+      "    }",
+      "    private Node _insertRec(Node node, int value) {",
+      "        if (node == null) {",
+      "            return new Node(value);",
+      "        }",
+      "        if (value < node.value) {",
+      "            node.left = _insertRec(node.left, value);",
+      "        } else if (value > node.value) {",
+      "            node.right = _insertRec(node.right, value);",
+      "        }",
+      "        return node;",
+      "    }",
+    ],
+    "C++": [
+      "    void insert(int value) {",
+      "        root = _insertRec(root, value);",
+      "    }",
+      "    Node* _insertRec(Node* node, int value) {",
+      "        if (node == nullptr) {",
+      "            return new Node(value);",
+      "        }",
+      "        if (value < node->value) {",
+      "            node->left = _insertRec(node->left, value);",
+      "        } else if (value > node->value) {",
+      "            node->right = _insertRec(node->right, value);",
+      "        }",
+      "        return node;",
+      "    }",
+    ],
+  },
+  search: {
+    JavaScript: [
+      "search(value) {",
+      "  return this._searchRec(this.root, value);",
+      "}",
+      "_searchRec(node, value) {",
+      "  if (node === null || node.value === value) return node;",
+      "  if (value < node.value) {",
+      "    return this._searchRec(node.left, value);",
+      "  } else {",
+      "    return this._searchRec(node.right, value);",
+      "  }",
+      "}",
+    ],
+     Python: [
+      "    def search(self, value):",
+      "        return self._search_rec(self.root, value)",
+      "    ",
+      "    def _search_rec(self, node, value):",
+      "        if node is None or node.value == value:",
+      "            return node",
+      "        if value < node.value:",
+      "            return self._search_rec(node.left, value)",
+      "        else:",
+      "            return self._search_rec(node.right, value)",
+    ],
+    Java: [
+      "    public Node search(int value) {",
+      "        return _searchRec(root, value);",
+      "    }",
+      "    private Node _searchRec(Node node, int value) {",
+      "        if (node == null || node.value == value) {",
+      "            return node;",
+      "        }",
+      "        if (value < node.value) {",
+      "            return _searchRec(node.left, value);",
+      "        } else {",
+      "            return _searchRec(node.right, value);",
+      "        }",
+      "    }",
+    ],
+    "C++": [
+      "    Node* search(int value) {",
+      "        return _searchRec(root, value);",
+      "    }",
+      "    Node* _searchRec(Node* node, int value) {",
+      "        if (node == nullptr || node->value == value) {",
+      "            return node;",
+      "        }",
+      "        if (value < node->value) {",
+      "            return _searchRec(node->left, value);",
+      "        } else {",
+      "            return _searchRec(node->right, value);",
+      "        }",
+      "    }",
+    ],
+  },
+  delete: {
+    JavaScript: [
+      "delete(value) {",
+      "  this.root = this._deleteRec(this.root, value);",
+      "}",
+      "_deleteRec(node, value) {",
+      "  if (node === null) return null;",
+      "  if (value < node.value) {",
+      "    node.left = this._deleteRec(node.left, value);",
+      "  } else if (value > node.value) {",
+      "    node.right = this._deleteRec(node.right, value);",
+      "  } else {",
+      "    if (node.left === null) return node.right;",
+      "    if (node.right === null) return node.left;",
+      "    let successor = this._minValueNode(node.right);",
+      "    node.value = successor.value;",
+      "    node.right = this._deleteRec(node.right, successor.value);",
+      "  }",
+      "  return node;",
+      "}",
+      "_minValueNode(node) {",
+      "  while (node.left !== null) { node = node.left; }",
+      "  return node;",
+      "}",
+    ],
+    Python: [
+      "    def delete(self, value):",
+      "        self.root = self._delete_rec(self.root, value)",
+      "    ",
+      "    def _delete_rec(self, node, value):",
+      "        if node is None: return None",
+      "        if value < node.value: node.left = self._delete_rec(node.left, value)",
+      "        elif value > node.value: node.right = self._delete_rec(node.right, value)",
+      "        else:",
+      "            if node.left is None: return node.right",
+      "            if node.right is None: return node.left",
+      "            successor = self._min_value_node(node.right)",
+      "            node.value = successor.value",
+      "            node.right = self._delete_rec(node.right, successor.value)",
+      "        return node",
+      "    ",
+      "    def _min_value_node(self, node):",
+      "        current = node",
+      "        while current.left is not None: current = current.left",
+      "        return current",
+    ],
+    Java: [
+      "    public void delete(int value) {",
+      "        root = _deleteRec(root, value);",
+      "    }",
+      "    private Node _deleteRec(Node node, int value) {",
+      "        if (node == null) return null;",
+      "        if (value < node.value) node.left = _deleteRec(node.left, value);",
+      "        else if (value > node.value) node.right = _deleteRec(node.right, value);",
+      "        else {",
+      "            if (node.left == null) return node.right;",
+      "            if (node.right == null) return node.left;",
+      "            Node successor = _minValueNode(node.right);",
+      "            node.value = successor.value;",
+      "            node.right = _deleteRec(node.right, successor.value);",
+      "        }",
+      "        return node;",
+      "    }",
+      "    private Node _minValueNode(Node node) {",
+      "        Node current = node;",
+      "        while (current.left != null) current = current.left;",
+      "        return current;",
+      "    }",
+    ],
+    "C++": [
+      "    void remove(int value) { // 'delete' is a keyword",
+      "        root = _deleteRec(root, value);",
+      "    }",
+      "    Node* _deleteRec(Node* node, int value) {",
+      "        if (node == nullptr) return nullptr;",
+      "        if (value < node->value) node->left = _deleteRec(node->left, value);",
+      "        else if (value > node->value) node->right = _deleteRec(node->right, value);",
+      "        else {",
+      "            if (node->left == nullptr) { Node* temp = node->right; delete node; return temp; }",
+      "            if (node->right == nullptr) { Node* temp = node->left; delete node; return temp; }",
+      "            Node* successor = _minValueNode(node->right);",
+      "            node->value = successor->value;",
+      "            node->right = _deleteRec(node->right, successor->value);",
+      "        }",
+      "        return node;",
+      "    }",
+      "    Node* _minValueNode(Node* node) {",
+      "        Node* current = node;",
+      "        while (current && current->left != nullptr) current = current->left;",
+      "        return current;",
+      "    }",
+    ],
+  },
+  build: {
+    JavaScript: [
+      "// Build Tree by repeated insertions:",
+      "// For each value in input:",
+      "//   tree.insert(value);",
+      "// (See 'insert' methods for details)",
+    ],
+    Python: [
+      "    # Build Tree by repeated insertions:",
+      "    # For each value in input:",
+      "    #   tree.insert(value)",
+      "    # (See 'insert' methods for details)",
+    ],
+    Java: [
+      "    // Build Tree by repeated insertions:",
+      "    // For each value in input:",
+      "    //   tree.insert(value);",
+      "    // (See 'insert' methods for details)",
+    ],
+    "C++": [
+      "    // Build Tree by repeated insertions:",
+      "    // For each value in input:",
+      "    //   tree.insert(value);",
+      "    // (See 'insert' methods for details)",
+    ],
+  }
 };
 
 interface BinarySearchTreeCodePanelProps {
   currentLine: number | null;
-  selectedOperation: BSTOperationType | 'structure'; // Allow 'structure' to show class definitions
+  selectedOperation: BSTOperationType | 'structure';
 }
 
 export function BinarySearchTreeCodePanel({ currentLine, selectedOperation }: BinarySearchTreeCodePanelProps) {
   const { toast } = useToast();
   
-  const codeToDisplay = BST_CODE_SNIPPETS_MAP[selectedOperation] || BST_CODE_SNIPPETS_MAP.structure;
-  const operationLabel = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1);
+  const languages = useMemo(() => Object.keys(BST_CODE_SNIPPETS_ALL_LANG.structure), []);
+  const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : languages[0];
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
+
+  const structureSnippets = BST_CODE_SNIPPETS_ALL_LANG.structure[selectedLanguage] || [];
+  const operationSnippets = BST_CODE_SNIPPETS_ALL_LANG[selectedOperation]?.[selectedLanguage] || [];
+
+  const codeToDisplay = useMemo(() => {
+    if (selectedOperation === 'structure') {
+      return structureSnippets;
+    }
+    return [
+      ...structureSnippets,
+      ...(operationSnippets.length > 0 ? ["", `// --- ${selectedOperation.toUpperCase()} METHOD ---`] : []),
+      ...operationSnippets,
+    ];
+  }, [structureSnippets, operationSnippets, selectedOperation]);
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');
     if (codeString) {
       navigator.clipboard.writeText(codeString)
-        .then(() => toast({ title: `${operationLabel} Code Copied!` }))
+        .then(() => toast({ title: `${selectedLanguage} BST Code Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
     }
   };
-
-  // Determine actual line number based on selected operation and global currentLine from step
-  // This is a bit of a conceptual mapping. If currentLine is from a specific op's map, show it.
-  // Otherwise, if line number makes sense in the current snippet, show it.
-  // For simplicity, we'll just pass currentLine and let the coloring logic handle it.
+  
+  const operationTitle = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1).replace(/([A-Z])/g, ' $1');
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[600px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-          <Code2 className="mr-2 h-5 w-5" /> Code: {operationLabel}
+          <Code2 className="mr-2 h-5 w-5" /> Code: {operationTitle}
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
-          <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
-        </Button>
+        <div className="flex items-center gap-2">
+            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
+                    {languages.map(lang => (
+                        <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
+                            {lang}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
+                <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-          <pre className="font-code text-sm p-4">
-            {codeToDisplay.map((line, index) => (
-              <div key={`${operationLabel}-line-${index}`}
-                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
-                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
-                {line}
-              </div>
-            ))}
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+            {codeToDisplay.map((line, index) => {
+              // Determine if this line is part of the structure or the operation for highlighting
+              let lineIsHighlighted = false;
+              if (currentLine !== null) {
+                if (selectedOperation === 'structure' && index + 1 === currentLine) {
+                  lineIsHighlighted = true;
+                } else if (selectedOperation !== 'structure') {
+                  // Adjust currentLine if it's for an operation snippet
+                  const structureLength = structureSnippets.length;
+                  const separatorLines = 2; // For "" and "// --- METHOD ---"
+                  const operationLineNumber = currentLine; // Assuming currentLine maps directly to operation line map
+                  
+                  // Check if the 'line' is from the structure part
+                  if (index < structureLength) {
+                    // No highlight for structure when an operation is selected, unless currentLine points to structure part
+                    // This logic can be refined if lineMap covers structure too.
+                  } 
+                  // Check if the 'line' is from the operation part
+                  else if (index >= structureLength + separatorLines) {
+                    const relativeOpLineIndex = index - (structureLength + separatorLines);
+                    if (relativeOpLineIndex + 1 === operationLineNumber) {
+                       lineIsHighlighted = true;
+                    }
+                  }
+                }
+              }
+              return (
+                <div key={`${selectedLanguage}-${selectedOperation}-line-${index}`}
+                  className={`px-2 py-0.5 rounded ${lineIsHighlighted ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                  <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                    {index + 1}
+                  </span>
+                  {/* Indent operation methods for non-JS/Python languages like Java/C++ if they were part of a class block */}
+                  {selectedOperation !== 'structure' && index >= structureSnippets.length + separatorLines && (selectedLanguage === 'Java' || selectedLanguage === 'C++') && !line.startsWith("//") ? `    ${line}` : line}
+                </div>
+              );
+            })}
             {codeToDisplay.length === 0 && <p className="text-muted-foreground">Select an operation to view code.</p>}
           </pre>
         </ScrollArea>
@@ -145,3 +411,4 @@ export function BinarySearchTreeCodePanel({ currentLine, selectedOperation }: Bi
   );
 }
 
+    
