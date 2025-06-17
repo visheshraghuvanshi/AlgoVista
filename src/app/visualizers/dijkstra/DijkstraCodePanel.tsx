@@ -9,6 +9,8 @@ import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Import the snippets from page.tsx or define them here if preferred
+// For this example, assuming snippets are passed as a prop
 interface DijkstraCodePanelProps {
   codeSnippets: { [language: string]: string[] };
   currentLine: number | null;
@@ -25,19 +27,17 @@ export function DijkstraCodePanel({ codeSnippets, currentLine, defaultLanguage =
   };
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>(getInitialLanguage);
-  const [userHasInteractedWithTabs, setUserHasInteractedWithTabs] = useState(false);
-
+  
   useEffect(() => {
     const initialLang = getInitialLanguage();
-    if (!userHasInteractedWithTabs && selectedLanguage !== initialLang) {
+    if (selectedLanguage !== initialLang && languages.includes(initialLang)) {
       setSelectedLanguage(initialLang);
     }
-  }, [languages, defaultLanguage, userHasInteractedWithTabs, selectedLanguage]);
+  }, [languages, defaultLanguage, selectedLanguage]);
 
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
-    setUserHasInteractedWithTabs(true);
   };
 
   const handleCopyCode = () => {
@@ -45,13 +45,13 @@ export function DijkstraCodePanel({ codeSnippets, currentLine, defaultLanguage =
     if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => {
-          toast({ title: `${selectedLanguage} Code Copied!`, description: "The code has been copied to your clipboard." });
+          toast({ title: `${selectedLanguage} Dijkstra's Code Copied!` });
         })
         .catch(err => {
-          toast({ title: "Copy Failed", description: "Could not copy code to clipboard.", variant: "destructive" });
+          toast({ title: "Copy Failed", variant: "destructive" });
         });
     } else {
-        toast({ title: "No Code to Copy", description: "No code available for selected language.", variant: "default" });
+        toast({ title: "No Code to Copy", variant: "default" });
     }
   };
   
@@ -65,7 +65,7 @@ export function DijkstraCodePanel({ codeSnippets, currentLine, defaultLanguage =
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> Code
+            <Code2 className="mr-2 h-5 w-5" /> Dijkstra's Algorithm Code
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0 || selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" />
@@ -85,7 +85,7 @@ export function DijkstraCodePanel({ codeSnippets, currentLine, defaultLanguage =
             {languages.map((lang) => (
               <TabsContent key={`${lang}-content`} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
                 <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                  <pre className="font-code text-sm p-4">
+                  <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-line-${index}`}
@@ -107,9 +107,9 @@ export function DijkstraCodePanel({ codeSnippets, currentLine, defaultLanguage =
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={`${selectedLanguage}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
-                 <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+                 <p className="text-muted-foreground p-4">No code snippets available.</p>
               </pre>
             </ScrollArea>
           </div>

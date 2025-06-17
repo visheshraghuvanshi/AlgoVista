@@ -14,6 +14,102 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Workflow } from 'lucide-react'; // Using Workflow for MST
 import { generateKruskalsSteps, parseKruskalInput } from './kruskals-algorithm-logic';
 
+const KRUSKALS_CODE_SNIPPETS = {
+  JavaScript: [
+    "// Kruskal's Algorithm (using DSU)",
+    "class DSU {",
+    "  constructor(n) { this.parent = Array(n).fill(0).map((_, i) => i); /* rank/size optional */ }",
+    "  find(i) { if (this.parent[i] === i) return i; return this.parent[i] = this.find(this.parent[i]); }",
+    "  union(i, j) { let rootI = this.find(i); let rootJ = this.find(j); if (rootI !== rootJ) { this.parent[rootI] = rootJ; return true; } return false; }",
+    "}",
+    "function kruskalsMST(numVertices, edges) { // edges: [{u, v, weight}, ...]",
+    "  edges.sort((a, b) => a.weight - b.weight); // Sort edges by weight",
+    "  const mst = []; const dsu = new DSU(numVertices);",
+    "  let edgeCount = 0;",
+    "  for (const edge of edges) {",
+    "    if (dsu.union(edge.u, edge.v)) { // If not forming a cycle",
+    "      mst.push(edge);",
+    "      edgeCount++;",
+    "      if (edgeCount === numVertices - 1) break;",
+    "    }",
+    "  }",
+    "  return (edgeCount === numVertices - 1 || numVertices === 0) ? mst : null; // Null if not connected for V > 0",
+    "}",
+  ],
+  Python: [
+    "class DSU:",
+    "    def __init__(self, n): self.parent = list(range(n))",
+    "    def find(self, i):",
+    "        if self.parent[i] == i: return i",
+    "        self.parent[i] = self.find(self.parent[i])",
+    "        return self.parent[i]",
+    "    def union(self, i, j):",
+    "        root_i, root_j = self.find(i), self.find(j)",
+    "        if root_i != root_j: self.parent[root_i] = root_j; return True",
+    "        return False",
+    "",
+    "def kruskals_mst(num_vertices, edges): # edges: list of (weight, u, v) tuples",
+    "    edges.sort() # Sort by weight (first element of tuple)",
+    "    mst = []",
+    "    dsu = DSU(num_vertices)",
+    "    edge_count = 0",
+    "    for weight, u, v in edges:",
+    "        if dsu.union(u, v):",
+    "            mst.append({'u': u, 'v': v, 'weight': weight})",
+    "            edge_count += 1",
+    "            if edge_count == num_vertices - 1: break",
+    "    return mst if edge_count == num_vertices - 1 or num_vertices == 0 else None",
+  ],
+  Java: [
+    "import java.util.*;",
+    "class DSU {",
+    "    int[] parent;",
+    "    public DSU(int n) { parent = new int[n]; for(int i=0; i<n; i++) parent[i]=i; }",
+    "    public int find(int i) { if (parent[i]==i) return i; return parent[i]=find(parent[i]); }",
+    "    public boolean union(int i, int j) { int rI=find(i), rJ=find(j); if(rI!=rJ){parent[rI]=rJ;return true;}return false;}",
+    "}",
+    "class Edge implements Comparable<Edge> { int u,v,weight; Edge(int u,int v,int w){this.u=u;this.v=v;this.weight=w;} @Override public int compareTo(Edge o){return this.weight-o.weight;}}",
+    "class KruskalMST {",
+    "    List<Edge> findMST(int numVertices, List<Edge> edges) {",
+    "        Collections.sort(edges);",
+    "        List<Edge> mst = new ArrayList<>();",
+    "        DSU dsu = new DSU(numVertices); int edgeCount = 0;",
+    "        for (Edge edge : edges) {",
+    "            if (dsu.union(edge.u, edge.v)) {",
+    "                mst.add(edge); edgeCount++;",
+    "                if (edgeCount == numVertices - 1) break;",
+    "            }",
+    "        }",
+    "        return (edgeCount == numVertices - 1 || numVertices == 0) ? mst : null;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <numeric> // For std::iota",
+    "#include <algorithm> // For std::sort",
+    "struct DSU {",
+    "    std::vector<int> parent;",
+    "    DSU(int n) { parent.resize(n); std::iota(parent.begin(), parent.end(), 0); }",
+    "    int find(int i) { if (parent[i]==i) return i; return parent[i]=find(parent[i]); }",
+    "    bool unite(int i, int j) { int rI=find(i),rJ=find(j); if(rI!=rJ){parent[rI]=rJ;return true;}return false;}",
+    "};",
+    "struct Edge { int u, v, weight; bool operator<(const Edge& o) const { return weight < o.weight; } };",
+    "std::vector<Edge> kruskalsMST(int numVertices, std::vector<Edge>& edges) {",
+    "    std::sort(edges.begin(), edges.end());",
+    "    std::vector<Edge> mst;",
+    "    DSU dsu(numVertices); int edgeCount = 0;",
+    "    for (const auto& edge : edges) {",
+    "        if (dsu.unite(edge.u, edge.v)) {",
+    "            mst.push_back(edge); edgeCount++;",
+    "            if (edgeCount == numVertices - 1) break;",
+    "        }",
+    "    }",
+    "    return (edgeCount == numVertices - 1 || numVertices == 0) ? mst : std::vector<Edge>(); // Empty if no MST",
+    "}",
+  ],
+};
+
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -186,6 +282,7 @@ export default function KruskalsVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <KruskalsAlgorithmCodePanel
+              codeSnippets={KRUSKALS_CODE_SNIPPETS}
               currentLine={currentLine}
             />
           </div>
@@ -196,12 +293,12 @@ export default function KruskalsVisualizerPage() {
             onPause={handlePause}
             onStep={handleStep}
             onReset={handleReset}
-            onGraphInputChange={handleEdgeListInputChange}
-            graphInputValue={edgeListInputValue}
-            showStartNodeInput={false} // Not needed for Kruskal's
-            onNumVerticesChange={handleNumVerticesChange}
-            numVerticesValue={numVerticesInput}
-            showNumVerticesInput={true}
+            onGraphInputChange={handleEdgeListInputChange} 
+            graphInputValue={edgeListInputValue} 
+            showStartNodeInput={false} 
+            onNumVerticesChange={handleNumVerticesChange} 
+            numVerticesValue={numVerticesInput} 
+            showNumVerticesInput={true} 
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -209,8 +306,9 @@ export default function KruskalsVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);..."
-            onExecute={generateSteps} // Add execute button for Kruskal's
+            graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);... (undirected)"
+            numVerticesInputPlaceholder="Num Vertices"
+            onExecute={generateSteps} 
             executeButtonText="Find MST"
           />
         </div>
@@ -220,4 +318,3 @@ export default function KruskalsVisualizerPage() {
     </div>
   );
 }
-

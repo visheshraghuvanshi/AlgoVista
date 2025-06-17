@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -8,138 +9,12 @@ import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Snippets should be passed from the page component
 interface BellmanFordCodePanelProps {
   codeSnippets: { [language: string]: string[] };
   currentLine: number | null;
   defaultLanguage?: string;
 }
-
-export const BELLMAN_FORD_CODE_SNIPPETS = {
-  JavaScript: [
-    "function bellmanFord(edges, numVertices, startNode) {", // 1
-    "  const distances = {}; const predecessors = {};",    // 2
-    "  for (let i = 0; i < numVertices; i++) {",           // 3
-    "    distances[i] = Infinity; predecessors[i] = null;", // 4
-    "  }",
-    "  distances[startNode] = 0;",                         // 5
-    "",
-    "  // Relax edges |V| - 1 times",
-    "  for (let i = 0; i < numVertices - 1; i++) {",       // 6
-    "    for (const edge of edges) { // {u, v, weight}",  // 7
-    "      if (distances[edge.u] !== Infinity && ",
-    "          distances[edge.u] + edge.weight < distances[edge.v]) {", // 8
-    "        distances[edge.v] = distances[edge.u] + edge.weight;", // 9
-    "        predecessors[edge.v] = edge.u;",              // 10
-    "      }",                                             // 11
-    "    }",                                               // 12
-    "  }",                                                 // 13
-    "",
-    "  // Check for negative-weight cycles",
-    "  for (const edge of edges) {",                       // 14
-    "    if (distances[edge.u] !== Infinity && ",
-    "        distances[edge.u] + edge.weight < distances[edge.v]) {", // 15
-    "      return { error: 'Negative cycle detected' };",   // 16
-    "    }",                                               // 17
-    "  }",                                                 // 18
-    "  return { distances, predecessors };",               // 19
-    "}",                                                   // 20
-  ],
-  Python: [
-    "def bellman_ford(edges, num_vertices, start_node):",
-    "    distances = {i: float('inf') for i in range(num_vertices)}",
-    "    predecessors = {i: None for i in range(num_vertices)}",
-    "    distances[start_node] = 0",
-    "",
-    "    for _ in range(num_vertices - 1):",
-    "        for u, v, weight in edges:",
-    "            if distances[u] != float('inf') and distances[u] + weight < distances[v]:",
-    "                distances[v] = distances[u] + weight",
-    "                predecessors[v] = u",
-    "",
-    "    for u, v, weight in edges:",
-    "        if distances[u] != float('inf') and distances[u] + weight < distances[v]:",
-    "            return {'error': 'Negative cycle detected'}",
-    "    return {'distances': distances, 'predecessors': predecessors}",
-  ],
-  Java: [
-    "import java.util.*;",
-    "class BellmanFord {",
-    "    static class Edge { int u, v, weight; Edge(int u,int v,int w){this.u=u;this.v=v;this.weight=w;} }",
-    "    Map<Integer, Double> distances = new HashMap<>();",
-    "    Map<Integer, Integer> predecessors = new HashMap<>();",
-    "",
-    "    public Map<String, Object> findShortestPaths(List<Edge> edges, int numVertices, int startNode) {",
-    "        for (int i = 0; i < numVertices; i++) {",
-    "            distances.put(i, Double.POSITIVE_INFINITY);",
-    "            predecessors.put(i, null);",
-    "        }",
-    "        distances.put(startNode, 0.0);",
-    "",
-    "        for (int i = 0; i < numVertices - 1; i++) {",
-    "            for (Edge edge : edges) {",
-    "                if (distances.get(edge.u) != Double.POSITIVE_INFINITY &&",
-    "                    distances.get(edge.u) + edge.weight < distances.get(edge.v)) {",
-    "                    distances.put(edge.v, distances.get(edge.u) + edge.weight);",
-    "                    predecessors.put(edge.v, edge.u);",
-    "                }",
-    "            }",
-    "        }",
-    "",
-    "        for (Edge edge : edges) {",
-    "            if (distances.get(edge.u) != Double.POSITIVE_INFINITY &&",
-    "                distances.get(edge.u) + edge.weight < distances.get(edge.v)) {",
-    "                Map<String, Object> errorResult = new HashMap<>();",
-    "                errorResult.put(\"error\", \"Negative cycle detected\");",
-    "                return errorResult;",
-    "            }",
-    "        }",
-    "        Map<String, Object> result = new HashMap<>();",
-    "        result.put(\"distances\", distances);",
-    "        result.put(\"predecessors\", predecessors);",
-    "        return result;",
-    "    }",
-    "}",
-  ],
-  "C++": [
-    "#include <vector>",
-    "#include <map>",
-    "#include <limits>",
-    "struct Edge { int u, v, weight; };",
-    "struct BellmanFordResult {",
-    "    std::map<int, double> distances;",
-    "    std::map<int, int> predecessors;",
-    "    bool has_negative_cycle = false;",
-    "};",
-    "BellmanFordResult bellmanFord(const std::vector<Edge>& edges, int numVertices, int startNode) {",
-    "    BellmanFordResult res;",
-    "    for (int i = 0; i < numVertices; ++i) {",
-    "        res.distances[i] = std::numeric_limits<double>::infinity();",
-    "        // predecessors can be implicitly null or use a special value like -1",
-    "    }",
-    "    res.distances[startNode] = 0;",
-    "",
-    "    for (int i = 0; i < numVertices - 1; ++i) {",
-    "        for (const auto& edge : edges) {",
-    "            if (res.distances[edge.u] != std::numeric_limits<double>::infinity() &&",
-    "                res.distances[edge.u] + edge.weight < res.distances[edge.v]) {",
-    "                res.distances[edge.v] = res.distances[edge.u] + edge.weight;",
-    "                res.predecessors[edge.v] = edge.u;",
-    "            }",
-    "        }",
-    "    }",
-    "",
-    "    for (const auto& edge : edges) {",
-    "        if (res.distances[edge.u] != std::numeric_limits<double>::infinity() &&",
-    "            res.distances[edge.u] + edge.weight < res.distances[edge.v]) {",
-    "            res.has_negative_cycle = true;",
-    "            return res; // Negative cycle",
-    "        }",
-    "    }",
-    "    return res;",
-    "}",
-  ],
-};
-
 
 export function BellmanFordCodePanel({ codeSnippets, currentLine, defaultLanguage = "JavaScript" }: BellmanFordCodePanelProps) {
   const { toast } = useToast();
@@ -169,13 +44,13 @@ export function BellmanFordCodePanel({ codeSnippets, currentLine, defaultLanguag
     if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => {
-          toast({ title: `${selectedLanguage} Code Copied!`, description: "The code has been copied to your clipboard." });
+          toast({ title: `${selectedLanguage} Bellman-Ford Code Copied!` });
         })
         .catch(err => {
-          toast({ title: "Copy Failed", description: "Could not copy code to clipboard.", variant: "destructive" });
+          toast({ title: "Copy Failed", variant: "destructive" });
         });
     } else {
-        toast({ title: "No Code to Copy", description: "No code available for selected language.", variant: "default" });
+        toast({ title: "No Code to Copy", variant: "default" });
     }
   };
   
@@ -209,7 +84,7 @@ export function BellmanFordCodePanel({ codeSnippets, currentLine, defaultLanguag
             {languages.map((lang) => (
               <TabsContent key={`${lang}-content`} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
                 <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                  <pre className="font-code text-sm p-4">
+                  <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-line-${index}`}
@@ -232,7 +107,7 @@ export function BellmanFordCodePanel({ codeSnippets, currentLine, defaultLanguag
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available.</p>
               </pre>
             </ScrollArea>

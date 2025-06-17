@@ -16,6 +16,7 @@ import { algorithmMetadata } from './metadata';
 
 const DIJKSTRA_CODE_SNIPPETS = {
   JavaScript: [
+    "// Conceptual Dijkstra using Priority Queue (min-heap)",
     "function dijkstra(graph, startNode) {",                            // 1
     "  const dist = {}; const prev = {}; const pq = new PriorityQueue();",// 2 
     "  for (let node in graph) { dist[node] = Infinity; prev[node] = null; }", // 3
@@ -24,13 +25,13 @@ const DIJKSTRA_CODE_SNIPPETS = {
     "  while (!pq.isEmpty()) {",                                        // 6
     "    let u = pq.extractMin();",                                     // 7
     "    // Mark u as processed (conceptually)",                       // 8
-    "    for (let neighbor of graph[u]) {",                             // 9
+    "    for (let neighbor of graph[u]) { // {node, weight}",           // 9
     "      let v = neighbor.node; let weight = neighbor.weight;",
     "      let alt = dist[u] + weight;",                                // 10
     "      if (alt < dist[v]) {",                                       // 11
     "        dist[v] = alt;",                                           // 12
     "        prev[v] = u;",                                             // 13
-    "        pq.decreaseKey(v, alt);",                                 // 14
+    "        pq.decreaseKey(v, alt); // Or add with new priority",      // 14
     "      }",                                                         // 15
     "    }",                                                           // 16
     "  }",                                                               // 17
@@ -39,7 +40,7 @@ const DIJKSTRA_CODE_SNIPPETS = {
   ],
   Python: [
     "import heapq",
-    "def dijkstra(graph, start_node):",
+    "def dijkstra(graph, start_node): # graph: {node: [{'node': neighbor, 'weight': w}, ...]}",
     "    dist = {node: float('inf') for node in graph}",
     "    prev = {node: None for node in graph}",
     "    dist[start_node] = 0",
@@ -65,8 +66,8 @@ const DIJKSTRA_CODE_SNIPPETS = {
     "        Node(String id, int dist) { this.id = id; this.distance = dist; }",
     "        @Override public int compareTo(Node other) { return Integer.compare(this.distance, other.distance); }",
     "    }",
-    "    static class Edge { String target; int weight; Edge(String t, int w){target=t;weight=w;} }",
-    "    public Map<String, Integer> findShortestPaths(Map<String, List<Edge>> graph, String startNode) {",
+    "    // Assume graph: Map<String, List<Map.Entry<String, Integer>>> where Entry is target,weight",
+    "    public Map<String, Integer> findShortestPaths(Map<String, List<Map.Entry<String, Integer>>> graph, String startNode) {",
     "        Map<String, Integer> distances = new HashMap<>();",
     "        Map<String, String> previous = new HashMap<>();",
     "        PriorityQueue<Node> pq = new PriorityQueue<>();",
@@ -74,14 +75,15 @@ const DIJKSTRA_CODE_SNIPPETS = {
     "        distances.put(startNode, 0);",
     "        pq.add(new Node(startNode, 0));",
     "        while (!pq.isEmpty()) {",
-    "            Node current = pq.poll();",
+    "            Node current = pq.poll(); // u",
     "            if (current.distance > distances.get(current.id)) continue;",
-    "            for (Edge edge : graph.getOrDefault(current.id, Collections.emptyList())) {",
-    "                int newDist = distances.get(current.id) + edge.weight;",
-    "                if (newDist < distances.get(edge.target)) {",
-    "                    distances.put(edge.target, newDist);",
-    "                    previous.put(edge.target, current.id);",
-    "                    pq.add(new Node(edge.target, newDist));",
+    "            for (Map.Entry<String, Integer> edge : graph.getOrDefault(current.id, Collections.emptyList())) {",
+    "                String v = edge.getKey(); int weight = edge.getValue();",
+    "                int newDist = distances.get(current.id) + weight;",
+    "                if (newDist < distances.get(v)) {",
+    "                    distances.put(v, newDist);",
+    "                    previous.put(v, current.id);",
+    "                    pq.add(new Node(v, newDist));",
     "                }",
     "            }",
     "        }",
@@ -96,24 +98,35 @@ const DIJKSTRA_CODE_SNIPPETS = {
     "#include <limits>",
     "using namespace std;",
     "const int INF = numeric_limits<int>::max();",
+    "// Assume graph: map<string, vector<pair<string, int>>> where pair is {neighbor, weight}",
     "map<string, int> dijkstra(const map<string, vector<pair<string, int>>>& adj, const string& startNode) {",
     "    map<string, int> dist;",
     "    map<string, string> prev;",
     "    priority_queue<pair<int, string>, vector<pair<int, string>>, greater<pair<int, string>>> pq;",
-    "    for (auto const& [node, _] : adj) dist[node] = INF;",
-    "    // Also add nodes that are only targets if graph keys don't cover all nodes",
+    "",
+    "    for (auto const& [node_label, _] : adj) { dist[node_label] = INF; }",
+    "    // Need to ensure all nodes mentioned (even as targets only) are in dist map",
+    "    for (auto const& [source_label, neighbors] : adj) {",
+    "        for (auto const& edge : neighbors) {",
+    "            if (dist.find(edge.first) == dist.end()) dist[edge.first] = INF;",
+    "        }",
+    "    }",
+    "    if (dist.find(startNode) == dist.end()) dist[startNode] = INF; // Ensure startNode is in dist",
+    "",
     "    dist[startNode] = 0;",
-    "    pq.push({0, startNode});",
+    "    pq.push({0, startNode}); // {distance, node_label}",
+    "",
     "    while (!pq.empty()) {",
     "        int d = pq.top().first;",
     "        string u = pq.top().second;",
     "        pq.pop();",
+    "",
     "        if (d > dist[u]) continue;",
     "        if (adj.count(u)) {",
     "            for (auto const& edge : adj.at(u)) {",
     "                string v = edge.first;",
     "                int weight = edge.second;",
-    "                if (dist[u] != INF && dist[u] + weight < dist[v]) {",
+    "                if (dist.count(v) && dist[u] != INF && dist[u] + weight < dist[v]) {",
     "                    dist[v] = dist[u] + weight;",
     "                    prev[v] = u;",
     "                    pq.push({dist[v], v});",

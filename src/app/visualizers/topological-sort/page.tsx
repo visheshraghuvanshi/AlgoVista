@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -13,6 +14,134 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, ListTree } from 'lucide-react';
 import { generateTopologicalSortSteps } from './topological-sort-logic';
 import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic';
+
+const TOPOLOGICAL_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "function topologicalSortKahn(graph, numNodes) { // graph: adj list {nodeId: [neighborIds...]}", // 1
+    "  const inDegree = new Array(numNodes).fill(0);", // 2 (part 1)
+    "  const adj = new Array(numNodes).fill(null).map(() => []);", // 2 (part 2)
+    "  Object.keys(graph).forEach(u => {",
+    "    const uIdx = parseInt(u);",
+    "    graph[u].forEach(vStr => {",
+    "      const vIdx = parseInt(vStr);",
+    "      adj[uIdx].push(vIdx);",
+    "      inDegree[vIdx]++;",
+    "    });",
+    "  });",
+    "",
+    "  const queue = [];", // 3
+    "  for (let i = 0; i < numNodes; i++) {", // 4
+    "    if (inDegree[i] === 0) queue.push(i);", // 5
+    "  }",
+    "",
+    "  const sortedOrder = []; let visitedCount = 0;", // 6
+    "  while (queue.length > 0) {", // 7
+    "    const u = queue.shift();", // 8
+    "    sortedOrder.push(u);", // 9
+    "    visitedCount++;", // 10
+    "    for (const v of adj[u]) {", // 11
+    "      inDegree[v]--;", // 12
+    "      if (inDegree[v] === 0) queue.push(v);", // 13 & 14
+    "    }",
+    "  }",
+    "  if (visitedCount !== numNodes) return { error: 'Graph has a cycle.' };", // 15 & 16
+    "  return sortedOrder;", // 17
+    "}",
+  ],
+  Python: [
+    "from collections import deque",
+    "def topological_sort_kahn(graph, num_nodes): # graph: {node_idx: [neighbor_indices...]}",
+    "    in_degree = [0] * num_nodes",
+    "    adj = [[] for _ in range(num_nodes)]",
+    "    # Assuming graph keys are integers 0 to num_nodes-1",
+    "    for u_idx_str, neighbors_str in graph.items():",
+    "        u = int(u_idx_str)",
+    "        for v_str in neighbors_str:",
+    "            v = int(v_str)",
+    "            adj[u].append(v)",
+    "            in_degree[v] += 1",
+    "",
+    "    queue = deque()",
+    "    for i in range(num_nodes):",
+    "        if in_degree[i] == 0:",
+    "            queue.append(i)",
+    "",
+    "    sorted_order = []",
+    "    visited_count = 0",
+    "    while queue:",
+    "        u = queue.popleft()",
+    "        sorted_order.append(u)",
+    "        visited_count += 1",
+    "        for v in adj[u]:",
+    "            in_degree[v] -= 1",
+    "            if in_degree[v] == 0:",
+    "                queue.append(v)",
+    "",
+    "    if visited_count != num_nodes:",
+    "        return None # Indicates a cycle",
+    "    return sorted_order",
+  ],
+  Java: [
+    "import java.util.*;",
+    "class TopologicalSort {",
+    "    // graph: Adjacency list, e.g., List<List<Integer>> where adj.get(u) gives neighbors of u",
+    "    public List<Integer> kahnSort(int numNodes, List<List<Integer>> adj) {",
+    "        int[] inDegree = new int[numNodes];",
+    "        for(int u = 0; u < numNodes; u++) {",
+    "            for(int v : adj.get(u)) { inDegree[v]++; }",
+    "        }",
+    "        Queue<Integer> queue = new LinkedList<>();",
+    "        for(int i=0; i<numNodes; i++) {",
+    "            if(inDegree[i] == 0) queue.add(i);",
+    "        }",
+    "        List<Integer> sortedOrder = new ArrayList<>();",
+    "        int visitedCount = 0;",
+    "        while(!queue.isEmpty()) {",
+    "            int u = queue.poll();",
+    "            sortedOrder.add(u);",
+    "            visitedCount++;",
+    "            for(int v : adj.get(u)) {",
+    "                inDegree[v]--;",
+    "                if(inDegree[v] == 0) queue.add(v);",
+    "            }",
+    "        }",
+    "        if(visitedCount != numNodes) return null; // Cycle detected",
+    "        return sortedOrder;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <queue>",
+    "#include <map>", // If input graph is map-like, otherwise vector of vectors
+    "// Assume adj is std::vector<std::vector<int>> adj(numNodes);",
+    "std::vector<int> topologicalSortKahn(int numNodes, const std::vector<std::vector<int>>& adj) {",
+    "    std::vector<int> in_degree(numNodes, 0);",
+    "    for(int u = 0; u < numNodes; ++u) {",
+    "        for(int v : adj[u]) {",
+    "            in_degree[v]++;",
+    "        }",
+    "    }",
+    "    std::queue<int> q;",
+    "    for(int i=0; i<numNodes; ++i) {",
+    "        if(in_degree[i] == 0) q.push(i);",
+    "    }",
+    "    std::vector<int> sorted_order;",
+    "    int visited_count = 0;",
+    "    while(!q.empty()) {",
+    "        int u = q.front(); q.pop();",
+    "        sorted_order.push_back(u);",
+    "        visited_count++;",
+    "        for(int v : adj[u]) {",
+    "            in_degree[v]--;",
+    "            if(in_degree[v] == 0) q.push(v);",
+    "        }",
+    "    }",
+    "    if(visited_count != numNodes) return {}; // Cycle, return empty vector",
+    "    return sorted_order;",
+    "}",
+  ],
+};
 
 
 const DEFAULT_ANIMATION_SPEED = 800;
@@ -78,6 +207,13 @@ export default function TopologicalSortVisualizerPage() {
       if (newSteps[0].message && (newSteps[0].message.includes("Invalid") || newSteps[0].message.includes("empty")) ){
            toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
       }
+      const lastStepMsg = newSteps[newSteps.length-1]?.message || "";
+      if (lastStepMsg.includes("Cycle detected")) {
+           toast({title:"Cycle Detected!", description: "Topological sort not possible.", variant: "destructive"});
+      } else if (lastStepMsg.includes("Topological sort complete")) {
+           toast({title:"Topological Sort Complete", description: "Linear ordering found."});
+      }
+
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
@@ -187,6 +323,7 @@ export default function TopologicalSortVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <TopologicalSortCodePanel
+              codeSnippets={TOPOLOGICAL_SORT_CODE_SNIPPETS}
               currentLine={currentLine}
             />
           </div>

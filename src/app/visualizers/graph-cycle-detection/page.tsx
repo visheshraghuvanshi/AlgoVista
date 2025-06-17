@@ -17,6 +17,213 @@ import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/df
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
+// Moved from CodePanel and expanded
+const CYCLE_DETECTION_CODE_SNIPPETS = {
+  JavaScript: {
+    undirected: [
+      "// Cycle Detection in Undirected Graph using DFS",
+      "function hasCycleUndirected(graph, numNodes) { // graph: {nodeId: [neighbors...]}",
+      "  const visited = new Array(numNodes).fill(false);",
+      "  function dfs(u, parent) {",
+      "    visited[u] = true;",
+      "    for (const v_str of graph[String(u)] || []) {", // Convert u to string for graph lookup
+      "      const v = parseInt(v_str);",
+      "      if (!visited[v]) {",
+      "        if (dfs(v, u)) return true;",
+      "      } else if (v !== parent) {",
+      "        return true; // Found a back edge",
+      "      }",
+      "    }",
+      "    return false;",
+      "  }",
+      "  for (let i = 0; i < numNodes; i++) {",
+      "    if (!visited[i]) {",
+      "      if (dfs(i, -1)) return true;", // -1 for no parent
+      "    }",
+      "  }",
+      "  return false;",
+      "}",
+    ],
+    directed: [
+      "// Cycle Detection in Directed Graph using DFS",
+      "function hasCycleDirected(graph, numNodes) { // graph: {nodeId: [neighbors...]}",
+      "  const visited = new Array(numNodes).fill(false);",
+      "  const recursionStack = new Array(numNodes).fill(false);",
+      "  function dfs(u) {",
+      "    visited[u] = true; recursionStack[u] = true;",
+      "    for (const v_str of graph[String(u)] || []) {", // Convert u to string
+      "      const v = parseInt(v_str);",
+      "      if (!visited[v]) {",
+      "        if (dfs(v)) return true;",
+      "      } else if (recursionStack[v]) {",
+      "        return true; // Found a back edge to node in recursion stack",
+      "      }",
+      "    }",
+      "    recursionStack[u] = false;",
+      "    return false;",
+      "  }",
+      "  for (let i = 0; i < numNodes; i++) {",
+      "    if (!visited[i]) {",
+      "      if (dfs(i)) return true;",
+      "    }",
+      "  }",
+      "  return false;",
+      "}",
+    ],
+  },
+  Python: {
+    undirected: [
+      "# Cycle Detection in Undirected Graph using DFS",
+      "def has_cycle_undirected(graph, num_nodes): # graph: dict {node_idx: [neighbor_indices...]}",
+      "    visited = [False] * num_nodes",
+      "    def dfs(u, parent):",
+      "        visited[u] = True",
+      "        for v in graph.get(u, []):", # Assume keys are already int
+      "            if not visited[v]:",
+      "                if dfs(v, u): return True",
+      "            elif v != parent:",
+      "                return True",
+      "        return False",
+      "    for i in range(num_nodes):",
+      "        if not visited[i]:",
+      "            if dfs(i, -1): return True",
+      "    return False",
+    ],
+    directed: [
+      "# Cycle Detection in Directed Graph using DFS",
+      "def has_cycle_directed(graph, num_nodes): # graph: dict {node_idx: [neighbor_indices...]}",
+      "    visited = [False] * num_nodes",
+      "    recursion_stack = [False] * num_nodes",
+      "    def dfs(u):",
+      "        visited[u] = True",
+      "        recursion_stack[u] = True",
+      "        for v in graph.get(u, []):", # Assume keys are already int
+      "            if not visited[v]:",
+      "                if dfs(v): return True",
+      "            elif recursion_stack[v]:",
+      "                return True",
+      "        recursion_stack[u] = False",
+      "        return False",
+      "    for i in range(num_nodes):",
+      "        if not visited[i]:",
+      "            if dfs(i): return True",
+      "    return False",
+    ],
+  },
+  Java: {
+     undirected: [
+      "import java.util.*;",
+      "class GraphCycleUndirected {",
+      "    // adj: List<List<Integer>> representing adjacency list for nodes 0 to numNodes-1",
+      "    boolean hasCycle(int numNodes, List<List<Integer>> adj) {",
+      "        boolean[] visited = new boolean[numNodes];",
+      "        for (int i = 0; i < numNodes; i++) {",
+      "            if (!visited[i]) {",
+      "                if (dfs(i, -1, visited, adj)) return true;",
+      "            }",
+      "        }",
+      "        return false;",
+      "    }",
+      "    boolean dfs(int u, int parent, boolean[] visited, List<List<Integer>> adj) {",
+      "        visited[u] = true;",
+      "        for (int v : adj.get(u)) {",
+      "            if (!visited[v]) {",
+      "                if (dfs(v, u, visited, adj)) return true;",
+      "            } else if (v != parent) {",
+      "                return true;",
+      "            }",
+      "        }",
+      "        return false;",
+      "    }",
+      "}",
+    ],
+    directed: [
+      "import java.util.*;",
+      "class GraphCycleDirected {",
+      "    // adj: List<List<Integer>>",
+      "    boolean hasCycle(int numNodes, List<List<Integer>> adj) {",
+      "        boolean[] visited = new boolean[numNodes];",
+      "        boolean[] recursionStack = new boolean[numNodes];",
+      "        for (int i = 0; i < numNodes; i++) {",
+      "            if (!visited[i]) {",
+      "                if (dfs(i, visited, recursionStack, adj)) return true;",
+      "            }",
+      "        }",
+      "        return false;",
+      "    }",
+      "    boolean dfs(int u, boolean[] visited, boolean[] recStack, List<List<Integer>> adj) {",
+      "        visited[u] = true; recStack[u] = true;",
+      "        for (int v : adj.get(u)) {",
+      "            if (!visited[v]) {",
+      "                if (dfs(v, visited, recStack, adj)) return true;",
+      "            } else if (recStack[v]) {",
+      "                return true;",
+      "            }",
+      "        }",
+      "        recStack[u] = false;",
+      "        return false;",
+      "    }",
+      "}",
+    ],
+  },
+  "C++": {
+    undirected: [
+      "#include <vector>",
+      "// adj: std::vector<std::vector<int>> for nodes 0 to numNodes-1",
+      "bool dfs_undirected_cpp(int u, int parent, std::vector<bool>& visited, const std::vector<std::vector<int>>& adj) {",
+      "    visited[u] = true;",
+      "    if (u < adj.size()) { // Bounds check",
+      "        for (int v : adj[u]) {",
+      "            if (!visited[v]) {",
+      "                if (dfs_undirected_cpp(v, u, visited, adj)) return true;",
+      "            } else if (v != parent) {",
+      "                return true;",
+      "            }",
+      "        }",
+      "    }",
+      "    return false;",
+      "}",
+      "bool hasCycleUndirected(int numNodes, const std::vector<std::vector<int>>& adj) {",
+      "    std::vector<bool> visited(numNodes, false);",
+      "    for (int i = 0; i < numNodes; ++i) {",
+      "        if (!visited[i]) {",
+      "            if (dfs_undirected_cpp(i, -1, visited, adj)) return true;",
+      "        }",
+      "    }",
+      "    return false;",
+      "}",
+    ],
+    directed: [
+      "#include <vector>",
+      "// adj: std::vector<std::vector<int>>",
+      "bool dfs_directed_cpp(int u, std::vector<bool>& visited, std::vector<bool>& recStack, const std::vector<std::vector<int>>& adj) {",
+      "    visited[u] = true; recStack[u] = true;",
+      "    if (u < adj.size()) { // Bounds check",
+      "        for (int v : adj[u]) {",
+      "            if (!visited[v]) {",
+      "                if (dfs_directed_cpp(v, visited, recStack, adj)) return true;",
+      "            } else if (recStack[v]) {",
+      "                return true;",
+      "            }",
+      "        }",
+      "    }",
+      "    recStack[u] = false;",
+      "    return false;",
+      "}",
+      "bool hasCycleDirected(int numNodes, const std::vector<std::vector<int>>& adj) {",
+      "    std::vector<bool> visited(numNodes, false);",
+      "    std::vector<bool> recStack(numNodes, false);",
+      "    for (int i = 0; i < numNodes; ++i) {",
+      "        if (!visited[i]) {",
+      "            if (dfs_directed_cpp(i, visited, recStack, adj)) return true;",
+      "        }",
+      "    }",
+      "    return false;",
+      "}",
+    ],
+  }
+};
+
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
@@ -144,8 +351,10 @@ export default function GraphCycleDetectionVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
+    setGraphInputValue('0:1;1:2;2:0,3;3:4;4:5;5:3');
+    setIsDirected(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    // generateSteps will be called by useEffect due to input changes
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -203,6 +412,7 @@ export default function GraphCycleDetectionVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <GraphCycleDetectionCodePanel
+              codeSnippets={CYCLE_DETECTION_CODE_SNIPPETS}
               currentLine={currentLine}
               graphType={isDirected ? 'directed' : 'undirected'}
             />
@@ -216,7 +426,7 @@ export default function GraphCycleDetectionVisualizerPage() {
             onReset={handleReset}
             onGraphInputChange={handleGraphInputChange}
             graphInputValue={graphInputValue}
-            showStartNodeInput={false} // Not strictly needed, DFS starts from all unvisited
+            showStartNodeInput={false} // Cycle detection starts from all unvisited nodes
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -235,4 +445,3 @@ export default function GraphCycleDetectionVisualizerPage() {
     </div>
   );
 }
-

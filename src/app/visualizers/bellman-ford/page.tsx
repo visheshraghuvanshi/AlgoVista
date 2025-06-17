@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
-import { BellmanFordCodePanel, BELLMAN_FORD_CODE_SNIPPETS } from './BellmanFordCodePanel'; 
+import { BellmanFordCodePanel } from './BellmanFordCodePanel'; 
 import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
 import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; 
@@ -12,6 +13,136 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateBellmanFordSteps, parseWeightedGraphInputWithEdgeList } from './bellman-ford-logic';
 import { algorithmMetadata } from './metadata';
+
+// Define code snippets here or import from BellmanFordCodePanel if separated
+const BELLMAN_FORD_CODE_SNIPPETS = {
+  JavaScript: [
+    "function bellmanFord(edges, numVertices, startNode) {", // 1
+    "  const distances = {}; const predecessors = {};",    // 2
+    "  for (let i = 0; i < numVertices; i++) {",           // 3
+    "    distances[i] = Infinity; predecessors[i] = null;", // 4
+    "  }",
+    "  distances[startNode] = 0;",                         // 5
+    "",
+    "  // Relax edges |V| - 1 times",
+    "  for (let i = 0; i < numVertices - 1; i++) {",       // 6
+    "    for (const edge of edges) { // {u, v, weight}",  // 7
+    "      if (distances[edge.u] !== Infinity && ",
+    "          distances[edge.u] + edge.weight < distances[edge.v]) {", // 8
+    "        distances[edge.v] = distances[edge.u] + edge.weight;", // 9
+    "        predecessors[edge.v] = edge.u;",              // 10
+    "      }",                                             // 11
+    "    }",                                               // 12
+    "  }",                                                 // 13
+    "",
+    "  // Check for negative-weight cycles",
+    "  for (const edge of edges) {",                       // 14
+    "    if (distances[edge.u] !== Infinity && ",
+    "        distances[edge.u] + edge.weight < distances[edge.v]) {", // 15
+    "      return { error: 'Negative cycle detected' };",   // 16
+    "    }",                                               // 17
+    "  }",                                                 // 18
+    "  return { distances, predecessors };",               // 19
+    "}",                                                   // 20
+  ],
+  Python: [
+    "def bellman_ford(edges, num_vertices, start_node): # edges: list of (u, v, weight)",
+    "    distances = {i: float('inf') for i in range(num_vertices)}",
+    "    predecessors = {i: None for i in range(num_vertices)}",
+    "    distances[start_node] = 0",
+    "",
+    "    for _ in range(num_vertices - 1):",
+    "        for u, v, weight in edges:",
+    "            if distances[u] != float('inf') and distances[u] + weight < distances[v]:",
+    "                distances[v] = distances[u] + weight",
+    "                predecessors[v] = u",
+    "",
+    "    for u, v, weight in edges:",
+    "        if distances[u] != float('inf') and distances[u] + weight < distances[v]:",
+    "            return {'error': 'Negative cycle detected'}",
+    "    return {'distances': distances, 'predecessors': predecessors}",
+  ],
+  Java: [
+    "import java.util.*;",
+    "class BellmanFord {",
+    "    static class Edge { int u, v, weight; Edge(int u,int v,int w){this.u=u;this.v=v;this.weight=w;} }",
+    "    // Note: numVertices should be used to initialize maps/arrays appropriately if nodes are 0 to N-1",
+    "    public Map<String, Object> findShortestPaths(List<Edge> edges, int numVertices, int startNode) {",
+    "        Map<Integer, Double> distances = new HashMap<>();",
+    "        Map<Integer, Integer> predecessors = new HashMap<>();",
+    "",
+    "        for (int i = 0; i < numVertices; i++) {",
+    "            distances.put(i, Double.POSITIVE_INFINITY);",
+    "            predecessors.put(i, null);",
+    "        }",
+    "        distances.put(startNode, 0.0);",
+    "",
+    "        for (int i = 0; i < numVertices - 1; i++) {",
+    "            for (Edge edge : edges) {",
+    "                if (distances.get(edge.u) != Double.POSITIVE_INFINITY &&",
+    "                    distances.get(edge.u) + edge.weight < distances.get(edge.v)) {",
+    "                    distances.put(edge.v, distances.get(edge.u) + edge.weight);",
+    "                    predecessors.put(edge.v, edge.u);",
+    "                }",
+    "            }",
+    "        }",
+    "",
+    "        for (Edge edge : edges) {",
+    "            if (distances.get(edge.u) != Double.POSITIVE_INFINITY &&",
+    "                distances.get(edge.u) + edge.weight < distances.get(edge.v)) {",
+    "                Map<String, Object> errorResult = new HashMap<>();",
+    "                errorResult.put(\"error\", \"Negative cycle detected\");",
+    "                return errorResult;",
+    "            }",
+    "        }",
+    "        Map<String, Object> result = new HashMap<>();",
+    "        result.put(\"distances\", distances);",
+    "        result.put(\"predecessors\", predecessors);",
+    "        return result;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <map>",
+    "#include <limits>",
+    "struct Edge { int u, v, weight; };",
+    "struct BellmanFordResult {",
+    "    std::map<int, double> distances;",
+    "    std::map<int, int> predecessors;",
+    "    bool has_negative_cycle = false;",
+    "    std::string error_message = \"\";",
+    "};",
+    "BellmanFordResult bellmanFord(const std::vector<Edge>& edges, int numVertices, int startNode) {",
+    "    BellmanFordResult res;",
+    "    for (int i = 0; i < numVertices; ++i) {",
+    "        res.distances[i] = std::numeric_limits<double>::infinity();",
+    "        // predecessors map will be filled as needed",
+    "    }",
+    "    res.distances[startNode] = 0;",
+    "",
+    "    for (int i = 0; i < numVertices - 1; ++i) {",
+    "        for (const auto& edge : edges) {",
+    "            if (res.distances[edge.u] != std::numeric_limits<double>::infinity() &&",
+    "                res.distances[edge.u] + edge.weight < res.distances[edge.v]) {",
+    "                res.distances[edge.v] = res.distances[edge.u] + edge.weight;",
+    "                res.predecessors[edge.v] = edge.u;",
+    "            }",
+    "        }",
+    "    }",
+    "",
+    "    for (const auto& edge : edges) {",
+    "        if (res.distances[edge.u] != std::numeric_limits<double>::infinity() &&",
+    "            res.distances[edge.u] + edge.weight < res.distances[edge.v]) {",
+    "            res.has_negative_cycle = true;",
+    "            res.error_message = \"Negative cycle detected\";",
+    "            return res;",
+    "        }",
+    "    }",
+    "    return res;",
+    "}",
+  ],
+};
 
 const DEFAULT_ANIMATION_SPEED = 1000;
 const MIN_SPEED = 150;

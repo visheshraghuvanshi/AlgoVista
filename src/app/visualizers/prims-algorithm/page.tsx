@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,6 +13,142 @@ import { PrimsAlgorithmCodePanel } from './PrimsAlgorithmCodePanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, GitCommit } from 'lucide-react'; // GitCommit for MST
 import { generatePrimsSteps, parsePrimsInput } from './prims-algorithm-logic';
+
+const PRIMS_CODE_SNIPPETS = {
+  JavaScript: [
+    "// Prim's Algorithm using Adjacency List and Min-Priority Queue (conceptual)",
+    "function primsMST(graph, numVertices, startNode = 0) { // graph: {node: [{neighbor, weight}, ...]}",
+    "  const parent = new Array(numVertices).fill(-1);",
+    "  const key = new Array(numVertices).fill(Infinity); // Min weight to connect to MST",
+    "  const mstSet = new Array(numVertices).fill(false); // Nodes included in MST",
+    "  const mstEdges = []; const pq = new PriorityQueue(); // {vertex, key}",
+    "",
+    "  key[startNode] = 0; pq.add(startNode, 0);",
+    "",
+    "  while (!pq.isEmpty() && mstEdges.length < numVertices - 1) {",
+    "    const u = pq.extractMin().vertex; // Vertex with min key",
+    "    if (mstSet[u]) continue;",
+    "    mstSet[u] = true;",
+    "    if (parent[u] !== -1) mstEdges.push({u: parent[u], v: u, weight: key[u]});",
+    "",
+    "    (graph[u] || []).forEach(edge => {",
+    "      const v = edge.neighbor; const weight = edge.weight;",
+    "      if (!mstSet[v] && weight < key[v]) {",
+    "        parent[v] = u; key[v] = weight;",
+    "        pq.addOrUpdate(v, key[v]); // Add to PQ or update priority",
+    "      }",
+    "    });",
+    "  }",
+    "  return (mstEdges.length === numVertices - 1 || numVertices === 0) ? mstEdges : null; // Null if not connected and V > 0",
+    "}",
+  ],
+  Python: [
+    "import heapq",
+    "def prims_mst(graph, num_vertices, start_node=0): # graph: {node_idx: [(neighbor_idx, weight), ...]}",
+    "    parent = [-1] * num_vertices",
+    "    key = [float('inf')] * num_vertices",
+    "    mst_set = [False] * num_vertices",
+    "    mst_edges = []",
+    "    pq = [] # (key_value, vertex, from_vertex_for_edge)",
+    "",
+    "    key[start_node] = 0",
+    "    heapq.heappush(pq, (0, start_node, -1)) # (key, vertex, parent_in_mst_edge)",
+    "",
+    "    while pq and len(mst_edges) < num_vertices - 1:",
+    "        weight, u, from_node = heapq.heappop(pq)",
+    "",
+    "        if mst_set[u]: continue",
+    "        mst_set[u] = True",
+    "        if from_node != -1: mst_edges.append({'u': from_node, 'v': u, 'weight': key[u]}) # Use key[u] for precise edge weight",
+    "",
+    "        for v, edge_weight in graph.get(u, []):",
+    "            if not mst_set[v] and edge_weight < key[v]:",
+    "                key[v] = edge_weight",
+    "                parent[v] = u",
+    "                heapq.heappush(pq, (edge_weight, v, u))",
+    "    return mst_edges if len(mst_edges) == num_vertices - 1 or num_vertices == 0 else None",
+  ],
+  Java: [
+    "import java.util.*;",
+    "class Edge implements Comparable<Edge> { int to, weight; Edge(int t, int w){to=t;weight=w;} @Override public int compareTo(Edge o){return this.weight-o.weight;}}",
+    "class PrimsMST {",
+    "    // graph: List of Lists of Pairs, where Pair is {neighbor, weight}",
+    "    // Example: adj.get(u) gives List<Pair<Integer,Integer>>",
+    "    List<Map<String, Integer>> findMST(int numVertices, List<List<Map.Entry<Integer,Integer>>> adj, int startNode) {",
+    "        int[] parent = new int[numVertices]; Arrays.fill(parent, -1);",
+    "        int[] key = new int[numVertices]; Arrays.fill(key, Integer.MAX_VALUE);",
+    "        boolean[] mstSet = new boolean[numVertices];",
+    "        List<Map<String, Integer>> mstEdges = new ArrayList<>();",
+    "        PriorityQueue<Edge> pq = new PriorityQueue<>();",
+    "",
+    "        key[startNode] = 0;",
+    "        pq.add(new Edge(startNode, 0)); // (vertex, key_value)",
+    "",
+    "        while(!pq.isEmpty() && mstEdges.size() < numVertices - 1) {",
+    "            Edge currentEdge = pq.poll(); int u = currentEdge.to;",
+    "            if(mstSet[u]) continue;",
+    "            mstSet[u] = true;",
+    "            if(parent[u] != -1) { ",
+    "                Map<String,Integer> edge = new HashMap<>(); ",
+    "                edge.put(\"u\",parent[u]); edge.put(\"v\",u); edge.put(\"weight\",key[u]); ",
+    "                mstEdges.add(edge);",
+    "            }",
+    "",
+    "            for(Map.Entry<Integer, Integer> neighborEntry : adj.get(u)) {",
+    "                int v = neighborEntry.getKey(); int weight = neighborEntry.getValue();",
+    "                if(!mstSet[v] && weight < key[v]) {",
+    "                    key[v] = weight; parent[v] = u;",
+    "                    pq.add(new Edge(v, key[v]));",
+    "                }",
+    "            }",
+    "        }",
+    "        return (mstEdges.size() == numVertices - 1 || numVertices == 0) ? mstEdges : null;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <queue>",
+    "#include <limits>",
+    "#include <map>", // For conceptual graph representation if needed
+    "const int INF = std::numeric_limits<int>::max();",
+    "struct EdgePQ { int to; int weight; bool operator>(const EdgePQ& other) const { return weight > other.weight; }};",
+    "struct MSTEdge { int u, v, weight; };",
+    "// Assume adj is std::vector<std::vector<std::pair<int, int>>> adj(numVertices);",
+    "// where adj[u] = {{v1,w1}, {v2,w2}, ...}",
+    "std::vector<MSTEdge> primsMST(int numVertices, const std::vector<std::vector<std::pair<int, int>>>& adj, int startNode = 0) {",
+    "    std::vector<int> parent(numVertices, -1);",
+    "    std::vector<int> key(numVertices, INF);",
+    "    std::vector<bool> mstSet(numVertices, false);",
+    "    std::vector<MSTEdge> mstEdges;",
+    "    std::priority_queue<EdgePQ, std::vector<EdgePQ>, std::greater<EdgePQ>> pq;",
+    "",
+    "    key[startNode] = 0;",
+    "    pq.push({startNode, 0}); // {vertex, key_value}",
+    "",
+    "    while(!pq.empty() && mstEdges.size() < numVertices - 1) {",
+    "        EdgePQ current = pq.top(); pq.pop();",
+    "        int u = current.to;",
+    "",
+    "        if(mstSet[u]) continue;",
+    "        mstSet[u] = true;",
+    "        if(parent[u] != -1) mstEdges.push_back({parent[u], u, key[u]});",
+    "",
+    "        if (u < adj.size()) { // Check bounds for adj[u]",
+    "          for(const auto& edge : adj[u]) {",
+    "              int v = edge.first; int weight = edge.second;",
+    "              if(!mstSet[v] && weight < key[v]) {",
+    "                  key[v] = weight; parent[v] = u;",
+    "                  pq.push({v, key[v]});",
+    "              }",
+    "          }",
+    "        }",
+    "    }",
+    "    return (mstEdges.size() == numVertices -1 || numVertices == 0) ? mstEdges : std::vector<MSTEdge>();",
+    "}",
+  ],
+};
+
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
@@ -68,7 +205,8 @@ export default function PrimsVisualizerPage() {
         return;
     }
     const startNodeId = startNodeValue.trim() === '' ? '0' : startNodeValue.trim();
-    if(parseInt(startNodeId,10) >= parsedData.numVertices || parseInt(startNodeId,10) < 0) {
+    const startNodeNum = parseInt(startNodeId, 10);
+    if(isNaN(startNodeNum) || startNodeNum >= parsedData.numVertices || startNodeNum < 0) {
         toast({ title: "Invalid Start Node", description: `Start node must be between 0 and ${parsedData.numVertices - 1}.`, variant: "destructive" });
         return;
     }
@@ -194,6 +332,7 @@ export default function PrimsVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <PrimsAlgorithmCodePanel
+              codeSnippets={PRIMS_CODE_SNIPPETS}
               currentLine={currentLine}
             />
           </div>
@@ -204,14 +343,14 @@ export default function PrimsVisualizerPage() {
             onPause={handlePause}
             onStep={handleStep}
             onReset={handleReset}
-            onGraphInputChange={handleEdgeListInputChange} // Use specific handler for edge list
-            graphInputValue={edgeListInputValue} // Pass edge list value
+            onGraphInputChange={handleEdgeListInputChange} 
+            graphInputValue={edgeListInputValue} 
             onStartNodeChange={handleStartNodeChange}
             startNodeValue={startNodeValue}
-            showStartNodeInput={true} // Prim's needs a start node
-            onNumVerticesChange={handleNumVerticesChange} // Handler for num vertices
-            numVerticesValue={numVerticesInput} // Pass num vertices value
-            showNumVerticesInput={true} // Show num vertices input
+            showStartNodeInput={true} 
+            onNumVerticesChange={handleNumVerticesChange} 
+            numVerticesValue={numVerticesInput} 
+            showNumVerticesInput={true} 
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -222,7 +361,7 @@ export default function PrimsVisualizerPage() {
             graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);... (undirected)"
             startNodeInputPlaceholder="Start Node (0-indexed)"
             numVerticesInputPlaceholder="Num Vertices"
-            onExecute={generateSteps} // Add execute button for Prim's
+            onExecute={generateSteps} 
             executeButtonText="Find MST"
           />
         </div>
