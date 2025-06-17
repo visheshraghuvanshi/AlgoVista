@@ -69,10 +69,12 @@ export default function AVLTreeVisualizerPage() {
     }
   }, [steps]);
   
-  const processOperation = (operation: 'build' | 'insert') => {
+  const processOperation = (operation: 'build' | 'insert' | 'delete') => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     let valuesToProcess: number[] = [];
+    let valueForOperation: number | undefined = undefined;
+
     if (operation === 'build') {
         valuesToProcess = initialValuesInput.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
         if (valuesToProcess.length === 0 && initialValuesInput.trim() !== "") {
@@ -84,22 +86,27 @@ export default function AVLTreeVisualizerPage() {
         }
         resetAVLTreeState(); 
         avlTreeRef.current = { rootId: null, nodes: new Map() }; 
-    } else if (operation === 'insert') {
+    } else if (operation === 'insert' || operation === 'delete') {
         const val = parseInt(operationValueInput, 10);
         if (isNaN(val)) {
-            toast({ title: "Invalid Value", description: "Please enter a numeric value to insert.", variant: "destructive" });
+            toast({ title: "Invalid Value", description: `Please enter a numeric value to ${operation}.`, variant: "destructive" });
             return;
         }
-        if (avlTreeRef.current.nodes.size >= 20) { // Limit total nodes
+        if (operation === 'insert' && avlTreeRef.current.nodes.size >= 20) { // Limit total nodes for insert
              toast({ title: "Tree Too Large", description: "Max 20 nodes in tree for smoother visualization.", variant: "default" });
              return;
         }
-        valuesToProcess = [val];
+        if (operation === 'delete' && avlTreeRef.current.nodes.size === 0) {
+            toast({ title: "Tree Empty", description: "Cannot delete from an empty tree.", variant: "default" });
+            return;
+        }
+        valuesToProcess = [val]; // For insert/delete, 'values' array will contain single element
+        valueForOperation = val;
     }
 
     const newSteps = generateAVLSteps(
       operation,
-      valuesToProcess,
+      valuesToProcess, // This is used for build, or for the single value in insert/delete
       avlTreeRef.current.rootId,
       avlTreeRef.current.nodes
     );
@@ -115,7 +122,8 @@ export default function AVLTreeVisualizerPage() {
         avlTreeRef.current = finalState; 
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
         if (lastStepMsg) {
-            toast({ title: operation.charAt(0).toUpperCase() + operation.slice(1) + " Info", description: lastStepMsg, duration: 3000 });
+            const opDisplay = operation.charAt(0).toUpperCase() + operation.slice(1);
+            toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 3000 });
         }
     } else {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
@@ -125,6 +133,8 @@ export default function AVLTreeVisualizerPage() {
 
   const handleBuildTree = () => processOperation('build');
   const handleInsertValue = () => processOperation('insert');
+  const handleDeleteValue = () => processOperation('delete');
+
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -165,7 +175,7 @@ export default function AVLTreeVisualizerPage() {
     avlTreeRef.current = { rootId: null, nodes: new Map() };
     setSteps([]);
     setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
-    setCurrentMessage("AVL Tree reset. Build a new tree or insert values.");
+    setCurrentMessage("AVL Tree reset. Build a new tree or perform operations.");
     // Optionally, immediately build the default tree again
     // handleBuildTree(); 
   };
@@ -208,9 +218,12 @@ export default function AVLTreeVisualizerPage() {
                  <Button onClick={handleBuildTree} disabled={isPlaying} className="w-full md:w-auto"><Cog className="mr-2 h-4 w-4"/>Build Tree</Button>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="operationValueInput">Value to Insert</Label>
+                <Label htmlFor="operationValueInput">Value for Insert/Delete</Label>
                 <Input id="operationValueInput" value={operationValueInput} onChange={(e) => setOperationValueInput(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying} />
-                 <Button onClick={handleInsertValue} disabled={isPlaying || avlTreeRef.current.nodes.size === 0} className="w-full md:w-auto"><PlusCircle className="mr-2 h-4 w-4"/>Insert Value</Button>
+                 <div className="flex gap-2 mt-1">
+                    <Button onClick={handleInsertValue} disabled={isPlaying} className="flex-1"><PlusCircle className="mr-2 h-4 w-4"/>Insert</Button>
+                    <Button onClick={handleDeleteValue} disabled={isPlaying || avlTreeRef.current.nodes.size === 0} variant="destructive" className="flex-1"><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
+                 </div>
               </div>
             </div>
             
@@ -241,3 +254,4 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
+
