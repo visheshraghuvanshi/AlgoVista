@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Menu, Search, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetTrigger } from "@/components/ui/sheet"; // Added SheetTrigger
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { docsContentBySlug } from '@/lib/docs-content'; 
 import Link from 'next/link';
@@ -44,10 +44,8 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchResults.length > 0) {
-      if(isSearchModalOpen) setIsSearchModalOpen(true); 
-      else setIsDesktopSearchFocused(true); 
-    }
+    // For desktop, results are shown live. For mobile, this might submit/focus.
+    // Current implementation shows results live, so submit doesn't do much beyond default.
   };
   
   const openSearchModal = () => {
@@ -63,13 +61,13 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
   }
   
   const onSidebarLinkClick = () => {
-    setIsMobileSidebarOpen(false);
+    setIsMobileSidebarOpen(false); // Close mobile sidebar when a link is clicked
   }
 
   const onSearchResultClick = () => {
-    closeSearchModal(); 
-    setIsDesktopSearchFocused(false); 
-    setSearchQuery(''); 
+    closeSearchModal(); // Close mobile search modal
+    setIsDesktopSearchFocused(false); // Close desktop search dropdown
+    setSearchQuery(''); // Clear search query
     setSearchResults([]);
   }
 
@@ -83,10 +81,15 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
           </ScrollArea>
         </aside>
 
+        {/* Main content area including the top bar */}
         <div className="lg:pl-64 xl:pl-72 flex-1 flex flex-col">
           {/* Top Bar with utilities - part of the main scrollable content flow now */}
-          <header className="sticky top-0 z-40 flex items-center justify-end h-16 px-4 sm:px-6 lg:px-8 border-b bg-background/80 backdrop-blur-sm">
-            <div className="flex items-center gap-x-3 md:gap-x-4">
+          <header className="sticky top-0 z-40 flex items-center justify-between lg:justify-end h-16 px-4 sm:px-6 lg:px-8 border-b bg-background/80 backdrop-blur-sm">
+            {/* Mobile Page Title (or breadcrumbs) - shown on mobile, hidden on LG+ */}
+            {/* Example: <h1 className="text-lg font-semibold lg:hidden">Current Doc Title</h1> */}
+            
+            {/* Utilities - always visible */}
+            <div className="flex items-center gap-x-3 md:gap-x-4 ml-auto"> {/* Use ml-auto to push to the right */}
               {/* Desktop Search */}
               <div className="hidden lg:block relative">
                 <form onSubmit={handleSearchSubmit}>
@@ -98,7 +101,7 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setIsDesktopSearchFocused(true)}
-                    // onBlur={() => setTimeout(() => setIsDesktopSearchFocused(false), 100)} // Timeout to allow click on results
+                    // onBlur={() => setTimeout(() => setIsDesktopSearchFocused(false), 200)} // Added timeout to allow click on results
                   />
                 </form>
                 {isDesktopSearchFocused && searchQuery && (
@@ -113,6 +116,7 @@ export default function DocsPageClient({ children }: { children: React.ReactNode
                     ) : (
                       <p className="p-2 text-muted-foreground">No results for "{searchQuery}".</p>
                     )}
+                     <Button variant="ghost" size="sm" onClick={() => setIsDesktopSearchFocused(false)} className="w-full mt-1 text-xs">Close</Button>
                   </div>
                 )}
               </div>
