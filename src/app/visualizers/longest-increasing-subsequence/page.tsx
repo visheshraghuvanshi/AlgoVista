@@ -1,153 +1,156 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
+import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2 } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from "@/components/ui/slider";
+import { LISVisualizationPanel } from './LISVisualizationPanel';
+import { LISCodePanel } from './LISCodePanel';
+import { generateLIS_N2_Steps, LIS_LINE_MAP_N2 } from './lis-logic'; // Using N2 version for visualization
 
-const LIS_CODE_SNIPPETS = {
-  JavaScript: [
-    "// Longest Increasing Subsequence (Dynamic Programming - O(N^2))",
-    "function lengthOfLIS_N2(nums) {",
-    "  if (nums.length === 0) return 0;",
-    "  // dp[i] stores the length of the LIS ending at index i",
-    "  const dp = new Array(nums.length).fill(1);",
-    "  let maxLength = 1;",
-    "  for (let i = 1; i < nums.length; i++) {",
-    "    for (let j = 0; j < i; j++) {",
-    "      if (nums[i] > nums[j]) {",
-    "        dp[i] = Math.max(dp[i], dp[j] + 1);",
-    "      }",
-    "    }",
-    "    maxLength = Math.max(maxLength, dp[i]);",
-    "  }",
-    "  return maxLength;",
-    "}",
-    "",
-    "// Longest Increasing Subsequence (Patience Sorting / Binary Search - O(N log N))",
-    "function lengthOfLIS_NLogN(nums) {",
-    "  if (nums.length === 0) return 0;",
-    "  // 'tails' array stores the smallest tail of all increasing subsequences with length i+1",
-    "  const tails = [];",
-    "  for (const num of nums) {",
-    "    let i = 0, j = tails.length;",
-    "    // Binary search for the first tail >= num",
-    "    while (i < j) {",
-    "      const mid = Math.floor((i + j) / 2);",
-    "      if (tails[mid] < num) {",
-    "        i = mid + 1;",
-    "      } else {",
-    "        j = mid;",
-    "      }",
-    "    }",
-    "    if (i === tails.length) {",
-    "      tails.push(num); // Extend the longest subsequence found so far",
-    "    } else {",
-    "      tails[i] = num; // Replace tail to potentially start a better LIS of this length",
-    "    }",
-    "  }",
-    "  return tails.length;",
-    "}",
-  ],
-};
+const DEFAULT_ANIMATION_SPEED = 600;
+const MIN_SPEED = 50;
+const MAX_SPEED = 1500;
+const DEFAULT_LIS_INPUT = "10,9,2,5,3,7,101,18";
 
 export default function LISVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [arrayInput, setArrayInput] = useState("10,9,2,5,3,7,101,18");
 
-  useEffect(() => {
-    setIsClient(true);
-    toast({
-        title: "Conceptual Overview",
-        description: `Interactive LIS visualization (DP table or patience sorting) is currently under construction.`,
-        variant: "default",
-        duration: 5000,
-    });
+  const [inputValue, setInputValue] = useState(DEFAULT_LIS_INPUT);
+  
+  const [steps, setSteps] = useState<DPAlgorithmStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<DPAlgorithmStep | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => { setIsClient(true); }, []);
+
+  const parseInput = useCallback((value: string): number[] | null => {
+    if (value.trim() === '') return [];
+    const parsed = value.split(',').map(s => parseInt(s.trim(), 10));
+    if (parsed.some(isNaN)) {
+      toast({ title: "Invalid Input", description: "Please enter comma-separated numbers.", variant: "destructive" });
+      return null;
+    }
+    if (parsed.length > 20) {
+        toast({title: "Input Too Long", description: "Max 20 numbers for optimal visualization.", variant: "default"});
+    }
+    return parsed;
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps = {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
-  };
+  const updateStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
+  }, [steps]);
+  
+  const handleGenerateSteps = useCallback(() => {
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    
+    const nums = parseInput(inputValue);
+    if (!nums) {
+      setSteps([]); setCurrentStep(null); setIsFinished(true); return;
+    }
 
-  if (!isClient) { 
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground">Loading visualizer...</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+    const newSteps = generateLIS_N2_Steps(nums);
+    setSteps(newSteps);
+    setCurrentStepIndex(0);
+    setCurrentStep(newSteps[0] || null);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+
+  }, [inputValue, parseInput, updateStateFromStep]);
+  
+  useEffect(() => { handleGenerateSteps(); }, [inputValue, handleGenerateSteps]);
+
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false); setIsFinished(true);
+    }
+    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+
+  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
+  const handlePause = () => setIsPlaying(false);
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    if (nextIdx === steps.length - 1) setIsFinished(true);
+  };
+  const handleReset = () => { 
+    setIsPlaying(false); setIsFinished(false); 
+    setInputValue(DEFAULT_LIS_INPUT);
+    // handleGenerateSteps will be called by useEffect on input change
+  };
+  
+  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+
+  if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithmMetadata.title}
-          </h1>
+          <TrendingUp className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
 
-        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
-            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                Interactive Visualization Coming Soon!
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithmMetadata.title}, showing DP table or patience sorting steps, is currently under construction.
-                Review the concepts and code below.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
+            <LISVisualizationPanel step={currentStep} />
+          </div>
+          <div className="lg:w-2/5 xl:w-1/3">
+            <LISCodePanel currentLine={currentStep?.currentLine ?? null} />
+          </div>
         </div>
         
-        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code (JavaScript)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
-                    <pre className="font-code text-sm p-4">
-                        {LIS_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
-                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                            {index + 1}
-                            </span>
-                            {line}
-                        </div>
-                        ))}
-                    </pre>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="w-full max-w-lg mx-auto my-4 p-4 border rounded-lg shadow-md space-y-4">
-            <div>
-                <Label htmlFor="arrayInputLIS" className="text-sm font-medium">Input Array (comma-separated numbers)</Label>
-                <Input id="arrayInputLIS" type="text" value={arrayInput} onChange={(e) => setArrayInput(e.target.value)} className="mt-1" disabled />
+        <Card className="shadow-xl rounded-xl mb-6">
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Input</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <div className="space-y-1 md:col-span-2">
+                <Label htmlFor="arrayInputLIS">Input Array (comma-separated numbers, max 20)</Label>
+                <Input id="arrayInputLIS" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying}/>
+              </div>
             </div>
-            <Button className="mt-2 w-full" disabled>Find LIS (Coming Soon)</Button>
-        </div>
+            {/* Removed explicit "Calculate" button, steps generate on input change */}
+            
+            <div className="flex items-center justify-start pt-4 border-t">
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Input & Simulation</Button>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex gap-2">
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+              </div>
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl">Animation Speed</Label>
+                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
