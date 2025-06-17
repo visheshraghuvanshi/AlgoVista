@@ -8,10 +8,11 @@ import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizat
 import { DijkstraCodePanel } from './DijkstraCodePanel'; 
 import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
 import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; 
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DIJKSTRA_LINE_MAP, generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic';
+import { algorithmMetadata } from './metadata'; // Ensure this is importing from local metadata
 
 const DIJKSTRA_CODE_SNIPPETS = {
   JavaScript: [
@@ -61,12 +62,10 @@ const DIJKSTRA_CODE_SNIPPETS = {
 const DEFAULT_ANIMATION_SPEED = 1000;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2500;
-const ALGORITHM_SLUG = 'dijkstra';
 
 export default function DijkstraVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-
+  
   const [graphInputValue, setGraphInputValue] = useState('0:1(4),2(1);1:3(1);2:1(2),3(5);3:'); 
   const [startNodeValue, setStartNodeValue] = useState('0');
   
@@ -84,14 +83,6 @@ export default function DijkstraVisualizerPage() {
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isAlgoImplemented = true;
-
-  useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -210,19 +201,26 @@ export default function DijkstraVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  if (!algorithm) {
+  if (!algorithmMetadata) { 
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
           <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
           <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-          <p className="text-muted-foreground text-lg">Could not load data for &quot;{ALGORITHM_SLUG}&quot;.</p>
+          <p className="text-muted-foreground text-lg">Could not load data for Dijkstra's Algorithm.</p>
         </main>
         <Footer />
       </div>
     );
   }
+  
+  const algoDetails: AlgorithmDetailsProps = {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -230,9 +228,9 @@ export default function DijkstraVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithm.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -270,6 +268,7 @@ export default function DijkstraVisualizerPage() {
             graphInputPlaceholder="e.g., 0:1(4),2(1);1:2(2) (node:neighbor(weight);...)"
           />
         </div>
+        <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
