@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -8,26 +9,35 @@ import { RBT_NODE_COLORS, RBT_TEXT_COLORS } from '@/app/visualizers/red-black-tr
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[];
+  traversalPath: (string | number)[]; // Can be node IDs or values
   currentProcessingNodeId?: string | null;
 }
 
-const SVG_WIDTH = 600; // Increased width slightly
-const SVG_HEIGHT_BASE = 250; // Base height, will adjust
-const NODE_RADIUS = 18; // Slightly larger nodes
-const ACCENT_COLOR_COMPARISON = "hsl(var(--primary))";
+const SVG_WIDTH = 600; 
+const SVG_HEIGHT_BASE = 250; 
+const NODE_RADIUS = 18; 
+const ACCENT_COLOR_COMPARISON = "hsl(var(--primary))"; // General active node
+const PATH_COLOR_TRAVERSAL = "hsl(var(--primary)/0.6)"; // Color for nodes in traversal path
 
 export function BinaryTreeVisualizationPanel({
   nodes,
   edges,
-  traversalPath,
+  traversalPath, // Expecting node IDs or values that are part of the current traversal path
   currentProcessingNodeId,
 }: BinaryTreeVisualizationPanelProps) {
   
-  const maxDepth = nodes.reduce((max, node) => Math.max(max, node.y), 0);
-  const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepth + NODE_RADIUS * 2 + 40); // Ensure enough height + buffer for labels
+  const maxDepthY = nodes.reduce((max, node) => Math.max(max, node.y), 0);
+  const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepthY + NODE_RADIUS * 2 + 40); 
 
   const viewBox = `0 0 ${SVG_WIDTH} ${svgHeight}`;
+
+  // Helper to check if a node is part of the current traversal path
+  // This assumes traversalPath contains node values. If it contains IDs, adjust accordingly.
+  const isNodeInTraversalPath = (nodeValue: string | number | null) => {
+    if (nodeValue === null) return false;
+    return traversalPath.includes(nodeValue);
+  };
+
 
   return (
     <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-[400px] md:h-[500px] lg:h-[600px] flex flex-col">
@@ -46,22 +56,28 @@ export function BinaryTreeVisualizationPanel({
                   const targetNode = nodes.find(n => n.id === edge.targetId);
                   if (!sourceNode || !targetNode) return null;
                   
+                  let strokeColor = edge.color || "hsl(var(--muted-foreground))";
+                  // If both source and target are in traversal path, color edge differently
+                  if (isNodeInTraversalPath(sourceNode.value) && isNodeInTraversalPath(targetNode.value) && (sourceNode.id === currentProcessingNodeId || targetNode.id === currentProcessingNodeId )) {
+                     // This condition might need refinement based on exact path logic
+                  }
+
+
                   return (
                     <line
                       key={edge.id}
                       x1={sourceNode.x}
-                      y1={sourceNode.y + NODE_RADIUS} // Start from bottom of parent
+                      y1={sourceNode.y + NODE_RADIUS} 
                       x2={targetNode.x}
-                      y2={targetNode.y - NODE_RADIUS} // End at top of child
-                      stroke={edge.color || "hsl(var(--muted-foreground))"}
+                      y2={targetNode.y - NODE_RADIUS} 
+                      stroke={strokeColor}
                       strokeWidth="1.5"
                     />
                   );
                 })}
                 {nodes.map((node) => {
-                  // Determine fill and text color based on RBT color or general highlight
-                  let fill = node.color; // Default to general highlight/state color
-                  let textColor = "hsl(var(--primary-foreground))"; // Default for general highlights
+                  let fill = node.color || "hsl(var(--secondary))"; 
+                  let textColor = node.textColor || "hsl(var(--primary-foreground))";
 
                   if (node.nodeColor === 'RED') {
                     fill = RBT_NODE_COLORS.RED;
@@ -71,15 +87,16 @@ export function BinaryTreeVisualizationPanel({
                     textColor = RBT_TEXT_COLORS.BLACK_TEXT;
                   }
                   
-                  // Override with active processing highlight if applicable
-                  if (node.id === currentProcessingNodeId && node.color !== RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
-                     fill = ACCENT_COLOR_COMPARISON; // Generic active processing
+                  if (node.id === currentProcessingNodeId && fill !== RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
+                     fill = ACCENT_COLOR_COMPARISON; 
                      textColor = "hsl(var(--primary-foreground))";
-                  } else if (node.color === RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
-                     fill = RBT_NODE_COLORS.FOUND_HIGHLIGHT;
+                  } else if (fill === RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
                      textColor = RBT_TEXT_COLORS.FOUND_HIGHLIGHT_TEXT;
+                  } else if (isNodeInTraversalPath(node.value) && node.id !== currentProcessingNodeId && !node.nodeColor && !node.color?.includes("accent")) {
+                     // Don't override RBT/found colors with path color unless explicitly active
+                     // fill = PATH_COLOR_TRAVERSAL;
+                     // textColor = "hsl(var(--primary-foreground))";
                   }
-
 
                   return (
                     <g key={node.id} transform={`translate(${node.x},${node.y})`}>
@@ -100,20 +117,16 @@ export function BinaryTreeVisualizationPanel({
                         fill={textColor}
                         fontWeight="bold"
                       >
-                        {/* For RBT, value might be formatted to include height/balance factor */}
-                        {/* This assumes node.value is already formatted by the logic file if needed */}
                         {node.value}
                       </text>
-                      {/* Optional: Display color explicitly for RBT if not clear from fill */}
                        {node.nodeColor && (
                         <text
                           x="0"
-                          y={NODE_RADIUS + 10} // Position below the node
+                          y={NODE_RADIUS + 10} 
                           textAnchor="middle"
                           fontSize="8"
                           fill={node.nodeColor === 'RED' ? RBT_NODE_COLORS.RED : RBT_NODE_COLORS.BLACK}
                         >
-                          {/* {node.nodeColor} */}
                         </text>
                       )}
                     </g>
