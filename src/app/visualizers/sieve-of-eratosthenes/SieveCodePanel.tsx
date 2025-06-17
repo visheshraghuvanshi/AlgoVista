@@ -64,7 +64,7 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
     "            }",
     "        }",
     "        List<Integer> primesList = new ArrayList<>();",
-    "        for (int p_num = 2; p_num <= n; p_num++) {", // Renamed loop variable
+    "        for (int p_num = 2; p_num <= n; p_num++) {", 
     "            if (prime[p_num]) { primesList.add(p_num); }",
     "        }",
     "        return primesList;",
@@ -86,7 +86,7 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
     "        }",
     "    }",
     "    std::vector<int> primes_list;",
-    "    for (int p_num = 2; p_num <= n; p_num++) {", // Renamed loop variable
+    "    for (int p_num = 2; p_num <= n; p_num++) {", 
     "        if (prime[p_num]) { primes_list.push_back(p_num); }",
     "    }",
     "    return primes_list;",
@@ -152,4 +152,3 @@ export function SieveCodePanel({ currentLine }: SieveCodePanelProps) {
     </Card>
   );
 }
-

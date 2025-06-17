@@ -53,7 +53,7 @@ const MODULAR_EXP_CODE_SNIPPETS: Record<string, string[]> = {
     "}",
   ],
   "C++": [
-    "#include <cstdint>",
+    "#include <cstdint> // For long long",
     "long long modularExponentiation(long long base, long long exponent, long long modulus) {",
     "    long long result = 1;",
     "    base %= modulus;",
@@ -111,10 +111,10 @@ export function ModularExponentiationCodePanel({ currentLine }: ModularExponenti
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-          <pre className="font-code text-sm p-4">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
             {codeToDisplay.map((line, index) => (
               <div key={`modexp-${selectedLanguage}-line-${index}`}
-                className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
                 {line}
               </div>
@@ -125,4 +125,3 @@ export function ModularExponentiationCodePanel({ currentLine }: ModularExponenti
     </Card>
   );
 }
-

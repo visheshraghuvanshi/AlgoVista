@@ -157,6 +157,7 @@ export const PERMUTATIONS_SUBSETS_CODE_SNIPPETS: Record<PermutationsSubsetsProbl
   },
 };
 
+
 interface PermutationsSubsetsCodePanelProps {
   currentLine: number | null;
   selectedProblemType: PermutationsSubsetsProblemType;
@@ -170,7 +171,7 @@ export function PermutationsSubsetsCodePanel({ currentLine, selectedProblemType 
   const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : (languages[0] || "Info");
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
 
-  React.useEffect(() => { // Reset language if problem type changes and current language not available
+  React.useEffect(() => { 
     const currentProblemLangs = Object.keys(PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType] || {});
     if (currentProblemLangs.length > 0 && !currentProblemLangs.includes(selectedLanguage)) {
       setSelectedLanguage(currentProblemLangs.includes("JavaScript") ? "JavaScript" : currentProblemLangs[0]);
@@ -239,5 +240,3 @@ export function PermutationsSubsetsCodePanel({ currentLine, selectedProblemType 
     </Card>
   );
 }
-
-  
