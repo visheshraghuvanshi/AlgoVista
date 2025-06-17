@@ -1,5 +1,4 @@
 
-
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -27,10 +26,10 @@ export interface AlgorithmMetadata {
 
 // For array-based algorithms (sorting, searching)
 export type ArrayAlgorithmStep = {
-  array: number[];
+  array: number[] | string[]; // Allow string arrays for permutation/subset elements
   activeIndices: number[];
   swappingIndices: number[];
-  sortedIndices: number[];
+  sortedIndices: number[]; // Can be used to highlight "finalized" elements or results
   currentLine: number | null;
   message?: string;
   processingSubArrayRange?: [number, number] | null;
@@ -132,13 +131,23 @@ export interface LinkedListAlgorithmStep {
 }
 
 // N-Queens Step Type 
-// It reuses many fields from ArrayAlgorithmStep but `array` is not primary.
-// `board` is the primary visual data.
 export interface NQueensStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
   board: number[][]; // N x N board, 1 for Queen, 0 for empty
   currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' };
   foundSolutions?: number[][][]; // Array of found board states
   isSafe?: boolean; // Result of the last safety check
+}
+
+// Rat in a Maze Step Type
+export interface RatInAMazeStep extends Omit<ArrayAlgorithmStep, 'array' | 'activeIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
+  maze: number[][]; // The maze grid (0 for wall, 1 for path, 2 for solution path)
+  currentPosition?: { row: number; col: number }; // Rat's current position
+  action?: 'try_move' | 'mark_path' | 'backtrack' | 'goal_reached' | 'stuck';
+  message: string;
+  currentLine: number | null;
+  // activeIndices can be used to highlight the current cell, if needed by VisualizationPanel
+  // For RatInAMaze, activeIndices might represent [row, col] of the current rat position
+  activeIndices: [number, number] | [];
 }
 
 
@@ -149,3 +158,4 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
 // N-Queens page will use NQueensStep directly in its state and logic.
+// Rat in a Maze page will use RatInAMazeStep.
