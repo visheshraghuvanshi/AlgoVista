@@ -76,35 +76,35 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Counting Sort', 
     category: 'Sorting', 
     difficulty: 'Medium', 
-    description: 'An integer sorting algorithm that operates by counting the number of objects that have each distinct key value. Not comparison-based.'
+    description: "An integer sorting algorithm that operates by counting the number of occurrences of each distinct key value. It's efficient when the range of input values (k) is not significantly larger than the number of items (n). It's not a comparison sort and is often used as a subroutine in Radix Sort. The algorithm involves creating a count array to store frequencies, then modifying it to store cumulative counts which determine the position of each element in the sorted output."
   },
   { 
     slug: 'radix-sort', 
     title: 'Radix Sort', 
     category: 'Sorting', 
     difficulty: 'Hard', 
-    description: 'A non-comparison integer sorting algorithm that sorts data with integer keys by grouping keys by individual digits which share the same significant position and value.'
+    description: "A non-comparison integer sorting algorithm that sorts data with integer keys by grouping keys by individual digits (or bits) which share the same significant position and value. It processes numbers digit by digit, from least significant to most significant (LSD) or vice-versa (MSD). It typically uses a stable sorting algorithm, like Counting Sort, as a subroutine for sorting based on each digit."
   },
   { 
     slug: 'bucket-sort', 
     title: 'Bucket Sort', 
     category: 'Sorting', 
     difficulty: 'Medium', 
-    description: 'Distributes elements into a number of buckets, each bucket is then sorted individually, either using a different sorting algorithm or recursively applying bucket sort.'
+    description: "A distribution sort algorithm that works by distributing elements into a number of buckets. Each bucket is then sorted individually, either using a different sorting algorithm (like insertion sort) or by recursively applying bucket sort. Bucket Sort is efficient if the input data is uniformly distributed over a range, allowing for near linear time complexity in the average case."
   },
   { 
     slug: 'shell-sort', 
     title: 'Shell Sort', 
     category: 'Sorting', 
     difficulty: 'Medium', 
-    description: 'An in-place comparison sort. It can be seen as either a generalization of sorting by exchange (bubble sort) or sorting by insertion (insertion sort).'
+    description: "An in-place comparison sort and a generalization of insertion sort. It allows the exchange of items that are far apart by starting with a large gap, then progressively reducing the gap between elements to be compared. This makes it more efficient than simple insertion sort for larger datasets as it moves out-of-place elements more quickly towards their correct positions. The choice of gap sequence is crucial for its performance."
   },
   { 
     slug: 'cocktail-sort', 
     title: 'Cocktail Shaker Sort', 
     category: 'Sorting', 
     difficulty: 'Easy', 
-    description: 'A variation of Bubble Sort that sorts in both directions on each pass through the list.'
+    description: 'A variation of Bubble Sort that sorts in both directions on each pass through the list. It passes through the list from left to right, then from right to left, continuously swapping adjacent elements if they are in the wrong order.'
   },
 
   // SECTION III: Searching & Array Techniques
@@ -164,7 +164,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Linked List Operations', 
     category: 'Linked List', 
     difficulty: 'Medium', 
-    description: 'Visualize core operations like insertion, deletion, search, reversal, and loop detection in Singly, Doubly, and Circular Linked Lists. Understand node navigation and pointer manipulation.'
+    description: 'Visualize core operations like insertion, deletion, search, and reversal in Singly, Doubly, and Circular Linked Lists. Understand node navigation, pointer manipulation, and specific list properties like loop detection or merging sorted lists.'
   },
 
   // SECTION V: Trees & Binary Trees
