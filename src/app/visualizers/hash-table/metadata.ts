@@ -1,0 +1,18 @@
+
+import type { AlgorithmMetadata } from '@/types';
+
+export const algorithmMetadata: AlgorithmMetadata = {
+  slug: 'hash-table',
+  title: 'Hash Table Operations',
+  category: 'Data Structures',
+  difficulty: 'Medium',
+  description: 'A data structure that implements an associative array abstract data type, a structure that can map keys to values. Uses a hash function to compute an index into an array of buckets or slots.',
+  longDescription: 'A Hash Table (or Hash Map) is a data structure used to implement an associative array, which maps keys to values. It uses a hash function to compute an index, also called a hash code, into an array of buckets or slots, from which the desired value can be found.\n\n**Core Components:**\n1.  **Hash Function**: A function that takes a key and computes an index (hash value) in the underlying array. A good hash function should distribute keys uniformly across the array to minimize collisions.\n2.  **Array (Buckets/Slots)**: The underlying storage for elements. Each slot can store a value or a pointer to a list of values (in case of collisions).\n3.  **Collision Resolution Strategy**: Since different keys might map to the same hash index (a "collision"), strategies are needed to handle this:\n    *   **Chaining**: Each bucket stores a linked list (or other data structure) of key-value pairs that hash to that index. When a collision occurs, the new key-value pair is added to the list in that bucket.\n    *   **Open Addressing**: All entries are stored in the bucket array itself. When a new entry has to be inserted, the buckets are examined, starting with the hashed-to slot and proceeding in some probe sequence, until an unoccupied slot is found. Common probing techniques include Linear Probing, Quadratic Probing, and Double Hashing.\n\n**Key Operations:**\n- **Insert (Put)**: Computes the hash of the key, finds the appropriate bucket, and inserts the key-value pair. Handles collisions based on the chosen strategy.\n- **Search (Get)**: Computes the hash of the key, finds the bucket, and then searches within that bucket (e.g., traverses the linked list in chaining, or follows the probe sequence in open addressing) for the key to retrieve its value.\n- **Delete (Remove)**: Computes the hash of the key, finds the bucket, searches for the key, and removes it. Deletion can be tricky with open addressing (often requires marking slots as "deleted" rather than "empty").\n\n**Load Factor**: The ratio of stored entries to the number of buckets (N/M). A high load factor increases the probability of collisions and can degrade performance. Rehashing (resizing the table and re-inserting all elements) is often performed when the load factor exceeds a certain threshold.\n\nUse Cases: Implementing caches, database indexing, symbol tables in compilers, associative arrays in programming languages.',
+  timeComplexities: {
+    best: "Insert/Search/Delete: O(1) if no collisions and good hash function.",
+    average: "Insert/Search/Delete: O(1) with a good hash function and effective collision resolution. O(L) for chaining where L is average chain length (ideally small).",
+    worst: "Insert/Search/Delete: O(N) in the worst case (e.g., all keys hash to the same bucket, or many collisions with poor open addressing strategy).",
+  },
+  spaceComplexity: "O(N+M) where N is number of entries and M is number of buckets. For chaining, O(N) for entries + O(M) for bucket array.",
+};
+    

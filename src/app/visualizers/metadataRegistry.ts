@@ -81,7 +81,7 @@ import { algorithmMetadata as primeFactorizationMeta } from './prime-factorizati
 import { algorithmMetadata as modularExponentiationMeta } from './modular-exponentiation/metadata';
 import { algorithmMetadata as baseConversionsMeta } from './base-conversions/metadata';
 
-// Data Structures
+// Other Data Structures
 import { algorithmMetadata as stackQueueMeta } from './stack-queue/metadata';
 import { algorithmMetadata as dequeOperationsMeta } from './deque-operations/metadata';
 import { algorithmMetadata as priorityQueueMeta } from './priority-queue/metadata';
@@ -170,12 +170,21 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
   modularExponentiationMeta,
   baseConversionsMeta,
 
-  // Data Structures
+  // Other Data Structures
   stackQueueMeta,
   dequeOperationsMeta,
   priorityQueueMeta,
   disjointSetUnionMeta,
   hashTableMeta,
 
-].sort((a, b) => a.title.localeCompare(b.title));
+].sort((a, b) => {
+    // Prioritize 'Fundamentals'
+    if (a.category === 'Fundamentals' && b.category !== 'Fundamentals') return -1;
+    if (a.category !== 'Fundamentals' && b.category === 'Fundamentals') return 1;
+    // Then sort by category
+    const categoryComparison = a.category.localeCompare(b.category);
+    if (categoryComparison !== 0) return categoryComparison;
+    // Then by title within category
+    return a.title.localeCompare(b.title);
+});
     

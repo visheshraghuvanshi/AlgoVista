@@ -4,18 +4,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
+import { BinaryTreeVisualizationPanel } from '@/components/algo-vista/BinaryTreeVisualizationPanel';
 import { AVLTreeCodePanel } from './AVLTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
+import { algorithmMetadata } from './metadata'; // Corrected import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
   generateAVLSteps,
   getFinalAVLTreeState,
   resetAVLTreeState,
-  type AVL_TREE_LINE_MAP // Assuming line map is exported for potential use
+  type AVL_TREE_LINE_MAP 
 } from './avl-tree-logic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,12 +24,10 @@ import { Play, Pause, SkipForward, RotateCcw, FastForward, Cog, PlusCircle, Tras
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const DEFAULT_ANIMATION_SPEED = 1200; // Slower for complex ops
+const DEFAULT_ANIMATION_SPEED = 1200; 
 const MIN_SPEED = 200;
 const MAX_SPEED = 3000;
-const ALGORITHM_SLUG = 'avl-tree';
 
-// Internal representation of AVL node for the page's state
 interface AVLNodeState {
   id: string;
   value: number;
@@ -41,8 +39,7 @@ interface AVLNodeState {
 
 export default function AVLTreeVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-
+  
   const [initialValuesInput, setInitialValuesInput] = useState('50,30,70,20,40,60,80');
   const [operationValueInput, setOperationValueInput] = useState('25'); 
   
@@ -56,23 +53,18 @@ export default function AVLTreeVisualizerPage() {
   const [currentProcessingNodeId, setCurrentProcessingNodeId] = useState<string|null>(null);
   const [currentMessage, setCurrentMessage] = useState<string>("Initialize tree or select an operation.");
 
-  const [isPlaying, setIsPlaying] = useState(isPlaying);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Ref to store the actual tree structure (map of nodes and rootId)
   const avlTreeRef = useRef<{ rootId: string | null, nodes: Map<string, AVLNodeState> }>({ rootId: null, nodes: new Map() });
 
   useEffect(() => {
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
-    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    // Initial build
     handleBuildTree();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+  }, []); 
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -96,8 +88,8 @@ export default function AVLTreeVisualizerPage() {
             toast({ title: "Invalid Input", description: "Please enter comma-separated numbers for build.", variant: "destructive" });
             return;
         }
-        resetAVLTreeState(); // Clear internal state in logic file before build
-        avlTreeRef.current = { rootId: null, nodes: new Map() }; // Reset local ref
+        resetAVLTreeState(); 
+        avlTreeRef.current = { rootId: null, nodes: new Map() }; 
     } else if (operation === 'insert') {
         const val = parseInt(operationValueInput, 10);
         if (isNaN(val)) {
@@ -121,8 +113,8 @@ export default function AVLTreeVisualizerPage() {
 
     if (newSteps.length > 0) {
         updateStateFromStep(0);
-        const finalState = getFinalAVLTreeState(); // Get updated tree from logic
-        avlTreeRef.current = finalState; // Update local ref
+        const finalState = getFinalAVLTreeState(); 
+        avlTreeRef.current = finalState; 
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
         if (lastStepMsg) {
             toast({ title: operation.charAt(0).toUpperCase() + operation.slice(1) + " Info", description: lastStepMsg, duration: 3000 });
@@ -176,22 +168,16 @@ export default function AVLTreeVisualizerPage() {
     setSteps([]);
     setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
     setCurrentMessage("AVL Tree reset. Build a new tree or insert values.");
-    // Optionally, rebuild a default tree:
-    // handleBuildTree(); // This would immediately build '50,30,70...'
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "O(log n) for search, insert, delete", 
-      average: "O(log n) for search, insert, delete", 
-      worst: "O(log n) for search, insert, delete (guaranteed due to balancing)" 
-    },
-    spaceComplexity: "O(n) for storage, O(log n) for recursion stack.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithm || !algoDetails) {
+  if (!algorithmMetadata || !algoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -200,7 +186,7 @@ export default function AVLTreeVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithm.title}</h1>
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -227,8 +213,6 @@ export default function AVLTreeVisualizerPage() {
                  <Button onClick={handleInsertValue} disabled={isPlaying || !avlTreeRef.current.rootId} className="w-full md:w-auto"><PlusCircle className="mr-2 h-4 w-4"/>Insert Value</Button>
               </div>
             </div>
-            {/* Placeholder for Delete operation button - to be implemented later */}
-            {/* <Button disabled className="w-full md:w-auto opacity-50"><Trash2 className="mr-2 h-4 w-4"/>Delete Value (Coming Soon)</Button> */}
             
             <div className="flex items-center justify-start pt-4 border-t">
               <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Controls & Tree</Button>
