@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { QuickSortCodePanel } from './QuickSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
 import type { AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
@@ -117,7 +118,6 @@ export default function QuickSortVisualizerPage() {
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
-  // const [initialData, setInitialData] = useState<number[]>([]); // Not strictly needed
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -185,7 +185,6 @@ export default function QuickSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
     }
     if (parsedData !== null) {
-      // setInitialData(parsedData); // Not strictly needed
       let newSteps: AlgorithmStep[] = generateQuickSortSteps(parsedData);
       
       setSteps(newSteps);
@@ -300,6 +299,13 @@ export default function QuickSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
+  const algoDetails: AlgorithmDetailsProps = {
+    title: "Quick Sort",
+    description: "A highly efficient divide-and-conquer sorting algorithm that picks an element as a pivot and partitions the array around the pivot.",
+    timeComplexities: { best: "O(n log n)", average: "O(n log n)", worst: "O(n²)" },
+    spaceComplexity: "O(log n) (average), O(n) (worst)",
+  };
+
   if (!algorithm) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -365,6 +371,12 @@ export default function QuickSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
+        <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />
       </main>
       <Footer />
     </div>

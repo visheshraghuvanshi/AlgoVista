@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { HeapSortCodePanel } from './HeapSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
 import type { AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
@@ -171,7 +172,6 @@ export default function HeapSortVisualizerPage() {
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
-  // const [initialData, setInitialData] = useState<number[]>([]); // Not strictly needed
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -239,7 +239,6 @@ export default function HeapSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
     }
     if (parsedData !== null) {
-      // setInitialData(parsedData); // Not strictly needed
       let newSteps: AlgorithmStep[] = generateHeapSortSteps(parsedData);
       
       setSteps(newSteps);
@@ -353,6 +352,13 @@ export default function HeapSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
+  const algoDetails: AlgorithmDetailsProps = {
+    title: "Heap Sort",
+    description: "A comparison-based sorting technique based on a Binary Heap data structure. In-place with O(n log n) complexity.",
+    timeComplexities: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
+    spaceComplexity: "O(1)",
+  };
+
   if (!algorithm) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -418,6 +424,12 @@ export default function HeapSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
+         <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />
       </main>
       <Footer />
     </div>
