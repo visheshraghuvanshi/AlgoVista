@@ -160,12 +160,48 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
 
   // SECTION IV: Linked Lists
   { 
-    slug: 'linked-list-operations', 
-    title: 'Linked List Operations', 
+    slug: 'singly-linked-list', 
+    title: 'Singly Linked List', 
+    category: 'Linked List', 
+    difficulty: 'Easy', 
+    description: 'A linear data structure where elements are stored in nodes, and each node points to the next node in the sequence. Covers basic operations like insertion (head, tail, specific position), deletion, search, and traversal. Emphasizes understanding node navigation and pointer manipulation in one direction. Accessing elements by index is O(n), while insertion/deletion at the head is O(1). Insertion/deletion at the tail is O(n) without a tail pointer, or O(1) with one.'
+  },
+  { 
+    slug: 'doubly-linked-list', 
+    title: 'Doubly Linked List', 
     category: 'Linked List', 
     difficulty: 'Medium', 
-    description: 'Covers core operations for various linked list types. For Singly Linked Lists: insertion, deletion, search, traversal, reversal, cycle detection (Floyd\'s Tortoise and Hare). For Doubly Linked Lists: similar operations, highlighting bidirectional advantages. For Circular Linked Lists: unique traversal and termination conditions. Includes merging two sorted lists, a common interview problem. Emphasizes understanding node navigation, pointer manipulation, and the distinct properties, advantages, and disadvantages of each list type, preparing for diverse applications.'
+    description: 'A linked list where each node contains a data part and two pointers: one to the next node and one to the previous node. This allows traversal in both directions. Covers insertion, deletion, search, and traversal, highlighting the advantages (e.g., O(1) deletion if node is known) and complexities of managing two pointers. Access/search is O(n). Insertion/deletion at head/tail is O(1).'
   },
+  { 
+    slug: 'circular-linked-list', 
+    title: 'Circular Linked List', 
+    category: 'Linked List', 
+    difficulty: 'Medium', 
+    description: 'A linked list where the last node points back to the first node (or a head node in some implementations), forming a circle. Can be singly or doubly circular. Useful in applications requiring round-robin scheduling or continuous looping. Traversal requires careful handling of termination conditions to avoid infinite loops. Operations like insertion and deletion are similar to linear lists but need to maintain the circular link.'
+  },
+  { 
+    slug: 'linked-list-reversal', 
+    title: 'Linked List Reversal', 
+    category: 'Linked List', 
+    difficulty: 'Medium', 
+    description: 'The process of reversing the order of nodes in a linked list. Explores iterative (using three pointers: prev, current, next) and recursive approaches for reversing a singly linked list. A fundamental manipulation technique testing pointer understanding.'
+  },
+  { 
+    slug: 'linked-list-cycle-detection', 
+    title: 'Linked List Cycle Detection', 
+    category: 'Linked List', 
+    difficulty: 'Medium', 
+    description: 'Algorithms to determine if a linked list contains a cycle (i.e., a node points back to a previously visited node). Focuses on Floyd\'s Tortoise and Hare algorithm (two-pointer technique) for efficient cycle detection in O(n) time and O(1) space.'
+  },
+  { 
+    slug: 'merge-sorted-linked-lists', 
+    title: 'Merge Two Sorted Linked Lists', 
+    category: 'Linked List', 
+    difficulty: 'Medium', 
+    description: 'Combining two sorted linked lists into a single, new sorted linked list. Explores iterative and recursive approaches to merge the lists while maintaining sorted order by comparing elements node by node. A common interview problem demonstrating pointer manipulation and recursion/iteration.'
+  },
+
 
   // SECTION V: Trees & Binary Trees
   { 
@@ -631,4 +667,6 @@ export default function VisualizersPage() {
     </div>
   );
 }
+    
+
     
