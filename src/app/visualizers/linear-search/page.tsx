@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { LinearSearchCodePanel } from './LinearSearchCodePanel'; 
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +61,40 @@ const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
 const ALGORITHM_SLUG = 'linear-search';
+
+interface AlgorithmDetailsProps {
+  title: string;
+  description: string;
+  timeComplexities: { best: string; average: string; worst: string };
+  spaceComplexity: string;
+}
+
+function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
+  return (
+    <Card className="mt-8 shadow-lg rounded-xl">
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
+          About {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground">{description}</p>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li>Best Case: {timeComplexities.best}</li>
+            <li>Average Case: {timeComplexities.average}</li>
+            <li>Worst Case: {timeComplexities.worst}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
+          <p className="text-muted-foreground">{spaceComplexity}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function LinearSearchVisualizerPage() {
   const { toast } = useToast();
@@ -139,13 +174,13 @@ export default function LinearSearchVisualizerPage() {
   }, [steps]);
 
    const generateSteps = useCallback(() => {
-    const parsedArray = parseInput(inputValue);
-    const parsedTarget = parseTarget(targetValue);
-
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
     }
+
+    const parsedArray = parseInput(inputValue);
+    const parsedTarget = parseTarget(targetValue);
 
     if (parsedArray !== null && parsedTarget !== null) {
       const newSteps = generateLinearSearchSteps(parsedArray, parsedTarget);
@@ -164,7 +199,6 @@ export default function LinearSearchVisualizerPage() {
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
       } else {
-        // Reset to initial parsed array if no steps (e.g. empty input)
         setDisplayedData(parsedArray || []);
         setActiveIndices([]);
         setSwappingIndices([]);
@@ -174,10 +208,9 @@ export default function LinearSearchVisualizerPage() {
         setPivotActualIndex(null);
       }
     } else {
-      // Handle invalid input for array or target
       setSteps([]);
       setCurrentStepIndex(0);
-      setDisplayedData(parsedArray || []); // Show potentially invalid array, or empty if null
+      setDisplayedData(parsedArray || []); 
       setActiveIndices([]);
       setSwappingIndices([]);
       setSortedIndices([]);
@@ -192,7 +225,7 @@ export default function LinearSearchVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]); // generateSteps itself is memoized and will run if its deps change
+  }, [generateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -250,6 +283,13 @@ export default function LinearSearchVisualizerPage() {
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
+
+  const algoDetails = {
+    title: "Linear Search",
+    description: "Sequentially checks each element of the list until a match is found or the whole list has been searched. A basic introduction to search operations.",
+    timeComplexities: { best: "O(1)", average: "O(n)", worst: "O(n)" },
+    spaceComplexity: "O(1)",
+  };
 
   if (!algorithm) {
     return (
@@ -314,6 +354,12 @@ export default function LinearSearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
+        <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />
       </main>
       <Footer />
     </div>

@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { InsertionSortCodePanel } from './InsertionSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AlgorithmMetadata } from '@/types';
 import type { AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
@@ -88,13 +89,46 @@ const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
 const ALGORITHM_SLUG = 'insertion-sort';
 
+interface AlgorithmDetailsProps {
+  title: string;
+  description: string;
+  timeComplexities: { best: string; average: string; worst: string };
+  spaceComplexity: string;
+}
+
+function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
+  return (
+    <Card className="mt-8 shadow-lg rounded-xl">
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
+          About {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground">{description}</p>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li>Best Case: {timeComplexities.best}</li>
+            <li>Average Case: {timeComplexities.average}</li>
+            <li>Worst Case: {timeComplexities.worst}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
+          <p className="text-muted-foreground">{spaceComplexity}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function InsertionSortVisualizerPage() {
   const { toast } = useToast();
   
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
-  // const [initialData, setInitialData] = useState<number[]>([]); // Not strictly needed
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -162,7 +196,6 @@ export default function InsertionSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
     }
     if (parsedData !== null) {
-      // setInitialData(parsedData); // Not strictly needed
       let newSteps: AlgorithmStep[] = generateInsertionSortSteps(parsedData);
       
       setSteps(newSteps);
@@ -276,6 +309,13 @@ export default function InsertionSortVisualizerPage() {
   const handleSpeedChange = (speedValue: number) => {
     setAnimationSpeed(speedValue);
   };
+  
+  const algoDetails = {
+    title: "Insertion Sort",
+    description: "Builds the final sorted array one item at a time by inserting each element into its proper place in the sorted part. Efficient for small or nearly sorted data.",
+    timeComplexities: { best: "O(n)", average: "O(n²)", worst: "O(n²)" },
+    spaceComplexity: "O(1)",
+  };
 
   if (!algorithm) {
     return (
@@ -342,6 +382,12 @@ export default function InsertionSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
+        <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />
       </main>
       <Footer />
     </div>

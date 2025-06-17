@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { BinarySearchCodePanel } from './BinarySearchCodePanel'; 
 import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
@@ -89,6 +90,40 @@ const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
 const ALGORITHM_SLUG = 'binary-search';
+
+interface AlgorithmDetailsProps {
+  title: string;
+  description: string;
+  timeComplexities: { best: string; average: string; worst: string };
+  spaceComplexity: string;
+}
+
+function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
+  return (
+    <Card className="mt-8 shadow-lg rounded-xl">
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
+          About {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground">{description}</p>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li>Best Case: {timeComplexities.best}</li>
+            <li>Average Case: {timeComplexities.average}</li>
+            <li>Worst Case: {timeComplexities.worst}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
+          <p className="text-muted-foreground">{spaceComplexity}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function BinarySearchVisualizerPage() {
   const { toast } = useToast();
@@ -173,6 +208,10 @@ export default function BinarySearchVisualizerPage() {
   }, [steps]);
   
   const generateSteps = useCallback((notifySort: boolean = false) => {
+    if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+    }
     const parsedArray = parseInput(inputValue, notifySort); 
     const parsedTarget = parseTarget(targetValue);
 
@@ -200,23 +239,23 @@ export default function BinarySearchVisualizerPage() {
       } else {
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null);
       }
     } else {
       setSteps([]);
       setCurrentStepIndex(0);
       setDisplayedData(parsedArray || []);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
+      setProcessingSubArrayRange(null); setPivotActualIndex(null);
       setIsPlaying(false);
       setIsFinished(false);
     }
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-  }, [inputValue, targetValue, parseInput, parseTarget, toast]); // Added toast to deps of generateSteps
+  }, [inputValue, targetValue, parseInput, parseTarget, toast]);
 
 
   useEffect(() => {
     generateSteps(false); 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetValue]); // Only targetValue, inputValue is handled by its own effect
+  }, [targetValue, generateSteps]); 
 
   useEffect(() => {
     if (inputValue !== lastProcessedInputValueRef.current) {
@@ -224,17 +263,19 @@ export default function BinarySearchVisualizerPage() {
         if (parsedArray) {
             const newInputValueStr = parsedArray.join(',');
             if (inputValue !== newInputValueStr) {
+                // This will trigger the other useEffect via setInputValue -> state change
                 setInputValue(newInputValueStr); 
             } else {
+                 // If string is same after sort (already sorted or empty), directly generate steps
                  generateSteps(true); 
             }
              lastProcessedInputValueRef.current = newInputValueStr;
         } else {
-             generateSteps(true);
+             // Handle case where parseInput returns null (invalid input)
+             generateSteps(true); // Will likely show errors via toasts and reset visuals
         }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput, parseTarget, toast]); // Using generateSteps in the effect that sets inputValue will cause a loop if generateSteps is also a dep
+  }, [inputValue, parseInput, generateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -292,6 +333,13 @@ export default function BinarySearchVisualizerPage() {
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
+
+  const algoDetails = {
+    title: "Binary Search",
+    description: "Efficiently finds an item from a sorted list by repeatedly dividing the search interval in half. Introduces logarithmic time complexity.",
+    timeComplexities: { best: "O(1)", average: "O(log n)", worst: "O(log n)" },
+    spaceComplexity: "O(1) (Iterative)",
+  };
 
   if (!algorithm) {
     return (
@@ -356,6 +404,12 @@ export default function BinarySearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
+         <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />
       </main>
       <Footer />
     </div>

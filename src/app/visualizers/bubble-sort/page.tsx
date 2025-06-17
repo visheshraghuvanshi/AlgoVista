@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
 import { BubbleSortCodePanel } from './BubbleSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AlgorithmMetadata } from '@/types';
 import type { AlgorithmStep } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
@@ -105,13 +106,46 @@ const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
 const ALGORITHM_SLUG = 'bubble-sort';
 
+interface AlgorithmDetailsProps {
+  title: string;
+  description: string;
+  timeComplexities: { best: string; average: string; worst: string };
+  spaceComplexity: string;
+}
+
+function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
+  return (
+    <Card className="mt-8 shadow-lg rounded-xl">
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
+          About {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground">{description}</p>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li>Best Case: {timeComplexities.best}</li>
+            <li>Average Case: {timeComplexities.average}</li>
+            <li>Worst Case: {timeComplexities.worst}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
+          <p className="text-muted-foreground">{spaceComplexity}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function BubbleSortVisualizerPage() {
   const { toast } = useToast();
   
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
-  // const [initialData, setInitialData] = useState<number[]>([]); // Not strictly needed if generateSteps uses inputValue
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -179,7 +213,6 @@ export default function BubbleSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
     }
     if (parsedData !== null) {
-      // setInitialData(parsedData); // Not strictly needed
       let newSteps: AlgorithmStep[] = generateBubbleSortSteps(parsedData);
       
       setSteps(newSteps);
@@ -204,7 +237,7 @@ export default function BubbleSortVisualizerPage() {
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
-        setDisplayedData([]); // Clear display on invalid input
+        setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
         setIsPlaying(false); setIsFinished(false);
@@ -293,6 +326,13 @@ export default function BubbleSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
+  const algoDetails = {
+    title: "Bubble Sort",
+    description: "A simple comparison-based sorting algorithm where adjacent elements are repeatedly compared and swapped. Good for understanding basic sorting loops.",
+    timeComplexities: { best: "O(n) (optimized)", average: "O(n²)", worst: "O(n²)" },
+    spaceComplexity: "O(1)",
+  };
+
   if (!algorithm) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -358,6 +398,12 @@ export default function BubbleSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
+        <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />
       </main>
       <Footer />
     </div>
