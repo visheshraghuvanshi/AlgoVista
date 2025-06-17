@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
   const { toast } = useToast();
 
   const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  
   const initialLang = useMemo(() => {
     return defaultLanguage && languages.includes(defaultLanguage) 
            ? defaultLanguage 
@@ -27,20 +28,29 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLang);
 
-  // Effect to reset selectedLanguage to initialLang if initialLang itself changes (e.g. due to prop changes)
   useEffect(() => {
-    setSelectedLanguage(initialLang);
-  }, [initialLang]);
+    // This effect ensures that if initialLang (derived from props) changes,
+    // selectedLanguage is updated to reflect it.
+    // This is important if codeSnippets or defaultLanguage props change after initial mount.
+    if (selectedLanguage !== initialLang) {
+      setSelectedLanguage(initialLang);
+    }
+  }, [initialLang, selectedLanguage]);
 
-  // Effect to ensure selectedLanguage is valid if the list of available languages changes,
-  // or if the initialLang (which might have been set above) is somehow not in the list (e.g. empty codeSnippets).
   useEffect(() => {
-    if (languages.length > 0 && !languages.includes(selectedLanguage)) {
-        // If current selected language is no longer valid, default to the (new) initialLang
-        setSelectedLanguage(initialLang);
-    } else if (languages.length === 0 && selectedLanguage !== 'Info') {
-        // If all languages are removed, default to 'Info'
+    // This effect ensures selectedLanguage remains valid if 'languages' array changes
+    // or if the current selectedLanguage is 'Info' and actual languages become available.
+    if (!languages.includes(selectedLanguage)) {
+      if (languages.length > 0) {
+        // If current lang is invalid, pick the new initialLang (which could be default or first)
+        setSelectedLanguage(initialLang); 
+      } else if (selectedLanguage !== 'Info') {
+        // All languages removed, current isn't 'Info', so set to 'Info'
         setSelectedLanguage('Info');
+      }
+    } else if (selectedLanguage === 'Info' && languages.length > 0 && initialLang !== 'Info') {
+      // Was 'Info', but now actual languages are available and initialLang reflects one
+      setSelectedLanguage(initialLang);
     }
   }, [selectedLanguage, languages, initialLang]);
 
@@ -86,7 +96,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
             </TabsList>
             {languages.map((lang) => (
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea key={lang} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5"> {/* Added key={lang} here */}
+                <ScrollArea key={lang} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
@@ -109,7 +119,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            <ScrollArea key={selectedLanguage} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5"> {/* Added key here */}
               <pre className="font-code text-sm p-4">
                 {currentCodeLines.map((line, index) => (
                   <div
