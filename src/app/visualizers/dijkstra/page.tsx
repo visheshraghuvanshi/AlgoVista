@@ -12,12 +12,12 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/a
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DIJKSTRA_LINE_MAP, generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic';
-import { algorithmMetadata } from './metadata'; // Ensure this is importing from local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const DIJKSTRA_CODE_SNIPPETS = {
   JavaScript: [
     "function dijkstra(graph, startNode) {",                            // 1
-    "  const dist = {}; const prev = {}; const pq = new PriorityQueue();",// 2 (Conceptual: init distances, prev, PQ)
+    "  const dist = {}; const prev = {}; const pq = new PriorityQueue();",// 2 
     "  for (let node in graph) { dist[node] = Infinity; prev[node] = null; }", // 3
     "  dist[startNode] = 0;",                                           // 4
     "  pq.add(startNode, 0);",                                           // 5
@@ -56,6 +56,73 @@ const DIJKSTRA_CODE_SNIPPETS = {
     "                prev[v] = u",
     "                heapq.heappush(pq, (alt, v))",
     "    return dist, prev",
+  ],
+  Java: [
+    "import java.util.*;",
+    "class Dijkstra {",
+    "    static class Node implements Comparable<Node> {",
+    "        String id; int distance;",
+    "        Node(String id, int dist) { this.id = id; this.distance = dist; }",
+    "        @Override public int compareTo(Node other) { return Integer.compare(this.distance, other.distance); }",
+    "    }",
+    "    static class Edge { String target; int weight; Edge(String t, int w){target=t;weight=w;} }",
+    "    public Map<String, Integer> findShortestPaths(Map<String, List<Edge>> graph, String startNode) {",
+    "        Map<String, Integer> distances = new HashMap<>();",
+    "        Map<String, String> previous = new HashMap<>();",
+    "        PriorityQueue<Node> pq = new PriorityQueue<>();",
+    "        for (String node : graph.keySet()) distances.put(node, Integer.MAX_VALUE);",
+    "        distances.put(startNode, 0);",
+    "        pq.add(new Node(startNode, 0));",
+    "        while (!pq.isEmpty()) {",
+    "            Node current = pq.poll();",
+    "            if (current.distance > distances.get(current.id)) continue;",
+    "            for (Edge edge : graph.getOrDefault(current.id, Collections.emptyList())) {",
+    "                int newDist = distances.get(current.id) + edge.weight;",
+    "                if (newDist < distances.get(edge.target)) {",
+    "                    distances.put(edge.target, newDist);",
+    "                    previous.put(edge.target, current.id);",
+    "                    pq.add(new Node(edge.target, newDist));",
+    "                }",
+    "            }",
+    "        }",
+    "        return distances;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <map>",
+    "#include <queue>",
+    "#include <limits>",
+    "using namespace std;",
+    "const int INF = numeric_limits<int>::max();",
+    "map<string, int> dijkstra(const map<string, vector<pair<string, int>>>& adj, const string& startNode) {",
+    "    map<string, int> dist;",
+    "    map<string, string> prev;",
+    "    priority_queue<pair<int, string>, vector<pair<int, string>>, greater<pair<int, string>>> pq;",
+    "    for (auto const& [node, _] : adj) dist[node] = INF;",
+    "    // Also add nodes that are only targets if graph keys don't cover all nodes",
+    "    dist[startNode] = 0;",
+    "    pq.push({0, startNode});",
+    "    while (!pq.empty()) {",
+    "        int d = pq.top().first;",
+    "        string u = pq.top().second;",
+    "        pq.pop();",
+    "        if (d > dist[u]) continue;",
+    "        if (adj.count(u)) {",
+    "            for (auto const& edge : adj.at(u)) {",
+    "                string v = edge.first;",
+    "                int weight = edge.second;",
+    "                if (dist[u] != INF && dist[u] + weight < dist[v]) {",
+    "                    dist[v] = dist[u] + weight;",
+    "                    prev[v] = u;",
+    "                    pq.push({dist[v], v});",
+    "                }",
+    "            }",
+    "        }",
+    "    }",
+    "    return dist;",
+    "}",
   ],
 };
 
@@ -114,12 +181,24 @@ export default function DijkstraVisualizerPage() {
        setSteps([]); setCurrentNodes(parseWeightedGraphInput(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray', distance: Infinity})) || []); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
       return;
     }
+    // Check for negative weights
+    let hasNegativeWeight = false;
+    parsedData.adj.forEach(edges => {
+        edges.forEach(edge => {
+            if(edge.weight < 0) hasNegativeWeight = true;
+        });
+    });
+    if(hasNegativeWeight){
+        toast({ title: "Negative Weights Detected", description: "Dijkstra's algorithm may not work correctly with negative edge weights. Consider Bellman-Ford.", variant: "destructive", duration: 7000 });
+        // Optionally, prevent step generation or allow with warning
+    }
+
 
     const newSteps = generateDijkstraSteps(parsedData, startNodeValue);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(false);
+    setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
       const firstStep = newSteps[0];
@@ -132,7 +211,12 @@ export default function DijkstraVisualizerPage() {
       }
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey', distance: Infinity})));
-      setCurrentEdges([]);
+      // Construct edges from adj map if needed for display, even if no steps
+      const edgesFromAdj: GraphEdge[] = [];
+      parsedData.adj.forEach((neighbors, sourceId) => {
+        neighbors.forEach(({target, weight}) => edgesFromAdj.push({id: `${sourceId}-${target}`, source:sourceId, target, weight, color: 'grey', isDirected: true}));
+      });
+      setCurrentEdges(edgesFromAdj);
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
     }
@@ -150,10 +234,6 @@ export default function DijkstraVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -166,7 +246,7 @@ export default function DijkstraVisualizerPage() {
   const handleStartNodeChange = (value: string) => setStartNodeValue(value);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -179,8 +259,8 @@ export default function DijkstraVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
-      toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated.", variant: "default" });
+    if (isFinished || currentStepIndex >= steps.length - 1) { // Check currentStepIndex to prevent overshooting
+      toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated or already at end.", variant: "default" });
       return;
     }
     setIsPlaying(false);
@@ -192,6 +272,7 @@ export default function DijkstraVisualizerPage() {
       if (nextStepIndex === steps.length - 1) setIsFinished(true);
     }
   };
+  
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
@@ -230,7 +311,7 @@ export default function DijkstraVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -265,7 +346,7 @@ export default function DijkstraVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            graphInputPlaceholder="e.g., 0:1(4),2(1);1:2(2) (node:neighbor(weight);...)"
+            graphInputPlaceholder="e.g., 0:1(4),2(1);1:2(2) (non-negative weights)"
           />
         </div>
         <AlgorithmDetailsCard {...algoDetails} />

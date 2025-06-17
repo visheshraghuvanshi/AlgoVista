@@ -73,7 +73,7 @@ export function parseWeightedGraphInput(input: string): ParsedWeightedGraph | nu
 
       const targetId = match[1].trim();
       const weight = parseFloat(match[2]);
-      if (!targetId || isNaN(weight) || weight < 0) return null; // Invalid target or weight
+      if (!targetId || isNaN(weight) || weight < 0) return null; // Invalid target or weight (Dijkstra needs non-negative)
 
       nodeSet.add(targetId);
       currentNeighbors.push({ target: targetId, weight });
@@ -145,8 +145,6 @@ export const generateDijkstraSteps = (parsedGraph: ParsedWeightedGraph, startNod
   let graphEdges: GraphEdge[] = [];
   adj.forEach((neighbors, sourceId) => {
     neighbors.forEach(({ target: targetId, weight }) => {
-      // For Dijkstra, if graph is undirected, conceptual edges are bidirectional
-      // but we usually represent directed edges if input format allows (our parser implies directed)
       const edgeId = `${sourceId}-${targetId}`;
       graphEdges.push({ id: edgeId, source: sourceId, target: targetId, weight, color: EDGE_COLORS.default, isDirected: true });
     });
@@ -168,16 +166,14 @@ export const generateDijkstraSteps = (parsedGraph: ParsedWeightedGraph, startNod
         let color = n.isStartNode && nodeDist === 0 && !prev[n.id] && currentProcessingNodeId !== n.id ? NODE_COLORS.start : NODE_COLORS.default;
 
         if (currentProcessingNodeId === n.id) color = NODE_COLORS.visiting;
-        else if (prev[n.id] !== undefined || nodeDist === 0) { // Node has been processed or is start
-            if (Object.values(prev).includes(n.id) || nodeDist === 0) { // Part of some path or is start
-                 // Check if it's in PQ to determine 'inQueue' or 'processed'
+        else if (prev[n.id] !== undefined || nodeDist === 0) { 
+            if (Object.values(prev).includes(n.id) || nodeDist === 0) { 
                 if (currentPqState && currentPqState.find(item => item.id === n.id)) {
                     color = NODE_COLORS.inQueue;
                 } else if (n.id !== startNodeId && !currentPqState?.find(item => item.id === n.id) && distances[n.id] !== Infinity) {
-                    // If not in PQ, it's considered processed (shortest path found or unreachable and processed)
                     color = NODE_COLORS.processed;
                 } else if (n.id === startNodeId && !currentPqState?.find(item => item.id === n.id)) {
-                     color = NODE_COLORS.processed; // Start node after first extraction
+                     color = NODE_COLORS.processed; 
                 }
             }
         }
@@ -185,7 +181,7 @@ export const generateDijkstraSteps = (parsedGraph: ParsedWeightedGraph, startNod
             color = NODE_COLORS.inQueue;
         }
          if (n.id === startNodeId && distances[n.id] === 0 && !currentProcessingNodeId && (!currentPqState || currentPqState.find(item=>item.id === n.id))) {
-             color = NODE_COLORS.start; // Ensure start node is distinct before processing starts
+             color = NODE_COLORS.start; 
          }
 
 
@@ -202,13 +198,17 @@ export const generateDijkstraSteps = (parsedGraph: ParsedWeightedGraph, startNod
     
     const pqForDisplay = (currentPqState || pq).map(item => `${item.id}(${item.distance === Infinity ? '∞' : item.distance})`).join(', ');
     const distForDisplay: { [key: string]: string | number } = {};
-    Object.keys(distances).forEach(k => distForDisplay[k] = distances[k] === Infinity ? '∞' : distances[k]);
+     initialNodeData.forEach(n => distForDisplay[n.id] = distances[n.id] === Infinity ? '∞' : (distances[n.id] === undefined ? '∞' : distances[n.id]));
+    const prevForDisplay: { [key: string]: string | null } = {};
+     initialNodeData.forEach(n => prevForDisplay[n.id] = prev[n.id] === undefined ? 'null' : prev[n.id]);
+
 
     localSteps.push({
       nodes: stepNodes,
       edges: stepEdges,
       auxiliaryData: [
         { type: 'set', label: 'Distances', values: distForDisplay },
+        { type: 'set', label: 'Previous', values: prevForDisplay },
         { type: 'queue', label: 'Priority Queue (Node,Dist)', values: [pqForDisplay || '(empty)'] },
       ],
       currentLine: line,
@@ -235,12 +235,11 @@ export const generateDijkstraSteps = (parsedGraph: ParsedWeightedGraph, startNod
   while (pq.length > 0) {
     addStep(DIJKSTRA_LINE_MAP.whileQueueNotEmpty, "Priority queue is not empty.", null, null, [...pq]);
     
-    // Sort PQ by distance to simulate extraction (simple PQ)
     pq.sort((a, b) => a.distance - b.distance);
-    const u_obj = pq.shift(); // Extract min
+    const u_obj = pq.shift(); 
     if (!u_obj || u_obj.distance === Infinity) {
         addStep(DIJKSTRA_LINE_MAP.extractMin, "No reachable unprocessed nodes left or all remaining have infinite distance.", null, null, [...pq]);
-        break; // All remaining nodes are unreachable
+        break; 
     }
     const u = u_obj.id;
     
@@ -259,12 +258,12 @@ export const generateDijkstraSteps = (parsedGraph: ParsedWeightedGraph, startNod
       if (alt < distances[v_id]) {
         distances[v_id] = alt;
         prev[v_id] = u;
-        graphNodes.find(n => n.id === v_id)!.distance = alt; // Update visual distance
+        graphNodes.find(n => n.id === v_id)!.distance = alt; 
         addStep(DIJKSTRA_LINE_MAP.updateDistance, `Yes. Update distance of ${v_id} to ${alt}.`, u, edgeIdToHighlight, [...pq]);
         addStep(DIJKSTRA_LINE_MAP.updatePrevNode, `Set ${u} as previous node for ${v_id}.`, u, edgeIdToHighlight, [...pq]);
         
         const vInPq = pq.find(item => item.id === v_id);
-        if (vInPq) vInPq.distance = alt; // Update PQ
+        if (vInPq) vInPq.distance = alt; 
         addStep(DIJKSTRA_LINE_MAP.updatePriorityQueue, `Update ${v_id} in priority queue with new distance ${alt}.`, u, edgeIdToHighlight, [...pq]);
       } else {
          addStep(DIJKSTRA_LINE_MAP.ifAltShorter, `No. Alternative distance ${alt} is not shorter than ${distances[v_id]}.`, u, edgeIdToHighlight, [...pq]);
