@@ -13,7 +13,7 @@ import type { AlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { HEAP_SORT_LINE_MAP, generateHeapSortSteps } from './heap-sort-logic';
-import { algorithmMetadata } from './metadata'; // Changed to local import
+import { algorithmMetadata } from './metadata'; 
 
 const HEAP_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -227,7 +227,7 @@ export default function HeapSortVisualizerPage() {
     }
     if (parsedData !== null) {
       let newSteps: AlgorithmStep[] = generateHeapSortSteps(parsedData);
-
+      
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
@@ -242,7 +242,7 @@ export default function HeapSortVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
-      } else {
+      } else { 
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
@@ -259,7 +259,7 @@ export default function HeapSortVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]);
+  }, [generateSteps]); 
 
 
   useEffect(() => {
@@ -334,7 +334,7 @@ export default function HeapSortVisualizerPage() {
     }
     generateSteps();
   };
-
+  
   const handleSpeedChange = (speedValue: number) => {
     setAnimationSpeed(speedValue);
   };

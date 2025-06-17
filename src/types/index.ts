@@ -241,6 +241,28 @@ export interface ModularExponentiationStep extends Omit<AlgorithmStep, 'array' |
   };
 }
 
+// Specific step type for Counting Sort
+export interface CountingSortStep extends AlgorithmStep {
+  countArray?: number[];
+  outputArray?: number[];
+  currentElement?: number; // Element from input array being processed
+  currentIndex?: number;  // Index in input or output array
+  currentCountIndex?: number; // Index in count array being accessed/modified
+}
+
+// Specific step type for Bucket Sort
+export interface BucketSortBucket {
+  id: number; // Bucket index
+  elements: number[];
+  isSorted?: boolean;
+}
+export interface BucketSortStep extends AlgorithmStep {
+  buckets?: BucketSortBucket[];
+  currentElement?: number; // Element being distributed
+  currentBucketIndex?: number; // Bucket being processed (distributed to or sorted)
+  phase?: 'distributing' | 'sorting_bucket' | 'gathering';
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.

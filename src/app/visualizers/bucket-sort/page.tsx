@@ -1,95 +1,192 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-// import { BucketSortCodePanel } from './BucketSortCodePanel'; // To be created if needed
+import { BucketSortVisualizationPanel } from './BucketSortVisualizationPanel';
+import { BucketSortCodePanel } from './BucketSortCodePanel'; 
 import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
-import { algorithmMetadata } from './metadata'; // Changed to local import
+import type { BucketSortStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertTriangle, Rows } from 'lucide-react'; // Using Rows as an icon for buckets
+import { BUCKET_SORT_LINE_MAP, generateBucketSortSteps } from './bucket-sort-logic';
+import { algorithmMetadata } from './metadata'; 
+import { BUCKET_SORT_CODE_SNIPPETS } from './BucketSortCodePanel'; // Import snippets
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-
-// Placeholder for Bucket Sort specific code snippets
-const BUCKET_SORT_CODE_SNIPPETS = {
-  JavaScript: [
-    "// Bucket Sort (JavaScript - Conceptual, using Insertion Sort for buckets)",
-    "function insertionSortForBuckets(bucket) {",
-    "  for (let i = 1; i < bucket.length; ++i) {",
-    "    let key = bucket[i];",
-    "    let j = i - 1;",
-    "    while (j >= 0 && bucket[j] > key) {",
-    "      bucket[j + 1] = bucket[j];",
-    "      j = j - 1;",
-    "    }",
-    "    bucket[j + 1] = key;",
-    "  }",
-    "  return bucket;",
-    "}",
-    "",
-    "function bucketSort(arr, numBuckets = 5) {",
-    "  if (arr.length === 0) return [];",
-    "",
-    "  // 1) Create empty buckets",
-    "  let buckets = new Array(numBuckets);",
-    "  for (let i = 0; i < numBuckets; i++) {",
-    "    buckets[i] = [];",
-    "  }",
-    "",
-    "  // 2) Put array elements in different buckets",
-    "  const maxVal = Math.max(...arr);",
-    "  const minVal = Math.min(...arr);",
-    "  const range = (maxVal - minVal) / numBuckets;",
-    "",
-    "  for (let i = 0; i < arr.length; i++) {",
-    "    let bucketIndex = Math.floor((arr[i] - minVal) / range);",
-    "    // Handle edge case for maxVal",
-    "    if (bucketIndex >= numBuckets) bucketIndex = numBuckets - 1;",
-    "    buckets[bucketIndex].push(arr[i]);",
-    "  }",
-    "",
-    "  // 3) Sort individual buckets",
-    "  for (let i = 0; i < numBuckets; i++) {",
-    "    insertionSortForBuckets(buckets[i]);",
-    "  }",
-    "",
-    "  // 4) Concatenate all buckets into arr[]",
-    "  let index = 0;",
-    "  for (let i = 0; i < numBuckets; i++) {",
-    "    for (let j = 0; j < buckets[i].length; j++) {",
-    "      arr[index++] = buckets[i][j];",
-    "    }",
-    "  }",
-    "  return arr;",
-    "}",
-  ],
-};
-
+const DEFAULT_ANIMATION_SPEED = 700; 
+const MIN_SPEED = 100; 
+const MAX_SPEED = 1800;
+const DEFAULT_NUM_BUCKETS = 5;
 
 export default function BucketSortVisualizerPage() {
   const { toast } = useToast();
-  // algorithmMetadata is now directly imported
-  const [isClient, setIsClient] = useState(false);
+    
+  const [inputValue, setInputValue] = useState('29,25,3,49,9,37,21,43'); // Non-negative example
+  const [numBuckets, setNumBuckets] = useState<number>(DEFAULT_NUM_BUCKETS);
+
+  const [steps, setSteps] = useState<BucketSortStep[]>([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  const [currentStepData, setCurrentStepData] = useState<BucketSortStep | null>(null);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isAlgoImplemented = true; 
+
+  const parseInput = useCallback((value: string): number[] | null => {
+    if (value.trim() === '') return [];
+    const parsed = value.split(',')
+      .map(s => s.trim())
+      .filter(s => s !== '')
+      .map(s => parseInt(s, 10));
+
+    if (parsed.some(isNaN)) {
+      toast({ title: "Invalid Input", description: "Please enter comma-separated non-negative integers.", variant: "destructive" });
+      return null;
+    }
+    if (parsed.some(n => n < 0 || n > 999)) { // Bucket sort often assumes non-negative, and for viz small range
+       toast({ title: "Input out of range", description: "Please enter non-negative numbers up to 999 for visualization.", variant: "destructive" });
+      return null;
+    }
+    return parsed;
+  }, [toast]);
+  
+  const updateStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) {
+      setCurrentStepData(steps[stepIndex]);
+    }
+  }, [steps]);
+
+  const generateSteps = useCallback(() => {
+    const parsedData = parseInput(inputValue);
+    if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+    }
+    if (numBuckets <=0 || numBuckets > 10) {
+        toast({title: "Invalid Bucket Count", description: "Number of buckets must be between 1 and 10.", variant: "destructive"});
+        return;
+    }
+
+    if (parsedData !== null) {
+      let newSteps: BucketSortStep[] = generateBucketSortSteps(parsedData, numBuckets);
+      
+      setSteps(newSteps);
+      setCurrentStepIndex(0);
+      setIsPlaying(false);
+      setIsFinished(newSteps.length <=1);
+
+      if (newSteps.length > 0) {
+        setCurrentStepData(newSteps[0]);
+      } else { 
+        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed"});
+      }
+    } else {
+        setSteps([]);
+        setCurrentStepIndex(0);
+        setCurrentStepData(null);
+        setIsPlaying(false); setIsFinished(false);
+    }
+  }, [inputValue, numBuckets, parseInput, toast]);
 
   useEffect(() => {
-    setIsClient(true);
-    if (algorithmMetadata) {
-       toast({
-            title: "Visualization Under Construction",
-            description: `The interactive visualizer for ${algorithmMetadata.title} is not yet fully implemented. Showing details only.`,
-            variant: "default",
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for Bucket Sort not found.`, variant: "destructive" });
+    generateSteps();
+  }, [generateSteps]); // Re-generate steps when input or numBuckets changes
+
+
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length -1 ) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextStepIndex = currentStepIndex + 1;
+        setCurrentStepIndex(nextStepIndex);
+        updateStateFromStep(nextStepIndex);
+        if (nextStepIndex === steps.length - 1) {
+          setIsPlaying(false);
+          setIsFinished(true);
+        }
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length -1) {
+        setIsPlaying(false);
+        setIsFinished(true);
     }
-  }, [toast]);
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+  };
+
+  const handleNumBucketsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    if (!isNaN(val) && val > 0 && val <= 10) {
+        setNumBuckets(val);
+    } else if (e.target.value === "") {
+        setNumBuckets(DEFAULT_NUM_BUCKETS); // Or some other default/previous valid
+    }
+  };
+
+  const handlePlay = () => {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
+      toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
+      setIsPlaying(false);
+      return;
+    }
+    setIsPlaying(true);
+    setIsFinished(false); 
+  };
+
+  const handlePause = () => {
+    setIsPlaying(false);
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+  };
+
+  const handleStep = () => {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
+       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
+      return;
+    }
+    setIsPlaying(false); 
+     if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+
+    const nextStepIndex = currentStepIndex + 1;
+    if (nextStepIndex < steps.length) {
+      setCurrentStepIndex(nextStepIndex);
+      updateStateFromStep(nextStepIndex);
+      if (nextStepIndex === steps.length - 1) {
+        setIsFinished(true);
+      }
+    }
+  };
+
+  const handleReset = () => {
+    setIsPlaying(false);
+    setIsFinished(false);
+    if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+    }
+    setInputValue('29,25,3,49,9,37,21,43'); // Reset input value
+    setNumBuckets(DEFAULT_NUM_BUCKETS); // Reset num buckets
+    // generateSteps will be called by useEffect due to input/numBuckets change
+  };
+  
+  const handleSpeedChange = (speedValue: number) => {
+    setAnimationSpeed(speedValue);
+  };
 
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
@@ -98,19 +195,7 @@ export default function BucketSortVisualizerPage() {
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!isClient) {
-    return (
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-                <p className="text-muted-foreground">Loading visualizer...</p>
-            </main>
-            <Footer />
-        </div>
-    );
-  }
-
-  if (!algorithmMetadata || !algoDetails) {
+  if (!algorithmMetadata) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -118,11 +203,8 @@ export default function BucketSortVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for "bucket-sort".
+              Could not load data for Bucket Sort.
             </p>
-            <Button asChild size="lg" className="mt-8">
-                <Link href="/visualizers">Back to Visualizers</Link>
-            </Button>
         </main>
         <Footer />
       </div>
@@ -134,67 +216,112 @@ export default function BucketSortVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
+          <Rows className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4"/>
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {algorithmMetadata.description} (Input non-negative integers for best results with this visualization).
+          </p>
         </div>
 
-        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
-            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                Interactive Visualization Coming Soon!
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithmMetadata.title} is currently under construction.
-                A proper visualization requires displaying multiple buckets and their sorting process, which is beyond our current simple bar chart.
-                Please check back later! In the meantime, you can review the algorithm details below.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
+            <BucketSortVisualizationPanel step={currentStepData} />
+          </div>
+          <div className="lg:w-2/5 xl:w-1/3">
+            <BucketSortCodePanel 
+              currentLine={currentStepData?.currentLine ?? null}
+            />
+          </div>
         </div>
         
-        <div className="lg:w-2/5 xl:w-1/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code (JavaScript)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                    <pre className="font-code text-sm p-4">
-                        {BUCKET_SORT_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground">
-                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                            {index + 1}
-                            </span>
-                            {line}
-                        </div>
-                        ))}
-                    </pre>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
+        <Card className="shadow-xl rounded-xl mb-6">
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Input</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="customInput" className="text-sm font-medium">
+                  Input Array (comma-separated non-negative numbers)
+                </Label>
+                <Input
+                  id="customInput"
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  placeholder="e.g., 29,25,3,49"
+                  className="w-full text-base"
+                  disabled={isPlaying || !isAlgoImplemented}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="numBucketsInput" className="text-sm font-medium">
+                  Number of Buckets (1-10)
+                </Label>
+                <Input
+                  id="numBucketsInput"
+                  type="number"
+                  value={numBuckets}
+                  onChange={handleNumBucketsChange}
+                  min="1" max="10"
+                  className="w-full text-base"
+                  disabled={isPlaying || !isAlgoImplemented}
+                />
+              </div>
+            </div>
+             <div className="flex items-center justify-start">
+                <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    disabled={isPlaying && isAlgoImplemented}
+                    aria-label="Reset algorithm and input"
+                >
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset Data & Algorithm
+                </Button>
+            </div>
 
-        <div className="w-full">
-          <SortingControlsPanel
-            onPlay={() => {}}
-            onPause={() => {}}
-            onStep={() => {}}
-            onReset={() => {}}
-            onInputChange={() => {}}
-            inputValue={"(Under Construction)"}
-            isPlaying={false}
-            isFinished={true} // To disable controls
-            currentSpeed={500}
-            onSpeedChange={() => {}}
-            isAlgoImplemented={false} // Disables controls
-            minSpeed={100}
-            maxSpeed={2000}
-          />
-        </div>
-        <AlgorithmDetailsCard {...algoDetails} />
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                {!isPlaying ? (
+                  <Button onClick={handlePlay} disabled={commonPlayDisabled} aria-label="Play algorithm animation" className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
+                    <Play className="mr-2 h-5 w-5" /> Play
+                  </Button>
+                ) : (
+                  <Button onClick={handlePause} aria-label="Pause algorithm animation" className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg" disabled={!isAlgoImplemented}>
+                    <Pause className="mr-2 h-5 w-5" /> Pause
+                  </Button>
+                )}
+                <Button onClick={handleStep} variant="outline" disabled={commonStepDisabled} aria-label="Step forward in algorithm animation" size="lg">
+                  <SkipForward className="mr-2 h-5 w-5" /> Step
+                </Button>
+              </div>
+
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl" className="text-sm font-medium flex items-center">
+                  <Gauge className="mr-2 h-4 w-4 text-muted-foreground" /> Animation Speed (Delay)
+                </Label>
+                <div className="flex items-center gap-2">
+                  <FastForward className="h-4 w-4 text-muted-foreground transform rotate-180" />
+                  <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => handleSpeedChange(v[0])} disabled={isPlaying || !isAlgoImplemented} className="flex-grow" />
+                  <FastForward className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+            {!isAlgoImplemented && (
+              <p className="text-sm text-center text-amber-500 dark:text-amber-400">
+                Interactive visualization for this algorithm is not yet implemented. Input and controls are disabled.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
+
+// Helper for commonPlayDisabled logic, not directly used if SortingControlsPanel manages this
+const commonPlayDisabled = isFinished || inputValue.trim() === '' || !isAlgoImplemented;
+const commonStepDisabled = isPlaying || isFinished || inputValue.trim() === '' || !isAlgoImplemented;

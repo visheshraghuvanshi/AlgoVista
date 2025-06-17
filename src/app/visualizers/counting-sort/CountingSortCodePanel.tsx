@@ -9,14 +9,90 @@ import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface HeapSortCodePanelProps {
-  codeSnippets: { [language: string]: string[] };
+export const COUNTING_SORT_CODE_SNIPPETS = {
+  JavaScript: [
+    "function countingSort(arr) {",                       // 1
+    "  if (arr.length === 0) return arr;",                // 2
+    "  const maxVal = Math.max(...arr);",                 // 3
+    "  const count = new Array(maxVal + 1).fill(0);",     // 4
+    "  for (let i = 0; i < arr.length; i++) {",            // 5
+    "    count[arr[i]]++;",                               // 6
+    "  }",
+    "  for (let i = 1; i <= maxVal; i++) {",               // 7
+    "    count[i] += count[i - 1];",                      // 8
+    "  }",
+    "  const output = new Array(arr.length);",            // 9
+    "  for (let i = arr.length - 1; i >= 0; i--) {",       // 10
+    "    output[count[arr[i]] - 1] = arr[i];",            // 11
+    "    count[arr[i]]--;",                               // 12
+    "  }",
+    "  for (let i = 0; i < arr.length; i++) {",            // 13
+    "    arr[i] = output[i];",                            // 14
+    "  }",
+    "  return arr;",                                      // 15
+    "}",                                                  // 16
+  ],
+  Python: [
+    "def counting_sort(arr):",
+    "    if not arr: return arr",
+    "    max_val = max(arr)",
+    "    count = [0] * (max_val + 1)",
+    "    output = [0] * len(arr)",
+    "    for num in arr:",
+    "        count[num] += 1",
+    "    for i in range(1, max_val + 1):",
+    "        count[i] += count[i-1]",
+    "    for i in range(len(arr) - 1, -1, -1):",
+    "        output[count[arr[i]] - 1] = arr[i]",
+    "        count[arr[i]] -= 1",
+    "    for i in range(len(arr)):",
+    "        arr[i] = output[i]",
+    "    return arr",
+  ],
+  Java: [
+    "import java.util.Arrays;",
+    "class CountingSort {",
+    "    public static void sort(int[] arr) {",
+    "        if (arr.length == 0) return;",
+    "        int maxVal = Arrays.stream(arr).max().getAsInt();",
+    "        int[] count = new int[maxVal + 1];",
+    "        int[] output = new int[arr.length];",
+    "        for (int num : arr) { count[num]++; }",
+    "        for (int i = 1; i <= maxVal; i++) { count[i] += count[i-1]; }",
+    "        for (int i = arr.length - 1; i >= 0; i--) {",
+    "            output[count[arr[i]] - 1] = arr[i];",
+    "            count[arr[i]]--;",
+    "        }",
+    "        System.arraycopy(output, 0, arr, 0, arr.length);",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::max_element, std::fill",
+    "void countingSort(std::vector<int>& arr) {",
+    "    if (arr.empty()) return;",
+    "    int maxVal = *std::max_element(arr.begin(), arr.end());",
+    "    std::vector<int> count(maxVal + 1, 0);",
+    "    std::vector<int> output(arr.size());",
+    "    for (int num : arr) { count[num]++; }",
+    "    for (int i = 1; i <= maxVal; ++i) { count[i] += count[i-1]; }",
+    "    for (int i = arr.size() - 1; i >= 0; --i) {",
+    "        output[count[arr[i]] - 1] = arr[i];",
+    "        count[arr[i]]--;",
+    "    }",
+    "    arr = output;",
+    "}",
+  ],
+};
+
+interface CountingSortCodePanelProps {
   currentLine: number | null;
 }
 
-export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePanelProps) {
+export function CountingSortCodePanel({ currentLine }: CountingSortCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  const languages = useMemo(() => Object.keys(COUNTING_SORT_CODE_SNIPPETS), []);
   
   const initialLanguage = languages.length > 0 && languages.includes("JavaScript") ? "JavaScript" : (languages.length > 0 ? languages[0] : "Info");
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
@@ -34,7 +110,7 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
   };
 
   const handleCopyCode = () => {
-    const codeToCopy = codeSnippets[selectedLanguage]?.join('\n') || '';
+    const codeToCopy = COUNTING_SORT_CODE_SNIPPETS[selectedLanguage]?.join('\n') || '';
     if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => {
@@ -49,8 +125,8 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
   };
 
   const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
-  }, [selectedLanguage, codeSnippets]);
+    return selectedLanguage === 'Info' ? [] : (COUNTING_SORT_CODE_SNIPPETS[selectedLanguage] || []);
+  }, [selectedLanguage]);
 
   const tabValue = languages.includes(selectedLanguage) 
                    ? selectedLanguage 
@@ -81,7 +157,7 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
                 <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4">
-                    {(codeSnippets[lang] || []).map((line, index) => (
+                    {(COUNTING_SORT_CODE_SNIPPETS[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-line-${index}`}
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
@@ -113,4 +189,3 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
     </Card>
   );
 }
-
