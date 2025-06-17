@@ -21,28 +21,26 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
     const initialLangs = Object.keys(codeSnippets || {});
-    return initialLangs.length > 0 && initialLangs.includes("JavaScript")
-      ? "JavaScript"
-      : (initialLangs.length > 0 ? initialLangs[0] : "Info");
+    if (initialLangs.length > 0) {
+      return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
+    }
+    return "Info";
   });
 
   useEffect(() => {
-    // This effect ensures selectedLanguage is valid if the available languages change.
-    // It reads the current selectedLanguage from state (via closure).
+    // This effect synchronizes selectedLanguage if the available languages change
+    // and the current selectedLanguage is no longer valid.
     if (languages.length > 0) {
       if (!languages.includes(selectedLanguage)) {
-        // If current selectedLanguage is not valid for the new languages array,
-        // reset to a default from the current valid languages.
         setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
       }
-      // If selectedLanguage IS valid within the new 'languages' array, DO NOTHING.
     } else {
-      // No languages available (e.g., codeSnippets is empty or null)
+      // No languages available, or codeSnippets is empty/null
       if (selectedLanguage !== "Info") {
         setSelectedLanguage("Info");
       }
     }
-  }, [languages]); // CORRECTED DEPENDENCY: Only 'languages' (derived from codeSnippets)
+  }, [languages]); // Only depend on `languages` (which correctly depends on `codeSnippets`)
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -64,7 +62,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
   };
 
   const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage] 
+    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage]
            ? [] 
            : (codeSnippets[selectedLanguage] || []);
   }, [selectedLanguage, codeSnippets]);
@@ -120,7 +118,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
             </ScrollArea>
@@ -130,3 +128,4 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     </Card>
   );
 }
+

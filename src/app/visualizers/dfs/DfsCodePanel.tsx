@@ -17,27 +17,30 @@ interface DfsCodePanelProps {
 
 export function DfsCodePanel({ codeSnippets, currentLine, defaultLanguage = "JavaScript" }: DfsCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+  const languages = useMemo(() => Object.keys(codeSnippets || {}), [codeSnippets]);
 
-  const getInitialLanguage = () => {
-    if (languages.length === 0) return 'Info';
-    return languages.includes(defaultLanguage) ? defaultLanguage : languages[0];
-  };
-
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(getInitialLanguage);
-  const [userHasInteractedWithTabs, setUserHasInteractedWithTabs] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    const initialLangs = Object.keys(codeSnippets || {});
+    if (initialLangs.length > 0) {
+      return initialLangs.includes(defaultLanguage) ? defaultLanguage : initialLangs[0];
+    }
+    return "Info";
+  });
 
   useEffect(() => {
-    const initialLang = getInitialLanguage();
-    if (!userHasInteractedWithTabs && selectedLanguage !== initialLang) {
-      setSelectedLanguage(initialLang);
+    if (languages.length > 0) {
+      if (!languages.includes(selectedLanguage)) {
+        setSelectedLanguage(languages.includes(defaultLanguage) ? defaultLanguage : languages[0]);
+      }
+    } else {
+      if (selectedLanguage !== "Info") {
+        setSelectedLanguage("Info");
+      }
     }
-  }, [languages, defaultLanguage, userHasInteractedWithTabs, selectedLanguage]);
-
+  }, [languages, defaultLanguage]); // Only depend on `languages` and `defaultLanguage` prop
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
-    setUserHasInteractedWithTabs(true);
   };
 
   const handleCopyCode = () => {
@@ -56,10 +59,14 @@ export function DfsCodePanel({ codeSnippets, currentLine, defaultLanguage = "Jav
   };
   
   const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
+    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage] 
+           ? [] 
+           : (codeSnippets[selectedLanguage] || []);
   }, [selectedLanguage, codeSnippets]);
 
-  const effectiveTabValue = languages.length === 0 ? 'Info' : (languages.includes(selectedLanguage) ? selectedLanguage : getInitialLanguage());
+  const effectiveTabValue = languages.includes(selectedLanguage) 
+                   ? selectedLanguage 
+                   : (languages.length > 0 ? (languages.includes(defaultLanguage) ? defaultLanguage : languages[0]) : 'Info');
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -83,12 +90,12 @@ export function DfsCodePanel({ codeSnippets, currentLine, defaultLanguage = "Jav
               ))}
             </TabsList>
             {languages.map((lang) => (
-              <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+              <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col"> 
+                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5"> 
                   <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
-                        key={`${lang}-line-${index}`}
+                        key={`${lang}-line-${index}`} 
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
                           index + 1 === currentLine && lang === effectiveTabValue ? "bg-accent text-accent-foreground" : "text-foreground"
                         }`}
@@ -107,8 +114,8 @@ export function DfsCodePanel({ codeSnippets, currentLine, defaultLanguage = "Jav
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={`${selectedLanguage}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
             </ScrollArea>
@@ -118,3 +125,4 @@ export function DfsCodePanel({ codeSnippets, currentLine, defaultLanguage = "Jav
     </Card>
   );
 }
+

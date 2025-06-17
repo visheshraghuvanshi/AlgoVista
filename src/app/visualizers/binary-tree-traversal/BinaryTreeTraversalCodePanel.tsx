@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -6,8 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import type { TraversalType } from './binary-tree-traversal-logic'; // Assuming TRAVERSAL_TYPES is exported
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs for language selection
+import type { TraversalType } from './binary-tree-traversal-logic'; 
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; 
 
 const TRAVERSAL_CODE_SNIPPETS_ALL_LANG: Record<TraversalType, Record<string, string[]>> = {
   inorder: {
@@ -122,12 +123,36 @@ export function BinaryTreeTraversalCodePanel({
   selectedTraversalType,
 }: BinaryTreeTraversalCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(TRAVERSAL_CODE_SNIPPETS_ALL_LANG.inorder), []); // Get languages from one type
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(languages[0] || "JavaScript");
+  
+  const codeSnippetsForTraversal = TRAVERSAL_CODE_SNIPPETS_ALL_LANG[selectedTraversalType] || {};
+  const languages = useMemo(() => Object.keys(codeSnippetsForTraversal), [codeSnippetsForTraversal]);
+  
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    const initialLangs = Object.keys(codeSnippetsForTraversal);
+    if (initialLangs.length > 0) {
+      return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
+    }
+    return "Info";
+  });
+
+  useEffect(() => {
+    // When selectedTraversalType changes, update available languages and potentially reset selectedLanguage
+    const currentOpLanguages = Object.keys(TRAVERSAL_CODE_SNIPPETS_ALL_LANG[selectedTraversalType] || {});
+    if (currentOpLanguages.length > 0) {
+      if (!currentOpLanguages.includes(selectedLanguage)) {
+        setSelectedLanguage(currentOpLanguages.includes("JavaScript") ? "JavaScript" : currentOpLanguages[0]);
+      }
+    } else {
+      if (selectedLanguage !== "Info") {
+        setSelectedLanguage("Info");
+      }
+    }
+  }, [selectedTraversalType, languages]); // Depend on `languages` as well, since it's derived from `selectedTraversalType` via `codeSnippetsForTraversal`
+
 
   const codeToDisplay = useMemo(() => {
-    return TRAVERSAL_CODE_SNIPPETS_ALL_LANG[selectedTraversalType]?.[selectedLanguage] || [];
-  }, [selectedTraversalType, selectedLanguage]);
+    return codeSnippetsForTraversal[selectedLanguage] || [];
+  }, [selectedTraversalType, selectedLanguage, codeSnippetsForTraversal]);
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');
@@ -144,6 +169,11 @@ export function BinaryTreeTraversalCodePanel({
     }
   };
 
+  const tabValue = languages.includes(selectedLanguage) 
+                   ? selectedLanguage 
+                   : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
+
+
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[600px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
@@ -151,7 +181,7 @@ export function BinaryTreeTraversalCodePanel({
           <Code2 className="mr-2 h-5 w-5" /> {selectedTraversalType.charAt(0).toUpperCase() + selectedTraversalType.slice(1)} Traversal
         </CardTitle>
         <div className="flex items-center gap-2">
-            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+            <Tabs value={tabValue} onValueChange={setSelectedLanguage} className="w-auto">
                 <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
                     {languages.map(lang => (
                         <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
@@ -160,7 +190,7 @@ export function BinaryTreeTraversalCodePanel({
                     ))}
                 </TabsList>
             </Tabs>
-            <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={codeToDisplay.length === 0}>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={codeToDisplay.length === 0 || selectedLanguage === 'Info'}>
                 <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
             </Button>
         </div>
@@ -172,9 +202,9 @@ export function BinaryTreeTraversalCodePanel({
               <div
                 key={`${selectedTraversalType}-${selectedLanguage}-line-${index}`}
                 className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                  index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
+                  index + 1 === currentLine && selectedLanguage === tabValue ? "bg-accent text-accent-foreground" : "text-foreground"
                 }`}
-                aria-current={index + 1 === currentLine ? "step" : undefined}
+                aria-current={index + 1 === currentLine && selectedLanguage === tabValue ? "step" : undefined}
               >
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                   {index + 1}
@@ -190,3 +220,4 @@ export function BinaryTreeTraversalCodePanel({
     </Card>
   );
 }
+
