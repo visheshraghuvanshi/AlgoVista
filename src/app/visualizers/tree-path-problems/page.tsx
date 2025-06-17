@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -65,20 +65,15 @@ const TREE_PATH_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'tree-path-problems';
-
 export default function TreePathProblemsVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [selectedTraversalType, setSelectedTraversalType] = useState<TraversalType>(TRAVERSAL_TYPES.INORDER);
 
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
        toast({
             title: "Conceptual Overview",
             description: `Interactive Tree Path Problems (e.g., Path Sum, Diameter) visualization is currently under construction.`,
@@ -86,19 +81,15 @@ export default function TreePathProblemsVisualizerPage() {
             duration: 6000,
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for tree-path-problems not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.longDescription || algorithm.description,
-    timeComplexities: { 
-      best: "Varies by problem (e.g., O(n) for Path Sum, O(n) for Diameter as DFS visits each node once)", 
-      average: "Varies by problem, generally O(n)", 
-      worst: "Varies by problem, generally O(n)" 
-    },
-    spaceComplexity: "O(h) for recursion stack (h = height of tree), O(n) in worst case (skewed tree). Some problems might require O(n) for storing paths.",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!, // Use defined complexities
+    spaceComplexity: algorithmMetadata.spaceComplexity!,   // Use defined complexity
   } : null;
 
   if (!isClient) {
@@ -113,7 +104,7 @@ export default function TreePathProblemsVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) { // Check algoDetails which depends on algorithmMetadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -121,7 +112,7 @@ export default function TreePathProblemsVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for &quot;tree-path-problems&quot;.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -138,7 +129,7 @@ export default function TreePathProblemsVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algorithmMetadata.title}
           </h1>
         </div>
 
@@ -148,7 +139,7 @@ export default function TreePathProblemsVisualizerPage() {
                 Interactive Visualization Coming Soon!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                Interactive visualizers for specific {algorithm.title} (like Path Sum, Diameter) are currently under construction.
+                Interactive visualizers for specific {algorithmMetadata.title} (like Path Sum, Diameter) are currently under construction.
                 Please check back later! Review the concepts and example code snippets below.
             </p>
         </div>
@@ -207,4 +198,3 @@ export default function TreePathProblemsVisualizerPage() {
     </div>
   );
 }
-

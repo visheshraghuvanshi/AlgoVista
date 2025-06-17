@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from '@/types';
-import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
+import { algorithmMetadata } from './metadata'; // Import local metadata
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,18 +54,13 @@ const SUBARRAY_SUM_CODE_SNIPPETS = {
   ],
 };
 
-const ALGORITHM_SLUG = 'subarray-sum-problems';
-
 export default function SubarraySumProblemsVisualizerPage() {
   const { toast } = useToast();
-  const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
+    if (algorithmMetadata) {
        toast({
             title: "Conceptual Overview",
             description: `Subarray Sum Problems cover various techniques. Interactive visualization for specific variants coming soon.`,
@@ -73,19 +68,15 @@ export default function SubarraySumProblemsVisualizerPage() {
             duration: 5000,
         });
     } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+      toast({ title: "Error", description: `Algorithm data for ${algorithmMetadata.slug} not found.`, variant: "destructive" });
     }
   }, [toast]);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
-    title: algorithm.title,
-    description: algorithm.description, // Will use the detailed description from MOCK_ALGORITHMS
-    timeComplexities: { 
-      best: "Varies by problem & technique (e.g., O(n) for Kadane's or sliding window on positive numbers)", 
-      average: "Varies (e.g., O(n) for HashMap approach for any numbers)", 
-      worst: "Varies (e.g., O(n^2) for brute-force, O(n) for optimized methods)" 
-    },
-    spaceComplexity: "Varies (e.g., O(1) for Kadane's/basic sliding window, O(n) for prefix sum/HashMap approaches).",
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
   if (!isClient) {
@@ -100,7 +91,7 @@ export default function SubarraySumProblemsVisualizerPage() {
     );
   }
 
-  if (!algorithm || !algoDetails) {
+  if (!algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -108,7 +99,7 @@ export default function SubarraySumProblemsVisualizerPage() {
             <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
             <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
             <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
+              Could not load data for &quot;{algorithmMetadata?.slug || 'Subarray Sum Problems'}&quot;.
             </p>
             <Button asChild size="lg" className="mt-8">
                 <Link href="/visualizers">Back to Visualizers</Link>
@@ -125,7 +116,7 @@ export default function SubarraySumProblemsVisualizerPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
+            {algoDetails.title}
           </h1>
         </div>
 
