@@ -35,7 +35,7 @@ export type ArrayAlgorithmStep = {
   message?: string;
   processingSubArrayRange?: [number, number] | null;
   pivotActualIndex?: number | null;
-  auxiliaryData?: Record<string, string | number | null | object>; 
+  auxiliaryData?: Record<string, any> | null; 
 };
 
 // For graph-based algorithms
@@ -131,6 +131,16 @@ export interface LinkedListAlgorithmStep {
   mergedListNodes?: LinkedListNodeVisual[]; // For merge operations
 }
 
+// N-Queens Step Type 
+// It reuses many fields from ArrayAlgorithmStep but `array` is not primary.
+// `board` is the primary visual data.
+export interface NQueensStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
+  board: number[][]; // N x N board, 1 for Queen, 0 for empty
+  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' };
+  foundSolutions?: number[][][]; // Array of found board states
+  isSafe?: boolean; // Result of the last safety check
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
@@ -138,5 +148,4 @@ export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Graph algorithm pages will use GraphAlgorithmStep directly.
 // Tree algorithm pages will use TreeAlgorithmStep directly.
 // Linked list pages will use LinkedListAlgorithmStep directly.
-
-
+// N-Queens page will use NQueensStep directly in its state and logic.
