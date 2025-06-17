@@ -60,7 +60,7 @@ export default function VisualizersPage() {
                         Loading interactive visualizations...
                     </p>
                 </div>
-                 <div className="sticky top-16 bg-background/90 dark:bg-background/80 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow">
+                 <div className="py-4 mb-8 rounded-lg shadow-md border bg-background">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                             <div className="h-10 bg-muted rounded-md lg:col-span-2"></div>
@@ -93,7 +93,8 @@ export default function VisualizersPage() {
           </p>
         </div>
 
-        <div className="sticky top-[calc(theme(spacing.16)+1px)] bg-background/95 dark:bg-background/90 backdrop-blur-md z-40 py-4 mb-8 rounded-lg shadow-md border">
+        {/* Removed sticky positioning classes, z-index, backdrop-blur from this div */}
+        <div className="bg-background py-4 mb-8 rounded-lg shadow-md border">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
               <div className="relative lg:col-span-2">
