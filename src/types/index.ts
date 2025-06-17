@@ -1,5 +1,5 @@
 
-export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other';
+export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
 export interface AlgorithmMetadata {
@@ -26,6 +26,7 @@ export type ArrayAlgorithmStep = {
   message?: string; 
   processingSubArrayRange?: [number, number] | null; 
   pivotActualIndex?: number | null;
+  auxiliaryData?: Record<string, string | number | null>; // For Kadane's, etc.
 };
 
 // For graph-based algorithms
@@ -67,12 +68,12 @@ export interface BinaryTreeNodeVisual {
   x: number;
   y: number;
   color: string;
-  leftId?: string | null; // ID of the left child
-  rightId?: string | null; // ID of the right child
+  leftId?: string | null; 
+  rightId?: string | null; 
 }
 
 export interface BinaryTreeEdgeVisual {
-  id: string; // e.g., "parentId-childId"
+  id: string; 
   sourceId: string;
   targetId: string;
   color?: string;
@@ -87,12 +88,40 @@ export interface TreeAlgorithmStep {
   currentProcessingNodeId?: string | null;
 }
 
+// Types for Linked List Visualizations
+export interface LinkedListNodeVisual {
+  id: string; // Unique ID for the node (e.g., value or index-based)
+  value: string | number;
+  nextId?: string | null; // ID of the next node
+  prevId?: string | null; // ID of the previous node (for DoublyLinkedList)
+  color: string; // For highlighting: default, active, new, deleted
+  isHead?: boolean;
+  isTail?: boolean; // For DLL or SLL with tail pointer
+  isSlow?: boolean; // For cycle detection
+  isFast?: boolean; // For cycle detection
+  x?: number; // Position for rendering
+  y?: number; // Position for rendering
+}
+
+export type LinkedListType = 'singly' | 'doubly' | 'circular';
+
+export interface LinkedListAlgorithmStep {
+  nodes: LinkedListNodeVisual[]; // Current state of the list
+  headId?: string | null;
+  tailId?: string | null; // For DLL or SLL with tail pointer
+  currentLine: number | null;
+  message?: string;
+  auxiliaryPointers?: Record<string, string | null>; // e.g., { current: 'node-1', prevNode: null, nextNode: 'node-2' }
+  operation?: string; // e.g., 'insert-head', 'delete-value', 'reverse', 'detect-cycle-move'
+  status?: 'success' | 'failure' | 'info'; // For operation outcomes
+  isCycleDetected?: boolean;
+  mergedListNodes?: LinkedListNodeVisual[]; // For merge operations
+}
+
 
 // Union type if needed, or components can just expect one type.
 // For now, page components will manage which step type they use.
-
-// Alias for clarity in component props
-export type AlgorithmStep = ArrayAlgorithmStep; // For sorting/searching pages
+export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
 // Graph algorithm pages will use GraphAlgorithmStep directly.
 // Tree algorithm pages will use TreeAlgorithmStep directly.
-
+// Linked list pages will use LinkedListAlgorithmStep directly.
