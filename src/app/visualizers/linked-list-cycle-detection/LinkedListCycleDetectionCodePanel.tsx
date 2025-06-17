@@ -1,12 +1,13 @@
 
 "use client";
 
-import React from 'react';
+import React, {useState} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
 
 export const CYCLE_DETECTION_CODE_SNIPPETS: Record<string, string[]> = {
   JavaScript: [
@@ -114,9 +115,15 @@ export function LinkedListCycleDetectionCodePanel({ currentLine }: LinkedListCyc
           <Code2 className="mr-2 h-5 w-5" /> Code: Floyd's Algorithm
         </CardTitle>
         <div className="flex items-center gap-2">
-            <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} className="p-1 text-xs border rounded bg-transparent">
-                {languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-            </select>
+            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
+                    {languages.map(lang => (
+                        <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
+                            {lang}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
             <Button variant="ghost" size="sm" onClick={handleCopyCode}>
                 <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
             </Button>
@@ -124,10 +131,10 @@ export function LinkedListCycleDetectionCodePanel({ currentLine }: LinkedListCyc
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-          <pre className="font-code text-sm p-4">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
             {codeToDisplay.map((line, index) => (
               <div key={`cycle-${selectedLanguage}-line-${index}`}
-                className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
                 {line}
               </div>
@@ -138,3 +145,5 @@ export function LinkedListCycleDetectionCodePanel({ currentLine }: LinkedListCyc
     </Card>
   );
 }
+
+  

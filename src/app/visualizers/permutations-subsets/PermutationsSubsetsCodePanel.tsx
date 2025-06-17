@@ -13,22 +13,22 @@ import type { PermutationsSubsetsProblemType } from './permutations-subsets-logi
 export const PERMUTATIONS_SUBSETS_CODE_SNIPPETS: Record<PermutationsSubsetsProblemType, Record<string, string[]>> = {
   permutations: {
     JavaScript: [
-      "function getAllPermutations(elements) {",
-      "  const result = [];",
-      "  function backtrack(currentPermutation, remaining) {",
-      "    if (remaining.length === 0) {",
-      "      result.push([...currentPermutation]);",
-      "      return;",
+      "function getAllPermutations(elements) {",                          // 1
+      "  const result = [];",                                            // 2
+      "  function backtrack(currentPermutation, remaining) {",          // 3
+      "    if (remaining.length === 0) {",                              // 4
+      "      result.push([...currentPermutation]);",                     // 5
+      "      return;",                                                  // 6
       "    }",
-      "    for (let i = 0; i < remaining.length; i++) {",
-      "      currentPermutation.push(remaining[i]);",
-      "      const nextRemaining = remaining.filter((_, idx) => idx !== i);",
-      "      backtrack(currentPermutation, nextRemaining);",
-      "      currentPermutation.pop(); // Backtrack",
+      "    for (let i = 0; i < remaining.length; i++) {",               // 7
+      "      currentPermutation.push(remaining[i]);",                   // 8
+      "      const nextRemaining = remaining.filter((_, idx) => idx !== i);", // 9
+      "      backtrack(currentPermutation, nextRemaining);",            // 10
+      "      currentPermutation.pop(); // Backtrack",                   // 11
       "    }",
       "  }",
-      "  backtrack([], elements);",
-      "  return result;",
+      "  backtrack([], elements);",                                     // 12
+      "  return result;",                                               // 13
       "}",
     ],
     Python: [
@@ -72,39 +72,39 @@ export const PERMUTATIONS_SUBSETS_CODE_SNIPPETS: Record<PermutationsSubsetsProbl
     ],
     "C++": [
       "#include <vector>",
-      "#include <algorithm> // For std::next_permutation (alternative) or manual backtrack",
-      "void backtrack(std::vector<int>& nums, int start, std::vector<std::vector<int>>& result) {",
+      "#include <algorithm> // For std::swap",
+      "void backtrack_permute(std::vector<int>& nums, int start, std::vector<std::vector<int>>& result) {",
       "    if (start == nums.size()) {",
       "        result.push_back(nums);",
       "        return;",
       "    }",
       "    for (int i = start; i < nums.size(); ++i) {",
       "        std::swap(nums[start], nums[i]);",
-      "        backtrack(nums, start + 1, result);",
+      "        backtrack_permute(nums, start + 1, result);",
       "        std::swap(nums[start], nums[i]); // Backtrack",
       "    }",
       "}",
       "std::vector<std::vector<int>> getAllPermutations(std::vector<int>& nums) {",
       "    std::vector<std::vector<int>> result;",
-      "    backtrack(nums, 0, result);",
+      "    backtrack_permute(nums, 0, result);",
       "    return result;",
       "}",
     ],
   },
   subsets: {
     JavaScript: [
-      "function getAllSubsets(elements) {",
-      "  const result = [];",
-      "  function backtrack(startIndex, currentSubset) {",
-      "    result.push([...currentSubset]);",
-      "    for (let i = startIndex; i < elements.length; i++) {",
-      "      currentSubset.push(elements[i]);",
-      "      backtrack(i + 1, currentSubset);",
-      "      currentSubset.pop(); // Backtrack",
+      "function getAllSubsets(elements) {",                             // 1
+      "  const result = [];",                                           // 2
+      "  function backtrack(startIndex, currentSubset) {",             // 3
+      "    result.push([...currentSubset]);",                          // 4
+      "    for (let i = startIndex; i < elements.length; i++) {",      // 5
+      "      currentSubset.push(elements[i]);",                       // 6
+      "      backtrack(i + 1, currentSubset);",                       // 7
+      "      currentSubset.pop(); // Backtrack",                       // 8
       "    }",
       "  }",
-      "  backtrack(0, []);",
-      "  return result;",
+      "  backtrack(0, []);",                                           // 9
+      "  return result;",                                              // 10
       "}",
     ],
     Python: [
@@ -139,18 +139,18 @@ export const PERMUTATIONS_SUBSETS_CODE_SNIPPETS: Record<PermutationsSubsetsProbl
     ],
     "C++": [
       "#include <vector>",
-      "void backtrack(int startIndex, std::vector<int>& currentSubset, std::vector<int>& nums, std::vector<std::vector<int>>& result) {",
+      "void backtrack_subsets(int startIndex, std::vector<int>& currentSubset, const std::vector<int>& nums, std::vector<std::vector<int>>& result) {",
       "    result.push_back(currentSubset);",
       "    for (int i = startIndex; i < nums.size(); ++i) {",
       "        currentSubset.push_back(nums[i]);",
-      "        backtrack(i + 1, currentSubset, nums, result);",
+      "        backtrack_subsets(i + 1, currentSubset, nums, result);",
       "        currentSubset.pop_back(); // Backtrack",
       "    }",
       "}",
-      "std::vector<std::vector<int>> getAllSubsets(std::vector<int>& nums) {",
+      "std::vector<std::vector<int>> getAllSubsets(const std::vector<int>& nums) {",
       "    std::vector<std::vector<int>> result;",
       "    std::vector<int> currentSubset;",
-      "    backtrack(0, currentSubset, nums, result);",
+      "    backtrack_subsets(0, currentSubset, nums, result);",
       "    return result;",
       "}",
     ],
@@ -164,40 +164,48 @@ interface PermutationsSubsetsCodePanelProps {
 
 export function PermutationsSubsetsCodePanel({ currentLine, selectedProblemType }: PermutationsSubsetsCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType]), [selectedProblemType]);
+  const problemSpecificSnippets = PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType] || {};
+  const languages = useMemo(() => Object.keys(problemSpecificSnippets), [problemSpecificSnippets]);
   
-  const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : languages[0];
+  const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : (languages[0] || "Info");
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
 
   React.useEffect(() => { // Reset language if problem type changes and current language not available
-    const currentProblemLanguages = Object.keys(PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType]);
-    if (!currentProblemLanguages.includes(selectedLanguage)) {
-      setSelectedLanguage(currentProblemLanguages.includes("JavaScript") ? "JavaScript" : currentProblemLanguages[0]);
+    const currentProblemLangs = Object.keys(PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType] || {});
+    if (currentProblemLangs.length > 0 && !currentProblemLangs.includes(selectedLanguage)) {
+      setSelectedLanguage(currentProblemLangs.includes("JavaScript") ? "JavaScript" : currentProblemLangs[0]);
+    } else if (currentProblemLangs.length === 0 && selectedLanguage !== "Info") {
+        setSelectedLanguage("Info");
     }
   }, [selectedProblemType, selectedLanguage]);
 
+
+  const codeToDisplay = problemSpecificSnippets[selectedLanguage] || [];
+  const problemLabel = selectedProblemType.charAt(0).toUpperCase() + selectedProblemType.slice(1);
+
   const handleCopyCode = () => {
-    const codeToCopy = PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType][selectedLanguage]?.join('\n') || '';
-    if (codeToCopy) {
-      navigator.clipboard.writeText(codeToCopy)
-        .then(() => toast({ title: `${selectedLanguage} Code for ${selectedProblemType} Copied!` }))
+    const codeString = codeToDisplay.join('\n');
+    if (codeString && selectedLanguage !== 'Info') {
+      navigator.clipboard.writeText(codeString)
+        .then(() => toast({ title: `${selectedLanguage} Code for ${problemLabel} Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
+    } else {
+      toast({ title: "No Code to Copy", variant: "default" });
     }
   };
-
-  const currentCodeLines = PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType][selectedLanguage] || [];
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> Code: {selectedProblemType.charAt(0).toUpperCase() + selectedProblemType.slice(1)}
+            <Code2 className="mr-2 h-5 w-5" /> Code: {problemLabel}
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={currentCodeLines.length === 0}>
+        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code" disabled={codeToDisplay.length === 0 || selectedLanguage === 'Info'}>
           <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
         </Button>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
+        {languages.length > 0 ? (
         <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
           <TabsList className="mx-4 mb-1 self-start shrink-0">
             {languages.map((lang) => (
@@ -206,30 +214,30 @@ export function PermutationsSubsetsCodePanel({ currentLine, selectedProblemType 
               </TabsTrigger>
             ))}
           </TabsList>
-          {languages.map((lang) => (
-            <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                <pre className="font-code text-sm p-4">
-                  {PERMUTATIONS_SUBSETS_CODE_SNIPPETS[selectedProblemType][lang]?.map((line, index) => (
-                    <div
-                      key={`${selectedProblemType}-${lang}-line-${index}`}
-                      className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                        index + 1 === currentLine && lang === selectedLanguage ? "bg-accent text-accent-foreground" : "text-foreground"
-                      }`}
-                      aria-current={index + 1 === currentLine && lang === selectedLanguage ? "step" : undefined}
-                    >
-                      <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                        {index + 1}
-                      </span>
-                      {line}
-                    </div>
-                  ))}
-                </pre>
-              </ScrollArea>
-            </TabsContent>
-          ))}
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+                {codeToDisplay.map((line, index) => (
+                  <div key={`${selectedProblemType}-${selectedLanguage}-line-${index}`}
+                    className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                    <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                    {line}
+                  </div>
+                ))}
+              </pre>
+            </ScrollArea>
         </Tabs>
+         ) : (
+          <div className="flex-grow overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+                 <p className="text-muted-foreground p-4">No code snippets available for this problem type/language.</p>
+              </pre>
+            </ScrollArea>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
+
+  

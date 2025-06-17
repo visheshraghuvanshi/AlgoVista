@@ -71,7 +71,7 @@ export default function PriorityQueueVisualizerPage() {
         toast({title: "Invalid Input", description: "Please provide item value and a numeric priority.", variant: "destructive"}); return;
     }
 
-    const newSteps = generatePriorityQueueSteps([...pqRef.current], selectedOperation, itemValueInput, itemPriorityInput);
+    const newSteps = generatePriorityQueueSteps([...pqRef.current], selectedOperation as 'enqueue' | 'dequeue' | 'peek', itemValueInput, itemPriorityInput);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -185,3 +185,5 @@ export default function PriorityQueueVisualizerPage() {
     </div>
   );
 }
+
+  

@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { DSU_LINE_MAP } from './dsu-logic'; // Line map can be used if highlighting is granular
 
-export const DSU_CODE_SNIPPETS = {
+export const DSU_CODE_SNIPPETS: Record<string, string[]> = {
   JavaScript: [
     "class DisjointSetUnion {",
     "  constructor(n) {",
@@ -189,7 +188,7 @@ export function DSUCodePanel({ currentLine }: DSUCodePanelProps) {
           {languages.map((lang) => (
             <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
               <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                <pre className="font-code text-sm p-4">
+                <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                   {DSU_CODE_SNIPPETS[lang as keyof typeof DSU_CODE_SNIPPETS]?.map((line, index) => (
                     <div
                       key={`dsu-${lang}-line-${index}`}
@@ -215,3 +214,5 @@ export function DSUCodePanel({ currentLine }: DSUCodePanelProps) {
 }
 
     
+
+  

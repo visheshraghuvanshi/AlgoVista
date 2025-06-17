@@ -98,51 +98,59 @@ const PRIORITY_QUEUE_OPERATIONS_CODE: Record<string, Record<string, string[]>> =
       "// Using Java's built-in PriorityQueue (Min-Heap by default)",
       "// To store custom objects, they need to be Comparable or provide a Comparator.",
       "// Example with simple Integers (priorities are the values themselves)",
-      "PriorityQueue<Integer> pq = new PriorityQueue<>();",
+      "// PriorityQueue<Integer> pq = new PriorityQueue<>();",
+      "",
+      "// For custom items with priority:",
+      "class PQEntry implements Comparable<PQEntry> {",
+      "    Object item;",
+      "    int priority;",
+      "    public PQEntry(Object item, int priority) { this.item = item; this.priority = priority; }",
+      "    @Override",
+      "    public int compareTo(PQEntry other) { return this.priority - other.priority; }",
+      "}",
+      "PriorityQueue<PQEntry> pq = new PriorityQueue<>();",
     ],
     enqueue: [
       "// Enqueue (add)",
-      "pq.add(value); // Value itself is used for priority in this simple case",
-      "// For custom objects with priority:",
-      "// class PQEntry implements Comparable<PQEntry> {",
-      "//   Object item; int priority;",
-      "//   public int compareTo(PQEntry other) { return this.priority - other.priority; }",
-      "// }",
-      "// PriorityQueue<PQEntry> customPq = new PriorityQueue<>();",
-      "// customPq.add(new PQEntry(item, priority));",
+      "// pq.add(new PQEntry(itemValue, itemPriority));",
     ],
     dequeue: [
       "// Dequeue (poll - removes and returns head, min element)",
-      "if (!pq.isEmpty()) { Integer minElement = pq.poll(); }",
+      "// if (!pq.isEmpty()) { PQEntry minEntry = pq.poll(); }",
     ],
     peek: [
       "// Peek (element - retrieves but does not remove head)",
-      "if (!pq.isEmpty()) { Integer minElement = pq.peek(); }",
+      "// if (!pq.isEmpty()) { PQEntry minEntry = pq.peek(); }",
     ],
   },
   "C++": {
     structure: [
       "#include <queue> // For std::priority_queue",
       "#include <vector>",
+      "#include <functional> // For std::greater",
       "// std::priority_queue is a Max-Heap by default.",
-      "// To make it a Min-Heap:",
+      "// To make it a Min-Heap for integers:",
       "// std::priority_queue<int, std::vector<int>, std::greater<int>> pq;",
-      "// For custom objects, overload operator< or provide custom comparator.",
+      "",
+      "// For custom items with priority:",
+      "struct PQEntry {",
+      "    // Your item type here, e.g., std::string item;",
+      "    int priority;",
+      "    bool operator>(const PQEntry& other) const { return priority > other.priority; } // For Min-Heap",
+      "};",
+      "std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>> pq;",
     ],
     enqueue: [
       "// Enqueue (push)",
-      "// For Min-Heap: pq.push(value);",
-      "// For Max-Heap (default): max_pq.push(value);",
+      "// pq.push({itemValue, itemPriority});",
     ],
     dequeue: [
-      "// Dequeue (pop - removes top, which is max for default PQ)",
-      "// if (!pq.empty()) { pq.pop(); } // Does not return element",
-      "// To get and remove:",
-      "// if (!pq.empty()) { int topElement = pq.top(); pq.pop(); }",
+      "// Dequeue (pop - removes top, which is min for std::greater)",
+      "// if (!pq.empty()) { PQEntry minEntry = pq.top(); pq.pop(); }",
     ],
     peek: [
       "// Peek (top - returns const ref to top element)",
-      "// if (!pq.empty()) { int topElement = pq.top(); }",
+      "// if (!pq.empty()) { PQEntry minEntry = pq.top(); }",
     ],
   },
 };
@@ -165,12 +173,28 @@ export function PriorityQueueCodePanel({ currentLine, selectedOperation }: Prior
 
   const handleCopyCode = () => {
     const opCodeString = codeToDisplay.join('\n');
-    const fullCode = (effectiveOp !== 'structure' ? (structureCode.join('\n') + '\n\n  // Operation:\n  ' + opCodeString.split('\n').map(line => `  ${line}`).join('\n') + '\n}') : structureCode.join('\n') );
+    let fullCode = "";
+    if (effectiveOp !== 'structure') {
+        const baseStructure = structureCode.join('\n');
+        // Smart indentation based on language
+        const indent = (selectedLanguage === "Python" || selectedLanguage === "Java" || selectedLanguage === "C++") ? "    " : "  ";
+        const operationIndented = opCodeString.split('\n').map(line => `${indent}${line}`).join('\n');
+        
+        if (selectedLanguage === "JavaScript" || selectedLanguage === "Java" || selectedLanguage === "C++") {
+             fullCode = `${baseStructure}\n${operationIndented}\n}`; // Close class
+        } else if (selectedLanguage === "Python") {
+             fullCode = `${baseStructure}\n${operationIndented}`; 
+        }
+    } else {
+        fullCode = structureCode.join('\n');
+    }
     
-    if (fullCode) {
+    if (fullCode.trim()) {
       navigator.clipboard.writeText(fullCode)
         .then(() => toast({ title: `${selectedLanguage} Priority Queue Code Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
+    } else {
+      toast({ title: "Nothing to Copy", description: "No code available for selection.", variant:"default"});
     }
   };
   
@@ -196,7 +220,7 @@ export function PriorityQueueCodePanel({ currentLine, selectedOperation }: Prior
             ))}
           </TabsList>
           <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-            <pre className="font-code text-sm p-4 whitespace-pre-wrap">
+            <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
               {effectiveOp !== 'structure' && structureCode.length > 0 && (
                 <>
                   {structureCode.map((line, index) => (
@@ -214,9 +238,9 @@ export function PriorityQueueCodePanel({ currentLine, selectedOperation }: Prior
                   className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}
                 >
                   <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                    {index + 1}
+                    {index + 1 + (effectiveOp !== 'structure' && structureCode.length > 0 ? structureCode.length +1 : 0) } 
                   </span>
-                   {effectiveOp !== 'structure' && !line.startsWith("}") && !line.startsWith("public") && !line.startsWith("private") && !line.startsWith("#include") && !line.startsWith("template") && !line.startsWith("class") && !line.startsWith("import") ? `    ${line}` : line}
+                   {line}
                 </div>
               ))}
             </pre>
@@ -226,3 +250,5 @@ export function PriorityQueueCodePanel({ currentLine, selectedOperation }: Prior
     </Card>
   );
 }
+
+  
