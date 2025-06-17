@@ -142,21 +142,50 @@ export default function LinearSearchVisualizerPage() {
     const parsedArray = parseInput(inputValue);
     const parsedTarget = parseTarget(targetValue);
 
+    if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+    }
+
     if (parsedArray !== null && parsedTarget !== null) {
       const newSteps = generateLinearSearchSteps(parsedArray, parsedTarget);
       setSteps(newSteps);
       setCurrentStepIndex(0);
-      if (newSteps.length > 0) updateStateFromStep(0);
-      else setDisplayedData(parsedArray);
       setIsPlaying(false);
       setIsFinished(false);
+
+      if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
+      } else {
+        setDisplayedData(parsedArray || []);
+        setActiveIndices([]);
+        setSwappingIndices([]);
+        setSortedIndices([]);
+        setCurrentLine(null);
+        setProcessingSubArrayRange(null);
+        setPivotActualIndex(null);
+      }
     } else {
       setSteps([]);
+      setCurrentStepIndex(0);
       setDisplayedData(parsedArray || []);
-      setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
+      setActiveIndices([]);
+      setSwappingIndices([]);
+      setSortedIndices([]);
+      setCurrentLine(null);
+      setProcessingSubArrayRange(null);
+      setPivotActualIndex(null);
+      setIsPlaying(false);
+      setIsFinished(false);
     }
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-  }, [inputValue, targetValue, parseInput, parseTarget, updateStateFromStep]);
+  }, [inputValue, targetValue, parseInput, parseTarget]);
 
   useEffect(() => {
     generateSteps();
@@ -214,6 +243,10 @@ export default function LinearSearchVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    // When resetting, we want to ensure input value is processed again from scratch
+    // and steps are regenerated based on the current inputValue and targetValue.
+    // The existing generateSteps already does this if inputValue or targetValue are stable.
+    // So, calling generateSteps directly is correct.
     generateSteps();
   };
 
