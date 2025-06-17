@@ -53,7 +53,7 @@ export function BinaryTreeTraversalCodePanel({
         </Button>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-        <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+        <ScrollArea key={selectedTraversalType} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
           <pre className="font-code text-sm p-4">
             {currentCodeLines.length > 0 ? currentCodeLines.map((line, index) => (
               <div
