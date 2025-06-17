@@ -27,41 +27,32 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     if (languages.length > 0) {
       return languages[0];
     }
-    return 'Info'; // Fallback if no languages or snippets
+    return 'Info';
   }, [defaultLanguage, languages]);
 
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(getEffectiveInitialLanguage());
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(getEffectiveInitialLanguage);
   const [userHasInteractedWithTabs, setUserHasInteractedWithTabs] = useState(false);
 
-
   useEffect(() => {
-    // This effect ensures selectedLanguage is valid if codeSnippets/defaultLanguage props change.
-    // It should not run just because selectedLanguage itself was set.
-    const newEffectiveInitialLang = getEffectiveInitialLanguage();
+    let newTargetLanguage: string;
 
-    if (languages.length === 0) {
-      if (selectedLanguage !== 'Info') {
-        setSelectedLanguage('Info');
+    if (userHasInteractedWithTabs) {
+      if (languages.includes(selectedLanguage)) {
+        newTargetLanguage = selectedLanguage; // User's choice is valid
+      } else {
+        // User's choice became invalid (e.g. languages changed)
+        newTargetLanguage = getEffectiveInitialLanguage();
+        setUserHasInteractedWithTabs(false); // Reset interaction
       }
-    } else { // Languages are available
-      // If current selectedLanguage is no longer valid (e.g., was 'Info' and now we have langs, or was a lang that got removed)
-      // then reset to the new effective initial language.
-      // Or, if the user hasn't interacted and the defaultLanguage prop suggests a different initial language.
-      if (!languages.includes(selectedLanguage) || (selectedLanguage === 'Info' && newEffectiveInitialLang !== 'Info')) {
-        setSelectedLanguage(newEffectiveInitialLang);
-        setUserHasInteractedWithTabs(false); // Reset interaction if language context fundamentally changed
-      } else if (
-        !userHasInteractedWithTabs &&
-        defaultLanguage &&
-        languages.includes(defaultLanguage) &&
-        selectedLanguage !== defaultLanguage
-      ) {
-         // If user hasn't picked a tab yet, and the defaultLanguage from props is valid and different, sync to it.
-         // This handles cases where defaultLanguage prop might change, though less common for this app.
-        setSelectedLanguage(defaultLanguage);
-      }
+    } else {
+      newTargetLanguage = getEffectiveInitialLanguage();
     }
-  }, [languages, defaultLanguage, getEffectiveInitialLanguage]); // Key change: selectedLanguage removed from deps
+
+    if (selectedLanguage !== newTargetLanguage) {
+      setSelectedLanguage(newTargetLanguage);
+    }
+  }, [languages, defaultLanguage, selectedLanguage, userHasInteractedWithTabs, getEffectiveInitialLanguage]);
+
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -88,6 +79,10 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
   }, [selectedLanguage, codeSnippets]);
 
+  // Ensure 'value' for Tabs is always one of the available 'languages' or a sensible default if empty.
+  const tabValue = languages.includes(selectedLanguage) 
+                   ? selectedLanguage 
+                   : (languages.length > 0 ? languages[0] : 'Info');
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -102,7 +97,7 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         {languages.length > 1 ? (
-          <Tabs value={selectedLanguage} onValueChange={handleSelectedLanguageChange} className="flex flex-col flex-grow overflow-hidden">
+          <Tabs value={tabValue} onValueChange={handleSelectedLanguageChange} className="flex flex-col flex-grow overflow-hidden">
             <TabsList className="mx-4 mb-1 self-start shrink-0">
               {languages.map((lang) => (
                 <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
@@ -116,11 +111,11 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
                   <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
-                        key={`${lang}-${index}`}
+                        key={`${lang}-line-${index}`}
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                          index + 1 === currentLine && lang === selectedLanguage ? "bg-accent text-accent-foreground" : "text-foreground"
+                          index + 1 === currentLine && lang === tabValue ? "bg-accent text-accent-foreground" : "text-foreground"
                         }`}
-                        aria-current={index + 1 === currentLine && lang === selectedLanguage ? "step" : undefined}
+                        aria-current={index + 1 === currentLine && lang === tabValue ? "step" : undefined}
                       >
                         <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                           {index + 1}
@@ -135,11 +130,12 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea key={selectedLanguage + "-scrollarea-single"} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            {/* Ensure selectedLanguage is used for key if it's the only one, or 'Info' */}
+            <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4">
                 {currentCodeLines.map((line, index) => (
                   <div
-                    key={`single-${index}`}
+                    key={`${tabValue}-line-${index}`}
                     className={`px-2 py-0.5 rounded transition-colors duration-150 ${
                       index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
                     }`}
@@ -151,12 +147,15 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
                     {line}
                   </div>
                 ))}
-                {currentCodeLines.length === 0 && selectedLanguage === 'Info' && (
+                {currentCodeLines.length === 0 && tabValue === 'Info' && (
                     <p className="text-muted-foreground p-4">No code available, or visualizer not fully implemented.</p>
                 )}
-                 {currentCodeLines.length === 0 && selectedLanguage !== 'Info' && (
-                    <p className="text-muted-foreground p-4">Loading code for {selectedLanguage}...</p>
+                 {currentCodeLines.length === 0 && tabValue !== 'Info' && languages.length > 0 && (
+                    <p className="text-muted-foreground p-4">Loading code for {tabValue}...</p>
                 )}
+                 {currentCodeLines.length === 0 && languages.length === 0 && tabValue === 'Info' && ( // Adjusted this condition
+                     <p className="text-muted-foreground p-4">No languages available for display.</p>
+                 )}
               </pre>
             </ScrollArea>
           </div>
@@ -165,4 +164,3 @@ export function CodePanel({ codeSnippets, currentLine, defaultLanguage }: CodePa
     </Card>
   );
 }
-    
