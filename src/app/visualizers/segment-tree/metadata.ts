@@ -15,3 +15,4 @@ export const algorithmMetadata: AlgorithmMetadata = {
   },
   spaceComplexity: "O(N) for the tree structure (typically 2N or 4N elements in array representation).",
 };
+

@@ -38,7 +38,7 @@ import { algorithmMetadata as mergeSortedLinkedListsMeta } from './merge-sorted-
 // Trees
 import { algorithmMetadata as binaryTreeTraversalMeta } from './binary-tree-traversal/metadata';
 import { algorithmMetadata as binarySearchTreeMeta } from './binary-search-tree/metadata';
-import { algorithmMetadata as avlTreeMeta } from './avl-tree/metadata';
+import { algorithmMetadata as avlTreeMeta } from './avl-tree/metadata'; 
 import { algorithmMetadata as redBlackTreeMeta } from './red-black-tree/metadata';
 import { algorithmMetadata as heapOperationsMeta } from './heap-operations/metadata';
 import { algorithmMetadata as segmentTreeMeta } from './segment-tree/metadata';
@@ -187,4 +187,5 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
     // Then by title within category
     return a.title.localeCompare(b.title);
 });
+
 
