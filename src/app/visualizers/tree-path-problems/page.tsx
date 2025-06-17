@@ -22,29 +22,44 @@ import { Label } from '@/components/ui/label';
 const TREE_PATH_CODE_SNIPPETS = {
   JavaScript: [
     "// Example: Path Sum (Root to Leaf)",
+    "// Given a binary tree and a sum, determine if the tree has a root-to-leaf path",
+    "// such that adding up all the values along the path equals the given sum.",
     "function hasPathSum(root, targetSum) {",
-    "  if (!root) return false;",
-    "  if (!root.left && !root.right && root.value === targetSum) {",
-    "    // Leaf node and sum matches",
-    "    return true;",
+    "  if (!root) return false; // Base case: empty tree or path ended",
+    "",
+    "  // If it's a leaf node, check if its value equals the remaining sum",
+    "  if (!root.left && !root.right) {",
+    "    return targetSum === root.value;",
     "  }",
-    "  return hasPathSum(root.left, targetSum - root.value) ||",
-    "         hasPathSum(root.right, targetSum - root.value);",
+    "",
+    "  // Recursively check left and right subtrees with updated target sum",
+    "  const remainingSum = targetSum - root.value;",
+    "  return hasPathSum(root.left, remainingSum) ||",
+    "         hasPathSum(root.right, remainingSum);",
     "}",
     "",
-    "// Example: Tree Diameter (Conceptual)",
+    "// Example: Tree Diameter (Conceptual - find longest path between any two nodes)",
     "// The diameter of a tree is the number of nodes on the longest path",
-    "// between any two leaf nodes. It can pass through the root or not.",
+    "// between any two leaf nodes. This path may or may not pass through the root.",
     "function diameterOfBinaryTree(root) {",
     "  let diameter = 0;",
-    "  function depth(node) {",
-    "    if (!node) return 0;",
-    "    let leftDepth = depth(node.left);",
-    "    let rightDepth = depth(node.right);",
-    "    diameter = Math.max(diameter, leftDepth + rightDepth);",
-    "    return Math.max(leftDepth, rightDepth) + 1;",
+    "",
+    "  function depthFirstSearch(node) {",
+    "    if (!node) return 0; // Height of an empty tree is 0",
+    "",
+    "    const leftPath = depthFirstSearch(node.left);",
+    "    const rightPath = depthFirstSearch(node.right);",
+    "",
+    "    // Diameter at current node is leftPath + rightPath",
+    "    // Update global diameter if current path is longer",
+    "    diameter = Math.max(diameter, leftPath + rightPath);",
+    "",
+    "    // Return the height of the current node's subtree",
+    "    // (max path from this node down to a leaf)",
+    "    return Math.max(leftPath, rightPath) + 1;",
     "  }",
-    "  depth(root);",
+    "",
+    "  depthFirstSearch(root);",
     "  return diameter;",
     "}",
   ],
@@ -77,13 +92,13 @@ export default function TreePathProblemsVisualizerPage() {
 
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
+    description: algorithm.longDescription || algorithm.description,
     timeComplexities: { 
-      best: "Varies by problem (e.g., O(n) for Path Sum, O(n) for Diameter)", 
-      average: "Varies", 
-      worst: "Varies" 
+      best: "Varies by problem (e.g., O(n) for Path Sum, O(n) for Diameter as DFS visits each node once)", 
+      average: "Varies by problem, generally O(n)", 
+      worst: "Varies by problem, generally O(n)" 
     },
-    spaceComplexity: "O(h) for recursion stack (h = height of tree), O(n) in worst case (skewed tree).",
+    spaceComplexity: "O(h) for recursion stack (h = height of tree), O(n) in worst case (skewed tree). Some problems might require O(n) for storing paths.",
   } : null;
 
   if (!isClient) {
@@ -192,3 +207,4 @@ export default function TreePathProblemsVisualizerPage() {
     </div>
   );
 }
+

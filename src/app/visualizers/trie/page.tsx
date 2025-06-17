@@ -20,7 +20,7 @@ const TRIE_CODE_SNIPPETS = {
   JavaScript: [
     "class TrieNode {",
     "  constructor() {",
-    "    this.children = {}; // or new Map()",
+    "    this.children = {}; // or new Map() for more flexible charsets",
     "    this.isEndOfWord = false;",
     "  }",
     "}",
@@ -44,20 +44,22 @@ const TRIE_CODE_SNIPPETS = {
     "  search(word) {",
     "    let current = this.root;",
     "    for (const char of word) {",
-    "      if (!current.children[char]) return false;",
+    "      if (!current.children[char]) return false; // Word not found",
     "      current = current.children[char];",
     "    }",
-    "    return current.isEndOfWord;",
+    "    return current.isEndOfWord; // True if 'word' exists, false if only a prefix",
     "  }",
     "",
     "  startsWith(prefix) {",
     "    let current = this.root;",
     "    for (const char of prefix) {",
-    "      if (!current.children[char]) return false;",
+    "      if (!current.children[char]) return false; // Prefix not found",
     "      current = current.children[char];",
     "    }",
-    "    return true;",
+    "    return true; // Prefix exists",
     "  }",
+    "",
+    "  delete(word) { /* Recursive deletion, more complex to maintain integrity */ }",
     "}",
   ],
 };
@@ -87,13 +89,13 @@ export default function TrieVisualizerPage() {
 
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
+    description: algorithm.longDescription || algorithm.description,
     timeComplexities: { 
       best: "Insert/Search/Delete: O(L)", // L = length of word
       average: "Insert/Search/Delete: O(L)", 
       worst: "Insert/Search/Delete: O(L)" 
     },
-    spaceComplexity: "O(N*L_avg*A) where N is num words, L_avg is avg length, A is alphabet size.",
+    spaceComplexity: "O(N*L_avg*A) where N is num words, L_avg is avg length, A is alphabet size (worst case). Efficient if many words share prefixes.",
   } : null;
 
   if (!isClient) {
@@ -183,3 +185,4 @@ export default function TrieVisualizerPage() {
     </div>
   );
 }
+

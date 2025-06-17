@@ -25,24 +25,39 @@ const LCA_CODE_SNIPPETS = {
     "",
     "// LCA in a Binary Tree (Recursive)",
     "function lowestCommonAncestor(root, p, q) {",
-    "  if (!root || root === p || root === q) return root;",
+    "  // Base cases:",
+    "  if (!root || root === p || root === q) {",
+    "    return root;",
+    "  }",
     "",
+    "  // Look for keys in left and right subtrees",
     "  const leftLCA = lowestCommonAncestor(root.left, p, q);",
     "  const rightLCA = lowestCommonAncestor(root.right, p, q);",
     "",
-    "  if (leftLCA && rightLCA) return root; // p and q are in different subtrees",
-    "  return leftLCA ? leftLCA : rightLCA; // p or q found, or LCA found in one subtree",
+    "  // If both leftLCA and rightLCA return a node, then root is the LCA",
+    "  if (leftLCA && rightLCA) {",
+    "    return root;",
+    "  }",
+    "",
+    "  // Otherwise check if left subtree or right subtree contains LCA",
+    "  return leftLCA ? leftLCA : rightLCA;",
     "}",
     "",
-    "// LCA in a Binary Search Tree (BST)",
+    "// LCA in a Binary Search Tree (BST) - Iterative for efficiency",
     "function lowestCommonAncestorBST(root, p, q) {",
-    "  if (p.value < root.value && q.value < root.value) {",
-    "    return lowestCommonAncestorBST(root.left, p, q);",
-    "  } else if (p.value > root.value && q.value > root.value) {",
-    "    return lowestCommonAncestorBST(root.right, p, q);",
-    "  } else {",
-    "    return root; // Found split point or one of the nodes",
+    "  while (root) {",
+    "    if (p.value < root.value && q.value < root.value) {",
+    "      // Both p and q are in the left subtree",
+    "      root = root.left;",
+    "    } else if (p.value > root.value && q.value > root.value) {",
+    "      // Both p and q are in the right subtree",
+    "      root = root.right;",
+    "    } else {",
+    "      // Found the split point (or one node is an ancestor of other), this is the LCA",
+    "      return root;",
+    "    }",
     "  }",
+    "  return null; // Should not happen if p and q are in the BST",
     "}",
   ],
 };
@@ -74,13 +89,13 @@ export default function LCAVisualizerPage() {
 
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
+    description: algorithm.longDescription || algorithm.description,
     timeComplexities: { 
-      best: "Binary Tree: O(n), BST: O(h) (h=height). With preprocessing (e.g., Euler tour + RMQ): O(1) per query.", 
+      best: "Binary Tree: O(n) (if nodes are leaves), BST: O(h) (h=height). With preprocessing (e.g., Euler tour + RMQ): O(1) per query.", 
       average: "Binary Tree: O(n), BST: O(log n) for balanced.", 
       worst: "Binary Tree: O(n), BST: O(n) for skewed." 
     },
-    spaceComplexity: "Binary Tree: O(h) for recursion stack. BST: O(h). Preprocessing methods may take O(n) or O(n log n) space.",
+    spaceComplexity: "Binary Tree: O(h) for recursion stack. BST (recursive): O(h), BST (iterative): O(1). Preprocessing methods may take O(n) or O(n log n) space.",
   } : null;
 
   if (!isClient) {
@@ -195,3 +210,4 @@ export default function LCAVisualizerPage() {
     </div>
   );
 }
+

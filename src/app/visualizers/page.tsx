@@ -159,120 +159,135 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
   },
 
   // SECTION IV: Linked Lists
-  { 
-    slug: 'singly-linked-list', 
-    title: 'Singly Linked List', 
-    category: 'Linked List', 
-    difficulty: 'Easy', 
-    description: 'A linear data structure where elements are stored in nodes, and each node points to the next node in the sequence. Covers basic operations like insertion (head, tail, specific position), deletion, search, and traversal. Emphasizes understanding node navigation and pointer manipulation in one direction. Accessing elements by index is O(n), while insertion/deletion at the head is O(1). Insertion/deletion at the tail is O(n) without a tail pointer, or O(1) with one.'
+  {
+    slug: 'singly-linked-list',
+    title: 'Singly Linked List Ops',
+    category: 'Linked List',
+    difficulty: 'Easy',
+    description: 'Explore fundamental operations like insertion, deletion, search, and traversal in a singly linked list. Understand how nodes connect in one direction.',
+    longDescription: 'A Singly Linked List is a linear data structure where elements (nodes) are not stored at contiguous memory locations. Each node consists of two parts: data and a pointer (or link) to the next node in the sequence. The last node points to null, indicating the end of the list. Common operations include: insertion (at head, tail, or specific position), deletion (of head, tail, or a specific value/position), search (finding a node with a given value), and traversal (visiting all nodes). Time complexity for access/search is O(n). Insertion/deletion at the head is O(1), while at the tail it is O(n) unless a tail pointer is maintained (then O(1)).'
   },
-  { 
-    slug: 'doubly-linked-list', 
-    title: 'Doubly Linked List', 
-    category: 'Linked List', 
-    difficulty: 'Medium', 
-    description: 'A linked list where each node contains a data part and two pointers: one to the next node and one to the previous node. This allows traversal in both directions. Covers insertion, deletion, search, and traversal, highlighting the advantages (e.g., O(1) deletion if node is known) and complexities of managing two pointers. Access/search is O(n). Insertion/deletion at head/tail is O(1).'
+  {
+    slug: 'doubly-linked-list',
+    title: 'Doubly Linked List Ops',
+    category: 'Linked List',
+    difficulty: 'Medium',
+    description: 'Discover operations on doubly linked lists, where each node points to both next and previous nodes, enabling bidirectional traversal and more efficient deletions.',
+    longDescription: 'A Doubly Linked List enhances the singly linked list by adding a pointer in each node to the previous node in the sequence, in addition to the next node pointer. This allows for bidirectional traversal (forward and backward). Operations like insertion and deletion can be more efficient if the node to be modified (or its neighbor) is known, as direct access to the previous node simplifies pointer updates. Search complexity remains O(n). Insertion/deletion at head or tail (if tail pointer is maintained) is O(1). Deletion of a known node (given a pointer to it) is O(1).'
   },
-  { 
-    slug: 'circular-linked-list', 
-    title: 'Circular Linked List', 
-    category: 'Linked List', 
-    difficulty: 'Medium', 
-    description: 'A linked list where the last node points back to the first node (or a head node in some implementations), forming a circle. Can be singly or doubly circular. Useful in applications requiring round-robin scheduling or continuous looping. Traversal requires careful handling of termination conditions to avoid infinite loops. Operations like insertion and deletion are similar to linear lists but need to maintain the circular link.'
+  {
+    slug: 'circular-linked-list',
+    title: 'Circular Linked List Ops',
+    category: 'Linked List',
+    difficulty: 'Medium',
+    description: 'Learn about circular linked lists where the last node points back to the first, forming a loop. Useful for round-robin scenarios and continuous cycles.',
+    longDescription: 'In a Circular Linked List, the `next` pointer of the last node points back to the first node (head) instead of null, forming a continuous loop. This structure can be singly or doubly linked. It is useful in applications that require cyclical processing or where the list should seamlessly wrap around, such as task schedulers or buffers. Traversal requires careful handling of termination conditions to avoid infinite loops. Operations like insertion and deletion need to correctly maintain the circular linkage, especially when modifying the head or tail.'
   },
-  { 
-    slug: 'linked-list-reversal', 
-    title: 'Linked List Reversal', 
-    category: 'Linked List', 
-    difficulty: 'Medium', 
-    description: 'The process of reversing the order of nodes in a linked list. Explores iterative (using three pointers: prev, current, next) and recursive approaches for reversing a singly linked list. A fundamental manipulation technique testing pointer understanding.'
+  {
+    slug: 'linked-list-reversal',
+    title: 'Linked List Reversal',
+    category: 'Linked List',
+    difficulty: 'Medium',
+    description: 'Visualize how to reverse the order of nodes in a linked list, a common interview problem. Both iterative (three-pointer) and recursive approaches are fundamental.',
+    longDescription: 'Reversing a linked list means reordering its nodes so that the direction of links is inverted; the original tail becomes the new head, and the original head becomes the new tail. This can be achieved iteratively using three pointers (previous, current, next) to update `next` pointers in a single pass (O(n) time, O(1) space). Alternatively, a recursive approach can be used: reverse the rest of the list (from the second node onwards), then make the original second node point to the original first node, and set the original first node\'s `next` to null. The recursive solution also takes O(n) time but uses O(n) stack space due to recursion depth.'
   },
-  { 
-    slug: 'linked-list-cycle-detection', 
-    title: 'Linked List Cycle Detection', 
-    category: 'Linked List', 
-    difficulty: 'Medium', 
-    description: 'Algorithms to determine if a linked list contains a cycle (i.e., a node points back to a previously visited node). Focuses on Floyd\'s Tortoise and Hare algorithm (two-pointer technique) for efficient cycle detection in O(n) time and O(1) space.'
+  {
+    slug: 'linked-list-cycle-detection',
+    title: 'Linked List Cycle Detection',
+    category: 'Linked List',
+    difficulty: 'Medium',
+    description: "Detect if a linked list contains a cycle (i.e., a node points back to a previously visited node). Floyd's Tortoise and Hare algorithm is a classic solution.",
+    longDescription: 'A cycle in a linked list occurs if, by following the `next` pointers, a node is encountered more than once. Floyd\'s Tortoise and Hare algorithm is an efficient method to detect such cycles. It uses two pointers: a "slow" pointer that moves one step at a time, and a "fast" pointer that moves two steps at a time. If the list contains a cycle, the fast pointer will eventually enter the cycle and lap the slow pointer (they will meet at some node within the cycle). If the fast pointer reaches the end of the list (null), no cycle exists. This algorithm runs in O(n) time complexity and O(1) space complexity.'
   },
-  { 
-    slug: 'merge-sorted-linked-lists', 
-    title: 'Merge Two Sorted Linked Lists', 
-    category: 'Linked List', 
-    difficulty: 'Medium', 
-    description: 'Combining two sorted linked lists into a single, new sorted linked list. Explores iterative and recursive approaches to merge the lists while maintaining sorted order by comparing elements node by node. A common interview problem demonstrating pointer manipulation and recursion/iteration.'
+  {
+    slug: 'merge-sorted-linked-lists',
+    title: 'Merge Sorted Linked Lists',
+    category: 'Linked List',
+    difficulty: 'Medium',
+    description: 'Combine two already sorted linked lists into a single, new sorted linked list efficiently. This is a common sub-problem in algorithms like Merge Sort for lists.',
+    longDescription: 'Merging two sorted linked lists involves creating a new list that contains all elements from both input lists, in sorted order. This can be done iteratively by maintaining pointers to the current nodes of both input lists. At each step, the node with the smaller value is appended to the merged list, and its respective pointer is advanced. This continues until one list is exhausted, after which the remaining portion of the other list is appended to the merged list. A recursive approach is also possible: compare the heads of both lists, the smaller one becomes the head of the merged list, and its `next` pointer is set to the result of merging its remainder with the other list. Both methods have a time complexity of O(n+m) (where n and m are lengths of the lists) and space complexity of O(1) for iterative (if reusing nodes) or O(n+m) for recursive (stack space) / new node creation.'
   },
-
-
+  
   // SECTION V: Trees & Binary Trees
   { 
     slug: 'binary-tree-traversal', 
     title: 'Binary Tree Traversal', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'Fundamental methods to visit all nodes in a binary tree. Inorder (Left-Root-Right) typically used for BSTs to get sorted order. Preorder (Root-Left-Right) useful for copying trees or prefix expressions. Postorder (Left-Right-Root) used for deleting trees or postfix expressions. Visualizing these recursive traversals is key to understanding tree manipulation.' 
+    description: 'Fundamental methods (Inorder, Preorder, Postorder) to visit all nodes in a binary tree. Essential for many tree-based algorithms.',
+    longDescription: 'Binary tree traversal refers to the process of visiting each node in a tree data structure exactly once. Common traversal methods include: Inorder (visit left subtree, root, then right subtree), Preorder (visit root, left subtree, then right subtree), and Postorder (visit left subtree, right subtree, then root). These traversals are typically implemented recursively and form the basis for many tree algorithms. For example, inorder traversal of a Binary Search Tree (BST) yields nodes in sorted order. Preorder can be used to create a copy of the tree or to get prefix expressions from expression trees. Postorder is useful for deleting nodes from a tree (children before parent) or getting postfix expressions. Time complexity for all is O(n) as each node is visited once. Space complexity is O(h) due to the recursion stack, where h is the height of the tree (O(log n) for balanced, O(n) for skewed).'
   },
   { 
     slug: 'binary-search-tree', 
     title: 'Binary Search Tree (BST)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'A node-based binary tree data structure which has the property: the left subtree of a node contains only nodes with keys lesser than the node’s key; the right subtree of a node contains only nodes with keys greater than the node’s key. Both the left and right subtrees must also be binary search trees. Operations include search, insert, delete, find min/max, successor/predecessor. Average time complexity for these operations is O(log n) if balanced, but O(n) in worst case (skewed tree).'
+    description: 'A sorted binary tree where each node\'s value is greater than all values in its left subtree and less than all values in its right subtree. Facilitates efficient search, insert, and delete.',
+    longDescription: 'A Binary Search Tree (BST) is a node-based binary tree data structure which has the property: the left subtree of a node contains only nodes with keys lesser than the node’s key; the right subtree of a node contains only nodes with keys greater than the node’s key. Both the left and right subtrees must also be binary search trees. Operations include search, insert, delete, find min/max, successor/predecessor. Average time complexity for these operations is O(log n) if balanced, but O(n) in worst case (skewed tree). Inorder traversal of a BST yields elements in sorted order.'
   },
   { 
     slug: 'avl-tree', 
     title: 'AVL Tree', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'The first self-balancing Binary Search Tree. It maintains a balance factor (height difference between left and right subtrees) of -1, 0, or 1 for every node. After insertions or deletions, if the balance factor is violated, tree rotations (LL, RR, LR, RL) are performed to restore balance, ensuring O(log n) time complexity for all operations.'
+    description: 'The first self-balancing Binary Search Tree. It maintains a balance factor for every node and performs rotations (LL, RR, LR, RL) to ensure O(log n) time complexity for operations.',
+    longDescription: 'An AVL Tree is a self-balancing Binary Search Tree (BST) named after its inventors Adelson-Velsky and Landis. It maintains a balance factor for each node, which is the difference between the height of its left subtree and its right subtree. This factor must be -1, 0, or 1. If an insertion or deletion causes this property to be violated at any node, the tree performs rebalancing operations called rotations (single or double, such as LL, RR, LR, RL) to restore the balance. This strict balancing ensures that the height of the tree remains O(log n), guaranteeing O(log n) worst-case time complexity for search, insertion, and deletion operations, unlike a standard BST which can degrade to O(n).'
   },
   { 
     slug: 'red-black-tree', 
     title: 'Red-Black Tree', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'A self-balancing Binary Search Tree where each node has an extra bit for storing color (red or black). By enforcing properties regarding node coloring and path lengths, it maintains a balanced structure, guaranteeing O(log n) time for search, insert, and delete operations. Complex but widely used (e.g., in C++ STL map/set).'
+    description: 'A self-balancing BST using node coloring (red/black) and specific rules to maintain balance, guaranteeing O(log n) performance. Found in many standard libraries.',
+    longDescription: 'A Red-Black Tree is another type of self-balancing Binary Search Tree. Each node stores an extra bit representing its "color" (red or black). Specific rules govern these colors to ensure the tree remains approximately balanced during insertions and deletions. These rules include: 1. Every node is either red or black. 2. The root is black. 3. All leaves (NIL nodes) are black. 4. If a node is red, then both its children are black. 5. Every simple path from a given node to any of its descendant leaves contains the same number of black nodes. These properties ensure that the longest path from root to leaf is no more than twice as long as the shortest path, keeping the tree height O(log n) and guaranteeing O(log n) performance for search, insert, and delete. Rebalancing involves rotations and recoloring.'
   },
   { 
     slug: 'heap-operations', 
     title: 'Heap (Min/Max)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'A specialized tree-based data structure that satisfies the heap property: in a Max-Heap, for any given node C, if P is a parent node of C, then the key of P is greater than or equal to the key of C. In a Min-Heap, the key of P is less than or equal to the key of C. Primarily used for implementing Priority Queues. Operations include insert (O(log n)), delete-min/max (O(log n)), and heapify (O(n) to build from array, O(log n) for single node adjustment).'
+    description: 'A specialized tree that satisfies the heap property (parent nodes are ordered relative to children). Used for Priority Queues. Visualize insert, extract-min/max, heapify.',
+    longDescription: 'A Heap is a complete binary tree that satisfies the heap property. In a Max-Heap, the value of each node is greater than or equal to the values of its children. In a Min-Heap, the value of each node is less than or equal to the values of its children. This structure makes heaps ideal for implementing Priority Queues. Key operations: `insert` (add an element and "heapify-up" or "bubble-up" to maintain heap property), `extractMax/Min` (remove the root, replace with last element, and "heapify-down" or "bubble-down"), `peek` (view root), `buildHeap` (create a heap from an unordered array in O(n) time). Heaps are often implemented using arrays for efficiency.'
   },
   { 
     slug: 'segment-tree', 
     title: 'Segment Tree (Conceptual)', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'A tree data structure for storing information about intervals or segments. Each node in the segment tree represents an interval. It allows querying which of the stored segments contain a given point, or what is the sum/min/max over a given range. Efficient for range queries (O(log n)) and updates (O(log n)). Often used in competitive programming.'
+    description: 'A tree for storing information about intervals or segments. Allows efficient range queries (sum, min, max) and point updates in O(log n) time.',
+    longDescription: 'A Segment Tree is a versatile tree data structure used for storing information about intervals or segments and performing efficient range queries and updates. Each node in the segment tree typically represents an interval [L, R]. Leaf nodes represent individual elements of an array, and internal nodes represent the union (or aggregate like sum, min, max) of their children\'s intervals. Common operations include: `build` (construct the tree from an array, O(n)), `query` (find sum/min/max over a range [L, R], O(log n)), and `update` (change the value of an element and update affected tree nodes, O(log n)). They are particularly useful for problems requiring frequent range queries on dynamic data.'
   },
   { 
     slug: 'trie', 
     title: 'Trie (Prefix Tree)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'A tree-like data structure (k-ary tree) used for efficient retrieval of keys in a dataset of strings. Each node represents a character, and paths from the root to a node represent prefixes. Nodes can mark the end of a word. Useful for auto-completion, spell checking, and IP routing. Search, insert, and delete operations typically take O(L) time, where L is the length of the string.'
+    description: 'A tree for efficient string retrieval (e.g., auto-completion). Each node represents a character; paths from root form prefixes. O(L) for search/insert (L=word length).',
+    longDescription: 'A Trie, also known as a prefix tree or digital tree, is a tree-like data structure that stores a dynamic set of strings. Each node represents a character, and the path from the root to a node represents a prefix. A special marker (e.g., `isEndOfWord` flag) in a node can indicate the end of a complete word. Tries are highly efficient for operations like word insertion, search, and prefix-based search (e.g., "find all words starting with \'pre\'"). The time complexity for these operations is O(L), where L is the length of the string, independent of the number of strings stored. Space complexity can be high if the alphabet size is large and strings don\'t share many common prefixes.'
   },
   { 
     slug: 'huffman-coding', 
     title: 'Huffman Coding', 
     category: 'Trees', 
     difficulty: 'Hard', 
-    description: 'A greedy algorithm for lossless data compression. It assigns variable-length codes to input characters, lengths of the assigned codes are based on the frequencies of corresponding characters. The most frequent character gets the smallest code and the least frequent character gets the largest code. It constructs a Huffman Tree (a binary tree where all leaves are input characters) to generate these codes.'
+    description: 'Greedy algorithm for lossless data compression. Uses a Huffman Tree (binary tree based on character frequencies) to assign variable-length codes.',
+    longDescription: 'Huffman Coding is a lossless data compression algorithm. It works by assigning variable-length binary codes to input characters based on their frequencies of occurrence. More frequent characters get shorter codes, and less frequent characters get longer codes. The process involves: 1. Calculating character frequencies. 2. Creating a leaf node for each character and its frequency, adding them to a min-priority queue. 3. Repeatedly extracting the two nodes with the smallest frequencies, creating a new internal node with their combined frequency, making them its children, and inserting the new node back into the priority queue. 4. The final node is the root of the Huffman Tree. 5. Traversing this tree (e.g., 0 for left, 1 for right) generates the prefix codes for each character.'
   },
   { 
     slug: 'lowest-common-ancestor', 
     title: 'Lowest Common Ancestor (LCA)', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'The Lowest Common Ancestor (LCA) of two nodes n1 and n2 in a tree is the lowest (i.e., deepest) node that has both n1 and n2 as descendants. Efficient algorithms exist for finding LCA in O(log N) or O(1) with preprocessing. Important in problems involving paths and relationships in trees.'
+    description: 'The deepest node in a tree that has two given nodes as descendants. Efficient O(log N) or O(1) (with preprocessing) solutions exist.',
+    longDescription: 'The Lowest Common Ancestor (LCA) of two nodes, `p` and `q`, in a tree is the deepest node that is an ancestor of both `p` and `q`. For a Binary Search Tree (BST), LCA can be found efficiently by traversing from the root: if both `p` and `q` are smaller than the current node, go left; if both are larger, go right; otherwise, the current node is the LCA. For a general binary tree, one common recursive approach is to find `p` or `q` in the left and right subtrees. If one is in the left and the other in the right, the current root is the LCA. If both are in one subtree, the LCA is in that subtree. If only one is found, that node is the LCA (assuming both nodes exist in the tree). Time complexity varies from O(h) to O(n) for simple traversal methods, but can be O(log n) or O(1) with preprocessing techniques like Euler tour + Range Minimum Query (RMQ).'
   },
   { 
     slug: 'tree-path-problems', 
     title: 'Tree Path Problems', 
     category: 'Trees', 
     difficulty: 'Medium', 
-    description: 'A collection of problems involving finding paths in trees. Examples include: finding a path between two nodes, finding the diameter of a tree (longest path), finding all paths that sum to a specific value, or checking if a path exists. Often solved using DFS or BFS traversal techniques.'
+    description: 'A class of problems involving finding paths in trees, such as path sum, diameter, or path between two nodes. Often solved using DFS or BFS.',
+    longDescription: 'Tree Path Problems encompass a variety of challenges related to paths within a tree structure. Common examples include: 1. **Path Sum**: Find if a root-to-leaf path sums to a target value. 2. **All Paths for a Sum**: Find all root-to-leaf paths that sum to a target. 3. **Diameter of a Binary Tree**: Find the length of the longest path between any two nodes (this path may or may not pass through the root). 4. **Path Between Two Nodes**: Find the sequence of nodes forming the path between two given nodes. These problems are typically solved using Depth-First Search (DFS) due to its natural ability to explore paths. BFS might be used if the shortest path in terms of edges is required. Complexities vary based on the specific problem and tree structure.'
   },
 
   // SECTION VI: Graph Algorithms
@@ -668,5 +683,9 @@ export default function VisualizersPage() {
   );
 }
     
+
+    
+
+
 
     

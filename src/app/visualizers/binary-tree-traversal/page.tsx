@@ -204,9 +204,9 @@ export default function BinaryTreeTraversalPage() {
   
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
-    description: algorithm.description,
+    description: algorithm.longDescription || algorithm.description,
     timeComplexities: { best: "O(n)", average: "O(n)", worst: "O(n)" }, // n is number of nodes
-    spaceComplexity: "O(h) for recursive stack, O(n) in worst case (skewed tree). Iterative can be O(w) where w is max width.",
+    spaceComplexity: "O(h) for recursive stack (h=height), O(n) in worst case (skewed tree). Iterative can be O(w) where w is max width for BFS-like or O(h) for stack-based DFS-like.",
   } : null;
 
 
