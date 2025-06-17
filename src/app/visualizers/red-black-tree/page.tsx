@@ -1,281 +1,287 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
+import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
 import { MOCK_ALGORITHMS } from '@/app/visualizers/page';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import {
+  generateRBTreeSteps,
+  type RBTNodeInternal,
+  type RBTreeGraph,
+  NIL_ID,
+  createInitialRBTreeGraph,
+  getFinalRBTreeGraph,
+} from './red-black-tree-logic';
+import type { RBTOperationType } from './RedBlackTreeCodePanel'; // Corrected import if type is in CodePanel
+
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Cog, PlusCircle, Search } from 'lucide-react';
+import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { BinaryTreeControlsPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeControlsPanel'; // Re-using for basic layout
-import { TRAVERSAL_TYPES, type TraversalType } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
 
-
-const RBT_CODE_SNIPPETS = {
-  JavaScript: [
-    "// Red-Black Tree Node and Class Structure (Conceptual)",
-    "const RED = true;",
-    "const BLACK = false;",
-    "",
-    "class RBTNode {",
-    "  constructor(value, color = RED, parent = null, left = null, right = null) {",
-    "    this.value = value;",
-    "    this.color = color; // New nodes are typically RED",
-    "    this.parent = parent;",
-    "    this.left = left;   // Leaf nodes (NIL) will be BLACK",
-    "    this.right = right;  // Leaf nodes (NIL) will be BLACK",
-    "  }",
-    "}",
-    "",
-    "class RedBlackTree {",
-    "  constructor() {",
-    "    // NIL node is a sentinel, black, and used for all leaves.",
-    "    this.NIL = new RBTNode(null, BLACK); ",
-    "    this.NIL.parent = this.NIL;",
-    "    this.NIL.left = this.NIL;",
-    "    this.NIL.right = this.NIL;",
-    "    this.root = this.NIL;",
-    "  }",
-    "",
-    "  rotateLeft(x) {",
-    "    //   x (original root of subtree)      y (new root)",
-    "    //  / \\                               / \\",
-    "    // T1  y            becomes          x   T3",
-    "    //    / \\                           / \\",
-    "    //   T2 T3                         T1 T2",
-    "    let y = x.right;                   // Set y",
-    "    x.right = y.left;                  // Turn y's left subtree into x's right subtree",
-    "    if (y.left !== this.NIL) { y.left.parent = x; }",
-    "    y.parent = x.parent;               // Link y's parent to x's parent",
-    "    if (x.parent === this.NIL) { this.root = y; }",
-    "    else if (x === x.parent.left) { x.parent.left = y; }",
-    "    else { x.parent.right = y; }",
-    "    y.left = x;                        // Put x on y's left",
-    "    x.parent = y;",
-    "    // Note: Heights/subtree sizes would also be updated in augmented RBTs",
-    "  }",
-    "",
-    "  rotateRight(y) {",
-    "    //     y (original root of subtree)   x (new root)",
-    "    //    / \\                             / \\",
-    "    //   x  T3           becomes       T1  y",
-    "    //  / \\                               / \\",
-    "    // T1 T2                             T2 T3",
-    "    let x = y.left;                    // Set x",
-    "    y.left = x.right;                  // Turn x's right subtree into y's left subtree",
-    "    if (x.right !== this.NIL) { x.right.parent = y; }",
-    "    x.parent = y.parent;               // Link x's parent to y's parent",
-    "    if (y.parent === this.NIL) { this.root = x; }",
-    "    else if (y === y.parent.right) { y.parent.right = x; }",
-    "    else { y.parent.left = x; }",
-    "    x.right = y;                       // Put y on x's right",
-    "    y.parent = x;",
-    "  }",
-    "",
-    "  insert(value) {",
-    "    let node = new RBTNode(value, RED, this.NIL, this.NIL, this.NIL);",
-    "    // Standard BST insert:",
-    "    let y = this.NIL; // Parent of x",
-    "    let x = this.root; // Current node",
-    "    while (x !== this.NIL) {",
-    "      y = x;",
-    "      if (node.value < x.value) x = x.left;",
-    "      else x = x.right;",
-    "    }",
-    "    node.parent = y;",
-    "    if (y === this.NIL) this.root = node; // Tree was empty",
-    "    else if (node.value < y.value) y.left = node;",
-    "    else y.right = node;",
-    "    // After BST insert, call insertFixup to restore R-B properties.",
-    "    this.insertFixup(node);",
-    "  }",
-    "",
-    "  insertFixup(z) {",
-    "    // This function restores Red-Black properties after insertion.",
-    "    // While z's parent is RED (property violation as new node z is RED):",
-    "    //   Case 1: Uncle is RED -> Recolor parent, uncle, grandparent. Move z to grandparent.",
-    "    //   Case 2: Uncle is BLACK & z is an inner child (triangle) -> Rotate parent. Turns into Case 3.",
-    "    //   Case 3: Uncle is BLACK & z is an outer child (line) -> Recolor parent, grandparent. Rotate grandparent.",
-    "    // (Simplified logic description - actual code is more detailed with side checks)",
-    "    while (z.parent.color === RED && z !== this.root && z.parent !== this.root) {",
-    "      if (z.parent === z.parent.parent.left) { /* Parent is left child */",
-    "        let y = z.parent.parent.right; // Uncle",
-    "        if (y.color === RED) { /* Case 1: Uncle RED */",
-    "          z.parent.color = BLACK; y.color = BLACK;",
-    "          z.parent.parent.color = RED; z = z.parent.parent;",
-    "        } else { /* Uncle BLACK */",
-    "          if (z === z.parent.right) { /* Case 2: Triangle */",
-    "            z = z.parent; this.rotateLeft(z);",
-    "          }",
-    "          /* Case 3: Line */",
-    "          z.parent.color = BLACK; z.parent.parent.color = RED;",
-    "          this.rotateRight(z.parent.parent);",
-    "        }",
-    "      } else { /* Symmetric: Parent is right child */",
-    "        let y = z.parent.parent.left; // Uncle",
-    "        if (y.color === RED) { /* Case 1 */",
-    "          z.parent.color = BLACK; y.color = BLACK;",
-    "          z.parent.parent.color = RED; z = z.parent.parent;",
-    "        } else { /* Uncle BLACK */",
-    "          if (z === z.parent.left) { /* Case 2 */",
-    "            z = z.parent; this.rotateRight(z);",
-    "          }",
-    "          /* Case 3 */",
-    "          z.parent.color = BLACK; z.parent.parent.color = RED;",
-    "          this.rotateLeft(z.parent.parent);",
-    "        }",
-    "      }",
-    "    }",
-    "    this.root.color = BLACK; // Root must always be black.",
-    "  }",
-    "",
-    "  // delete(value) { /* ... Very complex logic involving BST delete + deleteFixup ... */ }",
-    "  // deleteFixup(x) { /* ... Equally complex fixup logic for deletion ... */ }",
-    "}",
-  ],
-};
-
+const DEFAULT_ANIMATION_SPEED = 1200; // RBT ops can be complex
+const MIN_SPEED = 200;
+const MAX_SPEED = 3000;
 const ALGORITHM_SLUG = 'red-black-tree';
 
-export default function RedBlackTreeVisualizerPage() {
+export default function RedBlackTreePage() {
   const { toast } = useToast();
   const [algorithm, setAlgorithm] = useState<AlgorithmMetadata | null>(null);
-  const [isClient, setIsClient] = useState(false);
-  const [selectedTraversalType, setSelectedTraversalType] = useState<TraversalType>(TRAVERSAL_TYPES.INORDER);
+
+  const [initialArrayInput, setInitialArrayInput] = useState('10,20,30,5,15');
+  const [operationValue, setOperationValue] = useState('25'); 
+  const [selectedOperation, setSelectedOperation] = useState<RBTOperationType>('insert');
+  
+  const [steps, setSteps] = useState<TreeAlgorithmStep[]>([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  const [currentNodes, setCurrentNodes] = useState<BinaryTreeNodeVisual[]>([]);
+  const [currentEdges, setCurrentEdges] = useState<TreeAlgorithmStep['edges']>([]);
+  const [currentPath, setCurrentPath] = useState<(string | number)[]>([]); 
+  const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentProcessingNodeId, setCurrentProcessingNodeId] = useState<string|null>(null);
+  const [currentMessage, setCurrentMessage] = useState<string>("Initialize tree or select an operation.");
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const rbtRef = useRef<RBTreeGraph>(createInitialRBTreeGraph());
 
   useEffect(() => {
-    setIsClient(true);
     const foundAlgorithm = MOCK_ALGORITHMS.find(algo => algo.slug === ALGORITHM_SLUG);
-    if (foundAlgorithm) {
-      setAlgorithm(foundAlgorithm);
-       toast({
-            title: "Conceptual Overview",
-            description: `Interactive Red-Black Tree operations visualization is highly complex due to rotations, color changes, and numerous fixup cases. It is currently under construction.`,
-            variant: "default",
-            duration: 7000,
-        });
-    } else {
-      toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
-    }
-  }, [toast]);
+    if (foundAlgorithm) setAlgorithm(foundAlgorithm);
+    else toast({ title: "Error", description: `Algorithm data for ${ALGORITHM_SLUG} not found.`, variant: "destructive" });
+    
+    // Initial build when component mounts
+    handleOperation('build', initialArrayInput);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
+  const updateStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) {
+      const currentS = steps[stepIndex];
+      setCurrentNodes(currentS.nodes);
+      setCurrentEdges(currentS.edges);
+      setCurrentPath(currentS.traversalPath || []); 
+      setCurrentLine(currentS.currentLine);
+      setCurrentProcessingNodeId(currentS.currentProcessingNodeId ?? null);
+      setCurrentMessage(currentS.message || "Step executed.");
+    }
+  }, [steps]);
+  
+  const handleOperation = useCallback((
+      opType: 'build' | 'insert' | 'search', 
+      primaryValue?: string, // For build: initial array string; for insert/search: single value string
+    ) => {
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    
+    let valuesForBuild: string | undefined = undefined;
+    let valueForOp: number | undefined = undefined;
+
+    if (opType === 'build') {
+        valuesForBuild = primaryValue || initialArrayInput;
+        rbtRef.current = createInitialRBTreeGraph(); // Reset tree for build
+    } else if (opType === 'insert' || opType === 'search') {
+        valueForOp = parseInt(primaryValue || operationValue, 10);
+        if (isNaN(valueForOp)) {
+            toast({ title: "Invalid Value", description: "Please enter a numeric value for the operation.", variant: "destructive" });
+            return;
+        }
+    }
+    
+    const newSteps = generateRBTreeSteps(
+      opType,
+      valuesForBuild,
+      valueForOp,
+      rbtRef.current 
+    );
+    
+    setSteps(newSteps);
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+
+    if (newSteps.length > 0) {
+        updateStateFromStep(0);
+        // Update rbtRef with the final state of the tree from the logic
+        // (generateRBTreeSteps should ideally return the final RBTreeGraph state or the logic modifies the passed ref)
+        // For now, we assume generateRBTreeSteps directly modifies rbtRef.current if it's passed and mutated inside.
+        // A safer way is for generateRBTreeSteps to return the new graph state.
+        // Let's assume logic.ts returns steps and the final graph state could be inferred or explicitly returned by logic.ts
+        // For simplicity, if build, we reset. If insert/search, logic modifies the ref.
+        // This part might need refinement based on how generateRBTreeSteps manages state.
+        // After steps are generated, the RBT structure used to generate them is in rbtRef.current
+        // For this example, we trust generateRBTreeSteps to have updated rbtRef.current *if* it was intended to.
+        // However, to ensure consistency, we should get the final state from the last step or a dedicated function.
+        
+        // Simulate getting final graph state from the last step (or a helper from logic.ts)
+        // This assumes the last step's node/edge data can reconstruct the RBT graph state.
+        // A better way: const {steps: newSteps, finalGraph} = generateRBTreeSteps(...); rbtRef.current = finalGraph;
+        // For now, if opType is build or insert, we update the ref with the new state
+        // search does not modify the tree.
+
+        // If logic modifies rbtRef.current directly (by passing and mutating it), this line might not be needed
+        // or should be a deep copy from the last step if it's the source of truth for visuals.
+        // rbtRef.current = getFinalRBTreeGraph(rbtRef.current); // Ensure the ref is updated if logic returns new state
+        
+        const lastStepMsg = newSteps[newSteps.length - 1]?.message;
+        if (lastStepMsg) {
+            const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
+            toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 3000 });
+        }
+
+    } else {
+      setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
+      setCurrentMessage("No steps generated. Check inputs or operation.");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialArrayInput, operationValue, toast, updateStateFromStep]); // Removed selectedOperation to avoid re-triggering from its own change
+
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextStepIndex = currentStepIndex + 1;
+        setCurrentStepIndex(nextStepIndex);
+        updateStateFromStep(nextStepIndex);
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false);
+      setIsFinished(true);
+    }
+    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+
+  const handlePlay = () => {
+    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+      toast({ title: "Cannot Play", description: isFinished ? "Operation finished." : "No steps. Execute an operation first.", variant: "default" });
+      setIsPlaying(false); return;
+    }
+    setIsPlaying(true); setIsFinished(false);
+  };
+  const handlePause = () => setIsPlaying(false);
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    setIsPlaying(false);
+    const nextStepIndex = currentStepIndex + 1;
+    setCurrentStepIndex(nextStepIndex);
+    updateStateFromStep(nextStepIndex);
+    if (nextStepIndex === steps.length - 1) setIsFinished(true);
+  };
+  const handleResetControls = () => { 
+    setIsPlaying(false); setIsFinished(true);
+    rbtRef.current = createInitialRBTreeGraph();
+    setInitialArrayInput('10,20,30,5,15');
+    setOperationValue('25');
+    setSelectedOperation('insert');
+    setCurrentMessage("RBT Reset. Build a new tree or select an operation.");
+    // Trigger initial build with default values
+    handleOperation('build', '10,20,30,5,15');
+  };
+  
   const algoDetails: AlgorithmDetailsProps | null = algorithm ? {
     title: algorithm.title,
     description: algorithm.longDescription || algorithm.description,
     timeComplexities: { 
-      best: "O(log n) for search, insert, delete", 
-      average: "O(log n) for search, insert, delete", 
-      worst: "O(log n) for search, insert, delete (guaranteed)" 
+      best: "O(log n) for Search, Insert, Delete", 
+      average: "O(log n) for Search, Insert, Delete", 
+      worst: "O(log n) for Search, Insert, Delete (guaranteed)" 
     },
-    spaceComplexity: "O(n) for storage.",
+    spaceComplexity: "O(n) for storage. O(log n) for recursion stack if recursive implementations are used.",
   } : null;
 
-  if (!isClient) {
-    return (
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-                <p className="text-muted-foreground">Loading visualizer...</p>
-            </main>
-            <Footer />
-        </div>
-    );
+  if (!algorithm || !algoDetails) {
+    return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
-  if (!algorithm || !algoDetails) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
-            <p className="text-muted-foreground text-lg">
-              Could not load data for &quot;{ALGORITHM_SLUG}&quot;.
-            </p>
-            <Button asChild size="lg" className="mt-8">
-                <Link href="/visualizers">Back to Visualizers</Link>
-            </Button>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const isOperationWithValue = selectedOperation === 'insert' || selectedOperation === 'search';
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithm.title}
-          </h1>
+          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithm.title}</h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
         </div>
-
-        <div className="text-center my-10 p-6 border rounded-lg shadow-lg bg-card">
-            <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-6" />
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                Interactive Visualization Coming Soon!
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-                The interactive visualizer for {algorithm.title}, demonstrating node coloring, rotations, and fixup operations for insert and delete, is a highly complex feature and currently under construction.
-                This structure requires specialized UI components to clearly show color changes and animated rotations.
-                Please check back later! Review the concepts and code snippets below for a better understanding.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="lg:w-3/5 xl:w-2/3">
+            <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
+          </div>
+          <div className="lg:w-2/5 xl:w-1/3">
+            <RedBlackTreeCodePanel currentLine={currentLine} selectedOperation={selectedOperation} />
+          </div>
         </div>
         
-        <div className="lg:w-3/5 xl:w-2/3 mx-auto mb-6">
-             <Card className="shadow-lg rounded-lg h-auto flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-                    <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-                        <Code2 className="mr-2 h-5 w-5" /> Conceptual Code Snippets (JavaScript)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-                    <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5 max-h-[600px]">
-                    <pre className="font-code text-sm p-4">
-                        {RBT_CODE_SNIPPETS.JavaScript.map((line, index) => (
-                        <div key={`js-line-${index}`} className="px-2 py-0.5 rounded text-foreground whitespace-pre-wrap">
-                            <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                            {index + 1}
-                            </span>
-                            {line}
-                        </div>
-                        ))}
-                    </pre>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="w-full">
-          <BinaryTreeControlsPanel
-            onPlay={() => {}}
-            onPause={() => {}}
-            onStep={() => {}}
-            onReset={() => {}}
-            onTreeInputChange={() => {}}
-            treeInputValue={"(e.g., 10,5,15,3,7,12,18)"} 
-            onTraversalTypeChange={setSelectedTraversalType}
-            selectedTraversalType={selectedTraversalType} 
-            isPlaying={false}
-            isFinished={true} 
-            currentSpeed={500}
-            onSpeedChange={() => {}}
-            isAlgoImplemented={false} 
-            minSpeed={100}
-            maxSpeed={2000}
-          />
-        </div>
+        <Card className="shadow-xl rounded-xl mb-6">
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & RBT Operations</CardTitle></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="initialArrayInput" className="text-sm font-medium flex items-center"><Cog className="mr-2 h-4 w-4"/>Initial Array (for Build Tree)</Label>
+                <Input id="initialArrayInput" value={initialArrayInput} onChange={(e) => setInitialArrayInput(e.target.value)} placeholder="e.g., 10,20,5" disabled={isPlaying} />
+                <Button onClick={() => handleOperation('build', initialArrayInput)} disabled={isPlaying} className="w-full md:w-auto">Build Tree</Button>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="operationSelect">Operation</Label>
+                <Select value={selectedOperation} onValueChange={(v) => setSelectedOperation(v as RBTOperationType)} disabled={isPlaying}>
+                  <SelectTrigger id="operationSelect"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="insert">Insert Value</SelectItem>
+                    <SelectItem value="search">Search Value</SelectItem>
+                    <SelectItem value="delete" disabled>Delete Value (Conceptual)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="operationValue">Value for Operation</Label>
+                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue} />
+                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search', operationValue)} disabled={isPlaying || !isOperationWithValue || selectedOperation === 'delete'} className="w-full md:w-auto mt-1">
+                    {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4"/> : <Search className="mr-2 h-4 w-4"/>}
+                    Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-start pt-4 border-t">
+              <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Tree & Controls</Button>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex gap-2">
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 } size="lg"><Play className="mr-2"/>Play</Button> 
+                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+              </div>
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl">Animation Speed</Label>
+                <div className="flex items-center gap-2">
+                    <FastForward className="h-4 w-4 text-muted-foreground transform rotate-180" />
+                    <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
+                    <FastForward className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+             <p className="text-sm text-muted-foreground">
+              Interactive visualization for **Insert** and **Search** operations are available. Delete is conceptual.
+              NIL nodes are logical and not visually rendered for clarity.
+            </p>
+          </CardContent>
+        </Card>
         <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-
