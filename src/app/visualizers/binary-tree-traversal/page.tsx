@@ -110,17 +110,8 @@ export default function BinaryTreeTraversalPage() {
       
       if (initialNodes.length === 0 && treeInputValue.trim() !== "") {
           toast({ title: "Empty or Invalid Tree", description: "The provided input results in an empty tree.", variant: "default" });
-          // Still show the empty state or parsed representation if possible
-          setCurrentNodes([]); setCurrentEdges([]); setCurrentTraversalPath([]);
-      } else {
-          setCurrentNodes(initialNodes); // Show initial tree structure immediately
-          setCurrentEdges(initialEdges);
       }
-       setCurrentTraversalPath([]); // Reset path
-       setCurrentLine(null);
-       setCurrentProcessingNodeId(null);
-
-
+      
       const newSteps = generateTraversalSteps(initialNodes, initialEdges, rootId, selectedTraversalType);
       setSteps(newSteps);
       setCurrentStepIndex(0);
@@ -128,10 +119,16 @@ export default function BinaryTreeTraversalPage() {
       setIsFinished(false);
 
       if (newSteps.length > 0) {
-        updateStateFromStep(0); // Apply first step's state
+        const firstStep = newSteps[0];
+        setCurrentNodes(firstStep.nodes);
+        setCurrentEdges(firstStep.edges);
+        setCurrentTraversalPath(firstStep.traversalPath);
+        setCurrentLine(firstStep.currentLine);
+        setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
       } else {
-        // This case might occur if generateTraversalSteps is empty for some reason
-        // Ensure UI is reset or shows the initial parsed tree
+        setCurrentNodes(initialNodes); 
+        setCurrentEdges(initialEdges);
+        setCurrentTraversalPath([]);
         setCurrentLine(null);
         setCurrentProcessingNodeId(null);
       }
@@ -140,12 +137,12 @@ export default function BinaryTreeTraversalPage() {
       toast({ title: "Error Processing Tree", description: error.message || "Could not process tree input.", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentTraversalPath([]); setCurrentLine(null);setCurrentProcessingNodeId(null); setIsPlaying(false); setIsFinished(false);
     }
-  }, [treeInputValue, selectedTraversalType, toast, updateStateFromStep]);
+  }, [treeInputValue, selectedTraversalType, toast]);
 
 
   useEffect(() => {
     generateAndSetSteps();
-  }, [generateAndSetSteps]); // generateAndSetSteps is memoized
+  }, [generateAndSetSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -269,3 +266,4 @@ export default function BinaryTreeTraversalPage() {
     </div>
   );
 }
+
