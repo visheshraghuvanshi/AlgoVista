@@ -164,7 +164,7 @@ export const MOCK_ALGORITHMS: AlgorithmMetadata[] = [
     title: 'Linked List Operations', 
     category: 'Linked List', 
     difficulty: 'Medium', 
-    description: 'Visualize core operations like insertion, deletion, search, and reversal in Singly, Doubly, and Circular Linked Lists. Understand node navigation, pointer manipulation, and specific list properties like loop detection or merging sorted lists.'
+    description: 'Covers core operations (insertion, deletion, search, traversal) for Singly, Doubly, and Circular Linked Lists. Explores advanced topics like list reversal, cycle detection (e.g., Floyd\'s Tortoise and Hare algorithm), and merging two sorted lists. Emphasizes understanding node navigation, pointer manipulation, and the distinct properties and use cases of each list type.'
   },
 
   // SECTION V: Trees & Binary Trees
