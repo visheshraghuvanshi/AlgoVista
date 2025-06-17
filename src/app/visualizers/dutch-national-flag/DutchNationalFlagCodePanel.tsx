@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
@@ -15,18 +16,23 @@ interface DutchNationalFlagCodePanelProps {
 
 export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchNationalFlagCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
   
-  const initialLanguage = languages.length > 0 && languages.includes("JavaScript") ? "JavaScript" : (languages.length > 0 ? languages[0] : "Info");
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    const initialLangs = Object.keys(codeSnippets);
+    return initialLangs.length > 0 && initialLangs.includes("JavaScript") ? "JavaScript" : (initialLangs.length > 0 ? initialLangs[0] : "Info");
+  });
 
-  React.useEffect(() => {
+  const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
+
+  useEffect(() => {
+    // This effect synchronizes selectedLanguage if the available languages change
+    // and the current selectedLanguage is no longer valid.
     if (languages.length > 0 && !languages.includes(selectedLanguage)) {
       setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
     } else if (languages.length === 0 && selectedLanguage !== "Info") {
-        setSelectedLanguage("Info");
+      setSelectedLanguage("Info");
     }
-  }, [languages, selectedLanguage]);
+  }, [languages]); // Only re-run if `languages` (derived from `codeSnippets` prop) changes.
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -51,6 +57,8 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     return selectedLanguage === 'Info' ? [] : (codeSnippets[selectedLanguage] || []);
   }, [selectedLanguage, codeSnippets]);
 
+  // Ensure tabValue is always valid, even if selectedLanguage is temporarily out of sync
+  // before useEffect kicks in (though less likely with the corrected useEffect).
   const tabValue = languages.includes(selectedLanguage) 
                    ? selectedLanguage 
                    : (languages.length > 0 ? (languages.includes("JavaScript") ? "JavaScript" : languages[0]) : 'Info');
@@ -112,3 +120,4 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     </Card>
   );
 }
+
