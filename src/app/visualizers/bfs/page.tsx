@@ -1,54 +1,17 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
-import { BfsCodePanel } from './BfsCodePanel'; 
+import { BfsCodePanel, BFS_CODE_SNIPPETS_ALL_LANG } from './BfsCodePanel'; 
 import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; // Ensure this path is correct
 import type { GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { BFS_LINE_MAP, generateBfsSteps, parseGraphInput } from './bfs-logic';
-import { algorithmMetadata } from './metadata'; // Changed to local import
-
-const BFS_CODE_SNIPPETS = {
-  JavaScript: [
-    "function bfs(graph, startNode) {",                 // 1
-    "  let queue = [];",                               // 2
-    "  let visited = new Set();",
-    "  queue.push(startNode);",                        // 3
-    "  visited.add(startNode);",                       // 4
-    "  while (queue.length > 0) {",                   // 5
-    "    let u = queue.shift();",                      // 6
-    "    // Process node u (e.g., print it)",          // 7
-    "    for (let v of graph[u]) {",                  // 8
-    "      if (!visited.has(v)) {",                   // 9
-    "        visited.add(v);",                         // 10
-    "        queue.push(v);",                          // 11
-    "      }",                                         // 12
-    "    }",                                           // 13
-    "  }",                                             // 14
-    "}",                                               // 15
-  ],
-  Python: [
-    "from collections import deque",
-    "def bfs(graph, start_node):",
-    "    queue = deque()",
-    "    visited = set()",
-    "    queue.append(start_node)",
-    "    visited.add(start_node)",
-    "    while queue:",
-    "        u = queue.popleft()",
-    "        # Process node u",
-    "        for v in graph.get(u, []):",
-    "            if v not in visited:",
-    "                visited.add(v)",
-    "                queue.append(v)",
-  ],
-};
+import { algorithmMetadata } from './metadata'; 
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
@@ -56,7 +19,6 @@ const MAX_SPEED = 2000;
 
 export default function BfsVisualizerPage() {
   const { toast } = useToast();
-  // algorithmMetadata is now imported directly
 
   const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:0,3;2:0,4;3:1;4:2'); 
   const [startNodeValue, setStartNodeValue] = useState('0');
@@ -115,13 +77,9 @@ export default function BfsVisualizerPage() {
     setIsFinished(newSteps.length <= 1); // Finished if only one step (e.g. error message)
 
     if (newSteps.length > 0) {
-      const firstStep = newSteps[0];
-      setCurrentNodes(firstStep.nodes);
-      setCurrentEdges(firstStep.edges);
-      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
-      setCurrentLine(firstStep.currentLine);
-       if (firstStep.message && (firstStep.message.includes("not found") || firstStep.message.includes("empty")) ){
-           toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
+      updateStateFromStep(0);
+       if (newSteps[0].message && (newSteps[0].message.includes("not found") || newSteps[0].message.includes("empty")) ){
+           toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
       }
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
@@ -129,7 +87,7 @@ export default function BfsVisualizerPage() {
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
     }
-  }, [graphInputValue, startNodeValue, toast]);
+  }, [graphInputValue, startNodeValue, toast, updateStateFromStep]);
 
 
   useEffect(() => {
@@ -143,10 +101,6 @@ export default function BfsVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -172,7 +126,7 @@ export default function BfsVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || currentStepIndex >= steps.length - 1) { // Check currentStepIndex to prevent overshooting
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated or already at end.", variant: "default" });
       return;
     }
@@ -185,6 +139,7 @@ export default function BfsVisualizerPage() {
       if (nextStepIndex === steps.length - 1) setIsFinished(true);
     }
   };
+  
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
@@ -223,7 +178,9 @@ export default function BfsVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {steps[currentStepIndex]?.message || algorithmMetadata.description}
+          </p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -235,7 +192,7 @@ export default function BfsVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <BfsCodePanel
-              codeSnippets={BFS_CODE_SNIPPETS}
+              codeSnippets={BFS_CODE_SNIPPETS_ALL_LANG}
               currentLine={currentLine}
               defaultLanguage="JavaScript"
             />
