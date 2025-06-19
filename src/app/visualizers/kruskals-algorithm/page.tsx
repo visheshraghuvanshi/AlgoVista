@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
-import { KruskalsAlgorithmCodePanel } from './KruskalsAlgorithmCodePanel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
+import { KruskalsAlgorithmCodePanel } from './KruskalsAlgorithmCodePanel'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Workflow } from 'lucide-react'; // Using Workflow for MST
-import { generateKruskalsSteps, parseKruskalInput } from './kruskals-algorithm-logic';
+import { AlertTriangle, Workflow } from 'lucide-react';
+import { generateKruskalsSteps, parseKruskalInput } from './kruskals-algorithm-logic'; // Local import
 
 const KRUSKALS_CODE_SNIPPETS = {
   JavaScript: [
@@ -181,7 +181,7 @@ export default function KruskalsVisualizerPage() {
   useEffect(() => {
     generateSteps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numVerticesInput, edgeListInputValue]); // Re-generate if graph input changes
+  }, [numVerticesInput, edgeListInputValue]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -233,7 +233,6 @@ export default function KruskalsVisualizerPage() {
     setNumVerticesInput(DEFAULT_NUM_VERTICES);
     setEdgeListInputValue(DEFAULT_EDGE_LIST);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // generateSteps will be called by useEffect due to input changes
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);

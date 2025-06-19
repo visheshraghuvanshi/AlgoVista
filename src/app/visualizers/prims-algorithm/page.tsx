@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
-import { PrimsAlgorithmCodePanel } from './PrimsAlgorithmCodePanel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
+import { PrimsAlgorithmCodePanel } from './PrimsAlgorithmCodePanel'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, GitCommit } from 'lucide-react'; // GitCommit for MST
-import { generatePrimsSteps, parsePrimsInput } from './prims-algorithm-logic';
+import { AlertTriangle, GitCommit } from 'lucide-react';
+import { generatePrimsSteps, parsePrimsInput } from './prims-algorithm-logic'; // Local import
 
 const PRIMS_CODE_SNIPPETS = {
   JavaScript: [
@@ -73,7 +73,7 @@ const PRIMS_CODE_SNIPPETS = {
     "class Edge implements Comparable<Edge> { int to, weight; Edge(int t, int w){to=t;weight=w;} @Override public int compareTo(Edge o){return this.weight-o.weight;}}",
     "class PrimsMST {",
     "    // graph: List of Lists of Pairs, where Pair is {neighbor, weight}",
-    "    // Example: adj.get(u) gives List<Pair<Integer,Integer>>",
+    "    // Example: adj.get(u) gives List<Map.Entry<Integer,Integer>>",
     "    List<Map<String, Integer>> findMST(int numVertices, List<List<Map.Entry<Integer,Integer>>> adj, int startNode) {",
     "        int[] parent = new int[numVertices]; Arrays.fill(parent, -1);",
     "        int[] key = new int[numVertices]; Arrays.fill(key, Integer.MAX_VALUE);",
@@ -283,7 +283,6 @@ export default function PrimsVisualizerPage() {
     setEdgeListInputValue(DEFAULT_EDGE_LIST_PRIMS);
     setStartNodeValue('0');
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // generateSteps will be called by useEffect due to input changes
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -358,7 +357,7 @@ export default function PrimsVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);... (undirected)"
+            graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);... (undirected, non-negative)"
             startNodeInputPlaceholder="Start Node (0-indexed)"
             numVerticesInputPlaceholder="Num Vertices"
             onExecute={generateSteps} 

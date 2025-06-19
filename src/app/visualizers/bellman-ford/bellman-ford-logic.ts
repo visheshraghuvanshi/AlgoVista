@@ -1,5 +1,5 @@
 
-import type { GraphAlgorithmStep, GraphNode, GraphEdge } from '@/types';
+import type { GraphAlgorithmStep, GraphNode, GraphEdge } from './types'; // Local import
 
 export const BELLMAN_FORD_LINE_MAP = {
   functionDeclaration: 1,
@@ -41,13 +41,13 @@ const EDGE_COLORS = {
 export interface ParsedWeightedGraphWithEdgeList {
   nodes: { id: string; label: string }[];
   adj: Map<string, { target: string; weight: number }[]>;
-  edgeList: { u: string; v: string; weight: number }[];
+  edgeList: { u: string; v: string; weight: number; id: string }[]; // Added ID to edge for unique keying
 }
 
 export function parseWeightedGraphInputWithEdgeList(input: string): ParsedWeightedGraphWithEdgeList | null {
   const adj = new Map<string, { target: string; weight: number }[]>();
   const nodeSet = new Set<string>();
-  const edgeList: { u: string; v: string; weight: number }[] = [];
+  const edgeList: { u: string; v: string; weight: number; id: string }[] = [];
   const entries = input.trim().split(';').filter(Boolean);
 
   if (entries.length === 0 && input.trim() !== "") return null;
@@ -62,7 +62,7 @@ export function parseWeightedGraphInputWithEdgeList(input: string): ParsedWeight
     nodeSet.add(nodeId);
 
     if (parts.length === 1 || (parts.length === 2 && parts[1].trim() === "")) {
-      adj.set(nodeId, []);
+      if (!adj.has(nodeId)) adj.set(nodeId, []); // Ensure node is in adj map
       continue;
     }
 
@@ -79,7 +79,7 @@ export function parseWeightedGraphInputWithEdgeList(input: string): ParsedWeight
 
       nodeSet.add(targetId);
       currentNeighbors.push({ target: targetId, weight });
-      edgeList.push({ u: nodeId, v: targetId, weight });
+      edgeList.push({ u: nodeId, v: targetId, weight, id: `${nodeId}-${targetId}-${weight}-${edgeList.length}` }); // Add unique ID
     }
     adj.set(nodeId, currentNeighbors);
   }
@@ -127,13 +127,13 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
 
   let graphNodes = calculateCircularLayout(initialNodeData, 500, 300);
   const visualEdges: GraphEdge[] = edgeList.map(e => ({
-    id: `${e.u}-${e.v}`, source: e.u, target: e.v, weight: e.weight, color: EDGE_COLORS.default, isDirected: true
+    id: e.id, source: e.u, target: e.v, weight: e.weight, color: EDGE_COLORS.default, isDirected: true
   }));
 
   const distances: { [key: string]: number } = {};
   const predecessors: { [key: string]: string | null } = {};
   
-  const addStep = (line: number, message: string, activeEdgeId?: string, specialNodeHighlights?: {[nodeId: string]: string} ) => {
+  const addStep = (line: number, message: string, activeEdgeId?: string, specialNodeHighlights?: {[nodeId: string]: string}, isNegCycleEdge?: boolean ) => {
     const stepNodes = graphNodes.map(n => ({
       ...n,
       distance: distances[n.id] === undefined ? Infinity : distances[n.id],
@@ -141,18 +141,18 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
     }));
     const stepEdges = visualEdges.map(e => ({
       ...e,
-      color: e.id === activeEdgeId ? EDGE_COLORS.relaxed : (specialNodeHighlights && (specialNodeHighlights[e.source] === NODE_COLORS.pathHighlight && specialNodeHighlights[e.target] === NODE_COLORS.pathHighlight) ? EDGE_COLORS.negativeCycle : EDGE_COLORS.default),
+      color: e.id === activeEdgeId ? (isNegCycleEdge ? EDGE_COLORS.negativeCycle : EDGE_COLORS.relaxed) : e.color, // Keep MST color if set
     }));
 
     const distForDisplay: { [key: string]: string | number } = {};
-     initialNodeData.forEach(n => distForDisplay[n.id] = distances[n.id] === Infinity ? '∞' : distances[n.id]);
+     initialNodeData.forEach(n => distForDisplay[n.id] = distances[n.id] === Infinity ? '∞' : (distances[n.id] === undefined ? '∞' : distances[n.id]));
     const predForDisplay: { [key: string]: string | null } = {};
-    initialNodeData.forEach(n => predForDisplay[n.id] = predecessors[n.id]);
+    initialNodeData.forEach(n => predForDisplay[n.id] = predecessors[n.id] === undefined ? null : predecessors[n.id]);
 
     localSteps.push({
       nodes: stepNodes, edges: stepEdges, currentLine: line, message,
       auxiliaryData: [
-        { type: 'distances', label: 'Distances', values: distForDisplay },
+        { type: 'set', label: 'Distances', values: distForDisplay },
         { type: 'set', label: 'Predecessors', values: predForDisplay },
       ],
     });
@@ -173,30 +173,38 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
     addStep(BELLMAN_FORD_LINE_MAP.relaxationLoopOuter, `Iteration ${i + 1} of V-1 relaxations.`);
     let relaxedThisIteration = false;
     for (const edge of edgeList) {
-      addStep(BELLMAN_FORD_LINE_MAP.relaxationLoopInnerEdges, `Considering edge ${edge.u} -> ${edge.v} (weight ${edge.weight}).`, `${edge.u}-${edge.v}`);
+      addStep(BELLMAN_FORD_LINE_MAP.relaxationLoopInnerEdges, `Considering edge ${edge.u} -> ${edge.v} (weight ${edge.weight}).`, edge.id);
       if (distances[edge.u] !== Infinity && distances[edge.u] + edge.weight < distances[edge.v]) {
-        addStep(BELLMAN_FORD_LINE_MAP.relaxationCondition, `Relaxation condition met: dist[${edge.u}] (${distances[edge.u]}) + ${edge.weight} < dist[${edge.v}] (${distances[edge.v] === Infinity ? '∞' : distances[edge.v]}).`, `${edge.u}-${edge.v}`);
+        addStep(BELLMAN_FORD_LINE_MAP.relaxationCondition, `Relaxation: dist[${edge.u}](${distances[edge.u] === Infinity ? '∞' : distances[edge.u]}) + ${edge.weight} < dist[${edge.v}](${distances[edge.v] === Infinity ? '∞' : distances[edge.v]})`, edge.id);
         distances[edge.v] = distances[edge.u] + edge.weight;
         predecessors[edge.v] = edge.u;
         relaxedThisIteration = true;
-        addStep(BELLMAN_FORD_LINE_MAP.updateDistance, `Relaxed edge ${edge.u} -> ${edge.v}. New dist[${edge.v}] = ${distances[edge.v]}. Pred[${edge.v}] = ${edge.u}.`, `${edge.u}-${edge.v}`);
+        addStep(BELLMAN_FORD_LINE_MAP.updateDistance, `Relaxed ${edge.u}->${edge.v}. New dist[${edge.v}]=${distances[edge.v]}. Pred[${edge.v}]=${edge.u}.`, edge.id);
       } else {
-         addStep(BELLMAN_FORD_LINE_MAP.relaxationCondition, `No relaxation for edge ${edge.u} -> ${edge.v}. Condition dist[${edge.u}] (${distances[edge.u] === Infinity ? '∞' : distances[edge.u]}) + ${edge.weight} < dist[${edge.v}] (${distances[edge.v] === Infinity ? '∞' : distances[edge.v]}) not met.`, `${edge.u}-${edge.v}`);
+         addStep(BELLMAN_FORD_LINE_MAP.relaxationCondition, `No relaxation for ${edge.u}->${edge.v}. Condition not met.`, edge.id);
       }
     }
-     addStep(BELLMAN_FORD_LINE_MAP.endOuterRelaxLoop, `End of iteration ${i+1}. ${relaxedThisIteration ? 'Some edges were relaxed.' : 'No edges relaxed in this iteration.'}`);
+     addStep(BELLMAN_FORD_LINE_MAP.endOuterRelaxLoop, `End of iteration ${i+1}. ${relaxedThisIteration ? 'Relaxations occurred.' : 'No relaxations.'}`);
   }
 
-  addStep(BELLMAN_FORD_LINE_MAP.negCycleCheckLoop, "Checking for negative-weight cycles.");
+  addStep(BELLMAN_FORD_LINE_MAP.negCycleCheckLoop, "Checking for negative-weight cycles (final iteration).");
   for (const edge of edgeList) {
-    addStep(BELLMAN_FORD_LINE_MAP.negCycleCheckLoop, `Checking edge ${edge.u} -> ${edge.v} for negative cycle.`, `${edge.u}-${edge.v}`);
+    addStep(BELLMAN_FORD_LINE_MAP.negCycleCheckLoop, `Check edge ${edge.u}->${edge.v} for neg cycle.`, edge.id, undefined, true);
     if (distances[edge.u] !== Infinity && distances[edge.u] + edge.weight < distances[edge.v]) {
-        // Highlight nodes involved in the cycle if possible (complex to trace full cycle, just highlight edge and endpoints)
         const highlights: {[nodeId: string]: string} = {};
+        // Trace back to show part of the cycle, simplified highlight
+        let curr = edge.v; let pathCount = 0;
+        while(curr && pathCount < numVertices && !highlights[curr]){ 
+            highlights[curr] = NODE_COLORS.pathHighlight; 
+            curr = predecessors[curr]!;
+            pathCount++;
+        }
+        if(predecessors[edge.u]) highlights[predecessors[edge.u]!] = NODE_COLORS.pathHighlight;
         highlights[edge.u] = NODE_COLORS.pathHighlight;
         highlights[edge.v] = NODE_COLORS.pathHighlight;
-      addStep(BELLMAN_FORD_LINE_MAP.returnErrorNegCycle, `Negative cycle detected via edge ${edge.u} -> ${edge.v}! Further relaxation possible.`, `${edge.u}-${edge.v}`, highlights);
-      localSteps[localSteps.length-1].message = "Negative cycle detected! Shortest paths are not well-defined."; // Update last step message
+
+      addStep(BELLMAN_FORD_LINE_MAP.returnErrorNegCycle, `Negative cycle detected via edge ${edge.u}->${edge.v}! Further relaxation possible. Shortest paths ill-defined.`, edge.id, highlights, true);
+      localSteps[localSteps.length-1].message = "Negative cycle detected! Algorithm terminated.";
       return localSteps;
     }
   }

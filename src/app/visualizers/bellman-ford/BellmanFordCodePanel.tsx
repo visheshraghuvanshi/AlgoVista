@@ -21,7 +21,7 @@ export function BellmanFordCodePanel({ codeSnippets, currentLine, defaultLanguag
   const languages = useMemo(() => Object.keys(codeSnippets), [codeSnippets]);
 
   const getInitialLanguage = () => {
-    if (languages.length === 0) return 'Info';
+    if (languages.length === 0) return 'Info'; // Should not happen if snippets are passed
     return languages.includes(defaultLanguage) ? defaultLanguage : languages[0];
   };
 
@@ -29,8 +29,13 @@ export function BellmanFordCodePanel({ codeSnippets, currentLine, defaultLanguag
   
   useEffect(() => {
     const initialLang = getInitialLanguage();
-    if (selectedLanguage !== initialLang && languages.includes(initialLang)) {
+    // Only update if the current selection is invalid for the available languages
+    if (!languages.includes(selectedLanguage) && languages.includes(initialLang)) {
       setSelectedLanguage(initialLang);
+    } else if (!languages.includes(selectedLanguage) && languages.length > 0) {
+      setSelectedLanguage(languages[0]); // Fallback if default isn't there
+    } else if (languages.length === 0) {
+      setSelectedLanguage('Info');
     }
   }, [languages, defaultLanguage, selectedLanguage]);
 

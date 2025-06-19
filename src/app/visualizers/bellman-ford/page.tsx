@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { BellmanFordCodePanel } from './BellmanFordCodePanel'; 
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; 
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { generateBellmanFordSteps, parseWeightedGraphInputWithEdgeList } from './bellman-ford-logic';
-import { algorithmMetadata } from './metadata';
+import { generateBellmanFordSteps, parseWeightedGraphInputWithEdgeList } from './bellman-ford-logic'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 
 // Define code snippets here or import from BellmanFordCodePanel if separated
 const BELLMAN_FORD_CODE_SNIPPETS = {
@@ -117,7 +117,6 @@ const BELLMAN_FORD_CODE_SNIPPETS = {
     "    BellmanFordResult res;",
     "    for (int i = 0; i < numVertices; ++i) {",
     "        res.distances[i] = std::numeric_limits<double>::infinity();",
-    "        // predecessors map will be filled as needed",
     "    }",
     "    res.distances[startNode] = 0;",
     "",
