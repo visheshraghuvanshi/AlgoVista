@@ -106,7 +106,7 @@ export const generateTernarySearchSteps = (sortedArrToSearch: number[], target: 
       }
     }
   }
-  addStep(lm.whileLoopEnd, [left,right], [], [left, right], `Loop finished. left=${left}, right=${right}.`);
+  addStep(lm.whileLoopEnd, [left,right], [], [left, right], `Loop finished. left = ${left}, right = ${right}. Pointers crossed or met.`);
   addStep(lm.returnNotFound, [], [], null, `Target ${target} not found.`);
   addStep(lm.functionEnd);
   return localSteps;

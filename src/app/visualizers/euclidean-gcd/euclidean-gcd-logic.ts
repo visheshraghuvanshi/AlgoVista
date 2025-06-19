@@ -1,3 +1,4 @@
+
 // src/app/visualizers/euclidean-gcd/euclidean-gcd-logic.ts
 import type { AlgorithmStep } from '@/types'; // Use global for now
 import type { EuclideanGcdStep } from './types'; // Local, more specific type

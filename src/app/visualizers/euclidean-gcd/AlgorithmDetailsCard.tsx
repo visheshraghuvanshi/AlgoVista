@@ -1,3 +1,4 @@
+
 // src/app/visualizers/euclidean-gcd/AlgorithmDetailsCard.tsx
 "use client";
 

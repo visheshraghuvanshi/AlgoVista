@@ -3,16 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// No specific types from global needed, props are direct or standard.
-
-interface VisualizationPanelProps {
-  data: number[];
-  activeIndices?: number[];
-  swappingIndices?: number[];
-  sortedIndices?: number[];
-  processingSubArrayRange?: [number, number] | null;
-  pivotActualIndex?: number | null;
-}
+import type { VisualizationPanelProps } from './types'; // Local import
 
 const BAR_MAX_HEIGHT_BASE = 200; 
 const BAR_WIDTH = 20; 
@@ -45,7 +36,7 @@ export function VisualizationPanel({
   }, [data]);
 
   const getBarColor = (index: number, value: number) => {
-    if (pivotActualIndex === index) return "bg-purple-500";
+    if (pivotActualIndex === index) return "bg-purple-500"; // Pivot color
     if (sortedIndices.includes(index)) return "bg-green-500"; 
     if (swappingIndices.includes(index)) return "bg-accent"; 
     if (activeIndices.includes(index)) return "bg-primary"; 

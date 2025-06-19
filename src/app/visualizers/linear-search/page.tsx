@@ -239,6 +239,14 @@ export default function LinearSearchVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
+  const localAlgoDetails: AlgorithmDetailsProps = {
+      title: algorithmMetadata.title,
+      description: algorithmMetadata.longDescription || algorithmMetadata.description,
+      timeComplexities: algorithmMetadata.timeComplexities!,
+      spaceComplexity: algorithmMetadata.spaceComplexity!,
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -247,7 +255,7 @@ export default function LinearSearchVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -288,12 +296,7 @@ export default function LinearSearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
-        <AlgorithmDetailsCard 
-            title={algorithmMetadata.title}
-            description={algorithmMetadata.longDescription || algorithmMetadata.description}
-            timeComplexities={algorithmMetadata.timeComplexities!}
-            spaceComplexity={algorithmMetadata.spaceComplexity!}
-        />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>

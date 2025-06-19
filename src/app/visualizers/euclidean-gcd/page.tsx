@@ -1,3 +1,4 @@
+
 // src/app/visualizers/euclidean-gcd/page.tsx
 "use client";
 
@@ -5,8 +6,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
-import { algorithmMetadata } from './metadata'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, EuclideanGcdStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 
 import { EuclideanGcdCodePanel } from './EuclideanGcdCodePanel';
 import { EuclideanGcdVisualizationPanel } from './EuclideanGcdVisualizationPanel';
-import { generateEuclideanGcdSteps, type EuclideanGcdStep } from './euclidean-gcd-logic';
+import { generateEuclideanGcdSteps } from './euclidean-gcd-logic';
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
@@ -72,11 +73,11 @@ export default function EuclideanGcdVisualizerPage() {
     setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-  }, [numberAInput, numberBInput, toast]);
+  }, [numberAInput, numberBInput, toast, updateVisualStateFromStep]); // Added updateVisualStateFromStep
   
   useEffect(() => { 
     handleCalculateGcd();
-  }, [handleCalculateGcd]);
+  }, [handleCalculateGcd]); // Dependency on handleCalculateGcd
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -107,9 +108,12 @@ export default function EuclideanGcdVisualizerPage() {
     setIsFinished(true);
     setNumberAInput(DEFAULT_BASE);
     setNumberBInput(DEFAULT_EXPONENT);
+    // handleCalculateGcd will be called by useEffect due to input changes if they are dependencies
+    // Or call it directly if only resetting the simulation for current inputs:
+    // handleCalculateGcd(); 
   };
   
-  const algoDetails: AlgorithmDetailsProps = {
+  const localAlgoDetails: AlgorithmDetailsProps = { // Changed name to avoid conflict
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -171,7 +175,7 @@ export default function EuclideanGcdVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>

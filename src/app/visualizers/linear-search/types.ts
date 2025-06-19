@@ -1,5 +1,5 @@
 
-// Local types for Linear Search Visualizer
+// src/app/visualizers/linear-search/types.ts
 
 // Common metadata types
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
@@ -42,4 +42,35 @@ export interface ArrayAlgorithmStep {
   processingSubArrayRange?: [number, number] | null; // Not typically used by linear search
   pivotActualIndex?: number | null; // Not used by linear search
   auxiliaryData?: Record<string, any> | null;
+}
+
+// Props for SearchingControlsPanel (specific to this context if needed, or use global)
+export interface SearchingControlsPanelProps {
+  onPlay: () => void;
+  onPause: () => void;
+  onStep: () => void;
+  onReset: () => void;
+  onInputChange: (value: string) => void;
+  inputValue: string;
+  onTargetValueChange: (value: string) => void;
+  targetValue: string;
+  isPlaying: boolean;
+  isFinished: boolean;
+  currentSpeed: number;
+  onSpeedChange: (speed: number) => void;
+  isAlgoImplemented: boolean;
+  minSpeed: number;
+  maxSpeed: number;
+  targetInputLabel?: string;
+  targetInputPlaceholder?: string;
+}
+
+// Props for VisualizationPanel (specific to this context if needed, or use global)
+export interface VisualizationPanelProps {
+  data: number[];
+  activeIndices?: number[];
+  swappingIndices?: number[];
+  sortedIndices?: number[];
+  processingSubArrayRange?: [number, number] | null;
+  pivotActualIndex?: number | null;
 }

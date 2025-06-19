@@ -29,13 +29,13 @@ export const algorithmMetadata: AlgorithmMetadata = {
 
 ### Example:
 Searching for \`target = 13\` in sorted \`arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]\`
-- \`left = 0, right = 15\`
-- \`mid1 = 0 + (15-0)//3 = 5\`. \`arr[5] = 6\`.
-- \`mid2 = 15 - (15-0)//3 = 10\`. \`arr[10] = 11\`.
-- Target (13) > \`arr[mid2]\` (11). So, \`left = mid2 + 1 = 11\`. New range \`[11, 15]\`.
-- \`left = 11, right = 15\`
-- \`mid1 = 11 + (15-11)//3 = 11 + 1 = 12\`. \`arr[12] = 13\`.
-- Target (13) == \`arr[mid1]\` (13). Found! Return index 12.
+-   \`left = 0, right = 15\`
+-   \`mid1 = 0 + (15-0)//3 = 5\`. \`arr[5] = 6\`.
+-   \`mid2 = 15 - (15-0)//3 = 10\`. \`arr[10] = 11\`.
+-   Target (13) > \`arr[mid2]\` (11). So, \`left = mid2 + 1 = 11\`. New range \`[11, 15]\`.
+-   \`left = 11, right = 15\`
+-   \`mid1 = 11 + (15-11)//3 = 11 + 1 = 12\`. \`arr[12] = 13\`.
+-   Target (13) == \`arr[mid1]\` (13). Found! Return index 12.
 
 ### Characteristics:
 -   **Divide and Conquer**: Divides the problem into three smaller subproblems.

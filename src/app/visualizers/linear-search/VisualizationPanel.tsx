@@ -3,19 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// This component uses props passed directly from its parent page (linear-search/page.tsx)
-// The types for these props (like data, activeIndices) will be defined in linear-search/types.ts
-// and imported by the page.tsx that uses this local VisualizationPanel.
-
-interface VisualizationPanelProps {
-  data: number[];
-  activeIndices?: number[];
-  swappingIndices?: number[];
-  sortedIndices?: number[];
-  processingSubArrayRange?: [number, number] | null;
-  pivotActualIndex?: number | null;
-}
+import type { VisualizationPanelProps } from './types'; // Local import
 
 const BAR_MAX_HEIGHT_BASE = 200; 
 const BAR_WIDTH = 20; 

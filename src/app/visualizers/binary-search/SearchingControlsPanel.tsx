@@ -8,26 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-
-interface SearchingControlsPanelProps {
-  onPlay: () => void;
-  onPause: () => void;
-  onStep: () => void;
-  onReset: () => void;
-  onInputChange: (value: string) => void;
-  inputValue: string;
-  onTargetValueChange: (value: string) => void;
-  targetValue: string;
-  isPlaying: boolean;
-  isFinished: boolean;
-  currentSpeed: number;
-  onSpeedChange: (speed: number) => void;
-  isAlgoImplemented: boolean;
-  minSpeed: number;
-  maxSpeed: number;
-  targetInputLabel?: string;
-  targetInputPlaceholder?: string;
-}
+import type { SearchingControlsPanelProps } from './types'; // Local import
 
 export function SearchingControlsPanel({
   onPlay,

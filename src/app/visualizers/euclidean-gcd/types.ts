@@ -1,3 +1,4 @@
+
 // src/app/visualizers/euclidean-gcd/types.ts
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';

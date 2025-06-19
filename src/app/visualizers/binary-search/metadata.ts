@@ -23,8 +23,8 @@ export const algorithmMetadata: AlgorithmMetadata = {
 
 ### Example:
 Searching for \`target = 7\` in sorted \`arr = [1, 3, 4, 5, 7, 9]\`
-- \`left = 0\`, \`right = 5\`. \`mid = 0 + floor((5-0)/2) = 2\`. \`arr[2] = 4\`. \`4 < 7\`. \`left = 2 + 1 = 3\`.
-- \`left = 3\`, \`right = 5\`. \`mid = 3 + floor((5-3)/2) = 4\`. \`arr[4] = 7\`. \`7 == 7\`. Target found! Return index 4.
+-   \`left = 0\`, \`right = 5\`. \`mid = 0 + floor((5-0)/2) = 2\`. \`arr[2] = 4\`. \`4 < 7\`. \`left = 2 + 1 = 3\`.
+-   \`left = 3\`, \`right = 5\`. \`mid = 3 + floor((5-3)/2) = 4\`. \`arr[4] = 7\`. \`7 == 7\`. Target found! Return index 4.
 
 ### Characteristics:
 -   **Divide and Conquer**: It's a classic example of a divide and conquer algorithm.
