@@ -1,12 +1,11 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, ArrayAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, ArrayAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Shapes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -107,7 +106,7 @@ export default function PermutationsSubsetsVisualizerPage() {
   };
   const handleReset = () => { setIsPlaying(false); setIsFinished(false); handleGenerateSteps(); };
   
-  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; // Use local type
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -144,7 +143,7 @@ export default function PermutationsSubsetsVisualizerPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="permutations">Permutations</SelectItem>
-                    <SelectItem value="subsets">Subsets (Powerser)</SelectItem>
+                    <SelectItem value="subsets">Subsets (Powerset)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -168,7 +167,7 @@ export default function PermutationsSubsetsVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>

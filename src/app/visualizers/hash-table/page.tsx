@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, HashTableStep, HashTableEntry, HashValue } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, HashTableStep, HashTableEntry, HashValue, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, KeyRound, TabletSmartphone, PlusCircle, SearchIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { HashTableVisualizationPanel } from './HashTableVisualizationPanel';
+import { HashTableVisualizationPanel from './HashTableVisualizationPanel';
 import { HashTableCodePanel } from './HashTableCodePanel';
 import { generateHashTableSteps, createInitialHashTable, HASH_TABLE_LINE_MAP } from './hash-table-logic';
 
@@ -119,7 +119,7 @@ export default function HashTableVisualizerPage() {
     setSelectedOperation('insert');
   };
   
-  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; // Use local type
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -173,7 +173,7 @@ export default function HashTableVisualizerPage() {
               )}
             </div>
             <Button onClick={handleExecuteOperation} className="w-full md:w-auto">
-                {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4" /> : selectedOperation === 'search' ? <SearchIcon className="mr-2 h-4 w-4" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                {selectedOperation === 'insert' ? <PlusCircle /> : selectedOperation === 'search' ? <SearchIcon /> : <Trash2 />}
                 Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
             </Button>
             
@@ -188,10 +188,9 @@ export default function HashTableVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-

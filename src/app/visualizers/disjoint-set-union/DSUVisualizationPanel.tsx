@@ -1,9 +1,8 @@
-
 "use client";
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DSUStep } from '@/types'; // Use specific DSUStep
+import type { DSUStep } from './types'; // Local import
 import { Badge } from '@/components/ui/badge';
 
 interface DSUVisualizationPanelProps {
@@ -191,5 +190,3 @@ export function DSUVisualizationPanel({ step, numElements }: DSUVisualizationPan
     </Card>
   );
 }
-
-    

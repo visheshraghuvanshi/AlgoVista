@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local copy
 import { LinkedListCycleDetectionCodePanel } from './LinkedListCycleDetectionCodePanel';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local copy
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types'; // Local types
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateCycleDetectionSteps, CYCLE_DETECTION_LINE_MAP } from './linked-list-cycle-detection-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata';
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -94,17 +93,16 @@ export default function LinkedListCycleDetectionPage() {
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4,5,6'); setCycleConnectsTo('3');
-    // handleGenerateSteps will be called by useEffect due to state changes
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  if (!localAlgoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -149,7 +147,7 @@ export default function LinkedListCycleDetectionPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>

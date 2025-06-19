@@ -1,18 +1,18 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DSUStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, DSUStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Merge, SearchCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { DSUVisualizationPanel } from './DSUVisualizationPanel';
 import { DSUCodePanel } from './DSUCodePanel';
@@ -140,7 +140,7 @@ export default function DSUVisualizerPage() {
     setCurrentOperation('union');
   };
   
-  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; // Use local type
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -218,11 +218,9 @@ export default function DSUVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-
-    
