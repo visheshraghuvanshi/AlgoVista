@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -50,7 +51,6 @@ export default function PermutationsSubsetsVisualizerPage() {
       toast({ title: "Input Too Large", description: `Please enter up to ${MAX_INPUT_ELEMENTS} elements for performance.`, variant: "destructive" });
       return null;
     }
-    // Keep as string or try to parse as number
     return elements.map(el => isNaN(Number(el)) ? el : Number(el));
   }, [toast]);
 
@@ -78,11 +78,16 @@ export default function PermutationsSubsetsVisualizerPage() {
     
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [inputValue, problemType, parseInput, updateVisualStateFromStep]);
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+    } else {
+        setCurrentStep(null);
+    }
+
+  }, [inputValue, problemType, parseInput, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setOriginalInputSet]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -106,7 +111,7 @@ export default function PermutationsSubsetsVisualizerPage() {
   };
   const handleReset = () => { setIsPlaying(false); setIsFinished(false); handleGenerateSteps(); };
   
-  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; // Use local type
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 

@@ -84,16 +84,23 @@ export default function HeapOperationsPage() {
   }, [steps]);
   
   const handleOperation = useCallback((
-      opType: HeapOperationType, 
-      primaryValue?: string, // This will be string for build (initialArray) or insert (opValue)
+      opTypeInput: HeapOperationType, 
+      primaryValue?: string, 
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
+    const opType = opTypeInput;
+
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
 
     if (opType === 'buildMinHeap') {
         valuesForBuild = primaryValue || heapArrayInput;
+        const parsedBuildArray = valuesForBuild.split(',').map(s=>s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
+        if (parsedBuildArray.length > 15) {
+            toast({ title: "Input Too Large", description: "Max 15 elements for Build Heap for smoother visualization.", variant: "default" });
+        }
+        heapDataRef.current = []; // Reset heap for new build
     } else if (opType === 'insertMinHeap') {
         const opValStr = primaryValue || operationValue;
         if (opValStr.trim() === "") {
@@ -104,6 +111,10 @@ export default function HeapOperationsPage() {
         if (isNaN(valueForOp) || valueForOp < -999 || valueForOp > 999) {
             toast({ title: "Invalid Value", description: "Please enter a numeric value between -999 and 999 for insertion.", variant: "destructive" });
             return;
+        }
+        if (heapDataRef.current.length >= 15 && opType === 'insertMinHeap') {
+             toast({ title: "Heap Too Large", description: "Max 15 elements in heap for smoother insert visualization.", variant: "default" });
+             return;
         }
     } else if (opType === 'classDefinition') {
         const { nodes, edges } = generateHeapSteps(heapDataRef, 'classDefinition')[0] || {nodes: [], edges: []};
@@ -132,7 +143,14 @@ export default function HeapOperationsPage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-        updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setCurrentNodes(firstStep.nodes);
+        setCurrentEdges(firstStep.edges);
+        setCurrentPath(firstStep.traversalPath || []);
+        setCurrentLine(firstStep.currentLine);
+        setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
+        setCurrentMessage(firstStep.message || "Step executed.");
+        
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
         if (lastStepMsg && opType !== 'buildMinHeap' && opType !== 'classDefinition' && newSteps.length > 1) { 
             const opDisplay = opType.replace(/([A-Z])/g, ' $1').trim();
@@ -144,7 +162,7 @@ export default function HeapOperationsPage() {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  }, [heapArrayInput, operationValue, toast, updateStateFromStep]);
+  }, [heapArrayInput, operationValue, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
@@ -185,6 +203,7 @@ export default function HeapOperationsPage() {
     heapDataRef.current = []; 
     setSelectedOperation('buildMinHeap'); 
     setCurrentMessage("Heap reset. Building new tree with default values.");
+    // Let useEffect handle the build with new default values
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -222,7 +241,7 @@ export default function HeapOperationsPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="heapArrayInput" className="text-sm font-medium flex items-center"><Binary className="mr-2 h-4 w-4"/>Initial Array (for Build Heap)</Label>
+                <Label htmlFor="heapArrayInput" className="text-sm font-medium flex items-center"><Cog className="mr-2 h-4 w-4"/>Initial Array (for Build Heap)</Label>
                 <Input id="heapArrayInput" value={heapArrayInput} onChange={(e) => setHeapArrayInput(e.target.value)} placeholder="e.g., 4,10,3,5,1" disabled={isPlaying} />
               </div>
               <div className="space-y-2">
@@ -240,17 +259,18 @@ export default function HeapOperationsPage() {
               <div className="space-y-2">
                 <Label htmlFor="operationValue">Value for Insert</Label>
                 <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'classDefinition'} />
+                 <Button onClick={()=>handleOperation(selectedOperation, isOperationWithValue ? operationValue : heapArrayInput)} disabled={isPlaying || selectedOperation === 'classDefinition'} className="w-full md:w-auto mt-1">
+                    Execute {selectedOperation.replace(/([A-Z])/g, ' $1').trim()}
+                </Button>
               </div>
             </div>
-            <Button onClick={()=>handleOperation(selectedOperation, isOperationWithValue ? operationValue : heapArrayInput)} disabled={isPlaying || selectedOperation === 'classDefinition'}>
-                Execute {selectedOperation.replace(/([A-Z])/g, ' $1').trim()}
-            </Button>
+            
             <div className="flex items-center justify-start pt-4 border-t">
               <Button onClick={handleResetControls} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Heap &amp; Controls</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || selectedOperation === 'classDefinition'} size="lg"><Play className="mr-2"/>Play</Button> 
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || selectedOperation === 'classDefinition' } size="lg"><Play className="mr-2"/>Play</Button> 
                              : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
                 <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1 || selectedOperation === 'classDefinition'} size="lg"><SkipForward className="mr-2"/>Step</Button>
               </div>
@@ -264,6 +284,9 @@ export default function HeapOperationsPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
+             <p className="text-sm text-muted-foreground">
+              NIL nodes are logical and not visually rendered for clarity. Delete operation is conceptual.
+            </p>
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />

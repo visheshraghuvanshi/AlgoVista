@@ -201,18 +201,21 @@ export default function BellmanFordVisualizerPage() {
 
     if (startNodeValue.trim() === '') {
       toast({ title: "Missing Start Node", description: "Please enter a start node ID.", variant: "destructive" });
-       setSteps([]); setCurrentNodes(parseWeightedGraphInputWithEdgeList(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray', distance: Infinity})) || []); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+       setSteps([]); 
+       setCurrentNodes(parseWeightedGraphInputWithEdgeList(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray', distance: Infinity})) || []); 
+       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
       return;
     }
 
     const newSteps = generateBellmanFordSteps(parsedData, startNodeValue);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-
+    
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
+      setCurrentNodes(newSteps[0].nodes);
+      setCurrentEdges(newSteps[0].edges);
+      setCurrentAuxiliaryData(newSteps[0].auxiliaryData || []);
+      setCurrentLine(newSteps[0].currentLine);
       if (newSteps[0].message && (newSteps[0].message.includes("not found") || newSteps[0].message.includes("empty")) ){
            toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
       }
@@ -222,13 +225,16 @@ export default function BellmanFordVisualizerPage() {
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
     }
-  }, [graphInputValue, startNodeValue, toast, updateStateFromStep]);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+
+  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
     generateSteps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, startNodeValue]); 
+  }, [graphInputValue, startNodeValue, generateSteps]); // Removed generateSteps from here to break cycle, now it's stable
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {

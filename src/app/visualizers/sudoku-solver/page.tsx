@@ -15,8 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { SudokuVisualizationPanel } from './SudokuVisualizationPanel';
-import { SudokuCodePanel } from './SudokuCodePanel';
-import { generateSudokuSteps, SUDOKU_LINE_MAP } from './sudoku-solver-logic';
+import { SudokuCodePanel, SUDOKU_SOLVER_CODE_SNIPPETS } from './SudokuCodePanel'; // Import snippets
+import { generateSudokuSteps, SUDOKU_LINE_MAP } from './sudoku-solver-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 100; 
 const MIN_SPEED = 10;
@@ -47,6 +47,7 @@ export default function SudokuSolverVisualizerPage() {
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0); // Not used typically for Sudoku one solution
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -74,7 +75,9 @@ export default function SudokuSolverVisualizerPage() {
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
+      const currentS = steps[stepIndex];
+      setCurrentStep(currentS);
+      // No multiple solutions handling for Sudoku as it finds one or none
     }
   }, [steps]);
   
@@ -90,20 +93,22 @@ export default function SudokuSolverVisualizerPage() {
     const newSteps = generateSudokuSteps(boardArray);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-
+    
     if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
         if (lastStep.solutionFound) {
             toast({title: "Sudoku Solved!", description: "A solution has been found."});
         } else if (lastStep.message?.includes("No solution exists")) {
             toast({title: "No Solution", description: "This Sudoku puzzle has no solution.", variant: "default"});
         }
+    } else {
+        setCurrentStep(null);
     }
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
 
-  }, [sudokuInput, parseSudokuInput, updateVisualStateFromStep, toast]);
+  }, [sudokuInput, parseSudokuInput, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setInitialBoardState]);
   
   useEffect(() => { handleGenerateSteps(); }, [sudokuInput, handleGenerateSteps]);
 
@@ -166,7 +171,7 @@ export default function SudokuSolverVisualizerPage() {
                     placeholder={"Enter comma-separated numbers, new line for each row.\nExample:\n5,3,0,0,7,0,0,0,0\n6,0,0,1,9,5,0,0,0\n..."} 
                 />
               </div>
-              <div className="flex flex-col justify-end h-full pt-6"> {/* Align button with textarea bottom */}
+              <div className="flex flex-col justify-end h-full pt-6"> 
                  <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full mt-auto">Solve / Reset Steps</Button>
               </div>
             </div>

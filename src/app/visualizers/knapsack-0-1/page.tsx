@@ -58,7 +58,7 @@ export default function KnapsackVisualizerPage() {
           throw new Error("Weights must be positive, values non-negative.");
         }
         return { weight, value };
-      }).filter(item => item !== null && item !== undefined); // Ensure no undefined items if parsing fails for one part
+      }).filter(item => item !== null && item !== undefined); 
       if (items.length === 0 && input.trim() !== "") throw new Error("No valid items found.");
       return items;
     } catch (e: any) {
@@ -90,11 +90,16 @@ export default function KnapsackVisualizerPage() {
     const newSteps = generateKnapsack01Steps(items, capacity);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+    } else {
+        setCurrentStep(null);
+    }
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [itemInput, capacityInput, parseItemsInput, toast, updateStateFromStep]);
+  }, [itemInput, capacityInput, parseItemsInput, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -120,6 +125,7 @@ export default function KnapsackVisualizerPage() {
     setIsPlaying(false); setIsFinished(false); 
     setItemInput(DEFAULT_ITEMS_INPUT);
     setCapacityInput(DEFAULT_CAPACITY);
+    // handleGenerateSteps will be called by useEffect due to input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };

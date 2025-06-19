@@ -67,11 +67,16 @@ export default function EditDistanceVisualizerPage() {
     const newSteps = generateEditDistanceSteps(s1, s2);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+    } else {
+        setCurrentStep(null);
+    }
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [string1Input, string2Input, toast, updateVisualStateFromStep]);
+  }, [string1Input, string2Input, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
   useEffect(() => { handleGenerateSteps(); }, [string1Input, string2Input, handleGenerateSteps]);
 
@@ -97,6 +102,7 @@ export default function EditDistanceVisualizerPage() {
     setIsPlaying(false); setIsFinished(false); 
     setString1Input(DEFAULT_STRING1);
     setString2Input(DEFAULT_STRING2);
+    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };

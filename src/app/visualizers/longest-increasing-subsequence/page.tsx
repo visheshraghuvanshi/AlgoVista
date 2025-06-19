@@ -53,7 +53,7 @@ export default function LISVisualizerPage() {
     return parsed;
   }, [toast]);
 
-  const updateStateFromStep = useCallback((stepIndex: number) => {
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
   }, [steps]);
   
@@ -68,35 +68,41 @@ export default function LISVisualizerPage() {
     const newSteps = generateLIS_N2_Steps(nums);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+    } else {
+        setCurrentStep(null);
+    }
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [inputValue, parseInput, updateStateFromStep]);
+  }, [inputValue, parseInput, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
   useEffect(() => { handleGenerateSteps(); }, [inputValue, handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
     setInputValue(DEFAULT_LIS_INPUT);
+    // handleGenerateSteps will be called by useEffect on input change
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };

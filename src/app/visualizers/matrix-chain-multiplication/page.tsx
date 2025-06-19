@@ -4,19 +4,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
-import { algorithmMetadata } from './metadata'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
+import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
+import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, SquareFunction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Slider } from "@/components/ui/slider";
-import { MCMVisualizationPanel } from './MCMVisualizationPanel'; // Local import
+import { MCMVisualizationPanel } from './MCMVisualizationPanel';
 import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; 
-import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic'; // Local import
+import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 50;
@@ -60,7 +61,7 @@ export default function MCMVisualizerPage() {
     }
   }, [toast]);
 
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+  const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
   }, [steps]);
   
@@ -75,11 +76,16 @@ export default function MCMVisualizerPage() {
     const newSteps = generateMCMSteps(pArray);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+    } else {
+        setCurrentStep(null);
+    }
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [dimensionsInput, parseDimensionsInput, updateVisualStateFromStep]);
+  }, [dimensionsInput, parseDimensionsInput, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
   useEffect(() => { handleGenerateSteps(); }, [dimensionsInput, handleGenerateSteps]);
 
@@ -104,6 +110,7 @@ export default function MCMVisualizerPage() {
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
     setDimensionsInput(DEFAULT_DIMENSIONS_INPUT);
+    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -140,7 +147,7 @@ export default function MCMVisualizerPage() {
             </div>
             
             <div className="flex items-center justify-start pt-4 border-t">
-                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Input & Simulation</Button>
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Inputs & Simulation</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">

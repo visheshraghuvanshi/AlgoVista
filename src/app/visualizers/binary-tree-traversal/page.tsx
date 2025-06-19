@@ -101,7 +101,7 @@ export default function BinaryTreeTraversalPage() {
       toast({ title: "Error Processing Tree", description: error.message || "Could not process tree input.", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentTraversalPath([]); setCurrentLine(null);setCurrentProcessingNodeId(null); setIsPlaying(false); setIsFinished(false);
     }
-  }, [treeInputValue, selectedTraversalType, toast]);
+  }, [treeInputValue, selectedTraversalType, toast, setCurrentNodes, setCurrentEdges, setCurrentTraversalPath, setCurrentLine, setCurrentProcessingNodeId, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {

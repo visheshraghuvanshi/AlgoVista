@@ -15,8 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel';
-import { RatInAMazeCodePanel } from './RatInAMazeCodePanel';
-import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic';
+import { RatInAMazeCodePanel, N_QUEENS_CODE_SNIPPETS } from './RatInAMazeCodePanel'; // Corrected import name
+import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 200; 
 const MIN_SPEED = 20;
@@ -35,6 +35,7 @@ export default function RatInAMazeVisualizerPage() {
   const [isClient, setIsClient] = useState(false);
 
   const [mazeInput, setMazeInput] = useState(DEFAULT_MAZE_INPUT);
+  const [initialBoardState, setInitialBoardState] = useState<number[][] | null>(null);
   
   const [steps, setSteps] = useState<RatInAMazeStep[]>([]);
   const [currentStep, setCurrentStep] = useState<RatInAMazeStep | null>(null);
@@ -44,6 +45,7 @@ export default function RatInAMazeVisualizerPage() {
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0); // Not used for RatInAMaze usually, but kept if logic supports multiple paths
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -95,28 +97,31 @@ export default function RatInAMazeVisualizerPage() {
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const mazeArray = parseMazeInput(mazeInput);
-    if (!mazeArray) {
+    const boardArray = parseMazeInput(mazeInput);
+    if (!boardArray) {
       setSteps([]); setCurrentStep(null); setIsFinished(true); return;
     }
+    setInitialBoardState(boardArray.map(row => [...row])); 
 
-    const newSteps = generateRatInAMazeSteps(mazeArray);
+    const newSteps = generateRatInAMazeSteps(boardArray);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-
+    
     if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
         if (lastStep.action === 'goal_reached') {
             toast({title: "Path Found!", description: "The rat reached the destination."});
-        } else if (lastStep.message.includes("No solution")) {
+        } else if (lastStep.message?.includes("No solution exists")) {
             toast({title: "No Solution", description: "The rat could not find a path.", variant: "default"});
         }
+    } else {
+        setCurrentStep(null);
     }
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
 
-  }, [mazeInput, parseMazeInput, updateVisualStateFromStep, toast]);
+  }, [mazeInput, parseMazeInput, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setInitialBoardState]);
   
   useEffect(() => { handleGenerateSteps(); }, [mazeInput, handleGenerateSteps]);
 
@@ -156,7 +161,7 @@ export default function RatInAMazeVisualizerPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <RatInAMazeVisualizationPanel step={currentStep} />
+            <RatInAMazeVisualizationPanel step={currentStep ? {...currentStep, initialBoard: initialBoardState} : null} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <RatInAMazeCodePanel currentLine={currentStep?.currentLine ?? null} />
@@ -202,7 +207,7 @@ export default function RatInAMazeVisualizerPage() {
              {isFinished && currentStep?.action === 'goal_reached' && (
                 <p className="text-center text-lg font-semibold text-green-500">Solution Path Found!</p>
             )}
-            {isFinished && currentStep?.message?.includes("No solution exists") && (
+            {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
                 <p className="text-center text-lg font-semibold text-red-500">No Solution Path Found.</p>
             )}
           </CardContent>

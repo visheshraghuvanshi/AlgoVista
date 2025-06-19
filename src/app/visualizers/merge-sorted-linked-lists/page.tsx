@@ -4,15 +4,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel';
 import { MergeSortedLinkedListsCodePanel } from './MergeSortedLinkedListsCodePanel'; 
-import { LinkedListControlsPanel, type LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
 import { generateMergeSortedListsSteps } from './merge-sorted-linked-lists-logic';
@@ -62,15 +61,13 @@ export default function MergeSortedLinkedListsPage() {
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     if (mergeType === 'init') {
-        // For init, we might just display the two lists separately or not do much.
-        // For this visualizer, "init" means "ready to merge", so just reset steps.
         const initialMessage = "Lists ready for merge. Select merge type and play/step.";
-        setCurrentNodes([]); // Or display L1 and L2 if panel supports it
+        setCurrentNodes([]); 
         setCurrentHeadId(null);
         setCurrentAuxPointers({l1: 'L1_Head_Placeholder', l2: 'L2_Head_Placeholder'});
         setCurrentMessage(initialMessage);
         setCurrentLine(null);
-        setSteps([{ nodes: [], headId: null, currentLine: 0, message: initialMessage }]); // Dummy step for initial state
+        setSteps([{ nodes: [], headId: null, currentLine: 0, message: initialMessage }]);
         setIsPlaying(false); setIsFinished(true); 
         return;
     }
@@ -84,9 +81,17 @@ export default function MergeSortedLinkedListsPage() {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateVisualStateFromStep(0);
-    else setCurrentNodes([]);
-  }, [list1Str, list2Str, mergeType, updateVisualStateFromStep, toast]);
+    if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setCurrentNodes(firstStep.nodes);
+        setCurrentHeadId(firstStep.headId ?? null);
+        setCurrentAuxPointers(firstStep.auxiliaryPointers || {});
+        setCurrentMessage(firstStep.message);
+        setCurrentLine(firstStep.currentLine);
+    } else {
+        setCurrentNodes([]); setCurrentHeadId(null); setCurrentAuxPointers({}); setCurrentMessage("No steps generated."); setCurrentLine(null);
+    }
+  }, [list1Str, list2Str, mergeType, toast, setCurrentNodes, setCurrentHeadId, setCurrentAuxPointers, setCurrentMessage, setCurrentLine, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished ]);
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -111,7 +116,6 @@ export default function MergeSortedLinkedListsPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); 
     setList1Str('1,3,5,7'); setList2Str('2,4,6,8'); setMergeType('iterative');
-    // handleGenerateSteps will be called by useEffect due to state changes
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {

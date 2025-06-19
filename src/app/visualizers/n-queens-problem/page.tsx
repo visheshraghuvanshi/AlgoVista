@@ -42,6 +42,13 @@ export default function NQueensProblemVisualizerPage() {
 
   useEffect(() => { setIsClient(true); }, []);
 
+  const parseMazeInput = useCallback((input: string): number[][] | null => {
+    // This function seems to be a leftover from RatInAMaze, N-Queens doesn't parse a maze input
+    // It just needs N. For now, I'll keep it and assume it's unused or will be removed.
+    // If it were used, it would need to be specific to N-Queens (e.g. parsing initial board if we allowed that).
+    return []; // Placeholder
+  }, []);
+
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
@@ -54,7 +61,7 @@ export default function NQueensProblemVisualizerPage() {
         }));
       }
     }
-  }, [steps]);
+  }, [steps]); // Depends on steps
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -71,21 +78,29 @@ export default function NQueensProblemVisualizerPage() {
     const newSteps = generateNQueensSteps(boardSizeN);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    // Directly set the first step's state
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+        const lastStep = newSteps[newSteps.length - 1];
+        if (lastStep.foundSolutions && lastStep.foundSolutions.length > 0) {
+            toast({title: "N-Queens Solution(s)", description: `Found ${lastStep.foundSolutions.length} solution(s). Last animation step will show one.`});
+             setDisplayedSolutionIndex(0); // Reset solution index
+             // Ensure the board displayed for the last step IS a solution board
+            if (currentStepIndex === newSteps.length - 1) { // If it's the last step after generation
+                setCurrentStep(prev => ({...prev!, board: lastStep.foundSolutions![0]}));
+            }
+        } else if (lastStep.message?.includes("No solutions")) {
+            toast({title: "No Solution", description: "No solutions found for N=" + boardSizeN, variant: "default"});
+        }
+    } else {
+        setCurrentStep(null);
+    }
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     setDisplayedSolutionIndex(0);
 
-    if(newSteps.length > 0) {
-        const lastStep = newSteps[newSteps.length - 1];
-        if (lastStep.foundSolutions && lastStep.foundSolutions.length > 0) {
-            toast({title: "N-Queens Solution(s)", description: `Found ${lastStep.foundSolutions.length} solution(s). Last animation step will show one.`});
-        } else if (lastStep.message?.includes("No solutions")) {
-            toast({title: "N-Queens", description: "No solutions found for N=" + boardSizeN, variant: "default"});
-        }
-    }
 
-  }, [boardSizeN, toast, updateVisualStateFromStep]);
+  }, [boardSizeN, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setDisplayedSolutionIndex]); // Added setCurrentStep, etc.
   
   useEffect(() => { handleGenerateSteps(); }, [boardSizeN, handleGenerateSteps]);
 
@@ -185,6 +200,12 @@ export default function NQueensProblemVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
+             {isFinished && currentStep?.solutionFound && (
+                <p className="text-center text-lg font-semibold text-green-500">Sudoku Solved!</p>
+            )}
+            {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
+                <p className="text-center text-lg font-semibold text-red-500">No Solution Exists.</p>
+            )}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -193,3 +214,4 @@ export default function NQueensProblemVisualizerPage() {
     </div>
   );
 }
+
