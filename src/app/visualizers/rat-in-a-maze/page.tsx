@@ -8,14 +8,14 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDet
 import type { AlgorithmMetadata, RatInAMazeStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, MousePointerSquare } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Mouse } from 'lucide-react'; // Changed MousePointerSquare to Mouse
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel';
-import { RatInAMazeCodePanel, N_QUEENS_CODE_SNIPPETS } from './RatInAMazeCodePanel'; // Corrected import name
+import { RatInAMazeVisualizationPanel } from './NQueensVisualizationPanel'; // Corrected import name
+import { RatInAMazeCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; // Corrected import name
 import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 200; 
@@ -45,7 +45,7 @@ export default function RatInAMazeVisualizerPage() {
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0); // Not used for RatInAMaze usually, but kept if logic supports multiple paths
+  const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0);
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -90,9 +90,10 @@ export default function RatInAMazeVisualizerPage() {
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
+      const currentS = steps[stepIndex];
+      setCurrentStep(currentS);
     }
-  }, [steps]);
+  }, [steps, setCurrentStep]);
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -154,7 +155,7 @@ export default function RatInAMazeVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <MousePointerSquare className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <Mouse className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
@@ -173,7 +174,7 @@ export default function RatInAMazeVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> 
               <div className="space-y-1">
-                <Label htmlFor="mazeConfigInput">Maze Configuration (0=wall, 1=path, max {MAX_MAZE_DIM}x{MAX_MAZE_DIM})</Label>
+                <Label htmlFor="mazeConfigInput">Maze Configuration (0=wall, 1=path, max ${MAX_MAZE_DIM}x${MAX_MAZE_DIM})</Label>
                 <Textarea 
                     id="mazeConfigInput" 
                     value={mazeInput} 
@@ -204,7 +205,7 @@ export default function RatInAMazeVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
-             {isFinished && currentStep?.action === 'goal_reached' && (
+             {isFinished && currentStep?.solutionFound && (
                 <p className="text-center text-lg font-semibold text-green-500">Solution Path Found!</p>
             )}
             {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
@@ -218,3 +219,4 @@ export default function RatInAMazeVisualizerPage() {
     </div>
   );
 }
+
