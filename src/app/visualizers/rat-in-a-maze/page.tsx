@@ -5,17 +5,17 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, RatInAMazeStep } from './types'; // Local import
+import type { AlgorithmMetadata, SudokuStep as RatInAMazeStep } from './types'; // Using SudokuStep as RatInAMazeStep from local types
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, Mouse } from 'lucide-react'; // Changed MousePointerSquare to Mouse
+import { Play, Pause, SkipForward, RotateCcw, Mouse } from 'lucide-react'; // Corrected icon
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { RatInAMazeVisualizationPanel } from './NQueensVisualizationPanel'; // Corrected import name
-import { RatInAMazeCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; // Corrected import name
+import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel'; // Corrected import path
+import { RatInAMazeCodePanel } from './RatInAMazeCodePanel'; // Corrected import path
 import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 200; 
@@ -93,7 +93,7 @@ export default function RatInAMazeVisualizerPage() {
       const currentS = steps[stepIndex];
       setCurrentStep(currentS);
     }
-  }, [steps, setCurrentStep]);
+  }, [steps]); 
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -111,7 +111,7 @@ export default function RatInAMazeVisualizerPage() {
     if (newSteps.length > 0) {
         setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
-        if (lastStep.action === 'goal_reached') {
+        if (lastStep.currentCell?.action === 'goal_reached') {
             toast({title: "Path Found!", description: "The rat reached the destination."});
         } else if (lastStep.message?.includes("No solution exists")) {
             toast({title: "No Solution", description: "The rat could not find a path.", variant: "default"});
