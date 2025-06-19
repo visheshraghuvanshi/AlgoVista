@@ -26,7 +26,7 @@ The algorithm uses two pointers that traverse the list at different speeds:
     *   If \`slow == fast\` at any point during the traversal (after their initial placement at the head and subsequent moves), a cycle is detected.
 
 **Checking for Empty or Single-Node List**:
--   If the list is empty (\`head\` is \`null\`) or has only one node (\`head.next\` is \`null\`), it cannot have a cycle. These are base cases that should be handled, typically by returning \`false\` (no cycle).
+-   If the list is empty (\\\`head\\\` is \\\`null\\\`) or has only one node (\\\`head.next\\\` is \\\`null\\\`), it cannot have a cycle. These are base cases that should be handled, typically by returning \\\`false\\\` (no cycle).
 
 ### Example: List \`1 -> 2 -> 3 -> 4 -> 5 -> 3\` (cycle from 5 back to 3)
 -   **Init**: \`slow = 1\`, \`fast = 1\`
@@ -62,3 +62,4 @@ The AlgoVista visualizer for Linked List Cycle Detection demonstrates the moveme
   },
   spaceComplexity: "O(1)",
 };
+
