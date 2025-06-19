@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { ArrayAlgorithmStep } from './types'; // Local import
 
 export const BINARY_SEARCH_LINE_MAP = {
   functionDeclaration: 1,
@@ -8,37 +8,35 @@ export const BINARY_SEARCH_LINE_MAP = {
   calculateMid: 4,
   checkMidEqualsTarget: 5,
   returnFoundMid: 6,
-  checkTargetGreater: 7, // This corresponds to the "else if (sortedArr[mid] < target)"
+  checkTargetGreater: 7, 
   updateLow: 8,
-  elseBlock: 9, // This corresponds to the "else" part
+  elseBlock: 9, 
   updateHigh: 10,
-  // Line 11 is the closing brace for the inner "else"
-  whileLoopEnd: 12, // This is the closing brace for the while loop
+  whileLoopEnd: 12, 
   returnNotFound: 13,
   functionEnd: 14,
-  arraySortComment: 15, // "Note: Input array must be sorted."
+  arraySortComment: 15, 
 };
 
-export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: number): AlgorithmStep[] => {
-  const localSteps: AlgorithmStep[] = [];
-  // Assume arr is already sorted. The page component should handle sorting.
-  const arr = [...sortedArrToSearch];
+export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: number): ArrayAlgorithmStep[] => {
+  const localSteps: ArrayAlgorithmStep[] = [];
+  const arr = [...sortedArrToSearch]; // Assume arr is already sorted from page component
   const n = arr.length;
   const lm = BINARY_SEARCH_LINE_MAP;
 
   const addStep = (
     line: number,
-    active: number[] = [], // Typically [low, mid, high] or relevant indices
-    found: number[] = [],  // [foundIndex] if target is found
+    active: number[] = [], 
+    found: number[] = [],  
     processingRange: [number, number] | null = null,
     message: string = "",
     currentArrState = [...arr]
   ) => {
     localSteps.push({
       array: currentArrState,
-      activeIndices: [...active].filter(idx => idx >=0 && idx < n), // Ensure valid indices
-      swappingIndices: [], // Not used
-      sortedIndices: [...found], // Repurposed for found item
+      activeIndices: [...active].filter(idx => idx >=0 && idx < n), 
+      swappingIndices: [], 
+      sortedIndices: [...found], 
       currentLine: line,
       message,
       processingSubArrayRange: processingRange,
@@ -61,14 +59,14 @@ export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: n
   let iteration = 0; // Safety break
   while (low <= high && iteration < n + 5) {
     iteration++;
-    addStep(lm.whileLoopStart, [low, high], [], [low, high], `Searching. low=${low}, high=${high}`);
+    addStep(lm.whileLoopStart, [low, high], [], [low, high], `Searching in [${low}..${high}]. low=${low}, high=${high}`);
     const mid = Math.floor(low + (high - low) / 2);
     addStep(lm.calculateMid, [low, mid, high], [], [low, high], `Calculate mid = ${mid}. arr[mid]=${arr[mid]}`);
     
     addStep(lm.checkMidEqualsTarget, [low, mid, high], [], [low, high], `Is arr[mid] (${arr[mid]}) === target (${target})?`);
     if (arr[mid] === target) {
       addStep(lm.returnFoundMid, [mid], [mid], [low, high], `Target ${target} found at index ${mid}.`);
-      addStep(lm.functionEnd, [], [mid]); // Use functionEnd, not arraySortComment here
+      addStep(lm.functionEnd, [], [mid]); 
       return localSteps;
     }
 
@@ -84,7 +82,6 @@ export const generateBinarySearchSteps = (sortedArrToSearch: number[], target: n
   }
   addStep(lm.whileLoopEnd, [low,high], [], [low, high], `Loop finished. low (${low}) > high (${high}).`);
   addStep(lm.returnNotFound, [], [], null, `Target ${target} not found.`);
-  addStep(lm.functionEnd); // Use functionEnd, not arraySortComment here
+  addStep(lm.functionEnd); 
   return localSteps;
 };
-

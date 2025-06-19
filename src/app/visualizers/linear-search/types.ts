@@ -1,6 +1,7 @@
 
-// Local types for Bubble Sort Visualizer
+// Local types for Linear Search Visualizer
 
+// Common metadata types
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -33,12 +34,12 @@ export interface AlgorithmDetailsProps {
 // Specific Step Type for this visualizer (Array-based)
 export interface ArrayAlgorithmStep {
   array: number[];
-  activeIndices: number[];    
-  swappingIndices: number[];  
-  sortedIndices: number[];    
-  currentLine: number | null; 
-  message?: string;           
-  processingSubArrayRange?: [number, number] | null; 
-  pivotActualIndex?: number | null; 
+  activeIndices: number[];    // Indices being actively processed/compared
+  swappingIndices: number[];  // Indices involved in a swap animation (not used by linear search)
+  sortedIndices: number[];    // Indices of elements in their final sorted position (used to highlight found item)
+  currentLine: number | null; // Line number in the code panel to highlight
+  message?: string;           // Description of the current step
+  processingSubArrayRange?: [number, number] | null; // Not typically used by linear search
+  pivotActualIndex?: number | null; // Not used by linear search
   auxiliaryData?: Record<string, any> | null;
 }

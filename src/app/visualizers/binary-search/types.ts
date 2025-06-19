@@ -1,5 +1,5 @@
 
-// Local types for Bubble Sort Visualizer
+// Local types for Binary Search Visualizer
 
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
@@ -22,7 +22,6 @@ export interface AlgorithmMetadata {
   tags?: string[];
 }
 
-// Props for the locally copied AlgorithmDetailsCard
 export interface AlgorithmDetailsProps {
   title: string;
   description: string;
@@ -30,14 +29,13 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
-// Specific Step Type for this visualizer (Array-based)
 export interface ArrayAlgorithmStep {
   array: number[];
   activeIndices: number[];    
   swappingIndices: number[];  
   sortedIndices: number[];    
   currentLine: number | null; 
-  message?: string;           
+  message?: string;          
   processingSubArrayRange?: [number, number] | null; 
   pivotActualIndex?: number | null; 
   auxiliaryData?: Record<string, any> | null;

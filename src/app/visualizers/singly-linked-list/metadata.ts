@@ -1,5 +1,5 @@
 
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'singly-linked-list',

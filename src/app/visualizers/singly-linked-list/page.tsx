@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local import
 import { SinglyLinkedListCodePanel } from './SinglyLinkedListCodePanel'; 
-import { LinkedListControlsPanel, type LinkedListOperation, ALL_OPERATIONS } from '@/components/algo-vista/LinkedListControlsPanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmMetadata, AlgorithmDetailsProps, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { SINGLY_LL_LINE_MAPS, generateSinglyLinkedListSteps } from './singly-linked-list-logic';
@@ -25,7 +25,7 @@ export default function SinglyLinkedListPage() {
 
   const [initialListStr, setInitialListStr] = useState('10,20,30');
   const [inputValue, setInputValue] = useState('5'); 
-  const [positionValue, setPositionValue] = useState('1'); // For position-based operations
+  const [positionValue, setPositionValue] = useState('1');
   const [selectedOperation, setSelectedOperation] = useState<LinkedListOperation>('init');
   
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
@@ -71,12 +71,12 @@ export default function SinglyLinkedListPage() {
         positionToUse = Number(posOrSecondList);
     }
 
-    const currentOpDetails = ALL_OPERATIONS.find(details => details.value === op);
-    if (currentOpDetails?.needsValue && operationValueToUse === undefined) {
+    const currentOpDetails = ALL_OPERATIONS_LOCAL.find(details => details.value === op);
+    if (currentOpDetails?.needsValue && (operationValueToUse === undefined || String(operationValueToUse).trim() === '')) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
         return;
     }
-    if (currentOpDetails?.needsPosition && positionToUse === undefined) {
+    if (currentOpDetails?.needsPosition && (positionToUse === undefined || String(positionToUse).trim() === '')) {
         toast({ title: "Position Required", description: `Please enter a position for ${op}.`, variant: "destructive" });
         return;
     }
@@ -229,4 +229,3 @@ export default function SinglyLinkedListPage() {
     </div>
   );
 }
-

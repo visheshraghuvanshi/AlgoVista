@@ -4,14 +4,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { LinearSearchCodePanel } from './LinearSearchCodePanel'; 
-import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
-import { AlgorithmDetailsCard } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmStep } from '@/types';
+import { SearchingControlsPanel } from './SearchingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { ArrayAlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { LINEAR_SEARCH_LINE_MAP, generateLinearSearchSteps } from './linear-search-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const LINEAR_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
@@ -66,7 +66,7 @@ export default function LinearSearchVisualizerPage() {
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
   const [targetValue, setTargetValue] = useState('7');
   
-  const [steps, setSteps] = useState<AlgorithmStep[]>([]);
+  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); // Use local type
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [displayedData, setDisplayedData] = useState<number[]>([]);

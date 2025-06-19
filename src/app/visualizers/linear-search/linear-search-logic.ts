@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { ArrayAlgorithmStep } from './types'; // Local import
 
 export const LINEAR_SEARCH_LINE_MAP = {
   functionDeclaration: 1,
@@ -11,8 +11,8 @@ export const LINEAR_SEARCH_LINE_MAP = {
   functionEnd: 7,
 };
 
-export const generateLinearSearchSteps = (arrToSearch: number[], target: number): AlgorithmStep[] => {
-  const localSteps: AlgorithmStep[] = [];
+export const generateLinearSearchSteps = (arrToSearch: number[], target: number): ArrayAlgorithmStep[] => {
+  const localSteps: ArrayAlgorithmStep[] = [];
   if (!arrToSearch) return localSteps;
   const arr = [...arrToSearch];
   const n = arr.length;
@@ -28,8 +28,8 @@ export const generateLinearSearchSteps = (arrToSearch: number[], target: number)
     localSteps.push({
       array: currentArrState,
       activeIndices: [...active],
-      swappingIndices: [], // Not used in linear search
-      sortedIndices: [...found], // Repurposed to show 'found' item
+      swappingIndices: [], 
+      sortedIndices: [...found], 
       currentLine: line,
       message,
       processingSubArrayRange: null,

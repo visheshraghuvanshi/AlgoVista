@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { BinarySearchCodePanel } from './BinarySearchCodePanel'; 
-import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
-import { AlgorithmDetailsCard } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmStep } from '@/types';
+import { SearchingControlsPanel } from './SearchingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { ArrayAlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { BINARY_SEARCH_LINE_MAP, generateBinarySearchSteps } from './binary-search-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const BINARY_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
@@ -96,7 +96,7 @@ export default function BinarySearchVisualizerPage() {
   const [inputValue, setInputValue] = useState('1,2,3,4,5,6,7,8,9'); 
   const [targetValue, setTargetValue] = useState('7');
   
-  const [steps, setSteps] = useState<AlgorithmStep[]>([]);
+  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); // Use local type
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [displayedData, setDisplayedData] = useState<number[]>([]);
@@ -206,7 +206,7 @@ export default function BinarySearchVisualizerPage() {
       setIsPlaying(false);
       setIsFinished(false);
     }
-  }, [inputValue, targetValue, parseInput, parseTarget, toast]);
+  }, [inputValue, targetValue, parseInput, parseTarget, toast, updateStateFromStep]);
 
 
   useEffect(() => {
@@ -228,7 +228,9 @@ export default function BinarySearchVisualizerPage() {
              generateSteps(true); 
         }
     }
-  }, [inputValue, parseInput, generateSteps]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue, parseInput]); 
+
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {

@@ -5,17 +5,23 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react";
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 
-interface SortingControlsPanelProps {
+// Types for this component's props will be handled by the page.tsx that uses it,
+// or could be defined in a local types.ts for linear-search if they become complex.
+// For now, assuming basic props passed by linear-search/page.tsx.
+
+interface SearchingControlsPanelProps {
   onPlay: () => void;
   onPause: () => void;
   onStep: () => void;
   onReset: () => void;
   onInputChange: (value: string) => void;
   inputValue: string;
+  onTargetValueChange: (value: string) => void;
+  targetValue: string;
   isPlaying: boolean;
   isFinished: boolean;
   currentSpeed: number;
@@ -23,15 +29,19 @@ interface SortingControlsPanelProps {
   isAlgoImplemented: boolean;
   minSpeed: number;
   maxSpeed: number;
+  targetInputLabel?: string;
+  targetInputPlaceholder?: string;
 }
 
-export function SortingControlsPanel({
+export function SearchingControlsPanel({
   onPlay,
   onPause,
   onStep,
   onReset,
   onInputChange,
   inputValue,
+  onTargetValueChange,
+  targetValue,
   isPlaying,
   isFinished,
   currentSpeed,
@@ -39,17 +49,23 @@ export function SortingControlsPanel({
   isAlgoImplemented,
   minSpeed,
   maxSpeed,
-}: SortingControlsPanelProps) {
+  targetInputLabel = "Target Value",
+  targetInputPlaceholder = "Enter value",
+}: SearchingControlsPanelProps) {
   const handleInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
     onInputChange(event.target.value);
+  };
+
+  const handleTargetInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onTargetValueChange(event.target.value);
   };
 
   const handleSpeedSliderChange = (value: number[]) => {
     onSpeedChange(value[0]);
   };
 
-  const commonPlayDisabled = isFinished || inputValue.trim() === '' || !isAlgoImplemented;
-  const commonStepDisabled = isPlaying || isFinished || inputValue.trim() === '' || !isAlgoImplemented;
+  const commonPlayDisabled = isFinished || inputValue.trim() === '' || !isAlgoImplemented || (targetValue === undefined || targetValue.trim() === '');
+  const commonStepDisabled = isPlaying || isFinished || inputValue.trim() === '' || !isAlgoImplemented || (targetValue === undefined || targetValue.trim() === '');
 
   return (
     <Card className="shadow-xl rounded-xl">
@@ -58,7 +74,7 @@ export function SortingControlsPanel({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-          <div className="space-y-2 md:col-span-2"> 
+          <div className="space-y-2">
             <Label htmlFor="customInput" className="text-sm font-medium">
               Input Array (comma-separated numbers)
             </Label>
@@ -70,6 +86,21 @@ export function SortingControlsPanel({
               placeholder="e.g., 5,2,8,1,9"
               className="w-full text-base"
               aria-label="Custom input for algorithm data"
+              disabled={isPlaying || !isAlgoImplemented}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="targetInput" className="text-sm font-medium flex items-center">
+                <Search className="mr-2 h-4 w-4 text-muted-foreground" /> {targetInputLabel}
+            </Label>
+            <Input
+              id="targetInput"
+              type="text"
+              value={targetValue}
+              onChange={handleTargetInputChangeEvent}
+              placeholder={targetInputPlaceholder}
+              className="w-full text-base"
+              aria-label={targetInputLabel}
               disabled={isPlaying || !isAlgoImplemented}
             />
           </div>

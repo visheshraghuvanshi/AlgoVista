@@ -4,10 +4,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from './VisualizationPanel'; // Local import
+import { VisualizationPanel } from './VisualizationPanel'; 
 import { BubbleSortCodePanel } from './BubbleSortCodePanel'; 
-import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import { SortingControlsPanel } from './SortingControlsPanel'; 
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
 import type { ArrayAlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
@@ -109,7 +109,7 @@ export default function BubbleSortVisualizerPage() {
     
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
 
-  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); // Use local type
+  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [displayedData, setDisplayedData] = useState<number[]>([]);
