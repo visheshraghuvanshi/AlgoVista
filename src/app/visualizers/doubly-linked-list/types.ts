@@ -1,3 +1,4 @@
+
 // src/app/visualizers/doubly-linked-list/types.ts
 
 // Common metadata types
@@ -66,20 +67,49 @@ export type LinkedListOperation =
   | 'insertHead' | 'insertTail' | 'insertAtPosition' 
   | 'deleteHead' | 'deleteTail' | 'deleteByValue' | 'deleteAtPosition'
   | 'search' 
-  | 'reverse' // Though not used by DLL page specifically, kept for panel consistency
-  | 'detectCycle' // Same as above
-  | 'merge' // Same as above
+  | 'reverse' 
+  | 'detectCycle'
+  | 'merge' 
   | 'traverse';
 
+import type { LucideIcon } from 'lucide-react'; // Ensure LucideIcon type is available
 import { ListPlus, Trash2, SearchCode, CornerDownLeft, CornerUpRight, Milestone, FastForward } from "lucide-react";
 
-export const ALL_OPERATIONS_LOCAL: { value: LinkedListOperation; label: string; icon?: React.ElementType, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
+
+export const ALL_OPERATIONS_LOCAL: { value: LinkedListOperation; label: string; icon?: LucideIcon, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
   { value: 'init', label: 'Initialize/Set List', icon: ListPlus },
   { value: 'insertHead', label: 'Insert Head', icon: CornerUpRight, needsValue: true },
   { value: 'insertTail', label: 'Insert Tail', icon: CornerDownLeft, needsValue: true },
   { value: 'insertAtPosition', label: 'Insert At Position', icon: Milestone, needsValue: true, needsPosition: true },
   { value: 'deleteByValue', label: 'Delete by Value', icon: Trash2, needsValue: true },
   { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
-  { value: 'search', label: 'Search Value', icon: SearchCode, needsValue: true },
-  { value: 'traverse', label: 'Traverse List', icon: FastForward },
+  // Add other DLL-specific operations if needed, or filter in the panel itself
+  // For now, keeping it same as SLL available ops as the panel is generic
 ];
+
+// Props for LinkedListControlsPanel
+export interface LinkedListControlsPanelProps {
+  onPlay: () => void;
+  onPause: () => void;
+  onStep: () => void;
+  onReset: () => void;
+  onOperationChange: (operation: LinkedListOperation, value?: string, positionOrSecondList?: string | number) => void;
+  initialListValue: string;
+  onInitialListValueChange: (value: string) => void;
+  inputValue: string; 
+  onInputValueChange: (value: string) => void;
+  positionValue?: string; 
+  onPositionValueChange?: (value: string) => void;
+  secondListValue?: string; 
+  onSecondListValueChange?: (value: string) => void;
+  selectedOperation: LinkedListOperation | null;
+  onSelectedOperationChange: (operation: LinkedListOperation) => void;
+  availableOperations?: LinkedListOperation[]; 
+  isPlaying: boolean;
+  isFinished: boolean;
+  currentSpeed: number;
+  onSpeedChange: (speed: number) => void;
+  isAlgoImplemented: boolean; 
+  minSpeed: number;
+  maxSpeed: number;
+}

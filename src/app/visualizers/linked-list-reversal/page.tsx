@@ -1,17 +1,19 @@
+
 // src/app/visualizers/linked-list-reversal/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; 
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local import
 import { LinkedListReversalCodePanel } from './LinkedListReversalCodePanel'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types'; 
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types'; // Local import
+import type { ReversalTypeInternal as ReversalType } from './types'; // Renamed for clarity in this file
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { generateLinkedListReversalSteps, REVERSAL_ITERATIVE_LINE_MAP, REVERSAL_RECURSIVE_LINE_MAP } from './linked-list-reversal-logic';
@@ -22,8 +24,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
-
-type ReversalType = 'iterative' | 'recursive' | 'init';
 
 export default function LinkedListReversalPage() {
   const { toast } = useToast();

@@ -214,7 +214,6 @@ export const generateSinglyLinkedListSteps = (
              headId = newNodeAtPosId;
              addStep(lineMap.posFoundInsert, `Inserted ${value} at head (pos ${position}).`, undefined, newNodeAtPosId, 'new', undefined, 'success');
         } else { // Position out of bounds (e.g., insert at end if pos === list.length)
-          // If prev exists, it means we traversed some part of the list
           if (prev) {
              addStep(lineMap.posNotFound, `Position ${position} is at or after end (list length ${count}). Appending to tail.`, prev, newNodeAtPosId, 'new', undefined, 'info');
              actualListNodes.get(prev)!.nextId = newNodeAtPosId;
@@ -342,3 +341,40 @@ export const generateSinglyLinkedListSteps = (
   return localSteps;
 };
 
+```
+  </change>
+  <change>
+    <file>/src/app/visualizers/singly-linked-list/AlgorithmDetailsCard.tsx</file>
+    <content><![CDATA[
+"use client";
+
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { AlgorithmDetailsProps } from './types'; // Local import
+
+export function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
+  return (
+    <Card className="mt-8 shadow-lg rounded-xl">
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
+          About {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground whitespace-pre-line">{description}</p>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            <li>Best Case: {timeComplexities.best}</li>
+            <li>Average Case: {timeComplexities.average}</li>
+            <li>Worst Case: {timeComplexities.worst}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
+          <p className="text-muted-foreground">{spaceComplexity}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

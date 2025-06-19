@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; 
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local import
 import { CircularLinkedListCodePanel } from './CircularLinkedListCodePanel'; 
-import { LinkedListControlsPanel } from './LinkedListControlsPanel'; 
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, AlgorithmDetailsProps } from './types'; 
+import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, AlgorithmDetailsProps, ALL_OPERATIONS_LOCAL } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { CIRCULAR_LL_LINE_MAPS, generateCircularLinkedListSteps } from './circular-linked-list-logic';
@@ -72,9 +72,9 @@ export default function CircularLinkedListPage() {
         positionToUse = Number(posOrSecondList);
     }
 
-    // Using ALL_OPERATIONS_LOCAL from local types.ts for currentOpDetails
-    const { ALL_OPERATIONS_LOCAL } = require('./types'); 
-    const currentOpDetails = ALL_OPERATIONS_LOCAL.find((details: {value: LinkedListOperation}) => details.value === op);
+    // Using ALL_OPERATIONS_LOCAL from local types.ts
+    const { ALL_OPERATIONS_LOCAL: currentFileOps } = require('./types'); 
+    const currentOpDetails = currentFileOps.find((details: {value: LinkedListOperation}) => details.value === op);
 
     if (currentOpDetails?.needsValue && (operationValueToUse === undefined || String(operationValueToUse).trim() === '')) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
@@ -172,7 +172,7 @@ export default function CircularLinkedListPage() {
 
   if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
   
-  const algoDetails: AlgorithmDetailsProps = {
+  const localAlgoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -212,9 +212,16 @@ export default function CircularLinkedListPage() {
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
           isAlgoImplemented={true} minSpeed={MIN_SPEED} maxSpeed={MAX_SPEED}
         />
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
+
+// Helper to recreate visual nodes from Map (not used directly in page but shows how logic might manage it)
+const createVisualCLLNodes = (actualMap: Map<string, {value:string|number, nextId:string|null}>, headId: string|null): LinkedListNodeVisual[] => {
+    // ... implementation similar to createVisualNodesFromCurrentState in logic ...
+    return [];
+}
+

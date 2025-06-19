@@ -6,44 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListPlus, Trash2, SearchCode, Shuffle, GitMerge, LocateFixed, Milestone, CornerDownLeft, CornerUpRight } from "lucide-react"; // Added missing icons
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import type { LinkedListOperation } from './types'; // Local import
-import { ALL_OPERATIONS_LOCAL as ALL_OPERATIONS } from './types'; // Local import
+import type { LinkedListOperation, ALL_OPERATIONS_LOCAL as ALL_OPERATIONS_TYPE, LinkedListControlsPanelProps } from './types'; // Local import
+import { ALL_OPERATIONS_LOCAL } from './types'; // Local import
 
-interface LinkedListControlsPanelProps {
-  onPlay: () => void;
-  onPause: () => void;
-  onStep: () => void;
-  onReset: () => void;
-  onOperationChange: (operation: LinkedListOperation, value?: string, positionOrSecondList?: string | number) => void;
-  
-  initialListValue: string;
-  onInitialListValueChange: (value: string) => void;
-  
-  inputValue: string; 
-  onInputValueChange: (value: string) => void;
-
-  positionValue?: string; 
-  onPositionValueChange?: (value: string) => void;
-  
-  secondListValue?: string; 
-  onSecondListValueChange?: (value: string) => void;
-
-  selectedOperation: LinkedListOperation | null;
-  onSelectedOperationChange: (operation: LinkedListOperation) => void;
-  
-  availableOperations?: LinkedListOperation[]; 
-
-  isPlaying: boolean;
-  isFinished: boolean;
-  currentSpeed: number;
-  onSpeedChange: (speed: number) => void;
-  isAlgoImplemented: boolean; 
-  minSpeed: number;
-  maxSpeed: number;
-}
 
 export function LinkedListControlsPanel({
   onPlay, onPause, onStep, onReset, onOperationChange,
@@ -57,7 +25,7 @@ export function LinkedListControlsPanel({
   isAlgoImplemented, minSpeed, maxSpeed,
 }: LinkedListControlsPanelProps) {
 
-  const currentOpDetails = ALL_OPERATIONS.find(op => op.value === selectedOperation);
+  const currentOpDetails = ALL_OPERATIONS_LOCAL.find(op => op.value === selectedOperation);
   const showValueInput = currentOpDetails?.needsValue;
   const showPositionInput = currentOpDetails?.needsPosition;
   const showSecondListInput = currentOpDetails?.needsSecondList;
@@ -80,8 +48,8 @@ export function LinkedListControlsPanel({
   };
 
   const opsToDisplay = availableOperations 
-    ? ALL_OPERATIONS.filter(op => availableOperations.includes(op.value))
-    : ALL_OPERATIONS;
+    ? ALL_OPERATIONS_LOCAL.filter(op => availableOperations.includes(op.value))
+    : ALL_OPERATIONS_LOCAL;
 
   const isExecuteDisabled = isPlaying || !isAlgoImplemented || !selectedOperation ||
     (showValueInput && inputValue.trim() === '') ||
@@ -174,7 +142,7 @@ export function LinkedListControlsPanel({
         </div>
         
         <Button onClick={handleExecuteOperation} disabled={isExecuteDisabled} className="w-full md:w-auto">
-          Execute {selectedOperation ? ALL_OPERATIONS.find(op=>op.value===selectedOperation)?.label : ''}
+          Execute {selectedOperation ? ALL_OPERATIONS_LOCAL.find(op=>op.value===selectedOperation)?.label : ''}
         </Button>
         
         <div className="flex items-center justify-start pt-4 border-t">
@@ -186,7 +154,7 @@ export function LinkedListControlsPanel({
         <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {!isPlaying ? (
-              <Button onClick={onPlay} disabled={isFinished || !isAlgoImplemented || !selectedOperation || steps.length <=1} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
+              <Button onClick={onPlay} disabled={isFinished || !isAlgoImplemented || !selectedOperation || (steps && steps.length <=1)} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
                 <Play className="mr-2 h-5 w-5" /> Play Steps
               </Button>
             ) : (
@@ -194,7 +162,7 @@ export function LinkedListControlsPanel({
                 <Pause className="mr-2 h-5 w-5" /> Pause
               </Button>
             )}
-            <Button onClick={onStep} variant="outline" disabled={isPlaying || isFinished || !isAlgoImplemented || !selectedOperation || steps.length <=1} size="lg">
+            <Button onClick={onStep} variant="outline" disabled={isPlaying || isFinished || !isAlgoImplemented || !selectedOperation || (steps && steps.length <=1)} size="lg">
               <SkipForward className="mr-2 h-5 w-5" /> Step
             </Button>
           </div>

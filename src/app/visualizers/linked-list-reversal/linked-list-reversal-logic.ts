@@ -1,3 +1,4 @@
+
 // src/app/visualizers/linked-list-reversal/linked-list-reversal-logic.ts
 import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from './types'; // Local import
 

@@ -48,8 +48,6 @@ function createVisualDLLNodes(
   activeNodeId?: string | null,
   newNodeId?: string | null
 ): LinkedListNodeVisual[] {
-  if (parsedNodes.length === 0 && actualListMap.size === 0) return [];
-  
   const visualNodes: LinkedListNodeVisual[] = [];
   let currentId = currentHeadId;
   const visitedForRender = new Set<string>();
@@ -241,7 +239,7 @@ export const generateDoublyLinkedListSteps = (
       
       let currentDelVal = headId;
       addStep(lineMap.start, `Deleting value ${value}. Starting search.`, currentDelVal);
-      while(currentDelVal && actualListNodes.get(currentDelVal)?.value != value) {
+      while(currentDelVal && actualListNodes.get(currentDelVal)?.value != value) { // Use loose comparison
           addStep(lineMap.loop, `Current ${actualListNodes.get(currentDelVal)?.value} != ${value}. Move next.`, currentDelVal);
           currentDelVal = actualListNodes.get(currentDelVal)!.nextId;
       }
@@ -275,3 +273,4 @@ export const generateDoublyLinkedListSteps = (
   }
   return localSteps;
 };
+

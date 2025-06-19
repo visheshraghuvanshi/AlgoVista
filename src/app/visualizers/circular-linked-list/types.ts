@@ -71,15 +71,42 @@ export type LinkedListOperation =
   | 'merge' 
   | 'traverse';
 
-import { ListPlus, Trash2, SearchCode, Shuffle, GitMerge, LocateFixed, ListOrdered, CornerDownLeft, CornerUpRight, Milestone, FastForward } from "lucide-react";
+import type { LucideIcon } from 'lucide-react';
+import { ListPlus, Trash2, SearchCode, CornerDownLeft, CornerUpRight, Milestone, FastForward } from "lucide-react";
 
-export const ALL_OPERATIONS_LOCAL: { value: LinkedListOperation; label: string; icon?: React.ElementType, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
+
+export const ALL_OPERATIONS_LOCAL: { value: LinkedListOperation; label: string; icon?: LucideIcon, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
   { value: 'init', label: 'Initialize/Set List', icon: ListPlus },
   { value: 'insertHead', label: 'Insert Head', icon: CornerUpRight, needsValue: true },
-  { value: 'insertTail', label: 'Insert Tail', icon: CornerDownLeft, needsValue: true },
   { value: 'insertAtPosition', label: 'Insert At Position', icon: Milestone, needsValue: true, needsPosition: true },
-  { value: 'deleteByValue', label: 'Delete by Value', icon: Trash2, needsValue: true },
   { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
-  { value: 'search', label: 'Search Value', icon: SearchCode, needsValue: true },
   { value: 'traverse', label: 'Traverse List', icon: FastForward },
 ];
+
+// Props for LinkedListControlsPanel
+export interface LinkedListControlsPanelProps {
+  onPlay: () => void;
+  onPause: () => void;
+  onStep: () => void;
+  onReset: () => void;
+  onOperationChange: (operation: LinkedListOperation, value?: string, positionOrSecondList?: string | number) => void;
+  initialListValue: string;
+  onInitialListValueChange: (value: string) => void;
+  inputValue: string; 
+  onInputValueChange: (value: string) => void;
+  positionValue?: string; 
+  onPositionValueChange?: (value: string) => void;
+  secondListValue?: string; 
+  onSecondListValueChange?: (value: string) => void;
+  selectedOperation: LinkedListOperation | null;
+  onSelectedOperationChange: (operation: LinkedListOperation) => void;
+  availableOperations?: LinkedListOperation[]; 
+  isPlaying: boolean;
+  isFinished: boolean;
+  currentSpeed: number;
+  onSpeedChange: (speed: number) => void;
+  isAlgoImplemented: boolean; 
+  minSpeed: number;
+  maxSpeed: number;
+}
+

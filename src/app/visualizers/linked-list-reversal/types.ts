@@ -1,3 +1,4 @@
+
 // src/app/visualizers/linked-list-reversal/types.ts
 
 // Common metadata types
@@ -59,3 +60,6 @@ export interface LinkedListAlgorithmStep {
   isCycleDetected?: boolean;
   status?: 'success' | 'failure' | 'info';
 }
+
+// For controls (though Reversal page has embedded controls)
+export type ReversalTypeInternal = 'iterative' | 'recursive' | 'init';

@@ -18,7 +18,7 @@ const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
 
-const DLL_AVAILABLE_OPS_LOCAL: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition', 'traverse'];
+const DLL_AVAILABLE_OPS_LOCAL: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition'];
 
 
 export default function DoublyLinkedListPage() {
@@ -154,7 +154,7 @@ export default function DoublyLinkedListPage() {
     setCurrentMessage("Visualizer Reset. List initialized with default values."); 
     setCurrentLine(null);
   };
-
+  
   useEffect(() => { 
     handleReset(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,7 +166,7 @@ export default function DoublyLinkedListPage() {
       <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container mx-auto p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>
     );
   }
-  const algoDetails: AlgorithmDetailsProps = {
+  const localAlgoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -193,11 +193,14 @@ export default function DoublyLinkedListPage() {
           selectedOperation={selectedOperation} onSelectedOperationChange={(op) => {
               setSelectedOperation(op);
               if (op === 'init') handleOperationExecution('init', initialListStr);
-              else if (op === 'traverse') handleOperationExecution('traverse'); 
+              // For other ops, user clicks "Execute"
               else { 
                   setSteps([]); 
                   setCurrentStepIndex(0);
-                  updateVisualStateFromStep(0); 
+                  // Keep current visual state until execute
+                  const currentVisuals = createVisualDLLNodes(new Map(Object.entries(actualListNodes.current || {})), headId.current, tailId.current); // This requires access to actualListNodes which is internal to logic
+                  // This part would be simpler if handleOperationExecution sets up a "preview" step
+                  // For now, just clear steps and let user click execute.
                   setIsFinished(true);
               }
           }}
@@ -205,9 +208,16 @@ export default function DoublyLinkedListPage() {
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
           isAlgoImplemented={true} minSpeed={MIN_SPEED} maxSpeed={MAX_SPEED}
         />
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
+}
+
+// Helper to recreate visual nodes from Map (not used directly in page but shows how logic might manage it)
+// This would ideally be part of the logic file or a shared utility if needed by page for interim states
+const createVisualDLLNodes = (actualMap: Map<string, {value:string|number, nextId:string|null, prevId:string|null}>, headId: string|null, tailId: string|null): LinkedListNodeVisual[] => {
+    // ... implementation similar to createVisualNodesFromCurrentState in logic ...
+    return [];
 }

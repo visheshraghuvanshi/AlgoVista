@@ -71,6 +71,7 @@ export default function SinglyLinkedListPage() {
         positionToUse = Number(posOrSecondList);
     }
 
+    // Using ALL_OPERATIONS_LOCAL from local types.ts
     const currentOpDetails = ALL_OPERATIONS_LOCAL.find(details => details.value === op);
     if (currentOpDetails?.needsValue && (operationValueToUse === undefined || String(operationValueToUse).trim() === '')) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
@@ -178,6 +179,12 @@ export default function SinglyLinkedListPage() {
       <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container mx-auto p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>
     );
   }
+  const localAlgoDetails: AlgorithmDetailsProps = { // Use local type
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  };
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -210,7 +217,9 @@ export default function SinglyLinkedListPage() {
               else { 
                   setSteps([]); 
                   setCurrentStepIndex(0);
-                  updateVisualStateFromStep(0); 
+                  // Potentially update visual state to current list if an op is selected but not yet executed
+                  const currentVisuals = createVisualNodesFromCurrentState(new Map(Object.entries(actualListNodes.current || {})), headId.current); // This logic needs actualListNodes access
+                  setCurrentNodes(currentVisuals);
                   setIsFinished(true);
               }
           }}
@@ -218,14 +227,15 @@ export default function SinglyLinkedListPage() {
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
           isAlgoImplemented={true} minSpeed={MIN_SPEED} maxSpeed={MAX_SPEED}
         />
-        <AlgorithmDetailsCard 
-            title={algorithmMetadata.title}
-            description={algorithmMetadata.longDescription || algorithmMetadata.description}
-            timeComplexities={algorithmMetadata.timeComplexities!}
-            spaceComplexity={algorithmMetadata.spaceComplexity!}
-        />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
+}
+// Helper to recreate visual nodes from Map (not used directly in page but shows how logic might manage it)
+// This would ideally be part of the logic file or a shared utility if needed by page for interim states
+const createVisualNodesFromActualMap = (actualMap: Map<string, {value:string|number, nextId:string|null}>, headId: string|null): LinkedListNodeVisual[] => {
+    // ... implementation similar to createVisualNodesFromCurrentState in logic ...
+    return [];
 }

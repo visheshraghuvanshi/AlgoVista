@@ -1,50 +1,18 @@
 
+// src/app/visualizers/circular-linked-list/LinkedListControlsPanel.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListPlus, Trash2, SearchCode, Shuffle, GitMerge, LocateFixed, ListOrdered, CornerDownLeft, CornerUpRight, Milestone } from "lucide-react"; 
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import type { LinkedListOperation, ALL_OPERATIONS_LOCAL as ALL_OPERATIONS_TYPE } from './types'; 
-import { ALL_OPERATIONS_LOCAL } from './types'; 
+import type { LinkedListOperation, ALL_OPERATIONS_LOCAL as ALL_OPERATIONS_TYPE, LinkedListControlsPanelProps } from './types'; // Local import
+import { ALL_OPERATIONS_LOCAL } from './types'; // Local import
 
-
-interface LinkedListControlsPanelProps {
-  onPlay: () => void;
-  onPause: () => void;
-  onStep: () => void;
-  onReset: () => void;
-  onOperationChange: (operation: LinkedListOperation, value?: string, positionOrSecondList?: string | number) => void;
-  
-  initialListValue: string;
-  onInitialListValueChange: (value: string) => void;
-  
-  inputValue: string; 
-  onInputValueChange: (value: string) => void;
-
-  positionValue?: string; 
-  onPositionValueChange?: (value: string) => void;
-  
-  secondListValue?: string; 
-  onSecondListValueChange?: (value: string) => void;
-
-  selectedOperation: LinkedListOperation | null;
-  onSelectedOperationChange: (operation: LinkedListOperation) => void;
-  
-  availableOperations?: LinkedListOperation[]; 
-
-  isPlaying: boolean;
-  isFinished: boolean;
-  currentSpeed: number;
-  onSpeedChange: (speed: number) => void;
-  isAlgoImplemented: boolean; 
-  minSpeed: number;
-  maxSpeed: number;
-}
 
 export function LinkedListControlsPanel({
   onPlay, onPause, onStep, onReset, onOperationChange,

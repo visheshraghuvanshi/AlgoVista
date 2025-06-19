@@ -22,7 +22,7 @@ The list usually maintains pointers to the **head** (first node) and often a **t
 
 ### How it Works (Key Operations):
 
-**1. Traversal:**
+**1. Traversal (O(N)):**
    - **Forward**: Start from the \`head\` and follow \`next\` pointers until \`null\`.
    - **Backward**: Start from the \`tail\` and follow \`prev\` pointers until \`null\`.
 
@@ -60,18 +60,23 @@ The list usually maintains pointers to the **head** (first node) and often a **t
    - Can start from \`head\` (forward) or \`tail\` (backward if searching from end is beneficial).
    - Traverse until the node is found or the end of the search direction is reached.
 
-### Advantages:
+### Characteristics:
 -   **Bidirectional Traversal**: Can be traversed forwards and backwards easily.
--   **Efficient Deletion**: If a pointer to the node to be deleted is available, deletion is O(1) because its previous node is directly accessible via the \`prev\` pointer (unlike singly linked lists where finding the previous node takes O(N)).
--   Efficient insertion/deletion at both ends if \`head\` and \`tail\` pointers are maintained.
+-   **Efficient Deletion**: If a pointer to the node to be deleted is available, deletion is O(1).
+-   **Efficient End Operations**: O(1) insertion/deletion at both ends if \`head\` and \`tail\` pointers are tracked.
+
+### Advantages:
+-   Flexible traversal in both directions.
+-   Efficient deletion of a node if its reference is known (O(1)).
+-   Efficient insertions and deletions at both ends of the list.
 
 ### Disadvantages:
--   **More Memory per Node**: Each node requires an extra \`prev\` pointer, increasing memory overhead compared to a singly linked list.
--   **More Complex Pointer Manipulations**: Insertions and deletions involve updating more pointers (\`next\` and \`prev\` for multiple nodes), making the operations slightly more complex to implement correctly.
+-   **More Memory per Node**: Each node requires an extra \`prev\` pointer.
+-   **More Complex Pointer Manipulations**: Insertions and deletions involve updating more pointers.
 
 ### Common Use Cases:
 -   Implementing browser history (back and forward navigation).
--   Implementing undo/redo functionality in applications.
+-   Undo/redo functionality in applications.
 -   Used in certain data structures like LRU (Least Recently Used) caches.
 -   Implementing deques (double-ended queues).`,
   timeComplexities: {
