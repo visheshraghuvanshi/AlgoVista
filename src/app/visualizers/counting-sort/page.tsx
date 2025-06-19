@@ -47,8 +47,8 @@ export default function CountingSortVisualizerPage() {
       toast({ title: "Invalid Input", description: "Please enter comma-separated non-negative integers.", variant: "destructive" });
       return null;
     }
-    if (parsed.some(n => n < 0 || n > 99)) { 
-       toast({ title: "Input out of range", description: "Please enter numbers between 0 and 99 for visualization.", variant: "destructive" });
+    if (parsed.some(n => n < 0 || n > 99)) { // Counting sort often for non-negative, limit max for viz
+       toast({ title: "Input out of range", description: "Please enter numbers between 0 and 99.", variant: "destructive" });
       return null;
     }
     return parsed;
@@ -64,6 +64,7 @@ export default function CountingSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
     }
     if (parsedData !== null) {
       let newSteps: CountingSortStep[] = generateCountingSortSteps(parsedData);
@@ -85,7 +86,7 @@ export default function CountingSortVisualizerPage() {
         setCurrentStepData(null);
         setIsPlaying(false); setIsFinished(true); 
     }
-  }, [inputValue, parseInput]);
+  }, [inputValue, parseInput, setCurrentStepData]);
 
   useEffect(() => {
     generateSteps();
@@ -98,10 +99,6 @@ export default function CountingSortVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length -1) {
         setIsPlaying(false);
@@ -162,7 +159,7 @@ export default function CountingSortVisualizerPage() {
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
     }
-    generateSteps();
+    setInputValue('4,2,2,8,3,3,1'); 
   };
   
   const handleSpeedChange = (speedValue: number) => {
@@ -201,7 +198,7 @@ export default function CountingSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {currentStepData?.message || algorithmMetadata.description} (Note: Input non-negative integers, max 99 for this visualization).
+            {currentStepData?.message || algorithmMetadata.description} (Note: Only non-negative integers, max 99 for this visualization).
           </p>
         </div>
 

@@ -214,7 +214,10 @@ export default function SlidingWindowVisualizerPage() {
   }, [steps]);
   
   const handleGenerateSteps = useCallback(() => {
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+    }
     
     const arr = parseInputArray(inputValue);
     if (!arr) {
@@ -242,10 +245,19 @@ export default function SlidingWindowVisualizerPage() {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateStateFromStep(0);
-    else { setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); }
+    if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
+    } else { 
+        setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); 
+    }
 
-  }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, toast, updateStateFromStep]);
+  }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, toast, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -291,7 +303,7 @@ export default function SlidingWindowVisualizerPage() {
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
                     <CardContent className="text-sm flex flex-wrap justify-around gap-2">
                         {Object.entries(auxiliaryData).map(([key, value]) => {
-                             if (key === 'foundSubarrayIndices') return null; // Don't display this in text
+                             if (key === 'foundSubarrayIndices') return null; 
                             return (
                                 <p key={key}><strong>{key.replace(/([A-Z])/g, ' $1').trim()}:</strong> {value?.toString()}</p>
                             )

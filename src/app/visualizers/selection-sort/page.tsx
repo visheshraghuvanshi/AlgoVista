@@ -102,6 +102,7 @@ export default function SelectionSortVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
+  const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -138,6 +139,7 @@ export default function SelectionSortVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
   }, [steps]);
 
@@ -145,6 +147,7 @@ export default function SelectionSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
     }
     if (parsedData !== null) {
       let newSteps: AlgorithmStep[] = generateSelectionSortSteps(parsedData);
@@ -152,7 +155,7 @@ export default function SelectionSortVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         const firstStep = newSteps[0];
@@ -163,20 +166,21 @@ export default function SelectionSortVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else { 
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       }
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
         setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setIsPlaying(false); setIsFinished(false);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
+        setIsPlaying(false); setIsFinished(true);
     }
-  }, [inputValue, parseInput]);
+  }, [inputValue, parseInput, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
   useEffect(() => {
     generateSteps();
@@ -189,10 +193,6 @@ export default function SelectionSortVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length -1) {
         setIsPlaying(false);
@@ -211,7 +211,7 @@ export default function SelectionSortVisualizerPage() {
   };
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
       return;
@@ -228,7 +228,7 @@ export default function SelectionSortVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
@@ -260,14 +260,14 @@ export default function SelectionSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) { // Check against local metadata
+  if (!algorithmMetadata) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -338,3 +338,4 @@ export default function SelectionSortVisualizerPage() {
     </div>
   );
 }
+

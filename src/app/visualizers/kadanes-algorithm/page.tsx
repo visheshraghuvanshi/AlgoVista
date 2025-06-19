@@ -88,7 +88,15 @@ export default function KadanesAlgorithmVisualizerPage() {
       setIsFinished(newSteps.length <=1);
 
       if (newSteps.length > 0) {
-        updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else { 
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -99,9 +107,9 @@ export default function KadanesAlgorithmVisualizerPage() {
       setDisplayedData([]);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
       setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
-      setIsPlaying(false); setIsFinished(false);
+      setIsPlaying(false); setIsFinished(true);
     }
-  }, [inputValue, parseInput, updateStateFromStep]);
+  }, [inputValue, parseInput, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
 
   useEffect(() => {
@@ -155,7 +163,7 @@ export default function KadanesAlgorithmVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    setInputValue('-2,1,-3,4,-1,2,1,-5,4'); // Resets input, useEffect will call generateSteps
+    setInputValue('-2,1,-3,4,-1,2,1,-5,4'); 
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -241,3 +249,4 @@ export default function KadanesAlgorithmVisualizerPage() {
     </div>
   );
 }
+

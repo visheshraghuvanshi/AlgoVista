@@ -81,6 +81,7 @@ export default function RadixSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
     }
     if (parsedData !== null) {
       let newSteps: AlgorithmStep[] = generateRadixSortSteps(parsedData);
@@ -92,7 +93,15 @@ export default function RadixSortVisualizerPage() {
 
 
       if (newSteps.length > 0) {
-        updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else { 
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -106,7 +115,7 @@ export default function RadixSortVisualizerPage() {
         setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
         setIsPlaying(false); setIsFinished(true); 
     }
-  }, [inputValue, parseInput, updateStateFromStep]);
+  }, [inputValue, parseInput, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
   useEffect(() => {
     generateSteps();
@@ -253,3 +262,4 @@ export default function RadixSortVisualizerPage() {
     </div>
   );
 }
+

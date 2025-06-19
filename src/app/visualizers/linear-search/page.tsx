@@ -76,6 +76,7 @@ export default function LinearSearchVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
+  const [auxiliaryData, setAuxiliaryData] = useState<ArrayAlgorithmStep['auxiliaryData']>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -125,6 +126,7 @@ export default function LinearSearchVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
   }, [steps]);
 
@@ -142,7 +144,7 @@ export default function LinearSearchVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         const firstStep = newSteps[0];
@@ -153,6 +155,7 @@ export default function LinearSearchVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else {
         setDisplayedData(parsedArray || []);
         setActiveIndices([]);
@@ -161,6 +164,7 @@ export default function LinearSearchVisualizerPage() {
         setCurrentLine(null);
         setProcessingSubArrayRange(null);
         setPivotActualIndex(null);
+        setAuxiliaryData(null);
       }
     } else {
       setSteps([]);
@@ -172,10 +176,11 @@ export default function LinearSearchVisualizerPage() {
       setCurrentLine(null);
       setProcessingSubArrayRange(null);
       setPivotActualIndex(null);
+      setAuxiliaryData(null);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(true);
     }
-  }, [inputValue, targetValue, parseInput, parseTarget]);
+  }, [inputValue, targetValue, parseInput, parseTarget, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
 
   useEffect(() => {
@@ -188,10 +193,6 @@ export default function LinearSearchVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -204,7 +205,7 @@ export default function LinearSearchVisualizerPage() {
   const handleTargetChange = (value: string) => setTargetValue(value);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -217,7 +218,7 @@ export default function LinearSearchVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No data/steps.", variant: "default" });
       return;
     }
@@ -302,3 +303,4 @@ export default function LinearSearchVisualizerPage() {
     </div>
   );
 }
+

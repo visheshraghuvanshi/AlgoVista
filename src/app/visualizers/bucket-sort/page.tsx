@@ -72,6 +72,7 @@ export default function BucketSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
     }
     if (numBuckets <=0 || numBuckets > 10) {
         toast({title: "Invalid Bucket Count", description: "Number of buckets must be between 1 and 10.", variant: "destructive"});
@@ -89,7 +90,7 @@ export default function BucketSortVisualizerPage() {
       if (newSteps.length > 0) {
         setCurrentStepData(newSteps[0]);
       } else { 
-        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed", phase: 'initial', buckets: Array.from({length:numBuckets}, (_,i)=>({id:i, elements:[]}))});
+        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed", phase: 'initial', buckets: Array.from({length:numBuckets}, (_,i)=>({id:i, elements:[], isSorted: false}))});
       }
     } else {
         setSteps([]);
@@ -97,7 +98,7 @@ export default function BucketSortVisualizerPage() {
         setCurrentStepData(null);
         setIsPlaying(false); setIsFinished(true); 
     }
-  }, [inputValue, numBuckets, parseInput, toast]);
+  }, [inputValue, numBuckets, parseInput, toast, setCurrentStepData]);
 
   useEffect(() => {
     generateSteps();
@@ -226,7 +227,7 @@ export default function BucketSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description} (Note: Assumes non-negative integers for visualization).
+            {currentStepData?.message || algorithmMetadata.description} (Note: Assumes non-negative integers for visualization).
           </p>
         </div>
 
@@ -322,3 +323,4 @@ export default function BucketSortVisualizerPage() {
     </div>
   );
 }
+

@@ -33,6 +33,7 @@ export default function ShellSortVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
+  const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -69,6 +70,7 @@ export default function ShellSortVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
   }, [steps]);
 
@@ -84,7 +86,7 @@ export default function ShellSortVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         const firstStep = newSteps[0];
@@ -95,25 +97,25 @@ export default function ShellSortVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else { 
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       }
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
         setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setIsPlaying(false); setIsFinished(false);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
+        setIsPlaying(false); setIsFinished(true);
     }
-  }, [inputValue, parseInput]);
+  }, [inputValue, parseInput, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
   useEffect(() => {
     generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]);
+  }, [generateSteps]); 
 
 
   useEffect(() => {
@@ -122,10 +124,6 @@ export default function ShellSortVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length -1) {
         setIsPlaying(false);
@@ -144,7 +142,7 @@ export default function ShellSortVisualizerPage() {
   };
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
       return;
@@ -161,7 +159,7 @@ export default function ShellSortVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
@@ -271,3 +269,4 @@ export default function ShellSortVisualizerPage() {
     </div>
   );
 }
+

@@ -119,6 +119,7 @@ export default function TernarySearchVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null); 
+  const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -174,6 +175,7 @@ export default function TernarySearchVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
   }, [steps]);
   
@@ -195,30 +197,38 @@ export default function TernarySearchVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <=1);
 
       if (newSteps.length > 0) {
-         updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else {
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       }
     } else {
       setSteps([]); setCurrentStepIndex(0);
       setDisplayedData(parsedArray || []);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-      setProcessingSubArrayRange(null); setPivotActualIndex(null);
-      setIsPlaying(false); setIsFinished(false);
+      setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
+      setIsPlaying(false); setIsFinished(true);
     }
-  }, [inputValue, targetValue, parseInput, parseTarget, toast, updateStateFromStep]);
+  }, [inputValue, targetValue, parseInput, parseTarget, toast, setInputValue, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
 
   useEffect(() => {
     generateSteps(false); 
   }, [targetValue, generateSteps]); 
 
-  useEffect(() => {
+  useEffect(() => { 
     if (inputValue !== lastProcessedInputValueRef.current) {
         const parsedArray = parseInput(inputValue, true); 
         if (parsedArray) {
@@ -243,10 +253,6 @@ export default function TernarySearchVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -259,7 +265,7 @@ export default function TernarySearchVisualizerPage() {
   const handleTargetChange = (value: string) => setTargetValue(value);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -272,7 +278,7 @@ export default function TernarySearchVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps.", variant: "default" });
       return;
     }
@@ -370,3 +376,4 @@ export default function TernarySearchVisualizerPage() {
     </div>
   );
 }
+

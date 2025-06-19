@@ -10,7 +10,7 @@ import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
@@ -156,7 +156,7 @@ export default function TwoPointersVisualizerPage() {
     }
   }, [steps]);
   
-  const handleGenerateSteps = useCallback((notifySort: boolean = true) => {
+  const generateSteps = useCallback((notifySort: boolean = true) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const arr = parseInputArray(inputValue, notifySort);
@@ -167,6 +167,8 @@ export default function TwoPointersVisualizerPage() {
         const sortedArrString = arr.join(',');
         if(inputValue !== sortedArrString) {
             setInputValue(sortedArrString); 
+            // Value will be reprocessed by useEffect for inputValue
+            return;
         }
       }
       lastProcessedInputValueRef.current = arr.join(',');
@@ -176,24 +178,31 @@ export default function TwoPointersVisualizerPage() {
       setCurrentStepIndex(0);
       setIsPlaying(false);
       setIsFinished(newSteps.length <= 1);
-      if (newSteps.length > 0) updateStateFromStep(0);
-      else { setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); }
+      if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
+      } else { 
+        setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); 
+      }
     } else {
       setSteps([]); setDisplayedData(arr || []); setIsFinished(true);
     }
-  }, [inputValue, targetSumValue, parseInputArray, parseTargetSum, updateStateFromStep, toast]);
+  }, [inputValue, targetSumValue, parseInputArray, parseTargetSum, setInputValue, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
   
   useEffect(() => { 
     handleGenerateSteps(false); 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetSumValue]);
+  }, [targetSumValue, handleGenerateSteps]);
 
   useEffect(() => { 
     if (inputValue !== lastProcessedInputValueRef.current) {
       handleGenerateSteps(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]);
+  }, [inputValue, handleGenerateSteps]);
 
 
   useEffect(() => {

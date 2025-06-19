@@ -222,7 +222,10 @@ export default function SubarraySumProblemsVisualizerPage() {
   }, [steps]);
   
   const handleGenerateSteps = useCallback(() => {
-    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+    }
     
     const arr = parseInputArray(inputValue);
     const target = parseTargetSum(targetSumValue);
@@ -242,10 +245,19 @@ export default function SubarraySumProblemsVisualizerPage() {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateStateFromStep(0);
-    else { setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); }
+    if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
+    } else { 
+        setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); 
+    }
 
-  }, [inputValue, targetSumValue, problemType, parseInputArray, parseTargetSum, toast, updateStateFromStep]);
+  }, [inputValue, targetSumValue, problemType, parseInputArray, parseTargetSum, toast, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 

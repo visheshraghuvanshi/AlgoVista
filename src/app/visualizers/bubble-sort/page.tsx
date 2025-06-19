@@ -119,6 +119,8 @@ export default function BubbleSortVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
+  const [auxiliaryData, setAuxiliaryData] = useState<ArrayAlgorithmStep['auxiliaryData']>(null);
+
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -156,6 +158,7 @@ export default function BubbleSortVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
   }, [steps]);
 
@@ -163,6 +166,7 @@ export default function BubbleSortVisualizerPage() {
     const parsedData = parseInput(inputValue);
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
     }
     if (parsedData !== null) {
       let newSteps: ArrayAlgorithmStep[] = generateBubbleSortSteps(parsedData);
@@ -170,7 +174,7 @@ export default function BubbleSortVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         const firstStep = newSteps[0];
@@ -181,20 +185,21 @@ export default function BubbleSortVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else { 
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       }
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
         setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
-        setIsPlaying(false); setIsFinished(false);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
+        setIsPlaying(false); setIsFinished(true);
     }
-  }, [inputValue, parseInput]);
+  }, [inputValue, parseInput, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]);
 
   useEffect(() => {
     generateSteps();
@@ -207,10 +212,6 @@ export default function BubbleSortVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length -1) {
         setIsPlaying(false);
@@ -229,7 +230,7 @@ export default function BubbleSortVisualizerPage() {
   };
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps to visualize.", variant: "default" });
       setIsPlaying(false);
       return;
@@ -246,7 +247,7 @@ export default function BubbleSortVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length -1) {
+    if (isFinished || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
@@ -278,7 +279,7 @@ export default function BubbleSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -350,14 +351,15 @@ export default function BubbleSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        {algoDetails && <AlgorithmDetailsCard 
-            title={algoDetails.title}
-            description={algoDetails.description}
-            timeComplexities={algoDetails.timeComplexities}
-            spaceComplexity={algoDetails.spaceComplexity}
+        {localAlgoDetails && <AlgorithmDetailsCard 
+            title={localAlgoDetails.title}
+            description={localAlgoDetails.description}
+            timeComplexities={localAlgoDetails.timeComplexities}
+            spaceComplexity={localAlgoDetails.spaceComplexity}
         />}
       </main>
       <Footer />
     </div>
   );
 }
+
