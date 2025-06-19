@@ -1,5 +1,6 @@
 
-import type { DPAlgorithmStep } from '@/types';
+// src/app/visualizers/coin-change/coin-change-logic.ts
+import type { DPAlgorithmStep } from './types'; // Local import
 
 export type CoinChangeProblemType = 'minCoins' | 'numWays';
 
@@ -50,7 +51,7 @@ const addStep = (
     highlightedCells: highlighted,
     message,
     currentLine: line,
-    auxiliaryData: {...auxData, problemType, infinityVal: INFINITY_REPRESENTATION },
+    auxiliaryData: {...auxData, problemType, infinityVal: INFINITY_REPRESENTATION, coins: auxData?.coins || [] },
   });
 };
 
@@ -66,60 +67,57 @@ export const generateCoinChangeSteps = (
 
   if (problemType === 'minCoins') {
     dp = Array(amount + 1).fill(INFINITY_REPRESENTATION);
-    addStep(localSteps, lm.funcDeclare, dp, problemType, `Solving Min Coins for amount ${amount} with coins [${coins.join(', ')}].`);
-    addStep(localSteps, lm.initDPTable, dp, problemType, `DP table (size ${amount+1}) initialized to Infinity.`);
+    addStep(localSteps, lm.funcDeclare, dp, problemType, `Solving Min Coins for amount ${amount} with coins [${coins.join(', ')}].`, undefined, undefined, [], {coins, amount});
+    addStep(localSteps, lm.initDPTable, dp, problemType, `DP table (size ${amount+1}) initialized to Infinity.`, undefined, undefined, [], {coins, amount});
     dp[0] = 0;
-    addStep(localSteps, lm.setBaseCase, dp, problemType, "Base case: dp[0] = 0 (0 coins for amount 0).", 0, undefined, [{col:0, type:'current'}]);
+    addStep(localSteps, lm.setBaseCase, dp, problemType, "Base case: dp[0] = 0 (0 coins for amount 0).", 0, undefined, [{col:0, type:'current'}], {coins, amount});
 
     for (let i = 1; i <= amount; i++) {
-      addStep(localSteps, lm.outerLoopAmount, dp, problemType, `Calculating min coins for amount i = ${i}.`, i, undefined, [{col:i, type:'current'}]);
+      addStep(localSteps, lm.outerLoopAmount, dp, problemType, `Calculating min coins for amount i = ${i}.`, i, undefined, [{col:i, type:'current'}], {coins, amount});
       for (const coin of coins) {
-        addStep(localSteps, lm.innerLoopCoins, dp, problemType, `  Considering coin = ${coin}.`, i, coin, [{col:i, type:'current'}]);
+        addStep(localSteps, lm.innerLoopCoins, dp, problemType, `  Considering coin = ${coin}.`, i, coin, [{col:i, type:'current'}], {coins, amount});
         if (coin <= i && dp[i - coin] !== INFINITY_REPRESENTATION) {
           let calcMsg = `  Coin ${coin} <= amount ${i}. dp[${i-coin}] (${dp[i-coin] === INFINITY_REPRESENTATION ? '∞' : dp[i-coin]}) + 1`;
           const potentialNewMin = dp[i-coin] + 1;
-          addStep(localSteps, lm.checkCoinCondition, dp, problemType, calcMsg, i, coin, [{col:i, type:'current'}, {col: i-coin, type:'dependency'}]);
+          addStep(localSteps, lm.checkCoinCondition, dp, problemType, calcMsg, i, coin, [{col:i, type:'current'}, {col: i-coin, type:'dependency'}], {coins, amount, currentCalculation: `${dp[i-coin] === INFINITY_REPRESENTATION ? '∞' : dp[i-coin]} + 1 vs dp[${i}]=${dp[i] === INFINITY_REPRESENTATION ? '∞' : dp[i]}`});
           if (potentialNewMin < dp[i]) {
             dp[i] = potentialNewMin;
-            calcMsg += ` = ${dp[i]}. This is < current dp[${i}] (∞ or previous value). Update dp[${i}] = ${dp[i]}.`;
+            calcMsg = `    Update dp[${i}] = ${dp[i]}. (Was ${dp[i] === potentialNewMin ? (potentialNewMin === INFINITY_REPRESENTATION ? '∞' : dp[i-coin]+1) : (dp[i-coin]+1 < dp[i] ? dp[i-coin]+1 : dp[i]) })`; // Message for after update
           } else {
-            calcMsg += ` = ${potentialNewMin}. This is NOT < current dp[${i}] (${dp[i] === INFINITY_REPRESENTATION ? '∞' : dp[i]}). No update.`;
+            calcMsg = `    No update to dp[${i}]. Potential sum ${potentialNewMin} is not less than current ${dp[i] === INFINITY_REPRESENTATION ? '∞' : dp[i]}.`;
           }
-          addStep(localSteps, lm.updateDPMin, dp, problemType, calcMsg, i, coin, [{col:i, type:'current'}, {col: i-coin, type:'dependency'}], {currentCalculation: calcMsg});
+          addStep(localSteps, lm.updateDPMin, dp, problemType, calcMsg, i, coin, [{col:i, type:'result'}, {col: i-coin, type:'dependency'}], {coins, amount, currentCalculation: `${dp[i-coin] === INFINITY_REPRESENTATION ? '∞' : dp[i-coin]} + 1`});
         } else {
-          addStep(localSteps, lm.checkCoinCondition, dp, problemType, `  Coin ${coin} > amount ${i} OR dp[${i-coin}] is Infinity. Cannot use this coin.`, i, coin, [{col:i, type:'current'}, {col: i-coin, type:'dependency'}]);
+          addStep(localSteps, lm.checkCoinCondition, dp, problemType, `  Coin ${coin} > amount ${i} OR dp[${i-coin}] is Infinity. Cannot use this coin for current sum.`, i, coin, [{col:i, type:'current'}, {col: i-coin, type:'dependency'}], {coins, amount});
         }
       }
-      addStep(localSteps, lm.endOuterLoop, dp, problemType, `Finished calculations for amount i = ${i}. dp[${i}] = ${dp[i] === INFINITY_REPRESENTATION ? '∞' : dp[i]}.`, i, undefined, [{col:i, type:'result'}]);
+      addStep(localSteps, lm.endOuterLoop, dp, problemType, `Finished calculations for amount i = ${i}. dp[${i}] = ${dp[i] === INFINITY_REPRESENTATION ? '∞' : dp[i]}.`, i, undefined, [{col:i, type:'result'}], {coins, amount});
     }
     const result = dp[amount] === INFINITY_REPRESENTATION ? -1 : dp[amount];
-    addStep(localSteps, lm.returnResult, dp, problemType, `Min coins for amount ${amount}: ${result === -1 ? 'Not Possible' : result}.`, undefined, undefined, [{col:amount, type:'result'}], {resultValue: result});
+    addStep(localSteps, lm.returnResult, dp, problemType, `Min coins for amount ${amount}: ${result === -1 ? 'Not Possible' : result}.`, undefined, undefined, [{col:amount, type:'result'}], {coins, amount, resultValue: result});
 
   } else { // numWays
     dp = Array(amount + 1).fill(0);
-    addStep(localSteps, lm.funcDeclare, dp, problemType, `Solving Number of Ways for amount ${amount} with coins [${coins.join(', ')}].`);
-    addStep(localSteps, lm.initDPTable, dp, problemType, `DP table (size ${amount+1}) initialized to 0.`);
+    addStep(localSteps, lm.funcDeclare, dp, problemType, `Solving Number of Ways for amount ${amount} with coins [${coins.join(', ')}].`, undefined, undefined, [], {coins, amount});
+    addStep(localSteps, lm.initDPTable, dp, problemType, `DP table (size ${amount+1}) initialized to 0.`, undefined, undefined, [], {coins, amount});
     dp[0] = 1;
-    addStep(localSteps, lm.setBaseCase, dp, problemType, "Base case: dp[0] = 1 (1 way for amount 0 - use no coins).", 0, undefined, [{col:0, type:'current'}]);
+    addStep(localSteps, lm.setBaseCase, dp, problemType, "Base case: dp[0] = 1 (1 way for amount 0 - use no coins).", 0, undefined, [{col:0, type:'current'}], {coins, amount});
 
     for (const coin of coins) {
-      addStep(localSteps, lm.outerLoopCoins, dp, problemType, `Considering coin = ${coin}.`, undefined, coin);
+      addStep(localSteps, lm.outerLoopCoins, dp, problemType, `Considering coin = ${coin}.`, undefined, coin, [], {coins, amount});
       for (let i = coin; i <= amount; i++) {
         let calcMsg = `  Amount i = ${i}. Add ways from dp[${i-coin}] (${dp[i-coin]}) to current dp[${i}] (${dp[i]}).`;
-        addStep(localSteps, lm.innerLoopAmount, dp, problemType, calcMsg, i, coin, [{col:i, type:'current'}, {col:i-coin, type:'dependency'}]);
+        addStep(localSteps, lm.innerLoopAmount, dp, problemType, calcMsg, i, coin, [{col:i, type:'current'}, {col:i-coin, type:'dependency'}], {coins, amount, currentCalculation: `dp[${i}] (old=${dp[i]}) + dp[${i-coin}] (${dp[i-coin]})`});
         dp[i] += dp[i - coin];
-        calcMsg += ` New dp[${i}] = ${dp[i]}.`;
-        addStep(localSteps, lm.updateDPWays, dp, problemType, calcMsg, i, coin, [{col:i, type:'current'}, {col:i-coin, type:'dependency'}], {currentCalculation: `dp[${i}] = ${dp[i]-dp[i-coin]} + dp[${i-coin}] = ${dp[i]}`});
+        calcMsg = `    New dp[${i}] = ${dp[i]}.`;
+        addStep(localSteps, lm.updateDPWays, dp, problemType, calcMsg, i, coin, [{col:i, type:'result'}, {col:i-coin, type:'dependency'}], {coins, amount, currentCalculation: `dp[${i}] = ${dp[i]}`});
       }
-      addStep(localSteps, lm.endOuterLoop, dp, problemType, `Finished processing coin ${coin}.`);
+      addStep(localSteps, lm.endOuterLoop, dp, problemType, `Finished processing coin ${coin}.`, undefined, coin, [], {coins, amount});
     }
     const result = dp[amount];
-    addStep(localSteps, lm.returnResult, dp, problemType, `Number of ways for amount ${amount}: ${result}.`, undefined, undefined, [{col:amount, type:'result'}], {resultValue: result});
+    addStep(localSteps, lm.returnResult, dp, problemType, `Number of ways for amount ${amount}: ${result}.`, undefined, undefined, [{col:amount, type:'result'}], {coins, amount, resultValue: result});
   }
   
   addStep(localSteps, lm.funcEnd, dp, problemType, "Algorithm complete.");
   return localSteps;
 };
-
-
-    

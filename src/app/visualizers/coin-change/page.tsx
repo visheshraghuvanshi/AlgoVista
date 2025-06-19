@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { CoinChangeVisualizationPanel } from './CoinChangeVisualizationPanel';
-import { CoinChangeCodePanel, COIN_CHANGE_CODE_SNIPPETS } from './CoinChangeCodePanel'; // Import snippets
-import { generateCoinChangeSteps } from './coin-change-logic';
-import type { CoinChangeProblemType } from './coin-change-logic';
+import { CoinChangeVisualizationPanel } from './CoinChangeVisualizationPanel'; // Local import
+import { CoinChangeCodePanel } from './CoinChangeCodePanel'; // Local import
+import { generateCoinChangeSteps } from './coin-change-logic'; // Local import
+import type { CoinChangeProblemType } from './coin-change-logic'; // Local import
 
 const DEFAULT_ANIMATION_SPEED = 400;
 const MIN_SPEED = 50;
@@ -186,5 +186,3 @@ export default function CoinChangeVisualizerPage() {
     </div>
   );
 }
-
-    

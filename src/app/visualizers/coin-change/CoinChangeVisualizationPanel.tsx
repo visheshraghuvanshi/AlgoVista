@@ -3,8 +3,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DPAlgorithmStep } from '@/types';
-import { Badge } from "@/components/ui/badge";
+import type { DPAlgorithmStep } from './types'; // Local import
+import { Badge } from '@/components/ui/badge';
 
 interface CoinChangeVisualizationPanelProps {
   step: DPAlgorithmStep | null;
@@ -83,5 +83,3 @@ export function CoinChangeVisualizationPanel({ step }: CoinChangeVisualizationPa
     </Card>
   );
 }
-
-    
