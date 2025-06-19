@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { BubbleSortCodePanel } from './BubbleSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { ArrayAlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { BUBBLE_SORT_LINE_MAP, generateBubbleSortSteps } from './bubble-sort-logic';
@@ -106,10 +106,10 @@ const MAX_SPEED = 2000;
 
 export default function BubbleSortVisualizerPage() {
   const { toast } = useToast();
-  
+    
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
 
-  const [steps, setSteps] = useState<AlgorithmStep[]>([]);
+  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); // Use local type
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [displayedData, setDisplayedData] = useState<number[]>([]);
@@ -165,7 +165,7 @@ export default function BubbleSortVisualizerPage() {
         clearTimeout(animationTimeoutRef.current);
     }
     if (parsedData !== null) {
-      let newSteps: AlgorithmStep[] = generateBubbleSortSteps(parsedData);
+      let newSteps: ArrayAlgorithmStep[] = generateBubbleSortSteps(parsedData);
       
       setSteps(newSteps);
       setCurrentStepIndex(0);
@@ -198,7 +198,7 @@ export default function BubbleSortVisualizerPage() {
 
   useEffect(() => {
     generateSteps();
-  }, [generateSteps]);
+  }, [generateSteps]); 
 
 
   useEffect(() => {
@@ -278,6 +278,29 @@ export default function BubbleSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
+
+  if (!algorithmMetadata) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
+            <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
+            <p className="text-muted-foreground text-lg">
+              Could not load data for Bubble Sort.
+            </p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -287,7 +310,7 @@ export default function BubbleSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description}
+            {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
 
@@ -327,12 +350,12 @@ export default function BubbleSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        <AlgorithmDetailsCard 
-            title={algorithmMetadata.title}
-            description={algorithmMetadata.longDescription || algorithmMetadata.description}
-            timeComplexities={algorithmMetadata.timeComplexities!}
-            spaceComplexity={algorithmMetadata.spaceComplexity!}
-        />
+        {algoDetails && <AlgorithmDetailsCard 
+            title={algoDetails.title}
+            description={algoDetails.description}
+            timeComplexities={algoDetails.timeComplexities}
+            spaceComplexity={algoDetails.spaceComplexity}
+        />}
       </main>
       <Footer />
     </div>

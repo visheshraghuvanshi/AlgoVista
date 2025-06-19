@@ -1,4 +1,6 @@
 
+// This file will now primarily contain types used by the global visualizer listing page
+// and the metadataRegistry. Individual visualizer pages will have their own local types.ts.
 
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
@@ -9,6 +11,8 @@ export interface AlgorithmTimeComplexities {
   worst: string;
 }
 
+// This AlgorithmMetadata type is kept here because it's used by
+// src/app/visualizers/page.tsx (the listing page) and src/app/visualizers/metadataRegistry.ts
 export interface AlgorithmMetadata {
   slug: string;
   title: string;
@@ -19,332 +23,54 @@ export interface AlgorithmMetadata {
   timeComplexities?: AlgorithmTimeComplexities;
   spaceComplexity?: string;
   tags?: string[];
-  codeSnippets?: {
-    [language: string]: string[];
-  };
-  pseudocode?: string[];
+  // codeSnippets and pseudocode are part of local AlgorithmMetadata if needed by the page itself
 }
 
-// For array-based algorithms (sorting, searching)
-export type ArrayAlgorithmStep = {
-  array: number[] | string[]; // Allow string arrays for permutation/subset elements
-  activeIndices: number[];
-  swappingIndices: number[];
-  sortedIndices: number[]; // Can be used to highlight "finalized" elements or results
-  currentLine: number | null;
-  message?: string;
-  processingSubArrayRange?: [number, number] | null;
-  pivotActualIndex?: number | null;
-  auxiliaryData?: Record<string, any> | null; 
-};
-
-// For graph-based algorithms
-export interface GraphNode {
-  id: string;
-  label: string;
-  x: number; // For layout
-  y: number; // For layout
-  color: string; // To indicate state: e.g., default, visiting, visited, in_queue/stack
-  isStartNode?: boolean;
-  distance?: number | string; // For algorithms like Dijkstra
-}
-
-export interface GraphEdge {
-  id: string; // e.g., "sourceId-targetId"
-  source: string; // source node id
-  target: string; // target node id
-  color: string; // To indicate state: e.g., default, traversed
-  weight?: number; // For weighted graphs
-  isDirected?: boolean; // Default to undirected unless specified
-}
-
-export interface GraphAlgorithmStep {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  auxiliaryData?: {
-    type: 'queue' | 'stack' | 'set' | 'distances' | 'path';
-    label: string;
-    values: string[] | { [key: string]: string | number | null }; // Updated value type
-  }[];
-  currentLine: number | null;
-  message?: string;
-}
-
-// Types for Binary Tree Traversal
-export interface BinaryTreeNodeVisual {
-  id: string;
-  value: string | number | null;
-  x: number;
-  y: number;
-  color: string; // Visual fill color (can be for state highlighting)
-  textColor?: string; // Explicit text color
-  nodeColor?: 'RED' | 'BLACK' | string; // Specific RBT color or other type
-  leftId?: string | null;
-  rightId?: string | null;
-  // Huffman specific additions:
-  char?: string | null; // For Huffman leaf nodes
-  freq?: number;      // For Huffman nodes frequency
-}
-
-export interface BinaryTreeEdgeVisual {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  color?: string;
-}
-
-export interface TreeAlgorithmStep {
-  nodes: BinaryTreeNodeVisual[];
-  edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[]; // For path highlighting or display
-  currentLine: number | null;
-  message?: string;
-  currentProcessingNodeId?: string | null; // ID of the node currently being processed/visited
-  auxiliaryData?: Record<string, string | number | null | undefined | string[] | {weight: number, value: number}[] | {u:number, v:number, weight:number}[]>; // For additional info if needed (e.g. LCA result, RBT properties)
+// Generic AlgorithmStep - individual visualizers will define more specific step types locally
+// This generic one might still be useful for the top-level visualizer page if it needs a common type.
+export interface AlgorithmStep {
+  array: number[] | string[]; // Main data array
+  activeIndices: number[];    // Indices being actively processed/compared
+  swappingIndices: number[];  // Indices involved in a swap animation
+  sortedIndices: number[];    // Indices of elements in their final sorted position
+  currentLine: number | null; // Line number in the code panel to highlight
+  message?: string;           // Description of the current step
+  processingSubArrayRange?: [number, number] | null; // For algos like QuickSort, MergeSort
+  pivotActualIndex?: number | null; // For QuickSort pivot
+  auxiliaryData?: Record<string, any> | null; // For any other data needed by specific visualizers (e.g. temp arrays in merge sort, pointers in list algos)
 }
 
 
-// Types for Linked List Visualizations
-export interface LinkedListNodeVisual {
-  id: string; // Unique ID for the node (e.g., value or index-based)
-  value: string | number;
-  nextId?: string | null; // ID of the next node
-  prevId?: string | null; // ID of the previous node (for DoublyLinkedList)
-  color: string; // For highlighting: default, active, new, deleted
-  isHead?: boolean;
-  isTail?: boolean; // For DLL or SLL with tail pointer
-  isSlow?: boolean; // For cycle detection
-  isFast?: boolean; // For cycle detection
-  x?: number; // Position for rendering
-  y?: number; // Position for rendering
-}
+// Graph-related types might still be useful globally if any non-visualizer page handles graph data.
+// For now, assuming visualizers will define these locally.
+// Example:
+// export interface GraphNode { ... }
+// export interface GraphEdge { ... }
+// export interface GraphAlgorithmStep { ... }
 
-export type LinkedListType = 'singly' | 'doubly' | 'circular';
+// Similarly for Tree, LinkedList, DP, etc. types.
+// If a type is ONLY used by one visualizer and its direct components,
+// it should be in that visualizer's local types.ts.
 
-export interface LinkedListAlgorithmStep {
-  nodes: LinkedListNodeVisual[]; // Current state of the list
-  headId?: string | null;
-  tailId?: string | null; // For DLL or SLL with tail pointer
-  currentLine: number | null;
-  message?: string;
-  auxiliaryPointers?: Record<string, string | null>; // e.g., { current: 'node-1', prevNode: null, nextNode: 'node-2' }
-  operation?: string; // e.g., 'insert-head', 'delete-value', 'reverse', 'detect-cycle-move'
-  status?: 'success' | 'failure' | 'info'; // For operation outcomes
-  isCycleDetected?: boolean;
-  mergedListNodes?: LinkedListNodeVisual[]; // For merge operations
-}
-
-// N-Queens Step Type 
-export interface NQueensStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
-  board: number[][]; // N x N board, 1 for Queen, 0 for empty
-  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' ; num?: number};
-  foundSolutions?: number[][][]; // Array of found board states
-  isSafeResult?: boolean; // Result of the last safety check
-}
-
-// Rat in a Maze Step Type
-export interface RatInAMazeStep extends Omit<ArrayAlgorithmStep, 'array' | 'activeIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
-  maze: number[][]; // The maze grid (0 for wall, 1 for path, 2 for solution path)
-  currentPosition?: { row: number; col: number }; // Rat's current position
-  action?: 'try_move' | 'mark_path' | 'backtrack' | 'goal_reached' | 'stuck';
-  message: string;
-  currentLine: number | null;
-  activeIndices: [number, number] | [];
-}
-
-// Sudoku Solver Step Type
-export interface SudokuStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex'> {
-  board: number[][]; // 9x9 Sudoku board
-  initialBoard?: number[][]; // Store the initial board to distinguish original numbers
-  currentCell?: { row: number; col: number; num?: number; action: 'find_empty' | 'try_num' | 'place_num' | 'backtrack_remove' | 'check_safe' };
-  isSafe?: boolean; // Result of safety check
-  message: string;
-  currentLine: number | null;
-  solutionFound?: boolean;
-}
-
-// Disjoint Set Union (DSU) Step Type
-export interface DSUStep extends Omit<ArrayAlgorithmStep, 'array' | 'processingSubArrayRange' | 'pivotActualIndex' | 'swappingIndices' | 'sortedIndices'> {
-  parentArray: number[];
-  rankArray?: number[]; // Optional, for union by rank
-  sizeArray?: number[]; // Optional, for union by size
-  operation: 'makeSet' | 'find' | 'union' | 'initial';
-  elementsInvolved: number[]; // e.g., [element] for find, [el1, el2] for union
-  root1?: number; // For union operation
-  root2?: number; // For union operation
-  pathCompressedNodes?: number[]; // Nodes whose parents changed during path compression
-  message: string;
-  currentLine: number | null;
-  activeIndices: number[]; // For highlighting elements in parent/rank arrays
-}
-
-// Hash Table Step Type
-export type HashValue = string | number; // Key type
-export type HashTableEntry = [HashValue, HashValue]; // [key, value] pair
-
-export interface HashTableStep extends Omit<AlgorithmStep, 'array'> {
-  buckets: HashTableEntry[][]; // Array of buckets, each bucket is an array of entries (chaining)
-  tableSize: number;
-  operation: 'insert' | 'search' | 'delete' | 'init';
-  currentKey?: HashValue;
-  currentValue?: HashValue;
-  hashIndex?: number;
-  foundValue?: HashValue | null; // null if not found, undefined if not a search op
-  message: string;
-  activeBucketIndex?: number | null; // Index of the bucket being operated on
-  activeEntry?: HashTableEntry | null; // The specific entry being examined/added/deleted
-}
-
-// Priority Queue Step Type (assuming heap-based)
-export interface PriorityQueueItem {
-  value: string | number;
-  priority: number;
-}
-export interface PriorityQueueStep extends Omit<AlgorithmStep, 'array'> {
-  heapArray: PriorityQueueItem[]; // Array representing the heap
-  operation: 'enqueue' | 'dequeue' | 'peek' | 'init';
-  processedItem?: PriorityQueueItem | null; // Item enqueued or dequeued
-  message: string;
-  activeHeapIndices?: number[]; // Indices in heapArray being actively worked on (e.g. during heapify)
-}
-
-// Dynamic Programming Step Type
-export interface DPAlgorithmStep {
-  dpTable: number[][] | number[]; // The DP table itself (1D or 2D)
-  dpTableDimensions?: { rows: number; cols: number }; // For 2D tables
-  currentIndices?: { item?: number; capacity?: number; amount?: number; coin?: number; i?: number, j?: number, k?: number, L?:number }; // Indices being processed
-  highlightedCells?: {row: number, col: number, type: 'current' | 'dependency' | 'result'}[]; // For DP table cell highlighting
-  message: string;
-  currentLine: number | null;
-  auxiliaryData?: Record<string, any> | null; // General purpose aux data
-  resultValue?: number; // Final result of the DP calculation
-  selectedItems?: {weight: number, value: number}[]; // For Knapsack item reconstruction
-}
-
-// Specific step type for Sieve of Eratosthenes
-export interface SieveAlgorithmStep extends Omit<AlgorithmStep, 'swappingIndices' | 'sortedIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
-  array: number[]; // Represents the sieve: 0=composite, 1=prime, 2=current_p, 3=current_multiple
-  auxiliaryData?: {
-    limitN: number;
-    currentP?: number;
-    currentMultiple?: number;
-    primesFound?: number[];
-    message?: string;
-  };
-}
-
-// Specific step type for Modular Exponentiation
-export interface ModularExponentiationStep extends Omit<AlgorithmStep, 'array' | 'swappingIndices' | 'sortedIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
-  auxiliaryData: {
-    base: number;
-    exponent: number;
-    modulus: number;
-    result: number;
-    currentOperationDescription?: string;
-  };
-}
-
-// Specific step type for Counting Sort
-export interface CountingSortStep extends AlgorithmStep {
-  countArray?: number[];
-  outputArray?: number[];
-  currentElement?: number; // Element from input array being processed
-  currentIndex?: number;  // Index in input or output array
-  currentCountIndex?: number; // Index in count array being accessed/modified
-}
-
-// Specific step type for Bucket Sort
-export interface BucketSortBucket {
-  id: number; // Bucket index
-  elements: number[];
-  isSorted?: boolean;
-}
-export interface BucketSortStep extends AlgorithmStep {
-  buckets?: BucketSortBucket[];
-  currentElement?: number; // Element being distributed
-  currentBucketIndex?: number; // Bucket being processed (distributed to or sorted)
-  phase?: 'distributing' | 'sorting_bucket' | 'gathering';
-}
-
-// Huffman Coding Specific Types
-export interface HuffmanFrequencyItem {
-  char: string;
-  freq: number;
-  id: string; // Unique ID for visualization
-}
-
-export interface HuffmanNodeForPQ {
-  id: string;
-  char: string | null; // Null for internal nodes
-  freq: number;
-  leftId?: string | null;
-  rightId?: string | null;
-}
-
-export interface HuffmanCodeItem {
-  char: string;
-  code: string;
-}
-
-export interface HuffmanStep extends Omit<TreeAlgorithmStep, 'traversalPath'> {
-  phase: 'frequency_calculation' | 'pq_initialization' | 'tree_construction' | 'code_generation' | 'finished';
-  frequencies?: HuffmanFrequencyItem[];
-  priorityQueueState?: HuffmanNodeForPQ[]; // Conceptual representation
-  huffmanCodes?: HuffmanCodeItem[];
-  activeNodeIds?: string[]; // Nodes being merged from PQ or currently visited in code assignment
-  mergedNodeId?: string | null; // Newly created internal node
-  currentPathForCode?: string; // Path from root to current node during code generation
-}
-
-// Trie Specific Types
-export interface TrieNodeInternal {
-  id: string; 
-  char: string | null; 
-  isEndOfWord: boolean;
-  children: Map<string, string>; 
-  parentId?: string | null; 
-  depth?: number; 
-  x?: number; 
-  y?: number; 
-  visualColor?: string;
-}
-
-export interface TrieNodeVisual {
-  id: string;
-  label: string; 
-  x: number;
-  y: number;
-  isEndOfWord: boolean;
-  color: string; 
-  textColor?: string;
-}
-
-export interface TrieEdgeVisual {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  color?: string;
-}
-export interface TrieStep extends Omit<AlgorithmStep, 'array' | 'swappingIndices' | 'sortedIndices' | 'processingSubArrayRange' | 'pivotActualIndex'> {
-  nodes: TrieNodeVisual[]; 
-  edges: TrieEdgeVisual[];
-  operation: 'insert' | 'search' | 'startsWith' | 'init';
-  currentWord?: string;
-  currentCharIndex?: number;
-  currentNodeId?: string | null; 
-  pathTakenIds?: string[]; 
-  message: string;
-  found?: boolean; 
-  auxiliaryData?: {
-    insertedWords?: string[];
-  }
-}
-
-
-// Union type if needed, or components can just expect one type.
-// For now, page components will manage which step type they use.
-export type AlgorithmStep = ArrayAlgorithmStep; // Default alias
-// Graph algorithm pages will use GraphAlgorithmStep directly.
-// Tree algorithm pages will use TreeAlgorithmStep directly.
-// Linked list pages will use LinkedListAlgorithmStep directly.
-    
+// Types that were very specific and are now moved to local `types.ts` files:
+// - ArrayAlgorithmStep (though a generic AlgorithmStep is kept above)
+// - BinaryTreeNodeVisual
+// - BinaryTreeEdgeVisual
+// - TreeAlgorithmStep
+// - LinkedListNodeVisual
+// - LinkedListType
+// - LinkedListAlgorithmStep
+// - NQueensStep
+// - RatInAMazeStep
+// - SudokuStep
+// - DSUStep
+// - HashTableStep, HashTableEntry, HashValue
+// - PriorityQueueItem, PriorityQueueStep
+// - DPAlgorithmStep (a more specific one might exist locally too)
+// - SieveAlgorithmStep
+// - ModularExponentiationStep
+// - CountingSortStep
+// - BucketSortBucket, BucketSortStep
+// - Huffman Types (FrequencyItem, NodeForPQ, CodeItem, HuffmanStep)
+// - Trie Types (NodeInternal, NodeVisual, EdgeVisual, TrieStep)
+// The components consuming these (e.g., page.tsx) will import them locally.

@@ -1,12 +1,12 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { ArrayAlgorithmStep } from './types'; // Local import
 
 export const BUBBLE_SORT_LINE_MAP = { 
   functionDeclaration: 1, getN: 2, declareSwappedVar: 3, doWhileStart: 4, setSwappedFalse: 5, forLoopStart: 6, compareComment: 7,  ifCondition: 8, swapComment: 9,  tempAssignment: 10, firstSwapAssign: 11, secondSwapAssign: 12, setSwappedTrue: 13, ifEnd: 14, forLoopEnd: 15, decrementN: 16, doWhileEndCondition: 17, returnArr: 18, functionEnd: 19,
 };
 
-export const generateBubbleSortSteps = (arrToSort: number[]): AlgorithmStep[] => {
-  const localSteps: AlgorithmStep[] = [];
+export const generateBubbleSortSteps = (arrToSort: number[]): ArrayAlgorithmStep[] => {
+  const localSteps: ArrayAlgorithmStep[] = [];
   if (!arrToSort || arrToSort.length === 0) return localSteps;
   const arr = [...arrToSort];
   let n = arr.length;
