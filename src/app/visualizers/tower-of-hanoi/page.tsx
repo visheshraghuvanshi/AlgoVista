@@ -1,4 +1,5 @@
 
+      
 // src/app/visualizers/tower-of-hanoi/page.tsx
 "use client";
 
@@ -46,29 +47,30 @@ export default function TowerOfHanoiVisualizerPage() {
     setNumDisks(val);
   };
 
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) {
+      setCurrentStep(steps[stepIndex]);
+    }
+  }, [steps, setCurrentStep]);
+
   const generateNewSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     if (numDisks < 1 || numDisks > MAX_DISKS_FOR_VIS) {
         toast({title: "Invalid Disk Count", description: `Please enter between 1 and ${MAX_DISKS_FOR_VIS} disks.`, variant: "destructive"});
+        setSteps([]); setCurrentStep(null); setIsFinished(true);
         return;
     }
     const newSteps = generateTowerOfHanoiSteps(numDisks);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    setCurrentStep(newSteps[0] || null); // Directly set first step
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-  }, [numDisks, toast]);
+  }, [numDisks, toast, setSteps, setCurrentStep, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
   useEffect(() => {
     generateNewSteps();
   }, [numDisks, generateNewSteps]); 
-
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
-    }
-  }, [steps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -104,7 +106,6 @@ export default function TowerOfHanoiVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(true); 
     setNumDisks(DEFAULT_NUM_DISKS); 
-    // generateNewSteps will be called by useEffect on numDisks change
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -154,7 +155,6 @@ export default function TowerOfHanoiVisualizerPage() {
                  <Button onClick={generateNewSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Start / Reset Simulation</Button>
             </div>
             <div className="flex items-center justify-start pt-4 border-t">
-                 {/* Reset to Defaults button - handled by N change or Start/Reset above */}
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
@@ -177,3 +177,5 @@ export default function TowerOfHanoiVisualizerPage() {
   );
 }
 
+
+    

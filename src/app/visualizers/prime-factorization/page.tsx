@@ -1,4 +1,5 @@
 
+      
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -48,7 +49,7 @@ export default function PrimeFactorizationVisualizerPage() {
     if (steps[stepIndex]) {
       setCurrentStep(steps[stepIndex]);
     }
-  }, [steps]);
+  }, [steps, setCurrentStep]);
   
   const handleFactorize = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -56,20 +57,21 @@ export default function PrimeFactorizationVisualizerPage() {
     const num = parseInt(numberInput, 10);
     if (isNaN(num) || num <= 1 || num > MAX_NUMBER_TO_FACTOR) {
       toast({ title: "Invalid Input", description: `Please enter an integer between 2 and ${MAX_NUMBER_TO_FACTOR}.`, variant: "destructive" });
+      setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
 
     const newSteps = generatePrimeFactorizationSteps(num);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    setCurrentStep(newSteps[0] || null); // Directly set first step
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-  }, [numberInput, toast, updateVisualStateFromStep]);
+  }, [numberInput, toast, setSteps, setCurrentStep, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
   useEffect(() => { 
     handleFactorize();
-  }, [numberInput, handleFactorize]); // Re-factorize if numberInput changes
+  }, [numberInput, handleFactorize]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -99,7 +101,6 @@ export default function PrimeFactorizationVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(true);
     setNumberInput(DEFAULT_NUMBER_TO_FACTOR.toString());
-    // handleFactorize will be called by useEffect due to numberInput change
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -177,3 +178,5 @@ export default function PrimeFactorizationVisualizerPage() {
   );
 }
 
+
+    

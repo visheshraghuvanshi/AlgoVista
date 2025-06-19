@@ -1,3 +1,5 @@
+
+      
 // src/app/visualizers/base-conversions/page.tsx
 "use client";
 
@@ -8,7 +10,7 @@ import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
 import type { AlgorithmMetadata, AlgorithmDetailsProps, BaseConversionStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Repeat } from 'lucide-react'; // Repeat for base conversion
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
@@ -62,32 +64,33 @@ export default function BaseConversionsVisualizerPage() {
     if (isNaN(fromBase) || fromBase < 2 || fromBase > 36 || 
         isNaN(toBase) || toBase < 2 || toBase > 36) {
       toast({ title: "Invalid Base", description: "Bases must be integers between 2 and 36.", variant: "destructive" });
+      setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
     
-    // Validate numberInput based on fromBase
-    if (fromBase !== 10) { // For non-decimal, check if digits are valid for that base
+    if (fromBase !== 10) {
         const validChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".slice(0, fromBase);
         const inputToCheck = numberInput.toUpperCase();
         if (!inputToCheck.split('').every(char => validChars.includes(char))) {
             toast({ title: "Invalid Number", description: `Number "${numberInput}" contains invalid characters for base ${fromBase}.`, variant: "destructive" });
+            setSteps([]); setCurrentStep(null); setIsFinished(true);
             return;
         }
-    } else { // For decimal input, just check if it's a valid integer representation
+    } else {
         if (isNaN(parseInt(numberInput,10))) {
              toast({ title: "Invalid Decimal Number", description: `"${numberInput}" is not a valid decimal number.`, variant: "destructive" });
+             setSteps([]); setCurrentStep(null); setIsFinished(true);
             return;
         }
     }
 
-
     const newSteps = generateBaseConversionSteps(numberInput, fromBase, toBase);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
+    setCurrentStep(newSteps[0] || null); // Directly set first step
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-  }, [numberInput, fromBaseInput, toBaseInput, toast]); 
+  }, [numberInput, fromBaseInput, toBaseInput, toast, setSteps, setCurrentStep, setCurrentStepIndex, setIsPlaying, setIsFinished]); 
   
   useEffect(() => { 
     handleConvert();
@@ -123,6 +126,7 @@ export default function BaseConversionsVisualizerPage() {
     setNumberInput(DEFAULT_NUMBER_INPUT);
     setFromBaseInput(DEFAULT_FROM_BASE);
     setToBaseInput(DEFAULT_TO_BASE);
+    // handleConvert will be called by its useEffect dependency on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -198,3 +202,5 @@ export default function BaseConversionsVisualizerPage() {
   );
 }
 
+
+    

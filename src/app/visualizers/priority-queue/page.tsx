@@ -1,4 +1,5 @@
 
+      
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -56,17 +57,17 @@ export default function PriorityQueueVisualizerPage() {
         activeIndices: [], swappingIndices: [], sortedIndices: [], activeHeapIndices: []
     };
     setCurrentStep(initialStep);
-    setSteps([initialStep]);
+    setSteps([initialStep]); 
     setIsFinished(true);
     setCurrentStepIndex(0);
-  }, []);
+  }, [setCurrentStep, setSteps, setIsFinished, setCurrentStepIndex]);
 
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
-  }, [steps]);
+  }, [steps, setCurrentStep]);
   
-  const handleExecuteOperation = () => {
+  const handleExecuteOperation = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     if (selectedOperation === 'init') {
@@ -83,10 +84,11 @@ export default function PriorityQueueVisualizerPage() {
     const newSteps = generatePriorityQueueSteps([...pqRef.current], selectedOperation as 'enqueue'|'dequeue'|'peek', itemValueInput, itemPriorityInput);
     setSteps(newSteps);
     setCurrentStepIndex(0);
+    setCurrentStep(newSteps[0] || null); // Directly set first step
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
+
     if (newSteps.length > 0) {
-        updateStateFromStep(0);
         if(newSteps[newSteps.length - 1].heapArray) {
             pqRef.current = [...newSteps[newSteps.length - 1].heapArray];
         }
@@ -95,9 +97,15 @@ export default function PriorityQueueVisualizerPage() {
              toast({title: `${lastStep.lastOperation || 'Operation'} Status`, description: lastStep.message});
         }
     } else {
-        setCurrentStep({ ...currentStep!, message: "Operation did not produce steps." });
+        const currentArrayState = [...pqRef.current];
+        setCurrentStep({
+            heapArray: currentArrayState, operation: selectedOperation as 'enqueue'|'dequeue'|'peek',
+            message: "Operation did not produce steps or an error occurred.", currentLine: null,
+            activeIndices: [], swappingIndices: [], sortedIndices: [], activeHeapIndices: []
+        });
+        setSteps(currentStep ? [currentStep] : []);
     }
-  };
+  }, [selectedOperation, itemValueInput, itemPriorityInput, toast, initializePQ, setSteps, setCurrentStep, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -200,4 +208,5 @@ export default function PriorityQueueVisualizerPage() {
   );
 }
 
-  
+
+    
