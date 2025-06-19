@@ -1,13 +1,13 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; 
 import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, RBTreeGraph } from './types'; // Local import
-import type { RBTOperationType } from './RedBlackTreeCodePanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, RBTreeGraph, AlgorithmDetailsProps, RBTOperationType } from './types'; 
 import { algorithmMetadata } from './metadata'; 
 
 import { useToast } from "@/hooks/use-toast";
@@ -33,7 +33,7 @@ export default function RedBlackTreePage() {
 
   const [initialArrayInput, setInitialArrayInput] = useState('10,20,30,5,15,25,35,1,8');
   const [operationValue, setOperationValue] = useState('22'); 
-  const [selectedOperation, setSelectedOperation] = useState<RBTOperationType>('insert');
+  const [selectedOperation, setSelectedOperation] = useState<RBTOperationType>('build');
   
   const [steps, setSteps] = useState<TreeAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -66,7 +66,7 @@ export default function RedBlackTreePage() {
   
   const handleOperation = useCallback((
       opTypeInput: 'build' | 'insert' | 'search' | 'delete' | 'structure', 
-      primaryValue?: string,
+      primaryValue?: string, // For build: initialArrayInput, for insert/search/delete: operationValue
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
@@ -77,6 +77,10 @@ export default function RedBlackTreePage() {
 
     if (opType === 'build') {
         valuesForBuild = primaryValue || initialArrayInput;
+        const parsedBuildArray = valuesForBuild.split(',').map(s=>s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
+         if (parsedBuildArray.length > 12) { // Reduced for RBT complexity
+            toast({ title: "Input Too Large", description: "Max 12 nodes for Build RBT for smoother visualization.", variant: "default" });
+        }
         rbtRef.current = createInitialRBTreeGraph(); 
     } else if (opType === 'insert' || opType === 'search' || opType === 'delete') {
         const opValStr = primaryValue || operationValue;
@@ -86,22 +90,23 @@ export default function RedBlackTreePage() {
             return;
         }
         valueForOp = parseInt(opValStr, 10);
-        if (isNaN(valueForOp)) {
-            toast({ title: "Invalid Value", description: "Please enter a numeric value for the operation.", variant: "destructive" });
+        if (isNaN(valueForOp) || valueForOp < -999 || valueForOp > 999) {
+            toast({ title: "Invalid Value", description: "Please enter a numeric value between -999 and 999 for operation.", variant: "destructive" });
             setSteps([]);setCurrentNodes([]);setCurrentEdges([]);setCurrentPath([]);setCurrentLine(null);setCurrentProcessingNodeId(null);setCurrentMessage("Error: Invalid value.");setIsPlaying(false);setIsFinished(true);
             return;
+        }
+         if (rbtRef.current.nodesMap.size >= 15 + 1 /*NIL node*/ && opType === 'insert') { // +1 for NIL
+             toast({ title: "Tree Too Large", description: "Max 15 nodes in tree for smoother insert visualization.", variant: "default" });
+             return;
         }
     } else if (opTypeInput === 'structure') {
         const currentVisuals = generateRBTreeSteps('structure', undefined, undefined, rbtRef.current);
         setSteps(currentVisuals);
+        setCurrentStepIndex(0);
         if (currentVisuals.length > 0) {
-            const firstStep = currentVisuals[0];
-            setCurrentNodes(firstStep.nodes);
-            setCurrentEdges(firstStep.edges);
-            setCurrentPath(firstStep.traversalPath || []);
-            setCurrentLine(firstStep.currentLine);
-            setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
-            setCurrentMessage(firstStep.message || "Displaying current tree structure. Select an operation to visualize.");
+            updateStateFromStep(0);
+        } else {
+             setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);setCurrentMessage("Cannot display structure.");
         }
         setIsPlaying(false);
         setIsFinished(true);
@@ -129,6 +134,7 @@ export default function RedBlackTreePage() {
         setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
         setCurrentMessage(firstStep.message || "Step executed.");
         
+        // Persist the final state of the graph structure to rbtRef after operations
         const finalGraphStateFromSteps = newSteps[newSteps.length - 1]?.auxiliaryData?.finalGraphState as RBTreeGraph | undefined;
         if (finalGraphStateFromSteps) {
             rbtRef.current = finalGraphStateFromSteps;
@@ -137,13 +143,17 @@ export default function RedBlackTreePage() {
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
         if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { 
             const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
-            toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 3000 });
+            if (!lastStepMsg.toLowerCase().includes("fixup") && !lastStepMsg.toLowerCase().includes("rotate")) { // Avoid toast for intermediate fixup/rotate steps
+                toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 2000 });
+            }
+        } else if (opType === 'build' && newSteps.length > 1 && lastStepMsg) {
+             toast({ title: "Build RBT", description: lastStepMsg, duration: 2000 });
         }
     } else {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  }, [initialArrayInput, operationValue, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+  }, [initialArrayInput, operationValue, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, updateStateFromStep]);
 
   useEffect(() => {
     handleOperation('build', initialArrayInput);
@@ -191,14 +201,14 @@ export default function RedBlackTreePage() {
     handleOperation('build', defaultInitialArray);
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algoDetails) {
+  if (!localAlgoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -226,14 +236,14 @@ export default function RedBlackTreePage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="initialArrayInput" className="text-sm font-medium flex items-center"><Cog className="mr-2 h-4 w-4"/>Initial Array (for Build Tree)</Label>
-                <Input id="initialArrayInput" value={initialArrayInput} onChange={(e) => setInitialArrayInput(e.target.value)} placeholder="e.g., 10,20,5" disabled={isPlaying} />
+                <Label htmlFor="initialArrayInputRBT" className="text-sm font-medium flex items-center"><Cog className="mr-2 h-4 w-4"/>Initial Array (for Build Tree)</Label>
+                <Input id="initialArrayInputRBT" value={initialArrayInput} onChange={(e) => setInitialArrayInput(e.target.value)} placeholder="e.g., 10,20,5" disabled={isPlaying} />
                 <Button onClick={() => handleOperation('build', initialArrayInput)} disabled={isPlaying} className="w-full md:w-auto">Build Tree</Button>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="operationSelect">Operation</Label>
+                <Label htmlFor="operationSelectRBT">Operation</Label>
                 <Select value={selectedOperation} onValueChange={(v) => setSelectedOperation(v as RBTOperationType)} disabled={isPlaying}>
-                  <SelectTrigger id="operationSelect"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="operationSelectRBT"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="insert">Insert Value</SelectItem>
                     <SelectItem value="search">Search Value</SelectItem>
@@ -243,8 +253,8 @@ export default function RedBlackTreePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="operationValue">Value for Operation</Label>
-                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} />
+                <Label htmlFor="operationValueRBT">Value for Operation</Label>
+                <Input id="operationValueRBT" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} />
                  <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search' | 'delete', operationValue)} disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} className="w-full md:w-auto mt-1">
                     {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4"/> : selectedOperation === 'search' ? <Search className="mr-2 h-4 w-4"/> : <Trash2 className="mr-2 h-4 w-4"/>}
                     Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
@@ -272,14 +282,15 @@ export default function RedBlackTreePage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              NIL nodes are logical and not visually rendered for clarity. Delete operation is conceptual.
+              NIL nodes are logical and not visually rendered for clarity. Delete operation visualization is conceptual and does not include fixup steps.
             </p>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
 
+```

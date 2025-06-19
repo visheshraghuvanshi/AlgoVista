@@ -46,7 +46,7 @@ function addStep(
   currentTreeState: number[],
   message: string = "",
   active: number[] = [], 
-  auxData?: Record<string, string | number> 
+  auxData?: Record<string, string | number | null> 
 ) {
   localSteps.push({
     array: [...currentTreeState],
@@ -111,27 +111,37 @@ export const generateSegmentTreeSteps = (
     let r = queryRight;
     let result = 0;
     const initialL = l, initialR = r; // For message
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryFuncStart, tree, `Querying sum for original range [${initialL}, ${initialR})`, []);
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryInitResult, tree, `Initialize result = 0.`, [], {result});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryFuncStart, tree, `Querying sum for original range [${initialL}, ${initialR})`, [], {result: 0, L: l, R: r});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryInitResult, tree, `Initialize result = 0.`, [], {result, L: l, R: r});
     
     l += n; 
     r += n;
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAdjustLR, tree, `Adjust L=${l}, R=${r} for tree array. Querying nodes.`, [l,r-1], {result});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAdjustLR, tree, `Adjust L=${l}, R=${r} for tree array. Querying nodes.`, [l,r-1], {result, L: l, R: r});
+
+    const activeQueryIndices: number[] = [];
 
     for (; l < r; l = Math.floor(l/2), r = Math.floor(r/2)) {
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryLoop, tree, `Loop: L=${l}, R=${r}. Iterating.`, [l,r-1], {result});
+      activeQueryIndices.length = 0; // Clear for this iteration
+      if (l % 2 === 1) activeQueryIndices.push(l);
+      if (r % 2 === 1) activeQueryIndices.push(r-1);
+      if (l < r && Math.floor(l/2) !== l && Math.floor(r/2) !== r) { // Add parents if they will be checked
+          if (!activeQueryIndices.includes(Math.floor(l/2))) activeQueryIndices.push(Math.floor(l/2));
+          if (!activeQueryIndices.includes(Math.floor(r/2))) activeQueryIndices.push(Math.floor(r/2));
+      }
+
+      addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryLoop, tree, `Loop: L=${l}, R=${r}. Result=${result}. Iterating.`, [...activeQueryIndices], {result, L: l, R: r});
       if (l % 2 === 1) { 
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryIfLeftOdd, tree, `L (${l}) is odd. Include tree[${l}] (${tree[l]}) in sum.`, [l], {result});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryIfLeftOdd, tree, `L (${l}) is odd. Include tree[${l}] (${tree[l]}) in sum.`, [l, ...activeQueryIndices.filter(idx => idx !== l)], {result, L: l, R: r});
         result += tree[l++];
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAddLeft, tree, `result = ${result}. Increment L to ${l}.`, [l-1], {result});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAddLeft, tree, `result = ${result}. Increment L to ${l}.`, [l-1], {result, L: l, R: r});
       }
       if (r % 2 === 1) { 
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryIfRightOdd, tree, `R (${r}) is odd. Decrement R to ${r-1}. Include tree[${r-1}] (${tree[r-1]}) in sum.`, [r-1], {result});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryIfRightOdd, tree, `R (${r}) is odd. Decrement R to ${r-1}. Include tree[${r-1}] (${tree[r-1]}) in sum.`, [r-1, ...activeQueryIndices.filter(idx => idx !== r-1)], {result, L: l, R: r});
         result += tree[--r]; 
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAddRight, tree, `result = ${result}.`, [r], {result});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAddRight, tree, `result = ${result}. R is now ${r}.`, [r], {result, L: l, R: r});
       }
     }
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryReturnResult, tree, `Query complete. Sum for range [${initialL}, ${initialR}) is ${result}.`, [], {result});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryReturnResult, tree, `Query complete. Sum for range [${initialL}, ${initialR}) is ${result}.`, [], {result, L: initialL, R: initialR});
     addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryFuncEnd, tree, "Query function finished.");
 
   } else if (operation === 'update') {
@@ -159,3 +169,5 @@ export const generateSegmentTreeSteps = (
   
   return localSteps;
 };
+
+```

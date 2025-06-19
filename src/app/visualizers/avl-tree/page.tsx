@@ -1,12 +1,13 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; 
 import { AVLTreeCodePanel } from './AVLTreeCodePanel';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AVLNodeInternal, AlgorithmDetailsProps } from './types'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AVLNodeInternal, AlgorithmDetailsProps } from './types'; 
 import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
@@ -14,7 +15,7 @@ import {
   generateAVLSteps,
   getFinalAVLTreeState,
   resetAVLTreeState,
-} from './avl-tree-logic'; // Local import
+} from './avl-tree-logic'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,7 +61,7 @@ export default function AVLTreeVisualizerPage() {
       setCurrentProcessingNodeId(currentS.currentProcessingNodeId ?? null);
       setCurrentMessage(currentS.message || "Step executed.");
     }
-  }, [steps]);
+  }, [steps]); // Depends on steps, which is stable between re-renders of this callback.
   
   const processOperation = useCallback((operation: 'build' | 'insert' | 'delete') => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -135,7 +136,7 @@ export default function AVLTreeVisualizerPage() {
   useEffect(() => {
     handleBuildTree(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []); // Initial build on mount
 
 
   useEffect(() => {
@@ -178,17 +179,19 @@ export default function AVLTreeVisualizerPage() {
     setSteps([]);
     setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
     setCurrentMessage("AVL Tree reset. Build a new tree or perform operations.");
-    handleBuildTree(); // Rebuild with default values
+    // Defer build until next cycle if setInitialValuesInput triggers it, or call explicitly if not.
+    // For this setup, explicitly calling it ensures it runs after state updates.
+    processOperation('build'); // Rebuild with default values
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algoDetails) {
+  if (!localAlgoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -249,10 +252,11 @@ export default function AVLTreeVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
 
+```

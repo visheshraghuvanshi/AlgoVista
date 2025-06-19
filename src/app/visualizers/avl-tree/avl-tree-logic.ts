@@ -44,8 +44,8 @@ export const AVL_TREE_LINE_MAP = {
   deleteNodeFound: 81, // else (node to delete is found)
   deleteCase1LeftNull: 82,
   deleteReturnRightChild: 83,
-  deleteCase1RightNull: 84,
-  deleteReturnLeftChild: 85,
+  deleteCase1RightNull: 84, // If we had separate lines in code snippet
+  deleteReturnLeftChild: 85, // If we had separate lines in code snippet
   deleteCase2TwoChildren: 86,
   deleteFindMinValueNode: 87, // Call _minValueNode
   deleteCopySuccessorValue: 88,
@@ -241,49 +241,53 @@ function rotateLeft(xId: string): string {
 
 function balanceNode(nodeId: string, valueForPathContext?: number): string {
     updateHeight(nodeId);
-    addStep(AVL_TREE_LINE_MAP.insertUpdateHeight, `Updating height for node ${getNode(nodeId)!.value} after recursive call.`, [nodeId]);
+    addStep(AVL_TREE_LINE_MAP.insertUpdateHeight, `Updating height for node ${getNode(nodeId)!.value} after recursive call. Current Height: ${getNode(nodeId)!.height}`, [nodeId]);
 
     const balance = getBalanceFactor(nodeId);
     addStep(AVL_TREE_LINE_MAP.insertGetBalance, `Balance factor of ${getNode(nodeId)!.value} is ${balance}.`, [nodeId]);
 
     let newSubtreeRootId = nodeId;
 
+    // Left heavy cases
     if (balance > 1) {
         const leftChildId = getNode(nodeId)!.leftId!;
-        const conditionForLL = valueForPathContext !== undefined ? valueForPathContext < getNode(leftChildId)!.value : getBalanceFactor(leftChildId) >= 0;
+        const conditionForLL = valueForPathContext !== undefined ? valueForPathContext < getNode(leftChildId)!.value : getBalanceFactor(leftChildId) >= 0; // For deletion, use balance factor of left child
 
-        if (conditionForLL) { 
-            addStep(AVL_TREE_LINE_MAP.llCaseCondition, `LL Case for ${getNode(nodeId)!.value}. Rotating right.`, [nodeId]);
+        if (conditionForLL) { // LL Case (or L0 for delete)
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.llCaseCondition : AVL_TREE_LINE_MAP.delBalanceLL, `LL Case for ${getNode(nodeId)!.value}. Rotating right.`, [nodeId]);
             newSubtreeRootId = rotateRight(nodeId);
-        } else { 
-            addStep(AVL_TREE_LINE_MAP.lrCaseCondition, `LR Case for ${getNode(nodeId)!.value}. Rotate left on left child, then right on current.`, [nodeId]);
+        } else { // LR Case
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.lrCaseCondition : AVL_TREE_LINE_MAP.delBalanceLR, `LR Case for ${getNode(nodeId)!.value}. Rotate left on left child, then right on current.`, [nodeId]);
             const currentLeftId = getNode(nodeId)!.leftId!;
             const newLeftSubtreeRootId = rotateLeft(currentLeftId);
-            getNode(nodeId)!.leftId = newLeftSubtreeRootId;
-            getNode(newLeftSubtreeRootId)!.parentId = nodeId;
-            nodesMap.set(nodeId, getNode(nodeId)!);
-            addStep(AVL_TREE_LINE_MAP.lrCaseAction1, `After left rotation on left child of ${getNode(nodeId)!.value}`, [nodeId]);
+            getNode(nodeId)!.leftId = newLeftSubtreeRootId; // Update parent's left child pointer
+            getNode(newLeftSubtreeRootId)!.parentId = nodeId; // Update child's parent pointer
+            nodesMap.set(nodeId, getNode(nodeId)!); // Persist change to parent node
+            nodesMap.set(newLeftSubtreeRootId, getNode(newLeftSubtreeRootId)!); // Persist change to new left child
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.lrCaseAction1 : AVL_TREE_LINE_MAP.delBalanceLR, `After left rotation on left child of ${getNode(nodeId)!.value}`, [nodeId]);
             newSubtreeRootId = rotateRight(nodeId);
-            addStep(AVL_TREE_LINE_MAP.lrCaseAction2, `After right rotation on ${getNode(nodeId)?.value || 'original node'}. New root: ${getNode(newSubtreeRootId)!.value}`, [newSubtreeRootId]);
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.lrCaseAction2 : AVL_TREE_LINE_MAP.delBalanceLR, `After right rotation on ${getNode(nodeId)?.value || 'original node'}. New root: ${getNode(newSubtreeRootId)!.value}`, [newSubtreeRootId]);
         }
     }
+    // Right heavy cases
     else if (balance < -1) {
         const rightChildId = getNode(nodeId)!.rightId!;
-        const conditionForRR = valueForPathContext !== undefined ? valueForPathContext > getNode(rightChildId)!.value : getBalanceFactor(rightChildId) <= 0;
+        const conditionForRR = valueForPathContext !== undefined ? valueForPathContext > getNode(rightChildId)!.value : getBalanceFactor(rightChildId) <= 0; // For deletion, use balance factor of right child
 
-        if (conditionForRR) { 
-            addStep(AVL_TREE_LINE_MAP.rrCaseCondition, `RR Case for ${getNode(nodeId)!.value}. Rotating left.`, [nodeId]);
+        if (conditionForRR) { // RR Case (or R0 for delete)
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.rrCaseCondition : AVL_TREE_LINE_MAP.delBalanceRR, `RR Case for ${getNode(nodeId)!.value}. Rotating left.`, [nodeId]);
             newSubtreeRootId = rotateLeft(nodeId);
-        } else { 
-            addStep(AVL_TREE_LINE_MAP.rlCaseCondition, `RL Case for ${getNode(nodeId)!.value}. Rotate right on right child, then left on current.`, [nodeId]);
+        } else { // RL Case
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.rlCaseCondition : AVL_TREE_LINE_MAP.delBalanceRL, `RL Case for ${getNode(nodeId)!.value}. Rotate right on right child, then left on current.`, [nodeId]);
             const currentRightId = getNode(nodeId)!.rightId!;
             const newRightSubtreeRootId = rotateRight(currentRightId);
-            getNode(nodeId)!.rightId = newRightSubtreeRootId;
-            getNode(newRightSubtreeRootId)!.parentId = nodeId;
-             nodesMap.set(nodeId, getNode(nodeId)!);
-            addStep(AVL_TREE_LINE_MAP.rlCaseAction1, `After right rotation on right child of ${getNode(nodeId)!.value}`, [nodeId]);
+            getNode(nodeId)!.rightId = newRightSubtreeRootId; // Update parent's right child pointer
+            getNode(newRightSubtreeRootId)!.parentId = nodeId; // Update child's parent pointer
+            nodesMap.set(nodeId, getNode(nodeId)!); // Persist change to parent node
+            nodesMap.set(newRightSubtreeRootId, getNode(newRightSubtreeRootId)!); // Persist change to new right child
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.rlCaseAction1 : AVL_TREE_LINE_MAP.delBalanceRL, `After right rotation on right child of ${getNode(nodeId)!.value}`, [nodeId]);
             newSubtreeRootId = rotateLeft(nodeId);
-            addStep(AVL_TREE_LINE_MAP.rlCaseAction2, `After left rotation on ${getNode(nodeId)?.value || 'original node'}. New root: ${getNode(newSubtreeRootId)!.value}`, [newSubtreeRootId]);
+            addStep(valueForPathContext !== undefined ? AVL_TREE_LINE_MAP.rlCaseAction2 : AVL_TREE_LINE_MAP.delBalanceRL, `After left rotation on ${getNode(nodeId)?.value || 'original node'}. New root: ${getNode(newSubtreeRootId)!.value}`, [newSubtreeRootId]);
         }
     }
     return newSubtreeRootId;
@@ -297,7 +301,7 @@ function insertRec(nodeId: string | null, value: number, parentId: string | null
     const newNodeId = generateAVLNodeId(value);
     nodesMap.set(newNodeId, { id: newNodeId, value, height: 1, leftId: null, rightId: null, parentId });
     addStep(AVL_TREE_LINE_MAP.insertBaseCaseNull, `Created new node ${value}`, [newNodeId], {[newNodeId]: NODE_COLORS.inserted});
-    if (currentPathRec.length > 0 && currentPathRec[currentPathRec.length -1] === nodeId) currentPathRec.pop();
+    if (currentPathRec.length > 0 && getNode(currentPathRec[currentPathRec.length -1]) === null) currentPathRec.pop(); // If last element was null conceptually
     return newNodeId;
   }
 
@@ -335,6 +339,7 @@ function insertRec(nodeId: string | null, value: number, parentId: string | null
 
 function _minValueNode(nodeId: string): AVLNodeInternal {
     let current = getNode(nodeId)!;
+    let tempPathRecBackup = [...currentPathRec]; // Backup path
     currentPathRec.push(current.id);
     addStep(AVL_TREE_LINE_MAP.minValueNodeFunc, `Finding min value in subtree of ${current.value}. Start at ${current.value}.`, [current.id], {[current.id]:NODE_COLORS.successor});
     while (current.leftId !== null) {
@@ -343,6 +348,7 @@ function _minValueNode(nodeId: string): AVLNodeInternal {
         addStep(AVL_TREE_LINE_MAP.minValueNodeLoop, `Current min candidate: ${current.value}. Go left.`, [current.id], {[current.id]:NODE_COLORS.successor});
     }
     addStep(AVL_TREE_LINE_MAP.minValueNodeReturn, `Min value in subtree is ${current.value}.`, [current.id], {[current.id]:NODE_COLORS.successor});
+    currentPathRec = tempPathRecBackup; // Restore path
     return current;
 }
 
@@ -352,7 +358,7 @@ function deleteRec(nodeId: string | null, value: number): string | null {
 
     if (!nodeId) {
         addStep(AVL_TREE_LINE_MAP.deleteBaseCaseNull, `Value ${value} not found (reached null). Return.`, []);
-        if (currentPathRec.length > 0 && currentPathRec[currentPathRec.length -1] === nodeId) currentPathRec.pop();
+        if (currentPathRec.length > 0 && getNode(currentPathRec[currentPathRec.length -1]) === null) currentPathRec.pop();
         return null;
     }
 
@@ -389,37 +395,41 @@ function deleteRec(nodeId: string | null, value: number): string | null {
                 nodesMap.set(tempId, childNode);
                 newSubtreeRootAfterDeleteOrRecurse = tempId;
             }
-             nodesMap.delete(nodeId); 
+            nodesMap.delete(nodeId); 
         } else { 
             addStep(AVL_TREE_LINE_MAP.deleteCase2TwoChildren, `Node ${node.value} has two children. Find inorder successor.`, [nodeId], {[nodeId]:NODE_COLORS.deleted});
             const tempSuccessor = _minValueNode(node.rightId!);
+            // Note: _minValueNode adds its own steps. Path is restored after it.
             addStep(AVL_TREE_LINE_MAP.deleteFindMinValueNode, `Inorder successor is ${tempSuccessor.value}.`, [tempSuccessor.id], {[tempSuccessor.id]:NODE_COLORS.successor, [nodeId]:NODE_COLORS.deleted});
             
             node.value = tempSuccessor.value; 
-            nodesMap.set(nodeId, node); 
-            addStep(AVL_TREE_LINE_MAP.deleteCopySuccessorValue, `Copied successor value ${tempSuccessor.value} to node ${node.id}.`, [nodeId, tempSuccessor.id], {[nodeId]:NODE_COLORS.deleted, [tempSuccessor.id]:NODE_COLORS.successor});
+            nodesMap.set(nodeId, node); // Update node in map with new value (this replaces its ID effectively if needed)
+            addStep(AVL_TREE_LINE_MAP.deleteCopySuccessorValue, `Copied successor value ${tempSuccessor.value} to node ${node.id}. Node now ${formatNodeLabel(node)}`, [nodeId, tempSuccessor.id], {[nodeId]:NODE_COLORS.deleted, [tempSuccessor.id]:NODE_COLORS.successor});
             
-            const originalPathRecLength = currentPathRec.length;
-            addStep(AVL_TREE_LINE_MAP.deleteRecCallOnSuccessor, `Delete original inorder successor (${tempSuccessor.value}) from right subtree.`, [node.rightId!]);
+            currentPathRec.push(node.rightId!); // Path for recursive delete starts from here
+            addStep(AVL_TREE_LINE_MAP.deleteRecCallOnSuccessor, `Delete original inorder successor (${tempSuccessor.value}) from right subtree of ${node.value}.`, [node.rightId!]);
             node.rightId = deleteRec(node.rightId!, tempSuccessor.value); 
+            currentPathRec.pop(); // Pop right subtree root
+
             if(getNode(node.rightId)) getNode(node.rightId!)!.parentId = nodeId; 
-            nodesMap.set(nodeId, node);
-            currentPathRec.length = originalPathRecLength - (currentPathRec.length - originalPathRecLength);
+            nodesMap.set(nodeId, node); // Save changes to node (like its right child)
             newSubtreeRootAfterDeleteOrRecurse = nodeId;
         }
     }
-    nodesMap.set(nodeId, node);
-
-    if (newSubtreeRootAfterDeleteOrRecurse === null) {
+    if (newSubtreeRootAfterDeleteOrRecurse === null) { // If current node (or its replacement) became null
         addStep(AVL_TREE_LINE_MAP.deleteNodeIsNILAfterDeletion, `Subtree became null. No balancing needed for this spot.`, []);
-        if (currentPathRec.length > 0 && currentPathRec[currentPathRec.length -1] === nodeId) currentPathRec.pop();
+        if (currentPathRec.length > 0 && currentPathRec[currentPathRec.length-1] === nodeId) currentPathRec.pop();
         return null;
     }
     
+    // This node (newSubtreeRootAfterDeleteOrRecurse) needs its parent link properly set for balanceNode
+    // If it's a child that replaced its parent, its parentId should be the original parent's parent.
+    // This is typically handled by the BST delete logic or by how balanceNode traces parentage for rotations.
+    // For now, assume its parentId is correct or becomes correct via rotation updates.
     const balancedNodeId = balanceNode(newSubtreeRootAfterDeleteOrRecurse); 
 
     addStep(AVL_TREE_LINE_MAP.deleteReturnBalancedNode, `Return from deleteRec for (sub)tree rooted at ${getNode(balancedNodeId)!.value}.`, [balancedNodeId]);
-    if (currentPathRec.length > 0 && currentPathRec[currentPathRec.length -1] === nodeId) currentPathRec.pop();
+    if (currentPathRec.length > 0 && currentPathRec[currentPathRec.length-1] === nodeId) currentPathRec.pop();
     return balancedNodeId;
 }
 
@@ -437,7 +447,10 @@ export const generateAVLSteps = (
   if ((operation === 'insert' || operation === 'delete') && currentRootIdForOp !== undefined && currentNodesMapForOp) {
       currentNodesMapForOp.forEach((val, key) => nodesMap.set(key, {...val})); 
       rootId = currentRootIdForOp;
-      avlNodeIdCounter = Array.from(nodesMap.keys()).reduce((max, id) => Math.max(max, parseInt(id.split('-').pop() || '0')), 0) + 1;
+      avlNodeIdCounter = Array.from(nodesMap.keys()).reduce((max, id) => {
+          const numPart = id.split('-').pop();
+          return Math.max(max, numPart ? parseInt(numPart, 10) : 0);
+      }, 0) + 1;
   } else { 
       rootId = null;
       avlNodeIdCounter = 0;
@@ -462,7 +475,10 @@ export const generateAVLSteps = (
     addStep(null, `Insertion of ${valueToInsert} complete.`);
   } else if (operation === 'delete' && values.length > 0) {
     const valueToDelete = values[0];
-    if (!nodesMap.has(Array.from(nodesMap.keys()).find(key => nodesMap.get(key)?.value === valueToDelete) || '')) {
+    
+    let nodeExists = false;
+    nodesMap.forEach(node => { if(node.value === valueToDelete) nodeExists = true; });
+    if (!nodeExists) {
          addStep(null, `Value ${valueToDelete} not found in tree. Nothing to delete.`);
          return [...localSteps];
     }
@@ -486,3 +502,5 @@ export const resetAVLTreeState = () => {
     avlNodeIdCounter = 0;
     currentPathRec.length = 0;
 };
+
+```

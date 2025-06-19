@@ -43,3 +43,11 @@ export interface AlgorithmStep {
 
 // For SegmentTreeCodePanel and page logic
 export type SegmentTreeOperation = 'build' | 'query' | 'update';
+
+// For local Visualization Panel
+export interface VisualizationPanelProps {
+  data: number[]; 
+  activeIndices?: number[];
+}
+
+```

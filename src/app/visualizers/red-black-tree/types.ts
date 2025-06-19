@@ -66,9 +66,8 @@ export interface RBTNodeInternal {
   leftId: string | null;
   rightId: string | null;
   parentId: string | null;
-  // Visual specific properties, though ideally kept separate if possible
   depth?: number; 
-  visualColor?: string; // for temporary highlights like "created"
+  visualColor?: string; // For temporary highlights like "created"
 }
 
 export interface RBTreeGraph {
@@ -76,3 +75,7 @@ export interface RBTreeGraph {
   nodesMap: Map<string, RBTNodeInternal>;
   nilNodeId: string; 
 }
+
+export type RBTOperationType = 'build' | 'insert' | 'search' | 'delete' | 'structure';
+
+```
