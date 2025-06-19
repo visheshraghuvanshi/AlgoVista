@@ -1,12 +1,13 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Construction, Code2, Sigma } from 'lucide-react'; // Using Sigma for Sum
+import { AlertTriangle, Construction, Code2, Sigma } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +15,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { SegmentTreeCodePanel, SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG } from './SegmentTreeCodePanel';
-import { generateSegmentTreeSteps, SEGMENT_TREE_LINE_MAP, type SegmentTreeOperation } from './segment-tree-logic';
-import { algorithmMetadata } from './metadata'; 
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
+import { SegmentTreeCodePanel } from './SegmentTreeCodePanel'; // Local import
+import { generateSegmentTreeSteps, type SegmentTreeOperation } from './segment-tree-logic'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -49,7 +50,7 @@ export default function SegmentTreeVisualizerPage() {
 
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(isFinished);
+  const [isFinished, setIsFinished] = useState(true); // Start as finished until an op
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -67,7 +68,7 @@ export default function SegmentTreeVisualizerPage() {
       toast({ title: "Invalid Input", description: "Please enter comma-separated numbers.", variant: "destructive" });
       return null;
     }
-    if (parsed.length > 12) { // Limit size for better visualization
+    if (parsed.length > 12) { 
         toast({ title: "Input Too Long", description: "Max 12 numbers for optimal visualization.", variant: "default"});
     }
     if (parsed.some(n => n > 999 || n < -999)) {
@@ -94,10 +95,10 @@ export default function SegmentTreeVisualizerPage() {
     const parsedInitialArray = parseInput(inputValue);
 
     if (selectedOperation === 'build') {
-        if (!parsedInitialArray) { setSteps([]); setDisplayedData([]); return; }
+        if (!parsedInitialArray) { setSteps([]); setDisplayedData([]); setIsFinished(true); return; }
         if (parsedInitialArray.length === 0) {
             toast({title: "Input Empty", description: "Provide array for build.", variant: "default"});
-            setSteps([]); setDisplayedData([]); segmentTreeArrayRef.current = []; originalArraySizeRef.current = 0;
+            setSteps([]); setDisplayedData([]); segmentTreeArrayRef.current = []; originalArraySizeRef.current = 0; setIsFinished(true);
             return;
         }
         originalArraySizeRef.current = parsedInitialArray.length;
@@ -107,6 +108,7 @@ export default function SegmentTreeVisualizerPage() {
     } else { 
         if (segmentTreeArrayRef.current.length === 0 || originalArraySizeRef.current === 0) {
             toast({title: "Build Tree First", description: "Please build the segment tree before querying or updating.", variant: "destructive"});
+            setSteps([]); setDisplayedData([]); setIsFinished(true);
             return;
         }
         if (selectedOperation === 'query') {
@@ -114,6 +116,7 @@ export default function SegmentTreeVisualizerPage() {
             const qR = parseInt(queryRight, 10);
             if (isNaN(qL) || isNaN(qR) || qL < 0 || qR <= qL || qR > originalArraySizeRef.current) {
                 toast({title: "Invalid Query Range", description: `Range [${qL}, ${qR}) is invalid for original array size ${originalArraySizeRef.current}.`, variant: "destructive"});
+                setSteps([]); setDisplayedData(segmentTreeArrayRef.current); setIsFinished(true);
                 return;
             }
             newSteps = generateSegmentTreeSteps('query', [], segmentTreeArrayRef.current, originalArraySizeRef.current, qL, qR);
@@ -123,6 +126,7 @@ export default function SegmentTreeVisualizerPage() {
             const uVal = parseInt(updateValue, 10);
             if (isNaN(uIdx) || isNaN(uVal) || uIdx < 0 || uIdx >= originalArraySizeRef.current) {
                  toast({title: "Invalid Update Input", description: `Index ${uIdx} or value ${uVal} is invalid for original array size ${originalArraySizeRef.current}.`, variant: "destructive"});
+                setSteps([]); setDisplayedData(segmentTreeArrayRef.current); setIsFinished(true);
                 return;
             }
             newSteps = generateSegmentTreeSteps('update', [], segmentTreeArrayRef.current, originalArraySizeRef.current, undefined, undefined, uIdx, uVal);
@@ -136,7 +140,7 @@ export default function SegmentTreeVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) updateStateFromStep(0);
-    else { setDisplayedData(selectedOperation === 'build' ? [] : segmentTreeArrayRef.current); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); }
+    else { setDisplayedData(selectedOperation === 'build' ? [] : segmentTreeArrayRef.current); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); setIsFinished(true); }
 
   }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast, updateStateFromStep]);
 
@@ -175,6 +179,9 @@ export default function SegmentTreeVisualizerPage() {
     setQueryLeft("1"); setQueryRight("4");
     setUpdateIndex("2"); setUpdateValue("10");
     segmentTreeArrayRef.current = []; originalArraySizeRef.current = 0;
+    setSteps([]); setDisplayedData([]); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); setIsFinished(true);
+    // Re-trigger build if needed, or rely on useEffect for 'build' op
+    // handleExecuteOperation(); // This would re-build with current (possibly default) inputs
   };
 
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -192,7 +199,7 @@ export default function SegmentTreeVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <Sigma className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Sigma for Sum */}
+          <Sigma className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> 
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
@@ -204,16 +211,17 @@ export default function SegmentTreeVisualizerPage() {
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
             <div className="lg:w-3/5 xl:w-2/3">
                 <VisualizationPanel
-                    data={displayedData} // This will show the segment tree array
+                    data={displayedData} 
                     activeIndices={activeIndices}
-                    swappingIndices={[]} sortedIndices={[]}
+                    // Pass other props if VisualizationPanel is generic
                 />
                  {auxiliaryDisplay && (
                     <Card className="mt-4">
                         <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Operation Details</CardTitle></CardHeader>
                         <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
                             {Object.entries(auxiliaryDisplay).map(([key, value]) => {
-                                if (key === 'pArray' || key === 'nMatrices') return null; // Don't re-display input array
+                                if (key === 'pArray' || key === 'nMatrices') return null; 
+                                if (key === 'result' && selectedOperation !== 'query') return null;
                                 return (
                                 <p key={key}><strong>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:</strong> {value.toString()}</p>
                             );})}
@@ -284,4 +292,3 @@ export default function SegmentTreeVisualizerPage() {
     </div>
   );
 }
-

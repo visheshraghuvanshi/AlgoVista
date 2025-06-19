@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { RBT_LINE_MAP } from './red-black-tree-logic'; 
-
-export type RBTOperationType = 'insert' | 'search' | 'delete' | 'structure';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs components
+import type { RBTOperationType } from './types'; // Local import
 
 const RBT_CODE_SNIPPETS: Record<RBTOperationType, Record<string,string[]>> = {
   structure: {
@@ -300,15 +300,16 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
   
   const codeSnippetsForSelectedOp = RBT_CODE_SNIPPETS[selectedOperation] || RBT_CODE_SNIPPETS.structure;
   const languages = React.useMemo(() => Object.keys(codeSnippetsForSelectedOp), [codeSnippetsForSelectedOp]);
-  const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : languages[0];
+  const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : languages[0] || "JavaScript"; // Fallback for safety
   const [selectedLanguage, setSelectedLanguage] = React.useState<string>(initialLanguage);
 
   React.useEffect(() => {
-    // If selectedOperation changes, reset selectedLanguage to default for that op
     const currentOpLanguages = Object.keys(RBT_CODE_SNIPPETS[selectedOperation] || RBT_CODE_SNIPPETS.structure);
-    const defaultLangForOp = currentOpLanguages.includes("JavaScript") ? "JavaScript" : currentOpLanguages[0];
-    setSelectedLanguage(defaultLangForOp);
-  }, [selectedOperation]);
+    const defaultLangForOp = currentOpLanguages.includes("JavaScript") ? "JavaScript" : currentOpLanguages[0] || "JavaScript";
+    if (!currentOpLanguages.includes(selectedLanguage)) {
+        setSelectedLanguage(defaultLangForOp);
+    }
+  }, [selectedOperation, selectedLanguage]);
 
 
   const codeToDisplay = codeSnippetsForSelectedOp[selectedLanguage] || [];
@@ -320,12 +321,8 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
      if (selectedOperation !== 'structure' && structureCode.length > 0) {
         codeString = structureCode.join('\n') + '\n\n  // Operation: ' + operationLabel + '\n' + codeToDisplay.map(line => `  ${line}`).join('\n');
         if(selectedLanguage === 'JavaScript' || selectedLanguage === 'Java' || selectedLanguage === "C++") {
-             // Add closing brace for the class if it's not already in structureCode's last line
              if(!structureCode[structureCode.length-1].trim().endsWith("}")) {
                  codeString += "\n}";
-             } else if (codeToDisplay.length > 0 && !codeToDisplay[codeToDisplay.length-1].trim().startsWith("}")) {
-                 // If op code itself needs a closing brace for a method, this is too simple.
-                 // Assume structure is complete class, op is methods within.
              }
         }
     } else {
@@ -346,9 +343,15 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
           <Code2 className="mr-2 h-5 w-5" /> Code: {operationLabel}
         </CardTitle>
          <div className="flex items-center gap-2">
-            <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} className="p-1 text-xs border rounded bg-transparent">
-                {languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-            </select>
+            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
+                    {languages.map(lang => (
+                        <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
+                            {lang}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
             <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
                 <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
             </Button>
@@ -372,17 +375,16 @@ export function RedBlackTreeCodePanel({ currentLine, selectedOperation }: RedBla
               <div key={`${operationLabel}-${selectedLanguage}-line-${index}`}
                 className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                  {/* Line numbers map to RBT_LINE_MAP if currentLine is from there, else relative to snippet */}
-                  {currentLine && Object.values(RBT_LINE_MAP).includes(currentLine) ? currentLine : index +1 + (selectedOperation !== 'structure' && structureCode.length > 0 ? structureCode.length +1 : 0)}
+                  {index +1 + (selectedOperation !== 'structure' && structureCode.length > 0 ? structureCode.length +1 : 0)}
                 </span>
                 {line}
               </div>
             ))}
-            {codeToDisplay.length === 0 && <p className="text-muted-foreground">Select an operation to view code.</p>}
+            {codeToDisplay.length === 0 && selectedOperation !== 'structure' && <p className="text-muted-foreground">Conceptual code for {operationLabel}. Details omitted for brevity or vary by implementation.</p>}
+            {codeToDisplay.length === 0 && selectedOperation === 'structure' && <p className="text-muted-foreground">Select an operation to view code.</p>}
           </pre>
         </ScrollArea>
       </CardContent>
     </Card>
   );
 }
-

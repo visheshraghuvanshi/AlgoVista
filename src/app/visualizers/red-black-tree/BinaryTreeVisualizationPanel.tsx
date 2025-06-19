@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Ensure this points to local types if binary-tree-traversal is also localized
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
 
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
@@ -68,18 +68,33 @@ export function BinaryTreeVisualizationPanel({
                   );
                 })}
                 {nodes.map((node) => {
-                  // Node color and text color are now expected to be set by the logic
-                  // and passed via the 'node.color' and 'node.textColor' props.
-                  // The RBT-specific color logic is removed from here.
                   const fill = node.color || "hsl(var(--secondary))"; 
-                  const textColor = node.textColor || "hsl(var(--primary-foreground))"; // Sensible default
+                  const textColor = node.textColor || (node.nodeColor === 'RED' ? "hsl(var(--destructive-foreground))" : "hsl(var(--primary-foreground))");
 
-                  // Generic highlight for active processing node, if not already specially colored
                   let displayFill = fill;
                   let displayTextColor = textColor;
-                  if (node.id === currentProcessingNodeId && !node.nodeColor) { // Avoid overriding specific RBT colors unless it's a generic highlight
+
+                  // Specific handling for RBT 'nodeColor' property if present, otherwise use generic 'color'
+                  if (node.nodeColor === 'RED') {
+                    displayFill = "hsl(var(--destructive))"; // RBT Red
+                    displayTextColor = "hsl(var(--destructive-foreground))";
+                  } else if (node.nodeColor === 'BLACK') {
+                    displayFill = "hsl(var(--foreground))"; // RBT Black
+                    displayTextColor = "hsl(var(--background))"; // Text on black node
+                  } else if (node.nodeColor === 'NIL') {
+                     displayFill = "hsl(var(--muted))";
+                     displayTextColor = "hsl(var(--muted-foreground))";
+                  }
+
+
+                  if (node.id === currentProcessingNodeId && !specialFillOverrides(node.color)) { 
                      displayFill = ACCENT_COLOR_COMPARISON; 
                      displayTextColor = "hsl(var(--primary-foreground))";
+                  } else if (node.color && specialFillOverrides(node.color)) {
+                    // If a special color (like found highlight) is set, ensure text is readable
+                     displayFill = node.color;
+                     if(node.color === "hsl(var(--accent))") displayTextColor = "hsl(var(--accent-foreground))";
+                     // Add other special color text adjustments if needed
                   }
 
 
@@ -103,19 +118,8 @@ export function BinaryTreeVisualizationPanel({
                         fontWeight="bold"
                         className="select-none"
                       >
-                        {node.value}
+                        {node.value === null ? 'NIL' : node.value}
                       </text>
-                       {node.nodeColor && ( // RBT specific color label (can be kept if nodeColor is only set by RBT logic)
-                        <text
-                          x="0"
-                          y={NODE_RADIUS + 10} 
-                          textAnchor="middle"
-                          fontSize="8"
-                          fill={node.nodeColor === 'RED' ? "hsl(var(--destructive))" : "hsl(var(--foreground))"} // Example mapping
-                        >
-                           {/* {node.nodeColor} // Optionally display 'R' or 'B' */}
-                        </text>
-                      )}
                     </g>
                   );
                 })}
@@ -124,12 +128,17 @@ export function BinaryTreeVisualizationPanel({
           )}
         </div>
         <div className="flex-shrink-0 p-2 border rounded-md bg-background">
-            <p className="font-semibold text-muted-foreground text-sm">Traversal/Search Path:</p>
+            <p className="font-semibold text-muted-foreground text-sm">Current Path / Debug:</p>
             <p className="font-code text-xs break-all h-10 overflow-y-auto">
-                {traversalPath.join(' \u2192 ') || '(Path will appear here)'}
+                {traversalPath.join(' \u2192 ') || '(Path/info will appear here)'}
             </p>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function specialFillOverrides(color?: string): boolean {
+    if (!color) return false;
+    return color === "hsl(var(--accent))"; // e.g., found highlight
 }

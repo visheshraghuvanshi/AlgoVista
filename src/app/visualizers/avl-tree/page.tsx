@@ -4,10 +4,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
 import { AVLTreeCodePanel } from './AVLTreeCodePanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AVLNodeInternal } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
@@ -15,8 +15,7 @@ import {
   generateAVLSteps,
   getFinalAVLTreeState,
   resetAVLTreeState,
-  type AVLNodeInternal 
-} from './avl-tree-logic';
+} from './avl-tree-logic'; // Local import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -100,13 +99,13 @@ export default function AVLTreeVisualizerPage() {
             toast({ title: "Tree Empty", description: "Cannot delete from an empty tree.", variant: "default" });
             return;
         }
-        valuesToProcess = [val]; // For insert/delete, 'values' array will contain single element
+        valuesToProcess = [val]; 
         valueForOperation = val;
     }
 
     const newSteps = generateAVLSteps(
       operation,
-      valuesToProcess, // This is used for build, or for the single value in insert/delete
+      valuesToProcess, 
       avlTreeRef.current.rootId,
       avlTreeRef.current.nodes
     );
@@ -176,8 +175,6 @@ export default function AVLTreeVisualizerPage() {
     setSteps([]);
     setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
     setCurrentMessage("AVL Tree reset. Build a new tree or perform operations.");
-    // Optionally, immediately build the default tree again
-    // handleBuildTree(); 
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -254,4 +251,3 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
-

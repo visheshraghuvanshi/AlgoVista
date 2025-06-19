@@ -377,7 +377,7 @@ export function AVLTreeCodePanel({ currentLine }: AVLTreeCodePanelProps) {
         </CardTitle>
          <div className="flex items-center gap-2">
             <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
-                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5"> {/* Adjust grid-cols based on num languages */}
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5"> 
                     {languages.map(lang => (
                         <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
                             {lang}
@@ -406,6 +406,3 @@ export function AVLTreeCodePanel({ currentLine }: AVLTreeCodePanelProps) {
     </Card>
   );
 }
-
-
-    

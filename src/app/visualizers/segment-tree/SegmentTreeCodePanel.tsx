@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { SegmentTreeOperation } from './segment-tree-logic'; 
+import type { SegmentTreeOperation } from './types'; // Local import
 
 export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, Record<string, string[]>> = {
   build: {
@@ -192,8 +193,6 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     if (selectedOperation === 'build') {
         fullCode = codeToDisplay.join('\n');
     } else {
-        // For query/update, prepend conceptual class structure for context
-        // This needs refinement based on how the class structure is defined in snippets
         const classStructureLines = {
             JavaScript: [
                 "class SegmentTree {",
@@ -208,7 +207,7 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
                 "class SegmentTree:",
                 "  def __init__(self, input_array):",
                 "    self.n = len(input_array)",
-                "    this.tree = [0] * (2 * this.n)",
+                "    self.tree = [0] * (2 * self.n)",
                 "    for i in range(self.n): self.tree[self.n + i] = input_array[i]",
                 "    for i in range(self.n - 1, 0, -1): self.tree[i] = self.tree[i*2] + self.tree[i*2+1]",
             ],
@@ -227,9 +226,9 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
                  "  SegmentTree(const std::vector<int>& inputArray) { /* ... build logic ... */ }",
             ]
         };
-        const structurePrefix = classStructureLines[selectedLanguage]?.join('\n') || "";
+        const structurePrefix = classStructureLines[selectedLanguage as keyof typeof classStructureLines]?.join('\n') || "";
         const operationIndented = codeToDisplay.map(line => `    ${line}`).join('\n');
-        fullCode = `${structurePrefix}\n${operationIndented}\n}`; // Add closing brace for class
+        fullCode = `${structurePrefix}\n${operationIndented}\n}`; 
     }
 
     if (fullCode) {
@@ -277,4 +276,3 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     </Card>
   );
 }
-

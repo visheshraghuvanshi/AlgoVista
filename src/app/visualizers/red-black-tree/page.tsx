@@ -4,20 +4,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel'; 
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
 import { RedBlackTreeCodePanel } from './RedBlackTreeCodePanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, RBTreeGraph } from './types'; // Local import
+import type { RBTOperationType } from './RedBlackTreeCodePanel'; // Local import
+import { algorithmMetadata } from './metadata'; 
+
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
   generateRBTreeSteps,
-  type RBTreeGraph,
   createInitialRBTreeGraph,
-} from './red-black-tree-logic';
-import type { RBTOperationType } from './RedBlackTreeCodePanel';
-import { algorithmMetadata } from './metadata'; 
-
+} from './red-black-tree-logic'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,11 +71,13 @@ export default function RedBlackTreePage() {
   }, [steps]);
   
   const handleOperation = useCallback((
-      opType: 'build' | 'insert' | 'search' | 'delete', 
+      opTypeInput: 'build' | 'insert' | 'search' | 'delete' | 'structure', 
       primaryValue?: string,
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
+    const opType = opTypeInput as 'build' | 'insert' | 'search' | 'delete'; // Cast for generateRBTreeSteps
+
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
 
@@ -94,6 +95,13 @@ export default function RedBlackTreePage() {
             toast({ title: "Invalid Value", description: "Please enter a numeric value for the operation.", variant: "destructive" });
             return;
         }
+    } else if (opTypeInput === 'structure') {
+        const currentVisuals = generateRBTreeSteps('structure', undefined, undefined, rbtRef.current);
+        setSteps(currentVisuals);
+        updateStateFromStep(0);
+        setIsPlaying(false);
+        setIsFinished(true);
+        return;
     }
     
     const newSteps = generateRBTreeSteps(
@@ -110,6 +118,15 @@ export default function RedBlackTreePage() {
 
     if (newSteps.length > 0) {
         updateStateFromStep(0);
+        // Update rbtRef with the final state *after* the operation
+        const finalGraphStateFromSteps = newSteps[newSteps.length - 1]?.auxiliaryData?.finalGraphState as RBTreeGraph | undefined;
+        if (finalGraphStateFromSteps) {
+            rbtRef.current = finalGraphStateFromSteps;
+        } else if (newSteps.length > 0 && opType !== 'search') {
+            // If finalGraphState is not explicitly passed, try to infer from the last step's nodes/root
+            // This part might need refinement based on how generateRBTreeSteps structures its last step
+        }
+
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
         if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { 
             const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
@@ -188,7 +205,7 @@ export default function RedBlackTreePage() {
             <BinaryTreeVisualizationPanel nodes={currentNodes} edges={currentEdges || []} traversalPath={currentPath} currentProcessingNodeId={currentProcessingNodeId} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <RedBlackTreeCodePanel currentLine={currentLine} selectedOperation={selectedOperation} />
+            <RedBlackTreeCodePanel currentLine={currentLine} selectedOperation={selectedOperation as RBTOperationType} />
           </div>
         </div>
         
@@ -209,13 +226,14 @@ export default function RedBlackTreePage() {
                     <SelectItem value="insert">Insert Value</SelectItem>
                     <SelectItem value="search">Search Value</SelectItem>
                     <SelectItem value="delete">Delete Value (Conceptual)</SelectItem>
+                     <SelectItem value="structure">Show Structure Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationValue">Value for Operation</Label>
-                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue} />
-                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search' | 'delete', operationValue)} disabled={isPlaying || !isOperationWithValue} className="w-full md:w-auto mt-1">
+                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} />
+                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search' | 'delete', operationValue)} disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} className="w-full md:w-auto mt-1">
                     {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4"/> : selectedOperation === 'search' ? <Search className="mr-2 h-4 w-4"/> : <Trash2 className="mr-2 h-4 w-4"/>}
                     Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
                 </Button>
@@ -227,9 +245,9 @@ export default function RedBlackTreePage() {
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 } size="lg"><Play className="mr-2"/>Play</Button> 
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || selectedOperation === 'structure' } size="lg"><Play className="mr-2"/>Play</Button> 
                              : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
-                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1 || selectedOperation === 'structure'} size="lg"><SkipForward className="mr-2"/>Step</Button>
               </div>
               <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
                 <Label htmlFor="speedControl">Animation Speed</Label>
@@ -242,8 +260,7 @@ export default function RedBlackTreePage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              Interactive visualization for **Insert** and **Search** operations are available. Delete visualization is conceptual and does not show full rebalancing.
-              NIL nodes are logical and not visually rendered for clarity.
+              NIL nodes are logical and not visually rendered for clarity. Delete operation is conceptual.
             </p>
           </CardContent>
         </Card>
@@ -253,4 +270,3 @@ export default function RedBlackTreePage() {
     </div>
   );
 }
-

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Ensure this points to local types if binary-tree-traversal is also localized
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types';
 
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
@@ -68,20 +68,15 @@ export function BinaryTreeVisualizationPanel({
                   );
                 })}
                 {nodes.map((node) => {
-                  // Node color and text color are now expected to be set by the logic
-                  // and passed via the 'node.color' and 'node.textColor' props.
-                  // The RBT-specific color logic is removed from here.
                   const fill = node.color || "hsl(var(--secondary))"; 
-                  const textColor = node.textColor || "hsl(var(--primary-foreground))"; // Sensible default
+                  const textColor = node.textColor || "hsl(var(--primary-foreground))";
 
-                  // Generic highlight for active processing node, if not already specially colored
                   let displayFill = fill;
                   let displayTextColor = textColor;
-                  if (node.id === currentProcessingNodeId && !node.nodeColor) { // Avoid overriding specific RBT colors unless it's a generic highlight
+                  if (node.id === currentProcessingNodeId) { 
                      displayFill = ACCENT_COLOR_COMPARISON; 
                      displayTextColor = "hsl(var(--primary-foreground))";
                   }
-
 
                   return (
                     <g key={node.id} transform={`translate(${node.x},${node.y})`}>
@@ -105,17 +100,6 @@ export function BinaryTreeVisualizationPanel({
                       >
                         {node.value}
                       </text>
-                       {node.nodeColor && ( // RBT specific color label (can be kept if nodeColor is only set by RBT logic)
-                        <text
-                          x="0"
-                          y={NODE_RADIUS + 10} 
-                          textAnchor="middle"
-                          fontSize="8"
-                          fill={node.nodeColor === 'RED' ? "hsl(var(--destructive))" : "hsl(var(--foreground))"} // Example mapping
-                        >
-                           {/* {node.nodeColor} // Optionally display 'R' or 'B' */}
-                        </text>
-                      )}
                     </g>
                   );
                 })}
