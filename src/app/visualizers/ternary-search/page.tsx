@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { TernarySearchCodePanel } from './TernarySearchCodePanel'; 
-import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { SearchingControlsPanel } from './SearchingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { TERNARY_SEARCH_LINE_MAP, generateTernarySearchSteps } from './ternary-search-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const TERNARY_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
@@ -294,14 +294,14 @@ export default function TernarySearchVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) {
+  if (!algorithmMetadata) { // Check against local metadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -363,10 +363,9 @@ export default function TernarySearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
-         {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
+         {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
-

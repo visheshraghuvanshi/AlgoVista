@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const SELECTION_SORT_LINE_MAP = {
   functionDeclaration: 1,
@@ -10,11 +10,11 @@ export const SELECTION_SORT_LINE_MAP = {
   comparison: 6,
   updateMinIdx: 7,
   innerLoopEnd: 8,
-  swapComment: 9,
-  swapOperation: 10,
-  outerLoopEnd: 11,
-  returnArr: 12,
-  functionEnd: 13,
+  swapComment: 9, // Updated to line 10 in JS snippet
+  swapOperation: 10, // Updated to line 11 in JS snippet
+  outerLoopEnd: 11, // Updated to line 12 in JS snippet
+  returnArr: 12, // Updated to line 13 in JS snippet
+  functionEnd: 13, // Updated to line 14 in JS snippet
 };
 
 export const generateSelectionSortSteps = (arrToSort: number[]): AlgorithmStep[] => {
@@ -70,8 +70,9 @@ export const generateSelectionSortSteps = (arrToSort: number[]): AlgorithmStep[]
     }
     addStep(lm.innerLoopEnd, arr, [i, min_idx], [], `Inner loop finished. Minimum found at index ${min_idx} (value: ${arr[min_idx]})`);
 
-    addStep(lm.swapComment, arr, [i, min_idx], [], `Swap arr[${i}] with arr[min_idx]`);
-    if (min_idx !== i) { // Only add swapping step if actual swap happens
+    // For JS snippet, line 10 is comment, 11 is swap. We'll map to 11 for the action.
+    addStep(lm.swapComment, arr, [i, min_idx], [], `Swap arr[${i}] with arr[min_idx] (if different).`);
+    if (min_idx !== i) { 
         addStep(lm.swapOperation, arr, [i, min_idx], [i, min_idx], `Swapping arr[${i}] (${arr[i]}) and arr[${min_idx}] (${arr[min_idx]})`);
         [arr[i], arr[min_idx]] = [arr[min_idx], arr[i]];
         addStep(lm.swapOperation, arr, [i, min_idx], [], `Swapped. arr[${i}] is now ${arr[i]}`);
@@ -83,11 +84,10 @@ export const generateSelectionSortSteps = (arrToSort: number[]): AlgorithmStep[]
     addStep(lm.outerLoopEnd, arr, [], [], `Element arr[${i}] (${arr[i]}) is now sorted.`);
   }
   
-  // Add the last element to sortedIndices as it's sorted by default after n-1 iterations
   if (n > 0) {
     localSortedIndices.push(n - 1);
   }
-  localSortedIndices.sort((a,b)=>a-b); // Ensure it's sorted for consistent display
+  localSortedIndices.sort((a,b)=>a-b);
 
   addStep(lm.returnArr, arr, [], [], "Array is sorted");
   addStep(lm.functionEnd, arr, [], [], "Algorithm finished");

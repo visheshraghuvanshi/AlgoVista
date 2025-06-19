@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { InsertionSortCodePanel } from './InsertionSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard as AlgoDetailsCardComponent } from '@/components/algo-vista/AlgorithmDetailsCard'; // Renamed import
-import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from '@/types'; // Added AlgorithmDetailsProps
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { INSERTION_SORT_LINE_MAP, generateInsertionSortSteps } from './insertion-sort-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const INSERTION_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -108,8 +108,7 @@ export default function InsertionSortVisualizerPage() {
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const isAlgoImplemented = true;
+  const isAlgoImplemented = true; 
 
   const parseInput = useCallback((value: string): number[] | null => {
     if (value.trim() === '') return [];
@@ -164,7 +163,6 @@ export default function InsertionSortVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
-
       } else { 
         setDisplayedData(parsedData);
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -173,7 +171,7 @@ export default function InsertionSortVisualizerPage() {
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
-        setDisplayedData([]);
+        setDisplayedData([]); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
         setProcessingSubArrayRange(null); setPivotActualIndex(null);
         setIsPlaying(false); setIsFinished(false);
@@ -186,7 +184,7 @@ export default function InsertionSortVisualizerPage() {
 
 
   useEffect(() => {
-    if (isPlaying && currentStepIndex < steps.length -1) {
+    if (isPlaying && currentStepIndex < steps.length -1 ) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -234,6 +232,7 @@ export default function InsertionSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
+
     setIsPlaying(false); 
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
@@ -261,15 +260,15 @@ export default function InsertionSortVisualizerPage() {
   const handleSpeedChange = (speedValue: number) => {
     setAnimationSpeed(speedValue);
   };
-  
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) {
+  if (!algorithmMetadata) { // Check against local metadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -293,8 +292,8 @@ export default function InsertionSortVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description}
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
 
@@ -334,7 +333,7 @@ export default function InsertionSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        {algoDetails && <AlgoDetailsCardComponent {...algoDetails} />}
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>

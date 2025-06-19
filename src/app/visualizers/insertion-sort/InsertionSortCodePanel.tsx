@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// No specific types from global needed here.
 
 interface InsertionSortCodePanelProps {
   codeSnippets: { [language: string]: string[] };

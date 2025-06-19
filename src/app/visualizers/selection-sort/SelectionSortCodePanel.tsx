@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// No specific types from global needed here.
 
 interface SelectionSortCodePanelProps {
   codeSnippets: { [language: string]: string[] };
@@ -92,7 +93,7 @@ export function SelectionSortCodePanel({ codeSnippets, currentLine }: SelectionS
             {languages.map((lang) => (
               <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
                 <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                  <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+                  <pre className="font-code text-sm p-4">
                     {(codeSnippets[lang] || []).map((line, index) => (
                       <div
                         key={`${lang}-line-${index}`}

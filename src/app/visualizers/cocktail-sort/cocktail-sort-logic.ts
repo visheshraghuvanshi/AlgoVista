@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const COCKTAIL_SORT_LINE_MAP = {
   functionDeclaration: 1,
@@ -71,7 +71,6 @@ export const generateCocktailSortSteps = (arrToSort: number[]): AlgorithmStep[] 
     addStep(lm.setSwappedFalse, [], [], "Set swapped to false for this pass");
     swapped = false;
 
-    // Forward pass (like Bubble Sort)
     addStep(lm.forwardPassLoop, [], [], `Forward pass from index ${start} to ${end - 1}`);
     for (let i = start; i < end; i++) {
       addStep(lm.compareForward, [i, i + 1], [], `Comparing arr[${i}] (${arr[i]}) and arr[${i + 1}] (${arr[i + 1]})`);
@@ -101,7 +100,6 @@ export const generateCocktailSortSteps = (arrToSort: number[]): AlgorithmStep[] 
     end--;
 
 
-    // Backward pass
     addStep(lm.backwardPassLoop, [], [], `Backward pass from index ${end - 1} down to ${start}`);
     for (let i = end - 1; i >= start; i--) {
       addStep(lm.compareBackward, [i, i + 1], [], `Comparing arr[${i}] (${arr[i]}) and arr[${i + 1}] (${arr[i + 1]})`);
@@ -123,7 +121,6 @@ export const generateCocktailSortSteps = (arrToSort: number[]): AlgorithmStep[] 
     addStep(lm.doWhileCondition, [], [], `Loop continues if swapped is true. swapped=${swapped}`);
   } while (swapped);
   
-  // Ensure all indices are marked as sorted
   for(let k=0; k<n; k++) {
     if(!localSortedIndices.includes(k)) localSortedIndices.push(k);
   }
@@ -133,4 +130,3 @@ export const generateCocktailSortSteps = (arrToSort: number[]): AlgorithmStep[] 
   addStep(lm.functionEnd, [], [], "Algorithm finished");
   return localSteps;
 };
-

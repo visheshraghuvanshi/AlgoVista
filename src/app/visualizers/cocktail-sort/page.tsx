@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { CocktailSortCodePanel } from './CocktailSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateCocktailSortSteps } from './cocktail-sort-logic';
@@ -303,7 +303,7 @@ export default function CocktailSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -334,7 +334,7 @@ export default function CocktailSortVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
             {steps[currentStepIndex]?.message || algorithmMetadata.description}
           </p>
         </div>
@@ -375,15 +375,9 @@ export default function CocktailSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        <AlgorithmDetailsCard 
-            title={algorithmMetadata.title}
-            description={algorithmMetadata.longDescription || algorithmMetadata.description}
-            timeComplexities={algorithmMetadata.timeComplexities!}
-            spaceComplexity={algorithmMetadata.spaceComplexity!}
-        />
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
-

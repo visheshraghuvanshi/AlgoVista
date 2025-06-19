@@ -96,7 +96,7 @@ export default function BinarySearchVisualizerPage() {
   const [inputValue, setInputValue] = useState('1,2,3,4,5,6,7,8,9'); 
   const [targetValue, setTargetValue] = useState('7');
   
-  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); // Use local type
+  const [steps, setSteps] = useState<ArrayAlgorithmStep[]>([]); 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [displayedData, setDisplayedData] = useState<number[]>([]);
@@ -289,6 +289,27 @@ export default function BinarySearchVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Changed type to local
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
+
+  if (!algorithmMetadata) { // Check against local metadata
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center text-center">
+          <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
+          <h1 className="font-headline text-3xl font-bold text-destructive mb-2">Algorithm Data Not Loaded</h1>
+          <p className="text-muted-foreground text-lg">Could not load data for Binary Search.</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -338,12 +359,7 @@ export default function BinarySearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
-         <AlgorithmDetailsCard 
-            title={algorithmMetadata.title}
-            description={algorithmMetadata.longDescription || algorithmMetadata.description}
-            timeComplexities={algorithmMetadata.timeComplexities!}
-            spaceComplexity={algorithmMetadata.spaceComplexity!}
-        />
+         {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>

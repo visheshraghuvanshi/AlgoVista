@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const INSERTION_SORT_LINE_MAP = { 
   functionDeclaration: 1, getN: 2, outerLoopStart: 3, keyAssignment: 4,  jAssignment: 5, whileLoopComment1: 6, whileLoopComment2: 7,  whileCondition: 8, shiftElement: 9, decrementJ: 10, whileLoopEnd: 11, placeKey: 12, outerLoopEnd: 13, returnArr: 14, functionEnd: 15,

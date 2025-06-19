@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const TERNARY_SEARCH_LINE_MAP = {
   functionDeclaration: 1,
@@ -15,7 +15,7 @@ export const TERNARY_SEARCH_LINE_MAP = {
   updateRightToMid1: 11,
   checkTargetGreaterMid2: 12,
   updateLeftToMid2: 13,
-  elseBlockUpdateLeftRight: 14, // Covers left = mid1 + 1; right = mid2 - 1;
+  elseBlockUpdateLeftRight: 14, 
   whileLoopEnd: 15,
   returnNotFound: 16,
   functionEnd: 17,
@@ -23,15 +23,15 @@ export const TERNARY_SEARCH_LINE_MAP = {
 
 export const generateTernarySearchSteps = (sortedArrToSearch: number[], target: number): AlgorithmStep[] => {
   const localSteps: AlgorithmStep[] = [];
-  const arr = [...sortedArrToSearch].sort((a, b) => a - b); // Ternary search requires sorted array
+  const arr = [...sortedArrToSearch].sort((a, b) => a - b); 
   const n = arr.length;
   const lm = TERNARY_SEARCH_LINE_MAP;
 
   const addStep = (
     line: number,
-    active: number[] = [], // Typically [left, mid1, mid2, right] or relevant indices
-    found: number[] = [],  // [foundIndex] if target is found
-    processingRange: [number, number] | null = null, // Current search space [left, right]
+    active: number[] = [], 
+    found: number[] = [],  
+    processingRange: [number, number] | null = null, 
     message: string = "",
     currentArrState = [...arr]
   ) => {
@@ -60,11 +60,11 @@ export const generateTernarySearchSteps = (sortedArrToSearch: number[], target: 
   addStep(lm.initLeftRight, [left, right], [], [left, right], `Initialize left=${left}, right=${right}`);
 
   let iteration = 0;
-  while (left <= right && iteration < n + 5) { // iteration for safety
+  while (left <= right && iteration < n + 5) { 
     iteration++;
     addStep(lm.whileLoopStart, [left, right], [], [left, right], `Searching in [${left}..${right}]. left=${left}, right=${right}`);
     
-    if (left > right) { // Condition for loop break if not found
+    if (left > right) { 
       addStep(lm.whileLoopStart, [], [], [left,right], `left (${left}) > right (${right}), loop terminates.`);
       break;
     }

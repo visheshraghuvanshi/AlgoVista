@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { SelectionSortCodePanel } from './SelectionSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; // Ensured correct import
-import type { AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { SELECTION_SORT_LINE_MAP, generateSelectionSortSteps } from './selection-sort-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 const SELECTION_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -260,14 +260,14 @@ export default function SelectionSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) {
+  if (!algorithmMetadata) { // Check against local metadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -332,15 +332,9 @@ export default function SelectionSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        {algoDetails && <AlgorithmDetailsCard 
-            title={algoDetails.title}
-            description={algoDetails.description}
-            timeComplexities={algoDetails.timeComplexities}
-            spaceComplexity={algoDetails.spaceComplexity}
-        />}
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
-
