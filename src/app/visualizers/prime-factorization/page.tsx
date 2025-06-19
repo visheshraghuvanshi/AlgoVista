@@ -4,8 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import type { PrimeFactorizationStep } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, DivideCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { algorithmMetadata } from './metadata'; 
 import { PrimeFactorizationCodePanel } from './PrimeFactorizationCodePanel';
 import { PrimeFactorizationVisualizationPanel } from './PrimeFactorizationVisualizationPanel';
-import { generatePrimeFactorizationSteps, type PrimeFactorizationStep } from './prime-factorization-logic';
+import { generatePrimeFactorizationSteps } from './prime-factorization-logic';
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -68,7 +69,7 @@ export default function PrimeFactorizationVisualizerPage() {
   
   useEffect(() => { 
     handleFactorize();
-  }, [handleFactorize]);
+  }, [numberInput, handleFactorize]); // Re-factorize if numberInput changes
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -98,6 +99,7 @@ export default function PrimeFactorizationVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(true);
     setNumberInput(DEFAULT_NUMBER_TO_FACTOR.toString());
+    // handleFactorize will be called by useEffect due to numberInput change
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -120,6 +122,7 @@ export default function PrimeFactorizationVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">

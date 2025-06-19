@@ -32,15 +32,15 @@ The algorithm extends bubble sort by operating in two directions.
 ### Example:
 Sorting \`arr = [5, 1, 4, 2, 8]\`
 **Pass 1 (Forward):**
-- [1,5,4,2,8] -> [1,4,5,2,8] -> [1,4,2,5,8]. (8 is sorted)
+- \`[1,5,4,2,8]\` -> \`[1,4,5,2,8]\` -> \`[1,4,2,5,8]\`. (8 is sorted)
 **Pass 1 (Backward), range [0..3]:**
-- (5,2) -> swap [1,4,5,2] -> [1,4,2,5]
-- (4,2) -> swap [1,4,2] -> [1,2,4]
-- (2,1) -> no swap [1,2]
+- \`arr[2](5)\` vs \`arr[3](2)\` -> swap. Array is now \`[1,4,2,5,8]\`. (Conceptual intermediate, after 5,2 swap)
+- \`arr[1](4)\` vs \`arr[2](2)\` -> swap. Array becomes \`[1,2,4,5,8]\`.
+- \`arr[0](1)\` vs \`arr[1](2)\` -> no swap.
 - Array after Pass 1 (Bwd): \`[1, 2, 4, 5, 8]\`. (1 is sorted)
-New range for Pass 2: \`[1..2]\` (indices for actual elements 2,4,5)
+New range for Pass 2: \`start=1\`, \`end=3\`.
 
-**Pass 2 (Forward), range [1..2]:**
+**Pass 2 (Forward), range [1..2] (elements at indices 1,2,3):**
 - (arr[1]=2, arr[2]=4) -> no swap.
 - (arr[2]=4, arr[3]=5) -> no swap. (5 is sorted, effectively)
 **Pass 2 (Backward), range [1..1]:**
@@ -49,7 +49,7 @@ New range for Pass 2: \`[1..2]\` (indices for actual elements 2,4,5)
 The algorithm terminates when no swaps occur in a full forward and backward pass.
 
 ### Characteristics:
--   **In-place**: Sorts the array using O(1) auxiliary space.
+-   **In-Place**: Sorts the array using O(1) auxiliary space.
 -   **Stable**: Preserves the relative order of equal elements.
 -   **Bidirectional**: Addresses the "turtles" problem of bubble sort (where small elements at the end of the list are slow to move to the beginning) by also bubbling small elements to the start.
 

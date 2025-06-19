@@ -1,3 +1,4 @@
+
 // src/app/visualizers/tower-of-hanoi/AlgorithmDetailsCard.tsx
 "use client";
 
@@ -14,7 +15,7 @@ export function AlgorithmDetailsCard({ title, description, timeComplexities, spa
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground whitespace-pre-line">{description}</p>
         <div>
           <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
           <ul className="list-disc list-inside text-muted-foreground space-y-1">
@@ -31,3 +32,4 @@ export function AlgorithmDetailsCard({ title, description, timeComplexities, spa
     </Card>
   );
 }
+

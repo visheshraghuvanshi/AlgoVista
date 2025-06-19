@@ -1,3 +1,4 @@
+
 // src/app/visualizers/tower-of-hanoi/page.tsx
 "use client";
 
@@ -5,7 +6,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, TowerOfHanoiStep } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { algorithmMetadata } from './metadata'; // Local import
 import { TowerOfHanoiCodePanel } from './TowerOfHanoiCodePanel';
 import { TowerOfHanoiVisualizationPanel } from './TowerOfHanoiVisualizationPanel';
-import { generateTowerOfHanoiSteps, type TowerOfHanoiStep, TOWER_OF_HANOI_LINE_MAP } from './tower-of-hanoi-logic';
+import { generateTowerOfHanoiSteps, TOWER_OF_HANOI_LINE_MAP } from './tower-of-hanoi-logic';
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 200;
@@ -61,7 +62,7 @@ export default function TowerOfHanoiVisualizerPage() {
 
   useEffect(() => {
     generateNewSteps();
-  }, [generateNewSteps]); 
+  }, [numDisks, generateNewSteps]); 
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -131,6 +132,7 @@ export default function TowerOfHanoiVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -152,6 +154,7 @@ export default function TowerOfHanoiVisualizerPage() {
                  <Button onClick={generateNewSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Start / Reset Simulation</Button>
             </div>
             <div className="flex items-center justify-start pt-4 border-t">
+                 {/* Reset to Defaults button - handled by N change or Start/Reset above */}
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
@@ -173,3 +176,4 @@ export default function TowerOfHanoiVisualizerPage() {
     </div>
   );
 }
+

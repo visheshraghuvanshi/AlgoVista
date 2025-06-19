@@ -1,5 +1,5 @@
 
-// src/app/visualizers/cocktail-sort/types.ts
+// src/app/visualizers/jump-search/types.ts
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -40,24 +40,16 @@ export interface AlgorithmStep { // Using general AlgorithmStep for arrays
   auxiliaryData?: Record<string, any> | null;
 }
 
-// Props for VisualizationPanel
-export interface VisualizationPanelProps {
-  data: number[];
-  activeIndices?: number[];
-  swappingIndices?: number[];
-  sortedIndices?: number[];
-  processingSubArrayRange?: [number, number] | null;
-  pivotActualIndex?: number | null;
-}
-
-// Props for SortingControlsPanel
-export interface SortingControlsPanelProps {
+// Props for SearchingControlsPanel (specific to this context if needed)
+export interface SearchingControlsPanelProps {
   onPlay: () => void;
   onPause: () => void;
   onStep: () => void;
   onReset: () => void;
   onInputChange: (value: string) => void;
   inputValue: string;
+  onTargetValueChange: (value: string) => void;
+  targetValue: string;
   isPlaying: boolean;
   isFinished: boolean;
   currentSpeed: number;
@@ -65,5 +57,17 @@ export interface SortingControlsPanelProps {
   isAlgoImplemented: boolean;
   minSpeed: number;
   maxSpeed: number;
+  targetInputLabel?: string;
+  targetInputPlaceholder?: string;
+}
+
+// Props for VisualizationPanel (specific to this context if needed)
+export interface VisualizationPanelProps {
+  data: number[];
+  activeIndices?: number[];
+  swappingIndices?: number[];
+  sortedIndices?: number[];
+  processingSubArrayRange?: [number, number] | null;
+  pivotActualIndex?: number | null;
 }
 

@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { JumpSearchCodePanel } from './JumpSearchCodePanel'; 
-import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { SearchingControlsPanel } from './SearchingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { JUMP_SEARCH_LINE_MAP, generateJumpSearchSteps } from './jump-search-logic';
-import { algorithmMetadata } from './metadata';
+import { algorithmMetadata } from './metadata'; // Local import
 
 const JUMP_SEARCH_CODE_SNIPPETS = {
   JavaScript: [
@@ -82,10 +82,9 @@ const JUMP_SEARCH_CODE_SNIPPETS = {
     "        // while(arr[Math.min(step, n)-1] < target) { ... } then linear search starts from prev",
     "        // Correcting the loop: for (int currentStep = step; currentStep < n && sortedArr[Math.min(currentStep, n)-1] < target; ) { ... }",
     "        // The provided JS logic handles it with Math.min in the loop condition directly, so this is simpler:",
-    "        while (prev < Math.min(step, n)) {",
-    "             if (sortedArr[prev] == target) return prev;",
-    "             if (sortedArr[prev] > target) break; // Optimization",
-    "             prev++;",
+    "        for (int i = prev; i < Math.min(step, n); i++) {", // Linear search from prev to min(step,n)
+    "             if (sortedArr[i] == target) return i;",
+    "             if (sortedArr[i] > target) break; // Optimization for sorted array",
     "        }",
     "        return -1;",
     "    }",
@@ -108,7 +107,7 @@ const JUMP_SEARCH_CODE_SNIPPETS = {
     "    // Linear search in block [prev, min(step, n))",
     "    for (int i = prev; i < std::min(step, n); ++i) {",
     "        if (sortedArr[i] == target) return i;",
-    "        if (sortedArr[i] > target) break; // Optimization",
+    "        if (sortedArr[i] > target) break; // Optimization for sorted array",
     "    }",
     "    return -1;",
     "}",
@@ -214,7 +213,7 @@ export default function JumpSearchVisualizerPage() {
       setIsFinished(false);
 
       if (newSteps.length > 0) {
-        updateStateFromStep(0); 
+         updateStateFromStep(0); 
       } else {
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -310,14 +309,14 @@ export default function JumpSearchVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { 
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) {
+  if (!algorithmMetadata || !algoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -339,7 +338,7 @@ export default function JumpSearchVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -380,7 +379,7 @@ export default function JumpSearchVisualizerPage() {
             targetInputPlaceholder="Enter number"
           />
         </div>
-         {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
+         <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>

@@ -12,7 +12,7 @@ import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateCocktailSortSteps } from './cocktail-sort-logic';
-import { algorithmMetadata } from './metadata';
+import { algorithmMetadata } from './metadata'; // Local import
 
 const COCKTAIL_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -223,7 +223,7 @@ export default function CocktailSortVisualizerPage() {
   useEffect(() => {
     generateSteps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]);
+  }, [inputValue]); 
 
 
   useEffect(() => {
@@ -381,3 +381,4 @@ export default function CocktailSortVisualizerPage() {
     </div>
   );
 }
+

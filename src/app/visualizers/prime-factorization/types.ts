@@ -1,5 +1,7 @@
 
-// src/app/visualizers/tower-of-hanoi/types.ts
+// src/app/visualizers/prime-factorization/types.ts
+import type { AlgorithmStep as GlobalAlgorithmStep } from '@/types';
+
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -28,18 +30,21 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
-// Tower of Hanoi specific step type
-export interface TowerOfHanoiStep {
-  pegStates: { [key: string]: number[] }; 
-  lastMove?: { disk: number; fromPeg: string; toPeg: string };
-  numDisks: number;
-  currentLine: number | null;
-  message?: string;
-  // Minimal common fields, can add more if needed by a generic panel.
-  // For ToH, array, activeIndices etc. are not directly applicable from generic AlgorithmStep
-  array: []; // Empty or not used
-  activeIndices: number[];
-  swappingIndices: number[];
-  sortedIndices: number[];
+// Specific step type for Prime Factorization, extending the global one might be complex
+// due to different focus. So, defining a more specific local type.
+export interface PrimeFactorizationStep {
+  array: []; // Not directly used for number display here
+  activeIndices: number[]; // Can be used if we need to highlight current divisor in a list of potential divisors
+  swappingIndices: number[]; // Not used
+  sortedIndices: number[]; // Not used
+  currentLine: number | null; 
+  message?: string;           
+  auxiliaryData: {
+    originalN: number;
+    currentN: number;
+    currentDivisor: number | null;
+    factors: number[];
+    message: string;
+  };
 }
 
