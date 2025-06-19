@@ -5,110 +5,88 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListTree, Binary } from "lucide-react";
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { TraversalType } from './types'; // Local import
-import { TRAVERSAL_TYPES } from './binary-tree-traversal-logic'; // Local import
+import type { SearchingControlsPanelProps } from './types'; // Local import
 
-interface BinaryTreeControlsPanelProps {
-  onPlay: () => void;
-  onPause: () => void;
-  onStep: () => void;
-  onReset: () => void;
-  onTreeInputChange: (value: string) => void;
-  treeInputValue: string;
-  onTraversalTypeChange: (type: TraversalType) => void;
-  selectedTraversalType: TraversalType;
-  isPlaying: boolean;
-  isFinished: boolean;
-  currentSpeed: number;
-  onSpeedChange: (speed: number) => void;
-  isAlgoImplemented: boolean;
-  minSpeed: number;
-  maxSpeed: number;
-}
-
-export function BinaryTreeControlsPanel({
+export function SearchingControlsPanel({
   onPlay,
   onPause,
   onStep,
   onReset,
-  onTreeInputChange,
-  treeInputValue,
-  onTraversalTypeChange,
-  selectedTraversalType,
+  onInputChange,
+  inputValue,
+  onTargetValueChange,
+  targetValue,
   isPlaying,
   isFinished,
   currentSpeed,
   onSpeedChange,
+  isAlgoImplemented,
   minSpeed,
   maxSpeed,
-  isAlgoImplemented,
-}: BinaryTreeControlsPanelProps) {
-  
-  const handleTreeInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onTreeInputChange(event.target.value);
+  targetInputLabel = "Target Value",
+  targetInputPlaceholder = "Enter value",
+}: SearchingControlsPanelProps) {
+  const handleInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange(event.target.value);
+  };
+
+  const handleTargetInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onTargetValueChange(event.target.value);
   };
 
   const handleSpeedSliderChange = (value: number[]) => {
     onSpeedChange(value[0]);
   };
 
-  const commonPlayDisabled = isFinished || treeInputValue.trim() === '' || !isAlgoImplemented;
-  const commonStepDisabled = isPlaying || isFinished || treeInputValue.trim() === '' || !isAlgoImplemented;
-  
+  const commonPlayDisabled = isFinished || inputValue.trim() === '' || !isAlgoImplemented || (targetValue === undefined || targetValue.trim() === '');
+  const commonStepDisabled = isPlaying || isFinished || inputValue.trim() === '' || !isAlgoImplemented || (targetValue === undefined || targetValue.trim() === '');
+
   return (
     <Card className="shadow-xl rounded-xl">
       <CardHeader>
-        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Tree Input</CardTitle>
+        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Input</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <div className="space-y-2">
-            <Label htmlFor="treeInput" className="text-sm font-medium flex items-center">
-              <Binary className="mr-2 h-4 w-4 text-muted-foreground" /> Tree (comma-sep, level-order, use 'null' for empty nodes)
+            <Label htmlFor="customInput" className="text-sm font-medium">
+              Input Array (comma-separated numbers)
             </Label>
             <Input
-              id="treeInput"
+              id="customInput"
               type="text"
-              value={treeInputValue}
-              onChange={handleTreeInputChangeEvent}
-              placeholder="e.g., 1,2,3,null,4,null,5"
+              value={inputValue}
+              onChange={handleInputChangeEvent}
+              placeholder="e.g., 5,2,8,1,9"
               className="w-full text-base"
-              aria-label="Tree input as comma-separated level-order string"
+              aria-label="Custom input for algorithm data"
               disabled={isPlaying || !isAlgoImplemented}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="traversalType" className="text-sm font-medium flex items-center">
-              <ListTree className="mr-2 h-4 w-4 text-muted-foreground" /> Traversal Type
+            <Label htmlFor="targetInput" className="text-sm font-medium flex items-center">
+                <Search className="mr-2 h-4 w-4 text-muted-foreground" /> {targetInputLabel}
             </Label>
-            <Select
-              value={selectedTraversalType}
-              onValueChange={(value) => onTraversalTypeChange(value as TraversalType)}
+            <Input
+              id="targetInput"
+              type="text"
+              value={targetValue}
+              onChange={handleTargetInputChangeEvent}
+              placeholder={targetInputPlaceholder}
+              className="w-full text-base"
+              aria-label={targetInputLabel}
               disabled={isPlaying || !isAlgoImplemented}
-            >
-              <SelectTrigger id="traversalType" className="w-full" aria-label="Select traversal type">
-                <SelectValue placeholder="Select Traversal" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(TRAVERSAL_TYPES).map(type => (
-                  <SelectItem key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
-        
-        <div className="flex items-center justify-start">
+         <div className="flex items-center justify-start">
             <Button
                 onClick={onReset}
                 variant="outline"
-                disabled={isPlaying && isAlgoImplemented} 
+                disabled={isPlaying && isAlgoImplemented}
                 aria-label="Reset algorithm and input"
             >
                 <RotateCcw className="mr-2 h-4 w-4" /> Reset Data & Algorithm
@@ -171,7 +149,7 @@ export function BinaryTreeControlsPanel({
             <p className="text-xs text-muted-foreground text-center">{currentSpeed} ms delay</p>
           </div>
         </div>
-         {!isAlgoImplemented && (
+        {!isAlgoImplemented && (
           <p className="text-sm text-center text-amber-500 dark:text-amber-400">
             Interactive visualization for this algorithm is not yet implemented. Input and controls are disabled.
           </p>

@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const TWO_POINTERS_LINE_MAP = {
   functionDeclaration: 1,
@@ -19,8 +19,8 @@ export const TWO_POINTERS_LINE_MAP = {
 
 export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: number): AlgorithmStep[] => {
   const localSteps: AlgorithmStep[] = [];
-  // Ensure array is sorted (as it's a prerequisite for this two-pointer approach)
-  const arr = [...sortedArr].sort((a, b) => a - b);
+  // Array is assumed to be sorted by the page component before calling this.
+  const arr = [...sortedArr]; 
   const n = arr.length;
   const lm = TWO_POINTERS_LINE_MAP;
 
@@ -60,30 +60,31 @@ export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: 
   let iteration = 0; // Safety break for visualization
   while (left < right && iteration < n * 2) {
     iteration++;
-    addStep(lm.whileLoopStart, [left, right], [], `left (${left}) < right (${right}). Current window: [${arr[left]}, ${arr[right]}].`);
+    addStep(lm.whileLoopStart, [left, right], [], `left (${left}) < right (${right}). Window: [arr[${left}]=${arr[left]}, arr[${right}]=${arr[right]}].`);
     
     const currentSum = arr[left] + arr[right];
-    addStep(lm.calculateSum, [left, right], [], `Calculate sum: arr[${left}] (${arr[left]}) + arr[${right}] (${arr[right]}) = ${currentSum}.`, { currentSum });
+    addStep(lm.calculateSum, [left, right], [], `Current Sum = arr[${left}] (${arr[left]}) + arr[${right}] (${arr[right]}) = ${currentSum}.`, { currentSum, targetSum });
     
-    addStep(lm.checkSumEqualsTarget, [left, right], [], `Is currentSum (${currentSum}) === targetSum (${targetSum})?`, { currentSum });
+    addStep(lm.checkSumEqualsTarget, [left, right], [], `Is Current Sum (${currentSum}) === Target Sum (${targetSum})?`, { currentSum, targetSum });
     if (currentSum === targetSum) {
-      addStep(lm.returnPair, [left, right], [left, right], `Yes. Pair found: (${arr[left]}, ${arr[right]}) at indices [${left}, ${right}].`, { currentSum, result: `[${arr[left]}, ${arr[right]}]` });
+      addStep(lm.returnPair, [left, right], [left, right], `Yes. Pair found: (${arr[left]}, ${arr[right]}) at indices [${left}, ${right}].`, { currentSum, targetSum, result: `[${arr[left]}, ${arr[right]}]` });
       addStep(lm.functionEnd, [], [left, right], "Algorithm complete.");
       return localSteps;
     }
 
-    addStep(lm.checkSumLessThanTarget, [left, right], [], `Is currentSum (${currentSum}) < targetSum (${targetSum})?`, { currentSum });
+    addStep(lm.checkSumLessThanTarget, [left, right], [], `Is Current Sum (${currentSum}) < Target Sum (${targetSum})?`, { currentSum, targetSum });
     if (currentSum < targetSum) {
       left++;
-      addStep(lm.incrementLeft, [left, right], [], `Yes. Increment left to ${left}.`, { currentSum });
+      addStep(lm.incrementLeft, [left, right], [], `Yes. Increment left pointer to ${left}.`, { currentSum, targetSum });
     } else {
-      addStep(lm.elseBlock, [left, right], [], `No. currentSum (${currentSum}) > targetSum (${targetSum}). Decrement right.`, { currentSum });
+      addStep(lm.elseBlock, [left, right], [], `No. Current Sum (${currentSum}) > Target Sum (${targetSum}). Decrement right pointer.`, { currentSum, targetSum });
       right--;
-      addStep(lm.decrementRight, [left, right], [], `Decrement right to ${right}.`, { currentSum });
+      addStep(lm.decrementRight, [left, right], [], `Decrement right pointer to ${right}.`, { currentSum, targetSum });
     }
   }
-  addStep(lm.whileLoopEnd, [left, right], [], `Loop finished. left = ${left}, right = ${right}.`);
+  addStep(lm.whileLoopEnd, [left, right], [], `Loop finished. left = ${left}, right = ${right}. Pointers crossed or met.`);
   addStep(lm.returnNotFound, [], [], `No pair found with sum ${targetSum}.`);
   addStep(lm.functionEnd, [], [], "Algorithm complete.");
   return localSteps;
 };
+

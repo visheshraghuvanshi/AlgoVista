@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Ensure this points to local types if binary-tree-traversal is also localized
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
 
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
@@ -68,18 +68,27 @@ export function BinaryTreeVisualizationPanel({
                   );
                 })}
                 {nodes.map((node) => {
-                  // Node color and text color are now expected to be set by the logic
-                  // and passed via the 'node.color' and 'node.textColor' props.
-                  // The RBT-specific color logic is removed from here.
                   const fill = node.color || "hsl(var(--secondary))"; 
-                  const textColor = node.textColor || "hsl(var(--primary-foreground))"; // Sensible default
+                  const textColor = node.textColor || (node.nodeColor === 'RED' ? "hsl(var(--destructive-foreground))" : "hsl(var(--primary-foreground))");
 
-                  // Generic highlight for active processing node, if not already specially colored
                   let displayFill = fill;
                   let displayTextColor = textColor;
-                  if (node.id === currentProcessingNodeId && !node.nodeColor) { // Avoid overriding specific RBT colors unless it's a generic highlight
+
+                  if (node.nodeColor === 'RED') {
+                    displayFill = "hsl(var(--destructive))"; 
+                    displayTextColor = "hsl(var(--destructive-foreground))";
+                  } else if (node.nodeColor === 'BLACK') {
+                    displayFill = "hsl(var(--foreground))"; 
+                    displayTextColor = "hsl(var(--background))"; 
+                  }
+
+
+                  if (node.id === currentProcessingNodeId) { 
                      displayFill = ACCENT_COLOR_COMPARISON; 
                      displayTextColor = "hsl(var(--primary-foreground))";
+                  } else if (node.color && (node.color === "hsl(var(--accent))")) { // Example: found highlight
+                     displayFill = node.color;
+                     displayTextColor = "hsl(var(--accent-foreground))";
                   }
 
 
@@ -103,19 +112,8 @@ export function BinaryTreeVisualizationPanel({
                         fontWeight="bold"
                         className="select-none"
                       >
-                        {node.value}
+                        {node.value === null ? 'NIL' : node.value}
                       </text>
-                       {node.nodeColor && ( // RBT specific color label (can be kept if nodeColor is only set by RBT logic)
-                        <text
-                          x="0"
-                          y={NODE_RADIUS + 10} 
-                          textAnchor="middle"
-                          fontSize="8"
-                          fill={node.nodeColor === 'RED' ? "hsl(var(--destructive))" : "hsl(var(--foreground))"} // Example mapping
-                        >
-                           {/* {node.nodeColor} // Optionally display 'R' or 'B' */}
-                        </text>
-                      )}
                     </g>
                   );
                 })}
@@ -133,3 +131,4 @@ export function BinaryTreeVisualizationPanel({
     </Card>
   );
 }
+

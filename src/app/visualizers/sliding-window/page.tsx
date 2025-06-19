@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, BoxSelect } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { SlidingWindowCodePanel } from './SlidingWindowCodePanel';
 import { generateMaxSumFixedKSteps, generateMinLengthSumTargetSteps, SLIDING_WINDOW_LINE_MAPS } from './sliding-window-logic';
 import type { SlidingWindowProblemType } from './sliding-window-logic';
@@ -289,7 +289,7 @@ export default function SlidingWindowVisualizerPage() {
             {auxiliaryData && (
                 <Card className="mt-4">
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
+                    <CardContent className="text-sm flex flex-wrap justify-around gap-2">
                         {Object.entries(auxiliaryData).map(([key, value]) => {
                              if (key === 'foundSubarrayIndices') return null; // Don't display this in text
                             return (
@@ -331,8 +331,8 @@ export default function SlidingWindowVisualizerPage() {
               )}
               {problemType === 'minLengthSumTarget' && (
                 <div className="space-y-2">
-                  <Label htmlFor="targetSumInput">Target Sum</Label>
-                  <Input id="targetSumInput" type="number" value={targetSumValue} onChange={e => setTargetSumValue(e.target.value)} disabled={isPlaying} />
+                  <Label htmlFor="targetSumInputSW">Target Sum</Label>
+                  <Input id="targetSumInputSW" type="number" value={targetSumValue} onChange={e => setTargetSumValue(e.target.value)} disabled={isPlaying}/>
                 </div>
               )}
             </div>

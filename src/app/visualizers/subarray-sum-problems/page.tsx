@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Sigma } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { SubarraySumCodePanel } from './SubarraySumCodePanel';
 import { generateFindSubarraySumPositiveSteps, generateFindSubarraySumAnySteps, SUBARRAY_SUM_LINE_MAPS } from './subarray-sum-logic';
 import type { SubarraySumProblemType } from './subarray-sum-logic';
@@ -286,7 +286,7 @@ export default function SubarraySumProblemsVisualizerPage() {
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
             <VisualizationPanel data={displayedData} activeIndices={activeIndices} sortedIndices={sortedIndices} processingSubArrayRange={processingSubArrayRange} />
-             {auxiliaryData && (
+            {auxiliaryData && (
                 <Card className="mt-4">
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
                     <CardContent className="text-sm flex flex-wrap justify-around gap-2">
@@ -323,8 +323,8 @@ export default function SubarraySumProblemsVisualizerPage() {
                 <Select value={problemType} onValueChange={v => setProblemType(v as SubarraySumProblemType)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="positiveOnly">Given Sum (Positive Nums)</SelectItem>
-                    <SelectItem value="anyNumbers">Given Sum (Any Nums)</SelectItem>
+                    <SelectItem value="positiveOnly">Given Sum (Positive Nums Only)</SelectItem>
+                    <SelectItem value="anyNumbers">Given Sum (Any Numbers)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -353,3 +353,4 @@ export default function SubarraySumProblemsVisualizerPage() {
     </div>
   );
 }
+

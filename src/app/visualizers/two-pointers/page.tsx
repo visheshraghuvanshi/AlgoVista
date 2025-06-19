@@ -1,11 +1,12 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,10 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { TwoPointersCodePanel } from './TwoPointersCodePanel';
 import { generateTwoPointersPairSumSteps, TWO_POINTERS_LINE_MAP } from './two-pointers-logic';
-import { SearchingControlsPanel } from '@/components/algo-vista/searching-controls-panel';
+import { SearchingControlsPanel } from './SearchingControlsPanel'; // Local import
 
 
 const TWO_POINTERS_CODE_SNIPPETS = {
@@ -148,7 +149,7 @@ export default function TwoPointersVisualizerPage() {
       const currentS = steps[stepIndex];
       setDisplayedData(currentS.array);
       setActiveIndices(currentS.activeIndices);
-      setSortedIndices(currentS.sortedIndices); // Will highlight the found pair
+      setSortedIndices(currentS.sortedIndices); 
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setAuxiliaryData(currentS.auxiliaryData || null);
@@ -163,10 +164,9 @@ export default function TwoPointersVisualizerPage() {
 
     if (arr && target !== null) {
       if (notifySort) {
-        // Update inputValue state only if sorting changed the string representation
         const sortedArrString = arr.join(',');
         if(inputValue !== sortedArrString) {
-            setInputValue(sortedArrString); // This might trigger another re-render if inputValue is a dep of this useEffect
+            setInputValue(sortedArrString); 
         }
       }
       lastProcessedInputValueRef.current = arr.join(',');
@@ -183,12 +183,12 @@ export default function TwoPointersVisualizerPage() {
     }
   }, [inputValue, targetSumValue, parseInputArray, parseTargetSum, updateStateFromStep, toast]);
   
-  useEffect(() => { // Handles target sum changes
+  useEffect(() => { 
     handleGenerateSteps(false); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetSumValue]);
 
-  useEffect(() => { // Handles initial load and input array changes
+  useEffect(() => { 
     if (inputValue !== lastProcessedInputValueRef.current) {
       handleGenerateSteps(true);
     }
@@ -217,8 +217,6 @@ export default function TwoPointersVisualizerPage() {
   const handleReset = () => { 
     setIsPlaying(false); 
     setIsFinished(false); 
-    // setInputValue('1,2,3,4,6,8,9,10'); // Optional: reset input value too
-    // setTargetSumValue('10');
     handleGenerateSteps(true); 
   };
   
@@ -279,3 +277,4 @@ export default function TwoPointersVisualizerPage() {
     </div>
   );
 }
+

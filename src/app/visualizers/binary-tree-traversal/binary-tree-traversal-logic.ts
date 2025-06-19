@@ -1,4 +1,5 @@
-import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
+
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep, TraversalType } from './types'; // Local import
 
 export const TRAVERSAL_TYPES = {
   INORDER: 'inorder',
@@ -6,7 +7,8 @@ export const TRAVERSAL_TYPES = {
   POSTORDER: 'postorder',
 } as const;
 
-export type TraversalType = typeof TRAVERSAL_TYPES[keyof typeof TRAVERSAL_TYPES];
+// Ensure TraversalType is defined if not already from types.ts
+// export type TraversalType = typeof TRAVERSAL_TYPES[keyof typeof TRAVERSAL_TYPES];
 
 export const TRAVERSAL_LINE_MAPS: Record<TraversalType, Record<string, number>> = {
   [TRAVERSAL_TYPES.INORDER]: {
@@ -80,23 +82,23 @@ export function buildTreeNodesAndEdges(
   const rootId = generateNodeIdForTree(rootValue,0);
   
   const nodesToProcess: { id: string; value: string | number | null; index: number; depth: number; x: number, xRange: [number, number] }[] = [];
-  if(rootValue !== null) { // Check if rootValue itself is null
+  if(rootValue !== null) { 
       nodesToProcess.push({ id: rootId, value: rootValue, index: 0, depth: 0, x: 300, xRange: [0, 600] });
       visualNodes.push({ id: rootId, value: rootValue, x: 300, y: 50, color: NODE_COLORS.default, leftId: null, rightId: null });
   } else {
-       return { nodes: [], edges: [], rootId: null }; // Tree is effectively empty if root is null
+       return { nodes: [], edges: [], rootId: null }; 
   }
 
 
   let head = 0;
   while(head < nodesToProcess.length){
       const current = nodesToProcess[head++];
-      if(!current || current.value === null) continue; // Skip if current node is null conceptually
+      if(!current || current.value === null) continue; 
 
       const leftChildIndex = 2 * current.index + 1;
       const rightChildIndex = 2 * current.index + 2;
-      const Y_SPACING = 70; // Increased spacing
-      const X_BASE_OFFSET_FACTOR = 0.7; // Factor to control spread
+      const Y_SPACING = 70; 
+      const X_BASE_OFFSET_FACTOR = 0.7; 
 
       const childrenAtThisLevel = Math.pow(2, current.depth + 1);
       const spacePerChild = (current.xRange[1] - current.xRange[0]) / childrenAtThisLevel;
@@ -131,13 +133,12 @@ export function buildTreeNodesAndEdges(
           nodesToProcess.push({id: rightId, value: rightVal, index: rightChildIndex, depth: current.depth + 1, x: childX, xRange: [current.x, current.xRange[1]]});
       }
   }
-  // Simple centering adjustment based on actual node positions
     if (visualNodes.length > 0) {
         const minX = Math.min(...visualNodes.map(n => n.x));
         const maxX = Math.max(...visualNodes.map(n => n.x));
         const treeWidth = maxX - minX;
         const currentCenterX = minX + treeWidth / 2;
-        const desiredCenterX = 300; // SVG center
+        const desiredCenterX = 300;
         const shiftX = desiredCenterX - currentCenterX;
 
         visualNodes.forEach(node => {

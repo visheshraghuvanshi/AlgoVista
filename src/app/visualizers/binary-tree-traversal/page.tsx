@@ -1,13 +1,14 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel';
-import { BinaryTreeTraversalCodePanel } from './BinaryTreeTraversalCodePanel';
-import { BinaryTreeControlsPanel } from './BinaryTreeControlsPanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local
+import { BinaryTreeTraversalCodePanel } from './BinaryTreeTraversalCodePanel'; // Local
+import { BinaryTreeControlsPanel } from './BinaryTreeControlsPanel'; // Local
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep, TraversalType, AlgorithmDetailsProps, AlgorithmMetadata } from './types'; // Local
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import {
@@ -16,9 +17,8 @@ import {
   parseTreeInput,
   buildTreeNodesAndEdges,
   generateTraversalSteps,
-  type TraversalType,
-} from './binary-tree-traversal-logic';
-import { algorithmMetadata } from './metadata'; // Corrected import
+} from './binary-tree-traversal-logic'; // Local
+import { algorithmMetadata } from './metadata'; // Local import
 
 
 const DEFAULT_ANIMATION_SPEED = 800;
@@ -27,7 +27,6 @@ const MAX_SPEED = 2000;
 
 export default function BinaryTreeTraversalPage() {
   const { toast } = useToast();
-  // algorithmMetadata is now imported directly
 
   const [treeInputValue, setTreeInputValue] = useState('5,3,8,2,4,6,9,1,null,null,null,null,null,7');
   const [selectedTraversalType, setSelectedTraversalType] = useState<TraversalType>(TRAVERSAL_TYPES.INORDER);
@@ -81,7 +80,7 @@ export default function BinaryTreeTraversalPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         const firstStep = newSteps[0];
@@ -107,7 +106,7 @@ export default function BinaryTreeTraversalPage() {
 
   useEffect(() => {
     generateAndSetSteps();
-  }, [treeInputValue, selectedTraversalType, toast, generateAndSetSteps]); 
+  }, [generateAndSetSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -131,7 +130,7 @@ export default function BinaryTreeTraversalPage() {
   const handleTraversalTypeChange = (type: TraversalType) => setSelectedTraversalType(type);
 
   const handlePlay = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
@@ -144,7 +143,7 @@ export default function BinaryTreeTraversalPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated.", variant: "default" });
       return;
     }
@@ -238,3 +237,4 @@ export default function BinaryTreeTraversalPage() {
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export type SubarraySumProblemType = 'positiveOnly' | 'anyNumbers';
 
@@ -38,16 +38,17 @@ const addStep = (
   activeWindowOrIndices: number[],
   message: string,
   auxData?: Record<string, any>,
-  foundSubarray?: number[] | null
+  foundSubarray?: number[] | null // Array of indices for the found subarray
 ) => {
   localSteps.push({
     array: [...currentArr],
-    activeIndices: activeWindowOrIndices.filter(idx => idx >= 0 && idx < currentArr.length),
+    activeIndices: activeWindowOrIndices.filter(idx => idx >=0 && idx < currentArr.length),
     swappingIndices: [],
-    sortedIndices: foundSubarray || [], // Highlight the found subarray
+    sortedIndices: foundSubarray || [], 
     currentLine: line,
     message,
     processingSubArrayRange: activeWindowOrIndices.length === 2 ? [activeWindowOrIndices[0], activeWindowOrIndices[1]] : null,
+    pivotActualIndex: null,
     auxiliaryData: auxData,
   });
 };
@@ -57,34 +58,35 @@ export function generateFindSubarraySumPositiveSteps(arr: number[], targetSum: n
   const lm = SUBARRAY_SUM_LINE_MAPS.positiveOnly;
   const n = arr.length;
 
-  addStep(localSteps, lm.funcDeclare, arr, [], `Finding subarray with sum ${targetSum} (positive numbers).`);
+  addStep(localSteps, lm.funcDeclare, arr, [], `Find subarray with sum ${targetSum} (positive nums). Array: [${arr.join(', ')}]`);
 
   let currentSum = 0;
   let start = 0;
-  addStep(localSteps, lm.initVars, arr, [], `Initialize currentSum = 0, start = 0.`, { currentSum, start });
+  addStep(localSteps, lm.initVars, arr, [], `Initialize: currentSum = 0, start = 0.`, { currentSum, start, targetSum });
 
   for (let end = 0; end < n; end++) {
-    addStep(localSteps, lm.loopEnd, arr, [start, end], `Outer loop: end = ${end}. Processing arr[${end}] (${arr[end]}).`, { currentSum, start, end });
+    addStep(localSteps, lm.loopEnd, arr, [start, end], `Outer loop: end = ${end}. Considering arr[${end}]=${arr[end]}. Current window [${start}..${end}].`, { currentSum, start, end, targetSum });
     currentSum += arr[end];
-    addStep(localSteps, lm.addToCurrentSum, arr, [start, end], `Add arr[${end}] to currentSum. currentSum = ${currentSum}.`, { currentSum, start, end });
+    addStep(localSteps, lm.addToCurrentSum, arr, [start, end], `Added arr[${end}] to sum. currentSum = ${currentSum}.`, { currentSum, start, end, targetSum });
 
     while (currentSum > targetSum && start <= end) {
-      addStep(localSteps, lm.whileSumTooLarge, arr, [start, end], `currentSum (${currentSum}) > targetSum (${targetSum}). Shrink window.`, { currentSum, start, end });
+      addStep(localSteps, lm.whileSumTooLarge, arr, [start, end], `currentSum (${currentSum}) > targetSum (${targetSum}). Shrinking window from start.`, { currentSum, start, end, targetSum });
       currentSum -= arr[start];
-      addStep(localSteps, lm.subtractFromSum, arr, [start, end], `Subtract arr[${start}] (${arr[start]}) from currentSum. currentSum = ${currentSum}.`, { currentSum, start, end });
+      addStep(localSteps, lm.subtractFromSum, arr, [start, end], `Subtracted arr[${start}] (${arr[start]}) from sum. currentSum = ${currentSum}.`, { currentSum, start, end, targetSum });
       start++;
-      addStep(localSteps, lm.incrementStart, arr, [start, end], `Increment start to ${start}.`, { currentSum, start, end });
+      addStep(localSteps, lm.incrementStart, arr, [start, end], `Incremented start to ${start}. Window now [${start}..${end}].`, { currentSum, start, end, targetSum });
     }
     
-    addStep(localSteps, lm.checkSumEqualsTarget, arr, [start, end], `Is currentSum (${currentSum}) === targetSum (${targetSum})?`, { currentSum, start, end });
-    if (currentSum === targetSum && start <=end) { // Ensure non-empty for sum 0 case
+    addStep(localSteps, lm.checkSumEqualsTarget, arr, [start, end], `Is currentSum (${currentSum}) === targetSum (${targetSum})?`, { currentSum, start, end, targetSum });
+    if (currentSum === targetSum && start <=end) { // Ensure non-empty for sum 0 case and valid range
         const found = arr.slice(start, end + 1);
-        addStep(localSteps, lm.returnSubarray, arr, [], `Yes. Subarray [${found.join(',')}] found from index ${start} to ${end}.`, { currentSum, start, end, result: `[${found.join(',')}]` }, Array.from({length: end - start + 1}, (_, k) => start + k));
-        addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.");
+        const foundIndices = Array.from({length: end - start + 1}, (_, k) => start + k);
+        addStep(localSteps, lm.returnSubarray, arr, foundIndices, `Yes! Subarray [${found.join(',')}] (indices ${start}-${end}) found with sum ${targetSum}.`, { currentSum, start, end, targetSum, result: `[${found.join(',')}] from index ${start} to ${end}` }, foundIndices);
+        addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: `[${found.join(',')}]`});
         return localSteps;
     }
   }
-  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, start });
+  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, start, targetSum, result: "Not Found" });
   addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.");
   return localSteps;
 }
@@ -94,38 +96,38 @@ export function generateFindSubarraySumAnySteps(arr: number[], targetSum: number
   const lm = SUBARRAY_SUM_LINE_MAPS.anyNumbers;
   const n = arr.length;
 
-  addStep(localSteps, lm.funcDeclare, arr, [], `Finding subarray with sum ${targetSum} (any numbers).`);
+  addStep(localSteps, lm.funcDeclare, arr, [], `Find subarray with sum ${targetSum} (any numbers). Array: [${arr.join(', ')}]`);
 
   let currentSum = 0;
   const prefixSums = new Map<number, number>(); // Map: sum -> index
-  addStep(localSteps, lm.initVars, arr, [], `Initialize currentSum = 0, prefixSums map.`, { currentSum, prefixSums: Object.fromEntries(prefixSums) });
+  addStep(localSteps, lm.initVars, arr, [], `Initialize: currentSum = 0, prefixSums map = {}.`, { currentSum, prefixSums: {}, targetSum });
   
-  prefixSums.set(0, -1); // Base case for subarrays starting at index 0
-  addStep(localSteps, lm.setInitialPrefixSum, arr, [], `Set prefixSums[0] = -1 (base case).`, { currentSum, prefixSums: Object.fromEntries(prefixSums) });
+  prefixSums.set(0, -1); 
+  addStep(localSteps, lm.setInitialPrefixSum, arr, [], `Set prefixSums[0] = -1 (base for subarrays starting at index 0).`, { currentSum, prefixSums: {0:-1}, targetSum });
 
   for (let i = 0; i < n; i++) {
-    addStep(localSteps, lm.loopI, arr, [i], `Loop: i = ${i}. Processing arr[${i}] (${arr[i]}).`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i });
+    addStep(localSteps, lm.loopI, arr, [i], `Loop: i = ${i}. Processing arr[${i}]=${arr[i]}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, targetSum });
     currentSum += arr[i];
-    addStep(localSteps, lm.addToCurrentSum, arr, [i], `Add arr[${i}] to currentSum. currentSum = ${currentSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i });
+    addStep(localSteps, lm.addToCurrentSum, arr, [i], `Added arr[${i}] to sum. currentSum = ${currentSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, targetSum });
 
     const complement = currentSum - targetSum;
-    addStep(localSteps, lm.checkMapForComplement, arr, [i], `Check if prefixSums map contains complement (${complement}) = currentSum (${currentSum}) - targetSum (${targetSum}).`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, complement });
+    addStep(localSteps, lm.checkMapForComplement, arr, [i], `Check if prefixSums map contains complement (${complement}) = currentSum (${currentSum}) - targetSum (${targetSum}).`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, complement, targetSum });
     if (prefixSums.has(complement)) {
       const startIndex = prefixSums.get(complement)! + 1;
       const endIndex = i;
       const found = arr.slice(startIndex, endIndex + 1);
-      addStep(localSteps, lm.returnSubarray, arr, [], `Yes. Complement found. Subarray [${found.join(',')}] from index ${startIndex} to ${endIndex}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, result: `[${found.join(',')}]` }, Array.from({length: endIndex - startIndex + 1}, (_, k) => startIndex + k));
-      addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.");
+      const foundIndices = Array.from({length: endIndex - startIndex + 1}, (_, k) => startIndex + k);
+      addStep(localSteps, lm.returnSubarray, arr, foundIndices, `Yes! Complement found. Subarray [${found.join(',')}] (indices ${startIndex}-${endIndex}) has sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, result: `[${found.join(',')}] from index ${startIndex} to ${endIndex}` }, foundIndices);
+      addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: `[${found.join(',')}]`});
       return localSteps;
     }
     
     prefixSums.set(currentSum, i);
-    addStep(localSteps, lm.storePrefixSumInMap, arr, [i], `Store currentSum (${currentSum}) with index ${i} in prefixSums map.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i });
+    addStep(localSteps, lm.storePrefixSumInMap, arr, [i], `Store currentSum (${currentSum}) with index ${i} in prefixSums map.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, targetSum });
   }
 
-  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums) });
+  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), targetSum, result: "Not Found" });
   addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.");
   return localSteps;
 }
 
-    

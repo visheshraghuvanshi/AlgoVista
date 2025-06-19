@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import type { TraversalType } from './binary-tree-traversal-logic'; 
+import type { TraversalType } from './types'; // Local import
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; 
 
 const TRAVERSAL_CODE_SNIPPETS_ALL_LANG: Record<TraversalType, Record<string, string[]>> = {
@@ -225,3 +225,4 @@ export function BinaryTreeTraversalCodePanel({
     </Card>
   );
 }
+
