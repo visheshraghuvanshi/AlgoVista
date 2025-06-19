@@ -1,3 +1,4 @@
+
 // src/app/visualizers/stack-queue/metadata.ts
 import type { AlgorithmMetadata } from './types'; // Local import
 
@@ -7,7 +8,58 @@ export const algorithmMetadata: AlgorithmMetadata = {
   category: 'Data Structures',
   difficulty: 'Easy',
   description: 'Fundamental linear data structures: Stack (LIFO) and Queue (FIFO). Both are now interactive!',
-  longDescription: 'Stacks and Queues are fundamental linear data structures that differ in how elements are added and removed.\n\n**Stack (LIFO - Last-In, First-Out):**\nImagine a stack of plates. You can only add a new plate to the top, and you can only remove the topmost plate. This is the LIFO principle. Interactive visualization for Push, Pop, and Peek is available.\nKey Operations:\n- **Push**: Adds an item to the top of the stack.\n- **Pop**: Removes and returns the item from the top of the stack.\n- **Peek/Top**: Returns the top item without removing it.\n- **IsEmpty**: Checks if the stack is empty.\nCommon Implementations: Arrays (dynamic or fixed-size) or Linked Lists.\nUse Cases: Function call management (call stack), undo mechanisms, expression evaluation (infix to postfix), depth-first search (DFS).\n\n**Queue (FIFO - First-In, First-Out):**\nImagine a queue of people waiting for a service. The first person to join is the first person to be served. This is the FIFO principle. Interactive visualization for Enqueue, Dequeue, and Front (Peek) is available.\nKey Operations:\n- **Enqueue (or Add/Offer)**: Adds an item to the rear (end) of the queue.\n- **Dequeue (or Remove/Poll)**: Removes and returns the item from the front (head) of the queue.\n- **Front/Peek**: Returns the front item without removing it.\n- **IsEmpty**: Checks if the queue is empty.\nCommon Implementations: Arrays (circular arrays are efficient) or Linked Lists.\nUse Cases: Task scheduling, breadth-first search (BFS), print queues, message queues, simulating waiting lines.',
+  longDescription: `Stacks and Queues are fundamental linear data structures used to store collections of elements. They differ primarily in the order in which elements are accessed and removed.
+
+### Stack (LIFO - Last-In, First-Out)
+A stack operates on the LIFO principle: the last element added to the stack is the first one to be removed. Imagine a stack of plates; you add plates to the top and remove plates from the top.
+
+**Key Operations:**
+1.  **Push (or Add)**: Adds an element to the "top" of the stack.
+    *   *How it works*: The new element becomes the new top.
+2.  **Pop (or Remove)**: Removes and returns the element from the "top" of the stack.
+    *   *How it works*: The element below the current top (if any) becomes the new top. An error or special value is returned if the stack is empty.
+3.  **Peek (or Top)**: Returns the element at the "top" of the stack without removing it.
+    *   *How it works*: Useful for inspecting the next element to be popped. An error or special value is returned if the stack is empty.
+4.  **IsEmpty**: Checks if the stack contains no elements.
+5.  **Size**: Returns the number of elements currently in the stack.
+
+**Common Implementations:**
+-   **Array (Dynamic or Fixed-size)**: Push and pop operations typically involve adding/removing from one end of the array (e.g., the end with the highest index). Resizing may be needed for dynamic arrays.
+-   **Linked List**: Push and pop operations involve adding/removing from the head of the list.
+
+**Use Cases:**
+-   Function call management in programming (the call stack).
+-   Undo/redo mechanisms in applications.
+-   Expression evaluation (e.g., converting infix to postfix, evaluating postfix expressions).
+-   Depth-First Search (DFS) in graph and tree traversal (using an explicit stack for the iterative version).
+-   Validating parentheses or HTML tags.
+
+### Queue (FIFO - First-In, First-Out)
+A queue operates on the FIFO principle: the first element added to the queue is the first one to be removed. Imagine a line of people waiting for a service; the first person in line is served first.
+
+**Key Operations:**
+1.  **Enqueue (or Add/Offer)**: Adds an element to the "rear" (or "back", "tail") of the queue.
+    *   *How it works*: The new element becomes the new rear.
+2.  **Dequeue (or Remove/Poll)**: Removes and returns the element from the "front" (or "head") of the queue.
+    *   *How it works*: The element that was second in line (if any) becomes the new front. An error or special value is returned if the queue is empty.
+3.  **Front (or Peek)**: Returns the element at the "front" of the queue without removing it.
+    *   *How it works*: Useful for inspecting the next element to be dequeued. An error or special value is returned if the queue is empty.
+4.  **IsEmpty**: Checks if the queue contains no elements.
+5.  **Size**: Returns the number of elements currently in the queue.
+
+**Common Implementations:**
+-   **Array (often a Circular Array/Buffer)**: Enqueueing adds to one end, dequeuing removes from the other. Circular arrays are efficient to avoid shifting elements.
+-   **Linked List**: Enqueueing adds to the tail, dequeuing removes from the head. Requires pointers to both head and tail for O(1) operations.
+-   **Using Two Stacks**: A less common but possible implementation.
+
+**Use Cases:**
+-   Managing requests in order (e.g., print queues, server request handling).
+-   Breadth-First Search (BFS) in graph and tree traversal.
+-   Buffers in data streaming.
+-   Simulating waiting lines.
+-   CPU task scheduling.
+
+Both data structures are crucial building blocks in computer science and software development.`,
   timeComplexities: {
     best: "Stack (Array/LL): Push O(1), Pop O(1), Peek O(1). Queue (LL/Circular Array): Enqueue O(1), Dequeue O(1), Peek O(1).",
     average: "Stack (Array/LL): Push O(1), Pop O(1), Peek O(1). Queue (LL/Circular Array): Enqueue O(1), Dequeue O(1), Peek O(1).",

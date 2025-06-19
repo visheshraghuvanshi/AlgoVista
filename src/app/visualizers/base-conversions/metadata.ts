@@ -1,3 +1,4 @@
+
 // src/app/visualizers/base-conversions/metadata.ts
 import type { AlgorithmMetadata } from './types'; // Local import
 
@@ -7,7 +8,60 @@ export const algorithmMetadata: AlgorithmMetadata = {
   category: 'Math & Number Theory',
   difficulty: 'Easy',
   description: 'Converts numbers between different numeral systems (bases), e.g., decimal to binary.',
-  longDescription: 'Base conversion is the process of changing the representation of a number from one numeral system (base) to another. Common bases include binary (base-2), octal (base-8), decimal (base-10), and hexadecimal (base-16).\n\n**Converting from Decimal to Another Base (e.g., Base B):**\nTo convert a decimal integer to base B, repeatedly divide the decimal number by B. The remainders of these divisions, read in reverse order of their calculation, form the digits of the number in base B.\nFor the fractional part, repeatedly multiply the fractional part by B. The integer parts of these products, read in order, form the digits of the fractional part in base B.\n\nExample: Convert decimal 42 to binary (Base 2)\n- 42 / 2 = 21 remainder 0\n- 21 / 2 = 10 remainder 1\n- 10 / 2 = 5  remainder 0\n- 5  / 2 = 2  remainder 1\n- 2  / 2 = 1  remainder 0\n- 1  / 2 = 0  remainder 1\nReading remainders in reverse: 101010. So, 42 (decimal) = 101010 (binary).\n\n**Converting from Another Base (e.g., Base B) to Decimal:**\nTo convert a number from base B to decimal, multiply each digit by B raised to the power of its position (starting from 0 for the rightmost integer digit, and -1 for the first fractional digit) and sum the results.\n\nExample: Convert binary 101010 to decimal\nDigits (right to left): 0, 1, 0, 1, 0, 1\nPositions (right to left, starting 0): 0, 1, 2, 3, 4, 5\nValue = (0 * 2^0) + (1 * 2^1) + (0 * 2^2) + (1 * 2^3) + (0 * 2^4) + (1 * 2^5)\n      = 0 + 2 + 0 + 8 + 0 + 32 = 42.\n\nConverting between non-decimal bases (e.g., binary to hexadecimal) can often be done more easily by first converting to decimal, or by using shortcut methods if one base is a power of the other (e.g., each hex digit corresponds to 4 binary digits).',
+  longDescription: `Base conversion is the process of changing the representation of a number from one numeral system (base) to another. A numeral system is a way of representing numbers using a set of symbols (digits). The base (or radix) of a positional numeral system is the number of unique digits, including zero, used to represent numbers. Common bases include:
+-   **Binary (Base-2)**: Uses digits 0, 1. Fundamental in computer systems.
+-   **Octal (Base-8)**: Uses digits 0-7.
+-   **Decimal (Base-10)**: The standard system we use, with digits 0-9.
+-   **Hexadecimal (Base-16)**: Uses digits 0-9 and A-F (representing 10-15). Often used in computing for memory addresses and color codes.
+
+### Converting from an Arbitrary Base B to Decimal (Base-10)
+To convert a number \`(d_k d_{k-1} ... d_1 d_0 . f_1 f_2 ... f_m)_B\` from base B to decimal:
+-   **Integer Part**: Sum \`(d_i * B^i)\` for each digit \`d_i\` from right to left (position \`i\` starting at 0).
+    Example: \`(1011)_2 = (1*2^3) + (0*2^2) + (1*2^1) + (1*2^0) = 8 + 0 + 2 + 1 = (11)_{10}\`.
+    Example: \`(2A)_{16} = (2*16^1) + (10*16^0) = 32 + 10 = (42)_{10}\`.
+-   **Fractional Part** (if any): Sum \`(f_j * B^{-j})\` for each digit \`f_j\` from left to right (position \`j\` starting at 1 after the radix point).
+    Example: \`(0.101)_2 = (1*2^{-1}) + (0*2^{-2}) + (1*2^{-3}) = 1/2 + 0/4 + 1/8 = 0.5 + 0.125 = (0.625)_{10}\`.
+
+### Converting from Decimal (Base-10) to an Arbitrary Base B
+**Integer Part:**
+1.  Repeatedly divide the decimal number by the target base B.
+2.  The remainder of each division (in order from last to first) forms the digits of the number in base B. The first remainder is the least significant digit (LSD), and the last remainder (from the division where the quotient becomes 0) is the most significant digit (MSD).
+    Example: Convert decimal 42 to binary (Base 2):
+    - \`42 / 2 = 21\` remainder \`0\` (LSD)
+    - \`21 / 2 = 10\` remainder \`1\`
+    - \`10 / 2 = 5\`  remainder \`0\`
+    - \`5  / 2 = 2\`  remainder \`1\`
+    - \`2  / 2 = 1\`  remainder \`0\`
+    - \`1  / 2 = 0\`  remainder \`1\` (MSD)
+    Reading remainders in reverse: \`(101010)_2\`.
+
+**Fractional Part** (if any):
+1.  Repeatedly multiply the fractional part of the decimal number by the target base B.
+2.  The integer part of each product forms the digits of the fractional part in base B, read from first to last.
+3.  The new fractional part for the next step is the fractional part of the current product.
+4.  This process may terminate if the fractional part becomes 0, or it may be non-terminating (requiring a decision on precision).
+    Example: Convert decimal 0.625 to binary (Base 2):
+    - \`0.625 * 2 = 1.25\` (Integer part: \`1\`)
+    - \`0.25  * 2 = 0.5\`  (Integer part: \`0\`)
+    - \`0.5   * 2 = 1.0\`  (Integer part: \`1\`)
+    - Fractional part is now 0. Stop.
+    Reading integer parts: \`(0.101)_2\`.
+
+### Converting Between Two Non-Decimal Bases
+Usually, the easiest way is to convert the source base number to decimal first, and then convert that decimal number to the target base.
+Example: Convert \`(1A)_{12}\` (duodecimal) to Base-7.
+1.  Convert \`(1A)_{12}\` to decimal: \`(1 * 12^1) + (10 * 12^0) = 12 + 10 = (22)_{10}\`.
+2.  Convert \`(22)_{10}\` to Base-7:
+    - \`22 / 7 = 3\` remainder \`1\`
+    - \`3  / 7 = 0\` remainder \`3\`
+    Result: \`(31)_7\`.
+
+### Special Cases:
+-   Converting between bases that are powers of each other (e.g., binary to hexadecimal, binary to octal) can be done by grouping digits.
+    -   Binary to Hex: Group binary digits in sets of 4. (e.g., \`101010_2 -> (00)10 1010_2 -> 2A_{16}\`)
+    -   Binary to Octal: Group binary digits in sets of 3.
+
+The AlgoVista visualizer currently focuses on integer conversions between a given base and decimal, and then decimal to another given base.`,
   timeComplexities: {
     best: "O(log_B N) for integer part, O(P) for P precision digits of fractional part",
     average: "O(log_B N) for integer part, O(P) for P precision digits of fractional part",
