@@ -4,99 +4,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
-import { DutchNationalFlagCodePanel } from './DutchNationalFlagCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
+import { DutchNationalFlagCodePanel, DUTCH_NATIONAL_FLAG_CODE_SNIPPETS } from './DutchNationalFlagCodePanel'; 
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react'; // Keep AlertTriangle for error states
+import { Layers } from 'lucide-react'; // Icon for DNF
 import { DUTCH_NATIONAL_FLAG_LINE_MAP, generateDutchNationalFlagSteps } from './dutch-national-flag-logic';
 import { algorithmMetadata } from './metadata'; 
-
-const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
-  JavaScript: [
-    "function dutchNationalFlagSort(arr) {",                // 1
-    "  let low = 0, mid = 0, high = arr.length - 1;",       // 2
-    "  while (mid <= high) {",                              // 3
-    "    switch (arr[mid]) {",
-    "      case 0:",                                         // 4
-    "        [arr[low], arr[mid]] = [arr[mid], arr[low]];",  // 5
-    "        low++; mid++;",                                // 6
-    "        break;",                                       // 7
-    "      case 1:",                                         // 8
-    "        mid++;",                                        // 9
-    "        break;",                                       // 10
-    "      case 2:",                                         // 11
-    "        [arr[mid], arr[high]] = [arr[high], arr[mid]];",// 12
-    "        high--;",                                       // 13
-    "        break;",                                       // 14
-    "    }",                                                // 15 (End Switch)
-    "  }",                                                  // 16 (End While)
-    "  return arr;",                                        // 17
-    "}",                                                    // 18
-  ],
-  Python: [
-    "def dutch_national_flag_sort(arr):",
-    "    low, mid, high = 0, 0, len(arr) - 1",
-    "    while mid <= high:",
-    "        if arr[mid] == 0:",
-    "            arr[low], arr[mid] = arr[mid], arr[low]",
-    "            low += 1",
-    "            mid += 1",
-    "        elif arr[mid] == 1:",
-    "            mid += 1",
-    "        else:  # arr[mid] == 2",
-    "            arr[mid], arr[high] = arr[high], arr[mid]",
-    "            high -= 1",
-    "    return arr",
-  ],
-  Java: [
-    "public class DutchNationalFlag {",
-    "    public static void sort(int[] arr) {",
-    "        int low = 0, mid = 0;",
-    "        int high = arr.length - 1;",
-    "        int temp;",
-    "        while (mid <= high) {",
-    "            switch (arr[mid]) {",
-    "                case 0:",
-    "                    temp = arr[low]; arr[low] = arr[mid]; arr[mid] = temp;",
-    "                    low++; mid++;",
-    "                    break;",
-    "                case 1:",
-    "                    mid++;",
-    "                    break;",
-    "                case 2:",
-    "                    temp = arr[mid]; arr[mid] = arr[high]; arr[high] = temp;",
-    "                    high--;",
-    "                    break;",
-    "            }",
-    "        }",
-    "    }",
-    "}",
-  ],
-  "C++": [
-    "#include <vector>",
-    "#include <algorithm> // For std::swap",
-    "void dutchNationalFlagSort(std::vector<int>& arr) {",
-    "    int low = 0, mid = 0;",
-    "    int high = arr.size() - 1;",
-    "    while (mid <= high) {",
-    "        switch (arr[mid]) {",
-    "            case 0:",
-    "                std::swap(arr[low++], arr[mid++]);",
-    "                break;",
-    "            case 1:",
-    "                mid++;",
-    "                break;",
-    "            case 2:",
-    "                std::swap(arr[mid], arr[high--]);",
-    "                break;",
-    "        }",
-    "    }",
-    "}",
-  ],
-};
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; 
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -117,6 +35,8 @@ export default function DutchNationalFlagVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
   const [pivotActualIndex, setPivotActualIndex] = useState<number | null>(null);
+  const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
+
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -149,8 +69,9 @@ export default function DutchNationalFlagVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
+      setAuxiliaryData(currentS.auxiliaryData || null); // Ensure auxData is updated
     }
-  }, [steps]);
+  }, [steps, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]); // Added setters
   
   const generateSteps = useCallback(() => {
     if (animationTimeoutRef.current) {
@@ -167,20 +88,43 @@ export default function DutchNationalFlagVisualizerPage() {
       setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
-        updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
+        setSortedIndices(firstStep.sortedIndices);
+        setCurrentLine(firstStep.currentLine);
+        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
+        setPivotActualIndex(firstStep.pivotActualIndex || null);
+        setAuxiliaryData(firstStep.auxiliaryData || null); // Set auxData for the first step
       } else { 
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-        setProcessingSubArrayRange(null); setPivotActualIndex(null);
+        setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
       }
     } else { 
       setSteps([]); setCurrentStepIndex(0);
       setDisplayedData([]);
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
-      setProcessingSubArrayRange(null); setPivotActualIndex(null);
-      setIsPlaying(false); setIsFinished(false);
+      setProcessingSubArrayRange(null); setPivotActualIndex(null); setAuxiliaryData(null);
+      setIsPlaying(false); setIsFinished(true);
     }
-  }, [inputValue, parseInput, updateStateFromStep]);
+  }, [
+    inputValue, 
+    parseInput, 
+    setSteps, 
+    setCurrentStepIndex, 
+    setIsPlaying, 
+    setIsFinished,
+    setDisplayedData,
+    setActiveIndices,
+    setSwappingIndices,
+    setSortedIndices,
+    setCurrentLine,
+    setProcessingSubArrayRange,
+    setPivotActualIndex,
+    setAuxiliaryData 
+  ]);
 
 
   useEffect(() => {
@@ -234,19 +178,20 @@ export default function DutchNationalFlagVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    setInputValue('0,1,2,0,1,1,2,0,2,1,0'); // Reset to default or trigger generateSteps if inputValue is a dependency
+    setInputValue('0,1,2,0,1,1,2,0,2,1,0'); 
+    // generateSteps will be called by useEffect due to inputValue change
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { 
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata || !algoDetails) {
+  if (!algorithmMetadata || !localAlgoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -265,6 +210,7 @@ export default function DutchNationalFlagVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
+          <Layers className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Changed icon */}
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
@@ -280,6 +226,16 @@ export default function DutchNationalFlagVisualizerPage() {
               processingSubArrayRange={processingSubArrayRange}
               pivotActualIndex={pivotActualIndex}
             />
+             {auxiliaryData && (
+                <Card className="mt-4">
+                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Algorithm Pointers</CardTitle></CardHeader>
+                    <CardContent className="text-sm flex justify-around p-3">
+                        <p><strong>Low:</strong> {auxiliaryData.low?.toString()}</p>
+                        <p><strong>Mid:</strong> {auxiliaryData.mid?.toString()}</p>
+                        <p><strong>High:</strong> {auxiliaryData.high?.toString()}</p>
+                    </CardContent>
+                </Card>
+            )}
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <DutchNationalFlagCodePanel
@@ -305,10 +261,9 @@ export default function DutchNationalFlagVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-         <AlgorithmDetailsCard {...algoDetails} />
+         <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-
