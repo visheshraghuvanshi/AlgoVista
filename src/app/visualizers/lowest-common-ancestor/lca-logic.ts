@@ -1,5 +1,5 @@
 
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
 // Re-use tree parsing and initial building logic from binary-tree-traversal
 import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTree } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
 
@@ -74,7 +74,6 @@ function mapTreeToVisual(
         }
         if (specialColors && specialColors[nodeId]) {
             color = specialColors[nodeId];
-            // Potentially adjust textColor based on specialColor
             if (specialColors[nodeId] === "hsl(var(--success))" || specialColors[nodeId] === "hsl(var(--destructive))") {
                 textColor = "hsl(var(--primary-foreground))"; 
             }
@@ -91,14 +90,14 @@ function mapTreeToVisual(
         if (node.leftId && currentNodesMap.has(node.leftId)) {
             visualEdges.push({ 
                 id: `edge-${nodeId}-${node.leftId}`, sourceId: nodeId, targetId: node.leftId, 
-                color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(node.leftId)) ? "hsl(var(--primary)/0.7)" : "hsl(var(--muted-foreground))"
+                color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(node.leftId)) || (highlightedNodeIds.includes(nodeId) && highlightedNodeIds.includes(node.leftId) && specialColors && (specialColors[nodeId] === "hsl(var(--success))" || specialColors[node.leftId] === "hsl(var(--success))") ) ? "hsl(var(--primary)/0.7)" : "hsl(var(--muted-foreground))"
             });
             positionNode(node.leftId, x - childXOffset, y + Y_SPACING, xOffsetMultiplier, depth + 1);
         }
         if (node.rightId && currentNodesMap.has(node.rightId)) {
             visualEdges.push({ 
                 id: `edge-${nodeId}-${node.rightId}`, sourceId: nodeId, targetId: node.rightId, 
-                color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(node.rightId)) ? "hsl(var(--primary)/0.7)" : "hsl(var(--muted-foreground))"
+                color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(node.rightId)) || (highlightedNodeIds.includes(nodeId) && highlightedNodeIds.includes(node.rightId) && specialColors && (specialColors[nodeId] === "hsl(var(--success))" || specialColors[node.rightId] === "hsl(var(--success))")) ? "hsl(var(--primary)/0.7)" : "hsl(var(--muted-foreground))"
             });
             positionNode(node.rightId, x + childXOffset, y + Y_SPACING, xOffsetMultiplier, depth + 1);
         }
@@ -106,20 +105,27 @@ function mapTreeToVisual(
     positionNode(currentRootId, SVG_WIDTH / 2, 50, 0.8, 0);
 
     if (visualNodes.length > 0) {
-        const minX = Math.min(...visualNodes.map(n => n.x));
-        const maxX = Math.max(...visualNodes.map(n => n.x));
-        const treeWidth = maxX - minX;
-        const currentCenterX = minX + treeWidth / 2;
-        const desiredCenterX = SVG_WIDTH / 2;
-        const shiftX = desiredCenterX - currentCenterX;
+        const minX = Math.min(...visualNodes.map(n => n.x).filter(x => x !== undefined && !isNaN(x)));
+        const maxX = Math.max(...visualNodes.map(n => n.x).filter(x => x !== undefined && !isNaN(x)));
+        if(isFinite(minX) && isFinite(maxX)) {
+            const treeWidth = maxX - minX;
+            const currentCenterX = minX + treeWidth / 2;
+            const desiredCenterX = SVG_WIDTH / 2; // SVG center
+            const shiftX = desiredCenterX - currentCenterX;
 
-        let scaleFactor = 1;
-        if (treeWidth > SVG_WIDTH * 0.95 && treeWidth > 0) { 
-            scaleFactor = (SVG_WIDTH * 0.95) / treeWidth;
+            let scaleFactor = 1;
+            if (treeWidth > SVG_WIDTH * 0.95 && treeWidth > 0) { 
+                scaleFactor = (SVG_WIDTH * 0.95) / treeWidth;
+            }
+            visualNodes.forEach(node => {
+                if (node.x !== undefined) {
+                     node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
+                }
+                if(node.y !== undefined) {
+                    node.y = node.y; 
+                }
+            });
         }
-        visualNodes.forEach(node => {
-            node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
-        });
     }
     return { visualNodes, visualEdges };
 }
@@ -134,7 +140,7 @@ function addLCAStep(line: number | null, message: string, currentDfsNodeId?: str
         currentLine: line,
         message,
         currentProcessingNodeId: currentDfsNodeId,
-        auxiliaryData: { // Pass necessary data for result display
+        auxiliaryData: { 
             lcaValue: lcaHighlightNodes.length === 3 ? treeNodesMap.get(lcaHighlightNodes[2])?.value : null,
             lcaHighlightIds: lcaHighlightNodes
         }
@@ -189,14 +195,13 @@ export const generateLCASteps = (treeString: string, pValue: string | number, qV
     nodeP_id_logic = null;
     nodeQ_id_logic = null;
 
-    const parsedInput = parseTreeInput(treeString); // From binary-tree-traversal-logic
+    const parsedInput = parseTreeInput(treeString); 
     if (!parsedInput || parsedInput.length === 0) {
         addLCAStep(null, "Error: Invalid tree input string or empty tree.");
         return localSteps;
     }
 
-    // Use initialBuildTree to get nodes and edges in the format BinaryTreeVisualizationPanel expects
-    const { nodes: bttVisualNodes, rootId: bttRootId, edges: bttEdges } = initialBuildTree(parsedInput);
+    const { nodes: bttVisualNodes, rootId: bttRootId } = initialBuildTree(parsedInput);
 
     if (!bttRootId || bttRootId === 'null-0') { 
         addLCAStep(null, "Error: Tree is effectively empty or could not be built.");
@@ -206,7 +211,7 @@ export const generateLCASteps = (treeString: string, pValue: string | number, qV
 
     treeNodesMap = new Map();
     bttVisualNodes.forEach(node => {
-        if(node.value !== null) { // Ensure NIL nodes are not added to the traversable map
+        if(node.value !== null && node.id !== 'null-0') { 
             treeNodesMap.set(node.id, {
                 id: node.id,
                 value: node.value, 
@@ -224,7 +229,7 @@ export const generateLCASteps = (treeString: string, pValue: string | number, qV
         addLCAStep(LCA_LINE_MAP.nodeNotFound, `Node P='${pValue}' not found in the tree.`);
         return localSteps;
     }
-     addLCAStep(null, `Path to P='${pValue}' found: [${pathP.map(id=>treeNodesMap.get(id)?.value).join(' -> ')}]`, undefined, [...pathP], [nodeP_id_logic!]);
+     addLCAStep(null, `Path to P='${pValue}' found: [${pathP.map(id=>treeNodesMap.get(id)?.value).join(' -> ')}]`, undefined, [...pathP], nodeP_id_logic ? [nodeP_id_logic] : []);
 
 
     const pathQ: string[] = [];
@@ -234,12 +239,12 @@ export const generateLCASteps = (treeString: string, pValue: string | number, qV
         addLCAStep(LCA_LINE_MAP.nodeNotFound, `Node Q='${qValue}' not found in the tree.`);
         return localSteps;
     }
-     addLCAStep(null, `Path to Q='${qValue}' found: [${pathQ.map(id=>treeNodesMap.get(id)?.value).join(' -> ')}]`, undefined, [...pathQ], nodeQ_id_logic ? [nodeP_id_logic!, nodeQ_id_logic] : [nodeP_id_logic!]);
+     addLCAStep(null, `Path to Q='${qValue}' found: [${pathQ.map(id=>treeNodesMap.get(id)?.value).join(' -> ')}]`, undefined, [...pathQ], nodeP_id_logic && nodeQ_id_logic ? [nodeP_id_logic, nodeQ_id_logic] : (nodeP_id_logic ? [nodeP_id_logic] : (nodeQ_id_logic ? [nodeQ_id_logic] : [])));
 
 
     let lcaNodeId: string | null = null;
     let i = 0;
-    const finalHighlightIds = nodeQ_id_logic ? [nodeP_id_logic!, nodeQ_id_logic] : [nodeP_id_logic!];
+    const finalHighlightIds = nodeP_id_logic && nodeQ_id_logic ? [nodeP_id_logic, nodeQ_id_logic] : (nodeP_id_logic ? [nodeP_id_logic] : (nodeQ_id_logic ? [nodeQ_id_logic] : []));
     addLCAStep(LCA_LINE_MAP.comparePathsStart, "Comparing paths to find LCA...", undefined, [], finalHighlightIds);
     while (i < pathP.length && i < pathQ.length && pathP[i] === pathQ[i]) {
         lcaNodeId = pathP[i];
@@ -248,13 +253,19 @@ export const generateLCASteps = (treeString: string, pValue: string | number, qV
         i++;
     }
 
+    const specialColorsForLCA: Record<string, string> = {};
+    if(nodeP_id_logic) specialColorsForLCA[nodeP_id_logic] = "hsl(var(--accent))";
+    if(nodeQ_id_logic) specialColorsForLCA[nodeQ_id_logic] = "hsl(var(--accent))";
+    if(lcaNodeId) specialColorsForLCA[lcaNodeId] = "hsl(var(--success))";
+
+
     if (lcaNodeId) {
         const lcaNodeValue = treeNodesMap.get(lcaNodeId)?.value;
-        addLCAStep(LCA_LINE_MAP.lcaFoundReturn, `LCA found: ${lcaNodeValue}. Path P: [${pathP.map(id=>treeNodesMap.get(id)?.value).join('->')}]. Path Q: [${pathQ.map(id=>treeNodesMap.get(id)?.value).join('->')}]`, lcaNodeId, [...pathP, ...pathQ], [...finalHighlightIds, lcaNodeId], {[lcaNodeId]: "hsl(var(--success))", [nodeP_id_logic!]: "hsl(var(--accent))", [nodeQ_id_logic!]: "hsl(var(--accent))"});
+        addLCAStep(LCA_LINE_MAP.lcaFoundReturn, `LCA found: ${lcaNodeValue}. Path P: [${pathP.map(id=>treeNodesMap.get(id)?.value).join('->')}]. Path Q: [${pathQ.map(id=>treeNodesMap.get(id)?.value).join('->')}]`, lcaNodeId, [...pathP, ...pathQ], lcaNodeId ? [...finalHighlightIds, lcaNodeId] : finalHighlightIds, specialColorsForLCA);
     } else {
         addLCAStep(LCA_LINE_MAP.lcaFoundReturn, "No common ancestor found (this shouldn't happen if P and Q are in the same tree and root exists).", undefined, [...pathP, ...pathQ], finalHighlightIds);
     }
-    addLCAStep(null, "LCA Finding Algorithm Complete.", undefined, [], lcaNodeId ? [...finalHighlightIds, lcaNodeId] : finalHighlightIds);
+    addLCAStep(null, "LCA Finding Algorithm Complete.", undefined, [], lcaNodeId ? [...finalHighlightIds, lcaNodeId] : finalHighlightIds, specialColorsForLCA);
     return localSteps;
 };
 

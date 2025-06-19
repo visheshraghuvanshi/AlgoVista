@@ -50,7 +50,7 @@ export interface BinaryTreeEdgeVisual {
 export interface TreeAlgorithmStep {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[]; // Current path being explored
+  traversalPath: (string | number)[]; // Current path being explored (node values or IDs)
   currentLine: number | null;
   message?: string;
   currentProcessingNodeId?: string | null; // Node being visited by DFS

@@ -33,6 +33,8 @@ export function BinaryTreeVisualizationPanel({
     if (!nodeId) return false;
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return false;
+    // For path sum, traversalPath might hold node IDs instead of values, depending on logic
+    // If it holds values, this check is fine. If IDs, adjust accordingly.
     return traversalPath.some(p => p === node.id || p === node.value);
   };
 
@@ -74,15 +76,26 @@ export function BinaryTreeVisualizationPanel({
                   let fill = node.color || "hsl(var(--secondary))"; 
                   let textColor = node.textColor || "hsl(var(--primary-foreground))";
 
-                  if (isNodeInTraversalPath(node.id) && node.id !== currentProcessingNodeId && node.color !== "hsl(var(--success))" ) {
-                    fill = "hsl(var(--primary)/0.6)"; 
+                  if (isNodeInTraversalPath(node.id) && node.id !== currentProcessingNodeId) {
+                     // Special handling for LCA highlighting if node.color is explicitly set by logic
+                    if (node.color && (node.color === "hsl(var(--accent))" || node.color === "hsl(var(--success))")) {
+                         fill = node.color;
+                         textColor = node.color === "hsl(var(--accent))" ? "hsl(var(--accent-foreground))" : "hsl(var(--success-foreground))";
+                    } else {
+                        fill = "hsl(var(--primary)/0.6)"; // Default path highlight
+                    }
                   }
-                  if (node.id === currentProcessingNodeId && node.color !== "hsl(var(--success))") {
+                  if (node.id === currentProcessingNodeId) {
                     fill = ACCENT_COLOR_COMPARISON;
+                    textColor = "hsl(var(--primary-foreground))";
                   }
-                  if (node.color === "hsl(var(--success))") { 
-                        fill = "hsl(var(--success))";
-                        textColor = "hsl(var(--success-foreground))"; // Ensure text is readable on success color
+                   // If logic specifically sets a success/accent color, use it
+                  if(node.color === "hsl(var(--success))") {
+                      fill = "hsl(var(--success))";
+                      textColor = "hsl(var(--success-foreground))";
+                  } else if (node.color === "hsl(var(--accent))" && node.id !== currentProcessingNodeId) {
+                      fill = "hsl(var(--accent))";
+                      textColor = "hsl(var(--accent-foreground))";
                   }
 
 

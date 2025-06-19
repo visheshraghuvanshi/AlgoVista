@@ -24,7 +24,6 @@ const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1800;
 const DEFAULT_TREE_INPUT = "5,3,8,1,4,7,9,null,2"; 
-const DEFAULT_TARGET_SUM = "22"; // Not used for LCA, but from template
 const DEFAULT_NODE_P_LCA = "2"; 
 const DEFAULT_NODE_Q_LCA = "7";
 

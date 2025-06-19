@@ -51,7 +51,8 @@ Because of the BST property, the LCA can be found more efficiently (without find
 -   File system hierarchies (finding the nearest common directory for two files).
 -   Computational biology (e.g., comparing gene sequences).
 
-AlgoVista's visualizer primarily demonstrates the **Path Finding** approach for general binary trees.`,
+AlgoVista's visualizer primarily demonstrates the **Path Finding** approach for general binary trees.
+`,
   timeComplexities: { 
       best: "Path Finding: O(N), Recursive Single Pass: O(N), BST: O(H)", 
       average: "Path Finding: O(N), Recursive Single Pass: O(N), BST (balanced): O(log N)", 

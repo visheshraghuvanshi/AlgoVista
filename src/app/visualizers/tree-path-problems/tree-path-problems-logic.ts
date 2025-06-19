@@ -1,5 +1,5 @@
 
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
 // Re-use tree parsing and initial building logic from binary-tree-traversal
 import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTree } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
 
@@ -8,10 +8,10 @@ export const TREE_PATH_SUM_LINE_MAP = {
   baseCaseNull: 2,
   baseCaseLeafCheck: 3,
   baseCaseLeafSumMatch: 4,
-  baseCaseLeafSumNoMatch: 5,
+  baseCaseLeafSumNoMatch: 5, // Conceptual, part of the else of sum match
   recursiveCallLeft: 6,
   recursiveCallRight: 7,
-  returnRecursiveResult: 8, // Conceptual line for when a recursive call returns
+  returnRecursiveResult: 8, // For returning true if either child path found, or false if not
 };
 
 // --- Global state for step generation ---
@@ -46,12 +46,12 @@ function mapTreeToVisualForPathSum(
 
         if (successfulPathNodeIds.includes(nodeId)) {
             color = "hsl(var(--success))"; // Green for successful path
-            textColor = "hsl(var(--success-foreground))";
+            textColor = "hsl(var(--success-foreground))"; // Ensure text is visible on green
         } else if (currentPathNodeIds.includes(nodeId)) {
              color = "hsl(var(--primary)/0.7)"; 
              textColor = "hsl(var(--primary-foreground))";
         }
-        if (currentDfsNodeId === nodeId && !successfulPathNodeIds.includes(nodeId)) { // Don't override success highlight
+        if (currentDfsNodeId === nodeId && !successfulPathNodeIds.includes(nodeId)) { 
             color = "hsl(var(--primary))"; 
             textColor = "hsl(var(--primary-foreground))";
         }
@@ -86,7 +86,7 @@ function mapTreeToVisualForPathSum(
         if(isFinite(minX) && isFinite(maxX)) {
             const treeWidth = maxX - minX;
             const currentCenterX = minX + treeWidth / 2;
-            const desiredCenterX = SVG_WIDTH / 2;
+            const desiredCenterX = SVG_WIDTH / 2; // SVG center
             const shiftX = desiredCenterX - currentCenterX;
 
             let scaleFactor = 1;
@@ -98,7 +98,8 @@ function mapTreeToVisualForPathSum(
                      node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
                 }
                 if(node.y !== undefined) {
-                    node.y = node.y; // Keep Y as is or apply minor scaling if needed
+                    // Scale Y position slightly less aggressively or keep fixed levels if preferred
+                    node.y = node.y; 
                 }
             });
         }
@@ -141,17 +142,15 @@ function hasPathSumRecursive(nodeId: string | null, currentSum: number, path: st
   const currentPathSum = currentSum + (node ? Number(node.value) : 0);
   const currentPathNodeIds = node ? [...path, nodeId] : [...path];
 
-  addPathSumStep(TREE_PATH_SUM_LINE_MAP.funcDeclare, `hasPathSum(node=${node?.value || 'null'}, currentSumToMatch=${targetSumGlobal - currentSum})`, nodeId, currentPathNodeIds, currentPathSum);
+  addPathSumStep(TREE_PATH_SUM_LINE_MAP.funcDeclare, `hasPathSum(node=${node?.value || 'null'}, currentPathSum=${currentPathSum}, remainingTarget=${targetSumGlobal - currentPathSum})`, nodeId, currentPathNodeIds, currentPathSum);
 
   if (!node) {
-    addPathSumStep(TREE_PATH_SUM_LINE_MAP.baseCaseNull, "Base case: Node is null. Path does not exist here.", nodeId, path, currentSum - (path.length > 0 ? Number(treeNodesMap.get(path[path.length-1])?.value) : 0));
+    addPathSumStep(TREE_PATH_SUM_LINE_MAP.baseCaseNull, "Base case: Node is null. Path does not sum to target.", nodeId, path, currentSum);
     return false;
   }
   
-  const newSumForChildren = targetSumGlobal - currentPathSum;
-
   if (!node.leftId && !node.rightId) { // Leaf node
-    addPathSumStep(TREE_PATH_SUM_LINE_MAP.baseCaseLeafCheck, `Leaf node ${node.value}. Checking if current path sum ${currentPathSum} == target ${targetSumGlobal}.`, nodeId, currentPathNodeIds, currentPathSum);
+    addPathSumStep(TREE_PATH_SUM_LINE_MAP.baseCaseLeafCheck, `Leaf node ${node.value}. Current path sum: ${currentPathSum}. Target: ${targetSumGlobal}.`, nodeId, currentPathNodeIds, currentPathSum);
     if (currentPathSum === targetSumGlobal) {
       pathFoundGlobal = true;
       finalPathNodeIdsGlobal = [...currentPathNodeIds];
@@ -164,7 +163,7 @@ function hasPathSumRecursive(nodeId: string | null, currentSum: number, path: st
   }
 
   if (node.leftId) {
-    addPathSumStep(TREE_PATH_SUM_LINE_MAP.recursiveCallLeft, `Try left child of ${node.value}. Remaining sum to find: ${newSumForChildren}.`, node.leftId, currentPathNodeIds, currentPathSum);
+    addPathSumStep(TREE_PATH_SUM_LINE_MAP.recursiveCallLeft, `Try left child of ${node.value}. Path sum so far: ${currentPathSum}.`, node.leftId, currentPathNodeIds, currentPathSum);
     if (hasPathSumRecursive(node.leftId, currentPathSum, currentPathNodeIds)) {
       addPathSumStep(TREE_PATH_SUM_LINE_MAP.returnRecursiveResult, `Path found in left subtree of ${node.value}. Return true.`, nodeId, currentPathNodeIds, currentPathSum, true);
       return true;
@@ -173,7 +172,7 @@ function hasPathSumRecursive(nodeId: string | null, currentSum: number, path: st
   }
 
   if (node.rightId) {
-    addPathSumStep(TREE_PATH_SUM_LINE_MAP.recursiveCallRight, `Try right child of ${node.value}. Remaining sum to find: ${newSumForChildren}.`, node.rightId, currentPathNodeIds, currentPathSum);
+    addPathSumStep(TREE_PATH_SUM_LINE_MAP.recursiveCallRight, `Try right child of ${node.value}. Path sum so far: ${currentPathSum}.`, node.rightId, currentPathNodeIds, currentPathSum);
     if (hasPathSumRecursive(node.rightId, currentPathSum, currentPathNodeIds)) {
       addPathSumStep(TREE_PATH_SUM_LINE_MAP.returnRecursiveResult, `Path found in right subtree of ${node.value}. Return true.`, nodeId, currentPathNodeIds, currentPathSum, true);
       return true;
@@ -181,7 +180,7 @@ function hasPathSumRecursive(nodeId: string | null, currentSum: number, path: st
     addPathSumStep(TREE_PATH_SUM_LINE_MAP.returnRecursiveResult, `No path in right subtree of ${node.value}.`, nodeId, currentPathNodeIds, currentPathSum);
   }
   
-  addPathSumStep(TREE_PATH_SUM_LINE_MAP.returnRecursiveResult, `No path sum found through node ${node.value}. Backtracking.`, nodeId, path, currentSum); // Show original path before this node was added
+  addPathSumStep(TREE_PATH_SUM_LINE_MAP.returnRecursiveResult, `No path sum found through node ${node.value}. Backtracking from this node.`, nodeId, path, currentSum); 
   return false;
 }
 
@@ -206,7 +205,7 @@ export const generatePathSumSteps = (treeString: string, targetSum: number): Tre
 
   treeNodesMap = new Map();
   bttVisualNodes.forEach(node => {
-      if(node.value !== null && node.id !== 'null-0' /* Ensure valid node */) {
+      if(node.value !== null && node.id !== 'null-0') {
           treeNodesMap.set(node.id, {
               id: node.id,
               value: node.value, 

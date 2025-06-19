@@ -130,7 +130,8 @@ export default function TreePathProblemsVisualizerPage() {
   
   useEffect(() => {
     handleReset();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -201,6 +202,9 @@ export default function TreePathProblemsVisualizerPage() {
                 <p className={`text-center font-semibold text-lg mt-2 ${pathFoundResult ? 'text-green-500' : 'text-red-500'}`}>
                     {pathFoundResult ? `Path Found! Sum: ${currentStep?.auxiliaryData?.currentSum}, Target: ${currentStep?.auxiliaryData?.targetSum}` : "No path with the target sum found."}
                 </p>
+            )}
+             {isFinished && pathFoundResult === null && steps.length > 1 && !steps[steps.length-1].message?.toLowerCase().includes("error") && currentStep?.message && !currentStep.message.toLowerCase().includes("error") &&(
+                 <p className="text-center font-semibold text-lg mt-2 text-red-500">Could not determine path (or nodes not found).</p>
             )}
             
             <div className="flex items-center justify-start pt-4 border-t">
