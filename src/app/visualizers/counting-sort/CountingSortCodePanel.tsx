@@ -72,7 +72,7 @@ export const COUNTING_SORT_CODE_SNIPPETS = {
     "#include <algorithm> // For std::max_element, std::fill",
     "void countingSort(std::vector<int>& arr) {",
     "    if (arr.empty()) return;",
-    "    int maxVal = *std::max_element(arr.begin(), arr.end());",
+    "    int maxVal = 0; if (!arr.empty()) maxVal = *std::max_element(arr.begin(), arr.end());",
     "    std::vector<int> count(maxVal + 1, 0);",
     "    std::vector<int> output(arr.size());",
     "    for (int num : arr) { count[num]++; }",
@@ -201,3 +201,4 @@ export function CountingSortCodePanel({ currentLine }: CountingSortCodePanelProp
     </Card>
   );
 }
+

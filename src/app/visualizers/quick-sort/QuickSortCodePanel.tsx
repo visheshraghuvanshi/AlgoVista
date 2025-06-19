@@ -125,3 +125,4 @@ export function QuickSortCodePanel({ codeSnippets, currentLine }: QuickSortCodeP
     </Card>
   );
 }
+

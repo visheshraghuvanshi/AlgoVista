@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const QUICK_SORT_LINE_MAP = {
   quickSortBase: 1, 
@@ -126,3 +126,4 @@ export const generateQuickSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
   addStep(lm.quickSortEnd, arr, [], [], "Array is sorted", null, null);
   return localSteps;
 };
+

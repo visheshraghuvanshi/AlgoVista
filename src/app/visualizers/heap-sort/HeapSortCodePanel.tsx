@@ -125,3 +125,4 @@ export function HeapSortCodePanel({ codeSnippets, currentLine }: HeapSortCodePan
     </Card>
   );
 }
+

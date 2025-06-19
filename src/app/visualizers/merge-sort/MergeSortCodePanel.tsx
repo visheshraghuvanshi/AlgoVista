@@ -125,3 +125,4 @@ export function MergeSortCodePanel({ codeSnippets, currentLine }: MergeSortCodeP
     </Card>
   );
 }
+

@@ -1,5 +1,5 @@
 
-import type { CountingSortStep } from '@/types';
+import type { CountingSortStep } from './types'; // Local import
 
 export const COUNTING_SORT_LINE_MAP = {
   funcDeclare: 1,
@@ -118,3 +118,4 @@ export const generateCountingSortSteps = (arrToSort: number[]): CountingSortStep
   addStep(localSteps, lm.funcEnd, arr, "Algorithm finished.");
   return localSteps;
 };
+

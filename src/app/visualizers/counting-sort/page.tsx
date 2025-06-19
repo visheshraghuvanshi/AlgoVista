@@ -4,16 +4,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { CountingSortVisualizationPanel } from './CountingSortVisualizationPanel';
-import { CountingSortCodePanel } from './CountingSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { CountingSortStep } from '@/types';
+import { CountingSortVisualizationPanel } from './CountingSortVisualizationPanel'; // Local import
+import { CountingSortCodePanel } from './CountingSortCodePanel';  // Local import
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { CountingSortStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { generateCountingSortSteps } from './counting-sort-logic';
-import { algorithmMetadata } from './metadata'; 
-import { COUNTING_SORT_CODE_SNIPPETS } from './CountingSortCodePanel';
+import { generateCountingSortSteps } from './counting-sort-logic'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
+import { COUNTING_SORT_CODE_SNIPPETS } from './CountingSortCodePanel'; // Import snippets
 
 const DEFAULT_ANIMATION_SPEED = 600; 
 const MIN_SPEED = 100; 
@@ -24,10 +24,10 @@ export default function CountingSortVisualizerPage() {
     
   const [inputValue, setInputValue] = useState('4,2,2,8,3,3,1');
 
-  const [steps, setSteps] = useState<CountingSortStep[]>([]);
+  const [steps, setSteps] = useState<CountingSortStep[]>([]); // Local specific step type
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
-  const [currentStepData, setCurrentStepData] = useState<CountingSortStep | null>(null);
+  const [currentStepData, setCurrentStepData] = useState<CountingSortStep | null>(null); // Local specific step type
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -71,18 +71,19 @@ export default function CountingSortVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(newSteps.length <=1);
+      setIsFinished(newSteps.length <= 1); 
+
 
       if (newSteps.length > 0) {
         setCurrentStepData(newSteps[0]);
       } else { 
-        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed"});
+        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed", countArray:[], outputArray:[]});
       }
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
         setCurrentStepData(null);
-        setIsPlaying(false); setIsFinished(false);
+        setIsPlaying(false); setIsFinished(true); 
     }
   }, [inputValue, parseInput]);
 
@@ -136,7 +137,7 @@ export default function CountingSortVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
+    if (isFinished || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
@@ -157,7 +158,7 @@ export default function CountingSortVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false);
-    setIsFinished(false);
+    setIsFinished(false); 
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
     }
@@ -168,14 +169,14 @@ export default function CountingSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) {
+  if (!algorithmMetadata) { // Check against local metadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -200,7 +201,7 @@ export default function CountingSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description} (Note: Input numbers must be non-negative for this visualization).
+            {currentStepData?.message || algorithmMetadata.description} (Note: Input non-negative integers, max 99 for this visualization).
           </p>
         </div>
 
@@ -232,7 +233,7 @@ export default function CountingSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>

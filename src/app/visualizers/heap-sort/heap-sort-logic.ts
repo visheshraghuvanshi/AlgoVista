@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const HEAP_SORT_LINE_MAP = {
   heapSortStart: 1,
@@ -140,3 +140,4 @@ export const generateHeapSortSteps = (arrToSort: number[]): AlgorithmStep[] => {
   addStep(lm.heapSortEnd, arr, [], [], "Heap Sort finished", null);
   return localSteps;
 };
+

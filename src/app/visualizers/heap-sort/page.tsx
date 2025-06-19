@@ -4,12 +4,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { HeapSortCodePanel } from './HeapSortCodePanel';
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
-import type { AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata } from './types'; // Local import
+import type { AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { HEAP_SORT_LINE_MAP, generateHeapSortSteps } from './heap-sort-logic';
@@ -170,7 +170,7 @@ export default function HeapSortVisualizerPage() {
 
   const [inputValue, setInputValue] = useState('5,1,9,3,7,4,6,2,8');
 
-  const [steps, setSteps] = useState<AlgorithmStep[]>([]);
+  const [steps, setSteps] = useState<AlgorithmStep[]>([]); // Local type
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [displayedData, setDisplayedData] = useState<number[]>([]);
@@ -311,6 +311,7 @@ export default function HeapSortVisualizerPage() {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
+
     setIsPlaying(false);
      if (animationTimeoutRef.current) {
       clearTimeout(animationTimeoutRef.current);
@@ -339,7 +340,14 @@ export default function HeapSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  if (!algorithmMetadata) {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
+
+  if (!algorithmMetadata) { // Check against local metadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -354,13 +362,6 @@ export default function HeapSortVisualizerPage() {
       </div>
     );
   }
-
-  const algoDetails: AlgorithmDetailsProps = {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -411,14 +412,10 @@ export default function HeapSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-         <AlgorithmDetailsCard
-            title={algoDetails.title}
-            description={algoDetails.description}
-            timeComplexities={algoDetails.timeComplexities}
-            spaceComplexity={algoDetails.spaceComplexity}
-        />
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
+

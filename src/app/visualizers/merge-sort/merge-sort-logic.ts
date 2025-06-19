@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const MERGE_SORT_LINE_MAP = {
   mergeSortBase: 1, 
@@ -148,3 +148,4 @@ export const generateMergeSortSteps = (arrToSort: number[]): AlgorithmStep[] => 
   addStep(lm.mergeFunctionEnd, arr, [], [], arr.map((_, i) => i), "Array is sorted", null); 
   return localSteps;
 };
+
