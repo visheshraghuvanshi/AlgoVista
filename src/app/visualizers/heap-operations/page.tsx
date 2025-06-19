@@ -1,17 +1,18 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel'; // Re-using for tree display
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
 import { HeapOperationsCodePanel } from './HeapOperationsCodePanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AlgorithmDetailsProps } from './types'; // Local import
+import type { HeapOperationType } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateHeapSteps, HEAP_OPERATION_LINE_MAPS } from './heap-operations-logic';
-import type { HeapOperationType } from './heap-operations-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +31,7 @@ export default function HeapOperationsPage() {
   const { toast } = useToast();
 
   const [heapArrayInput, setHeapArrayInput] = useState('4,10,3,5,1');
-  const [operationValue, setOperationValue] = useState('2'); // For insert
+  const [operationValue, setOperationValue] = useState('2'); 
   const [selectedOperation, setSelectedOperation] = useState<HeapOperationType>('buildMinHeap');
   
   const [steps, setSteps] = useState<TreeAlgorithmStep[]>([]);
@@ -53,12 +54,10 @@ export default function HeapOperationsPage() {
 
 
   useEffect(() => {
-    // Initial build when component mounts or when heapArrayInput changes IF selectedOp is build
     if (selectedOperation === 'buildMinHeap') {
-      heapDataRef.current = heapArrayInput.split(',').map(s => s.trim()).filter(s => s!== '').map(Number).filter(n => !isNaN(n));
+      heapDataRef.current = heapArrayInput.split(',').map(s => s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
       handleOperation('buildMinHeap', heapArrayInput);
     } else {
-      // If not building, ensure the display reflects the current heapDataRef based on last build/op
       const { nodes, edges } = generateHeapSteps(heapDataRef, 'classDefinition')[0] || {nodes: [], edges: []};
       setCurrentNodes(nodes);
       setCurrentEdges(edges);
@@ -70,8 +69,7 @@ export default function HeapOperationsPage() {
          setCurrentMessage("Heap is empty. Enter initial array and Build, or Insert values.");
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heapArrayInput, selectedOperation]); // Re-evaluate if initial array or selected op changes
+  }, [heapArrayInput, selectedOperation]); // Re-evaluate if initial array or selected op changes // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -96,7 +94,6 @@ export default function HeapOperationsPage() {
 
     if (opType === 'buildMinHeap') {
         valuesForBuild = primaryValue || heapArrayInput;
-        // heapDataRef is updated within generateHeapSteps for 'build' itself
     } else if (opType === 'insertMinHeap') {
         const opValStr = primaryValue || operationValue;
         if (opValStr.trim() === "") {
@@ -109,7 +106,6 @@ export default function HeapOperationsPage() {
             return;
         }
     } else if (opType === 'classDefinition') {
-        // Just show current structure, no actual operation steps
         const { nodes, edges } = generateHeapSteps(heapDataRef, 'classDefinition')[0] || {nodes: [], edges: []};
         setCurrentNodes(nodes);
         setCurrentEdges(edges);
@@ -124,7 +120,7 @@ export default function HeapOperationsPage() {
     }
     
     const newSteps = generateHeapSteps(
-      heapDataRef, // Pass the ref for modifications
+      heapDataRef, 
       opType,
       valueForOp,
       valuesForBuild 
@@ -138,7 +134,7 @@ export default function HeapOperationsPage() {
     if (newSteps.length > 0) {
         updateStateFromStep(0);
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
-        if (lastStepMsg && opType !== 'buildMinHeap' && opType !== 'classDefinition' && newSteps.length > 1) { // Avoid toast for initial build display
+        if (lastStepMsg && opType !== 'buildMinHeap' && opType !== 'classDefinition' && newSteps.length > 1) { 
             const opDisplay = opType.replace(/([A-Z])/g, ' $1').trim();
             toast({ title: `${opDisplay}`, description: lastStepMsg, variant: "default", duration: 3000 });
         } else if (opType === 'buildMinHeap' && newSteps.length > 1 && lastStepMsg) {
@@ -186,8 +182,8 @@ export default function HeapOperationsPage() {
     const defaultInitialArray = '4,10,3,5,1';
     setHeapArrayInput(defaultInitialArray);
     setOperationValue('2');
-    heapDataRef.current = []; // Clear internal heap state
-    setSelectedOperation('buildMinHeap'); // This will trigger build via useEffect
+    heapDataRef.current = []; 
+    setSelectedOperation('buildMinHeap'); 
     setCurrentMessage("Heap reset. Building new tree with default values.");
   };
   
@@ -243,7 +239,7 @@ export default function HeapOperationsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationValue">Value for Insert</Label>
-                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue} />
+                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'classDefinition'} />
               </div>
             </div>
             <Button onClick={()=>handleOperation(selectedOperation, isOperationWithValue ? operationValue : heapArrayInput)} disabled={isPlaying || selectedOperation === 'classDefinition'}>

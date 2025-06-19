@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, LocateFixed, Binary, FastForward, Gauge, Sigma } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
+
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
 import { TreePathProblemsCodePanel } from './TreePathProblemsCodePanel'; 
 import { generatePathSumSteps, TREE_PATH_SUM_LINE_MAP } from './tree-path-problems-logic'; 
+import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1800;
-const DEFAULT_TREE_INPUT = "5,4,8,11,null,13,4,7,2,null,null,null,1"; // Example from LeetCode Path Sum
+const DEFAULT_TREE_INPUT = "5,4,8,11,null,13,4,7,2,null,null,null,1"; 
 const DEFAULT_TARGET_SUM = "22";
 
 export default function TreePathProblemsVisualizerPage() {
@@ -67,6 +69,17 @@ export default function TreePathProblemsVisualizerPage() {
         return;
     }
 
+    const parsedInput = parseTreeInput(treeInputValue);
+    if (!parsedInput) {
+        toast({title: "Invalid Tree", description: "Please ensure tree input is correct (e.g., '5,3,8,1,null,7,9').", variant: "destructive"});
+        setSteps([]); setCurrentStep(null); setIsFinished(true); setPathFoundResult(null);
+        setInitialDisplayTree({nodes: [], edges: []});
+        return;
+    }
+    const { nodes: iNodes, edges: iEdges } = initialBuildTreeForDisplay(parsedInput);
+    setInitialDisplayTree({nodes: iNodes, edges: iEdges});
+
+
     const newSteps = generatePathSumSteps(treeInputValue, target);
     setSteps(newSteps);
     setCurrentStepIndex(0);
@@ -83,7 +96,7 @@ export default function TreePathProblemsVisualizerPage() {
             toast({ title: "Path Sum Result", description: pathMessage });
         }
     } else {
-        setCurrentStep(null); // Clear visual if no steps
+        setCurrentStep(null);
     }
   }, [treeInputValue, targetSumInput, toast, updateVisualStateFromStep]);
   
@@ -115,6 +128,11 @@ export default function TreePathProblemsVisualizerPage() {
     setPathFoundResult(null);
   };
   
+  useEffect(() => {
+    handleReset();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
@@ -125,8 +143,9 @@ export default function TreePathProblemsVisualizerPage() {
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>;}
   if (!algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;}
   
-  const displayNodes = currentStep?.nodes || [];
-  const displayEdges = currentStep?.edges || [];
+  const displayNodes = currentStep?.nodes && currentStep.nodes.length > 0 ? currentStep.nodes : initialDisplayTree.nodes;
+  const displayEdges = currentStep?.edges && currentStep.edges.length > 0 ? currentStep.edges : initialDisplayTree.edges;
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -135,7 +154,7 @@ export default function TreePathProblemsVisualizerPage() {
         <div className="mb-8 text-center">
           <Sigma className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
-            {algorithmMetadata.title}: Path Sum
+            {algorithmMetadata.title}
           </h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || "Find a root-to-leaf path that sums to a target."}</p>
         </div>
@@ -207,4 +226,3 @@ export default function TreePathProblemsVisualizerPage() {
     </div>
   );
 }
-

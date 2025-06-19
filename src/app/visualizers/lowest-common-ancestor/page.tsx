@@ -4,18 +4,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, LocateFixed, Binary, FastForward, Gauge } from 'lucide-react'; 
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, LocateFixed, Binary, FastForward, Gauge, Sigma } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel'; // Re-use
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
 import { LowestCommonAncestorCodePanel } from './LowestCommonAncestorCodePanel'; 
 import { generateLCASteps, LCA_LINE_MAP } from './lca-logic'; 
 import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
@@ -23,14 +23,19 @@ import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1800;
+const DEFAULT_TREE_INPUT = "5,3,8,1,4,7,9,null,2"; 
+const DEFAULT_TARGET_SUM = "22"; // Not used for LCA, but from template
+const DEFAULT_NODE_P_LCA = "2"; 
+const DEFAULT_NODE_Q_LCA = "7";
+
 
 export default function LCAVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   
-  const [treeInputValue, setTreeInputValue] = useState("5,3,8,1,4,7,9,null,2"); 
-  const [nodePValue, setNodePValue] = useState("2"); // Changed default to use node '2'
-  const [nodeQValue, setNodeQValue] = useState("7"); // Changed default
+  const [treeInputValue, setTreeInputValue] = useState(DEFAULT_TREE_INPUT); 
+  const [nodePValue, setNodePValue] = useState(DEFAULT_NODE_P_LCA);
+  const [nodeQValue, setNodeQValue] = useState(DEFAULT_NODE_Q_LCA);
   
   const [steps, setSteps] = useState<TreeAlgorithmStep[]>([]);
   const [currentStep, setCurrentStep] = useState<TreeAlgorithmStep | null>(null);
@@ -53,11 +58,10 @@ export default function LCAVisualizerPage() {
       const currentS = steps[stepIndex];
       setCurrentStep(currentS);
       if (stepIndex === steps.length - 1 && currentS.message?.toLowerCase().includes("lca found")) {
-         const lcaHighlightId = currentS.auxiliaryData?.lcaHighlightIds?.slice(-1)[0]; // Last one in highlights is LCA
-         const lcaNode = currentS.nodes.find(n => n.id === lcaHighlightId);
-         setLcaResult(lcaNode?.value ?? "Error");
+         const lcaVal = currentS.auxiliaryData?.lcaValue;
+         setLcaResult(lcaVal !== undefined ? lcaVal : "Error");
       } else if (stepIndex === steps.length - 1 && !currentS.message?.toLowerCase().includes("lca found")) {
-         setLcaResult(null); // Clear if not found or error
+         setLcaResult(null); 
       }
     }
   }, [steps]);
@@ -75,10 +79,14 @@ export default function LCAVisualizerPage() {
         setSteps([]); setCurrentStep(null); setIsFinished(true); setLcaResult(null);
         return;
     }
+     if (pVal == qVal) { // Use == for loose comparison string/number
+        toast({title: "Same Nodes", description: "Node P and Node Q must be different.", variant: "destructive"});
+        return;
+    }
 
     const parsedInput = parseTreeInput(treeInputValue);
     if (!parsedInput) {
-        toast({title: "Invalid Tree", description: "Please ensure tree input is correct.", variant: "destructive"});
+        toast({title: "Invalid Tree", description: "Please ensure tree input is correct (e.g., '5,3,8,1,null,7,9').", variant: "destructive"});
         setSteps([]); setCurrentStep(null); setIsFinished(true); setLcaResult(null);
         setInitialDisplayTree({nodes: [], edges: []});
         return;
@@ -98,10 +106,8 @@ export default function LCAVisualizerPage() {
         updateVisualStateFromStep(0);
         const lastStep = newSteps[newSteps.length-1];
         if (lastStep.message?.toLowerCase().includes("lca found")) {
-            const lcaHighlightId = lastStep.auxiliaryData?.lcaHighlightIds?.slice(-1)[0];
-            const lcaNode = lastStep.nodes.find(n => n.id === lcaHighlightId);
-            const finalLcaValue = lcaNode?.value;
-            setLcaResult(finalLcaValue ?? "Error");
+            const finalLcaValue = lastStep.auxiliaryData?.lcaValue;
+            setLcaResult(finalLcaValue !== undefined ? finalLcaValue : "Error");
             if (finalLcaValue !== undefined) {
                 toast({ title: "LCA Process Complete", description: `LCA of P='${pVal}' and Q='${qVal}' is ${finalLcaValue}.` });
             }
@@ -114,6 +120,7 @@ export default function LCAVisualizerPage() {
   }, [treeInputValue, nodePValue, nodeQValue, toast, updateVisualStateFromStep]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -134,20 +141,14 @@ export default function LCAVisualizerPage() {
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
-    setIsPlaying(false); setIsFinished(true); // Reset to initial, non-playing state
-    setTreeInputValue("5,3,8,1,4,7,9,null,2"); 
-    setNodePValue("2"); setNodeQValue("7");
+    setIsPlaying(false); setIsFinished(true); 
+    setTreeInputValue(DEFAULT_TREE_INPUT); 
+    setNodePValue(DEFAULT_NODE_P_LCA); setNodeQValue(DEFAULT_NODE_Q_LCA);
     setLcaResult(null);
-    // handleGenerateSteps will be called by useEffect due to input changes
-    // For an immediate visual reset to an empty/default tree, you might need to call something like:
-    // const parsed = parseTreeInput("5,3,8,1,4,7,9,null,2");
-    // const {nodes, edges} = initialBuildTreeForDisplay(parsed || []);
-    // setInitialDisplayTree({nodes, edges});
-    // setCurrentStep(null); setSteps([]);
   };
   
   useEffect(() => {
-    handleReset(); // Initial setup call
+    handleReset();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -197,7 +198,7 @@ export default function LCAVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div className="space-y-1">
-                    <Label htmlFor="lcaTreeInput">Tree Input (comma-sep, level-order, 'null' for empty)</Label>
+                    <Label htmlFor="lcaTreeInput">Tree Input (comma-sep, level-order, 'null')</Label>
                     <Input id="lcaTreeInput" value={treeInputValue} onChange={e => setTreeInputValue(e.target.value)} placeholder="e.g., 5,3,8,1,4,null,9" disabled={isPlaying}/>
                 </div>
                 <div className="space-y-1">
@@ -213,7 +214,7 @@ export default function LCAVisualizerPage() {
             {isFinished && lcaResult !== null && (
                 <p className="text-center font-semibold text-lg mt-2">LCA Result: <span className="text-green-500">{lcaResult.toString()}</span></p>
             )}
-            {isFinished && lcaResult === null && steps.length > 1 && !steps[steps.length-1].message?.toLowerCase().includes("error") && currentStep?.message && !currentStep.message.toLowerCase().includes("error") &&(
+             {isFinished && lcaResult === null && steps.length > 1 && !steps[steps.length-1].message?.toLowerCase().includes("error") && currentStep?.message && !currentStep.message.toLowerCase().includes("error") &&(
                  <p className="text-center font-semibold text-lg mt-2 text-red-500">LCA could not be determined (or nodes not found).</p>
             )}
             

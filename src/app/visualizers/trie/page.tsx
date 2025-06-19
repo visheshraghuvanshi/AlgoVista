@@ -4,26 +4,25 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, TrieStep, TrieNodeInternal } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, TrieStep, TrieNodeInternal } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, SpellCheck, Binary, PlusCircle, SearchIcon, CaseSensitive } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, SpellCheck, PlusCircle, SearchIcon, CaseSensitive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from "@/components/ui/slider";
 import { TrieVisualizationPanel } from './TrieVisualizationPanel';
 import { TrieCodePanel } from './TrieCodePanel';
 import { generateTrieSteps, createInitialTrie, TRIE_LINE_MAP } from './trie-logic';
+import type { TrieOperationType } from './types'; // Local import
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
-
-type TrieOperationType = 'insert' | 'search' | 'startsWith' | 'init';
 
 export default function TrieVisualizerPage() {
   const { toast } = useToast();
@@ -47,7 +46,6 @@ export default function TrieVisualizerPage() {
 
   useEffect(() => { 
     setIsClient(true); 
-    // Initial display of empty trie
     const initialTrieState = createInitialTrie();
     trieRef.current = initialTrieState;
     const initStep = generateTrieSteps(initialTrieState, 'init', '')[0];
@@ -62,8 +60,12 @@ export default function TrieVisualizerPage() {
   const handleExecuteOperation = () => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const word = wordInput.trim();
-    if (!word) {
+    const word = wordInput.trim().toLowerCase(); // Standardize to lowercase
+     if (!/^[a-z]*$/.test(word) && word !== "") {
+        toast({title: "Invalid Input", description: "Please enter words containing only lowercase English letters.", variant: "destructive"});
+        return;
+    }
+    if (!word && selectedOperation !== 'init') {
         toast({title: "Input Needed", description: "Please enter a word for the operation.", variant: "destructive"});
         return;
     }
@@ -80,14 +82,19 @@ export default function TrieVisualizerPage() {
 
     if (newSteps.length > 0) {
         updateVisualStateFromStep(0);
-        // Update trieRef with the final state of the Trie after the operation
         if (newSteps[newSteps.length - 1].nodes && selectedOperation === 'insert') {
-            // The logic itself modifies trieRef.current.nodesMap
-            // For insert, update the list of inserted words
             if (!insertedWords.includes(word)) {
                 setInsertedWords(prev => [...prev, word].sort());
             }
         }
+        // Display final result of search/startsWith via toast
+        const lastStep = newSteps[newSteps.length-1];
+        if (lastStep.operation === 'search' && lastStep.found !== undefined) {
+            toast({title: "Search Result", description: `Word "${lastStep.currentWord}" ${lastStep.found ? 'found.' : 'not found.'}`});
+        } else if (lastStep.operation === 'startsWith' && lastStep.found !== undefined) {
+            toast({title: "StartsWith Result", description: `Prefix "${lastStep.currentWord}" ${lastStep.found ? 'exists.' : 'does not exist.'}`});
+        }
+
     } else {
         setCurrentStep({ ...currentStep!, message: "Operation did not produce steps or encountered an issue." });
     }
@@ -138,7 +145,7 @@ export default function TrieVisualizerPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <TrieVisualizationPanel step={currentStep} />
+            <TrieVisualizationPanel step={currentStep ? {...currentStep, auxiliaryData: {...currentStep.auxiliaryData, insertedWords: insertedWords}} : null} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <TrieCodePanel currentLine={currentStep?.currentLine ?? null} selectedOperation={selectedOperation} />
@@ -161,7 +168,7 @@ export default function TrieVisualizerPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="wordInputTrie">Word / Prefix (max 15 chars)</Label>
+                <Label htmlFor="wordInputTrie">Word / Prefix (lowercase, max 15 chars)</Label>
                 <Input id="wordInputTrie" value={wordInput} onChange={e => setWordInput(e.target.value.toLowerCase())} maxLength={15} disabled={isPlaying} />
               </div>
                <Button onClick={handleExecuteOperation} disabled={isPlaying} className="w-full md:w-auto self-end">
@@ -185,12 +192,6 @@ export default function TrieVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
-             <div className="mt-2 p-2 border rounded-md bg-background">
-                <p className="text-xs font-semibold text-muted-foreground">Current Words in Trie:</p>
-                <div className="flex flex-wrap gap-1 text-xs">
-                    {insertedWords.length > 0 ? insertedWords.map((w, i) => <Badge key={i} variant="secondary">{w}</Badge>) : "(empty)"}
-                </div>
-            </div>
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -199,4 +200,3 @@ export default function TrieVisualizerPage() {
     </div>
   );
 }
-

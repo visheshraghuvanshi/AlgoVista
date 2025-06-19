@@ -1,5 +1,5 @@
 
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'tree-path-problems',
@@ -7,7 +7,68 @@ export const algorithmMetadata: AlgorithmMetadata = {
   category: 'Trees',
   difficulty: 'Medium',
   description: 'Finds if a root-to-leaf path exists in a binary tree such that the sum of node values along the path equals a given target sum.',
-  longDescription: 'The Root-to-Leaf Path Sum problem is a common tree traversal challenge. Given a binary tree and a target sum, the goal is to determine if there exists a path from the root node to any leaf node where the sum of the values of the nodes along that path equals the target sum. A leaf node is a node with no children.\\n\\nAlgorithm Steps (DFS-based Recursive Approach):\\n1. If the current node is null (empty tree or end of a branch), return false (no path here).\\n2. Subtract the current node\'s value from the target sum to get the remaining sum needed from its children.\\n3. If the current node is a leaf node (no left and no right child):\\n   a. Check if the remaining sum is zero (i.e., current node\'s value equals what was needed). If so, a path is found, return true.\\n   b. Otherwise, this leaf path doesn\'t match, return false.\\n4. If not a leaf node, recursively call the function for the left child with the remaining sum.\\n5. If the left child call returns true, a path is found, so return true.\\n6. Otherwise, recursively call the function for the right child with the remaining sum.\\n7. Return the result of the right child call.\\n\\nThis approach systematically explores all root-to-leaf paths. The interactive visualizer demonstrates this DFS traversal, showing the current path being explored and the sum accumulated so far.',
+  longDescription: `The Root-to-Leaf Path Sum problem is a common tree traversal challenge where the goal is to determine if there exists a path from the root node to any leaf node such that the sum of the values of all nodes along that path equals a given target sum.
+
+A **leaf node** is defined as a node that has no children (both its left and right child pointers are null).
+
+### How it Works (DFS-based Recursive Approach):
+
+The problem is typically solved using a Depth-First Search (DFS) traversal. The core idea is to explore each possible root-to-leaf path while keeping track of the sum of node values encountered so far along the current path.
+
+1.  **Base Cases for Recursion**:
+    *   If the current node is \`null\` (i.e., we've gone beyond a leaf or the tree is empty), this path is invalid. Return \`false\`.
+    *   If the current node is a **leaf node**:
+        *   Check if the current node's value, when added to the sum accumulated so far from its ancestors, equals the \`targetSum\`. (Alternatively, subtract the current node's value from the \`targetSum\` passed down and check if the result is 0 at the leaf).
+        *   If it matches, a valid path is found. Return \`true\`.
+        *   Otherwise, this leaf path doesn't sum to the target. Return \`false\`.
+
+2.  **Recursive Step**:
+    *   For a non-leaf node, subtract its value from the \`targetSum\` to get the \`remainingSum\` that needs to be found in its subtrees.
+    *   Recursively call the path sum function for the left child, passing the \`remainingSum\`.
+    *   Recursively call the path sum function for the right child, passing the \`remainingSum\`.
+    *   If *either* of these recursive calls returns \`true\`, it means a path summing to the target was found in one of the subtrees. Therefore, the current node is part of a valid path. Return \`true\`.
+    *   If both recursive calls return \`false\`, no such path exists through the current node. Return \`false\`.
+
+### Example: Tree: Root=5, LeftChild=4, RightChild=8, TargetSum=22
+Path to P for 22 (example from LeetCode 112):
+\`\`\`
+    5
+   / \\
+  4   8
+ /   / \\
+11  13  4
+/ \\      \\
+7   2      1
+\`\`\`
+Target Sum = 22
+
+1.  \`hasPathSum(node=5, sum=22)\`: \`remaining = 22 - 5 = 17\`
+2.  Call \`hasPathSum(node=4, sum=17)\` (left): \`remaining = 17 - 4 = 13\`
+3.  Call \`hasPathSum(node=11, sum=13)\` (left-left): \`remaining = 13 - 11 = 2\`
+4.  Call \`hasPathSum(node=7, sum=2)\` (left-left-left): Leaf. \`sum (2) == node.val (7)\` is false. Return \`false\`.
+5.  Call \`hasPathSum(node=2, sum=2)\` (left-left-right): Leaf. \`sum (2) == node.val (2)\` is true. Return \`true\`.
+6.  Since call for node 2 returned \`true\`, node 11 returns \`true\`.
+7.  Since call for node 11 returned \`true\`, node 4 returns \`true\`.
+8.  Since call for node 4 returned \`true\`, node 5 returns \`true\`.
+Result: Path exists (e.g., 5 -> 4 -> 11 -> 2).
+
+### Characteristics:
+-   **DFS Traversal**: Explores each branch fully before backtracking.
+-   **State Management**: The key is to manage the \`currentSum\` or \`remainingSum\` correctly as the recursion unwinds.
+
+### Advantages:
+-   Relatively straightforward to implement using recursion.
+-   Visits each node at most once, leading to efficient time complexity.
+
+### Disadvantages:
+-   The recursive approach uses stack space proportional to the height of the tree, which can be O(N) in the worst case (for a skewed tree). An iterative DFS approach using an explicit stack can also be used.
+
+### Common Use Cases:
+-   Standard tree problem often asked in interviews.
+-   Can be adapted to find all paths that sum to a target, or paths with max/min sums, etc.
+-   Useful in scenarios where decisions are made based on accumulated values along a path in a hierarchical structure.
+
+The AlgoVista visualizer for this problem shows the DFS traversal, the current path being explored, the sum accumulated so far (or remaining sum needed), and highlights the final path if one is found.`,
   timeComplexities: {
     best: "O(N) in the best case (path found quickly).",
     average: "O(N) as it visits each node at most once.",
@@ -15,4 +76,3 @@ export const algorithmMetadata: AlgorithmMetadata = {
   },
   spaceComplexity: "O(H) for recursion stack, where H is the height of the tree. In the worst case (skewed tree), H can be N.",
 };
-    

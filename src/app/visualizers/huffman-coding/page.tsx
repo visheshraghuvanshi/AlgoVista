@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, HuffmanStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, HuffmanStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Binary } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { HuffmanCodingVisualizationPanel } from './HuffmanCodingVisualizationPanel';
 import { HuffmanCodingCodePanel } from './HuffmanCodingCodePanel';
-import { generateHuffmanCodingSteps } from './huffman-coding-logic';
+import { generateHuffmanCodingSteps, HUFFMAN_CODING_LINE_MAP } from './huffman-coding-logic';
 
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
@@ -52,9 +52,13 @@ export default function HuffmanCodingVisualizerPage() {
       setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
-    if (inputText.length > 50) { // Performance consideration
+    if (inputText.length > 50) { 
         toast({ title: "Input Too Long", description: "Consider shorter text for faster visualization (max 50 chars).", variant: "default"});
     }
+    if (new Set(inputText).size > 15) { // Too many unique chars makes tree wide
+        toast({ title: "Too Many Unique Chars", description: "Max 15 unique chars for better tree display.", variant: "default"});
+    }
+
 
     const newSteps = generateHuffmanCodingSteps(inputText);
     setSteps(newSteps);
@@ -87,7 +91,7 @@ export default function HuffmanCodingVisualizerPage() {
   };
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
-    setInputText(DEFAULT_HUFFMAN_INPUT); // This will trigger useEffect to regenerate steps
+    setInputText(DEFAULT_HUFFMAN_INPUT);
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -118,7 +122,7 @@ export default function HuffmanCodingVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-1 md:col-span-2">
-                <Label htmlFor="huffmanInputText">Input Text (max 50 chars)</Label>
+                <Label htmlFor="huffmanInputText">Input Text (max 50 chars, max 15 unique)</Label>
                 <Input id="huffmanInputText" value={inputText} onChange={e => setInputText(e.target.value)} maxLength={50} disabled={isPlaying}/>
               </div>
             </div>

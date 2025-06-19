@@ -3,9 +3,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { HuffmanStep, HuffmanFrequencyItem, HuffmanNodeForPQ, HuffmanCodeItem, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
-import { BinaryTreeVisualizationPanel } from '@/app/visualizers/binary-tree-traversal/BinaryTreeVisualizationPanel';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import type { HuffmanStep, HuffmanFrequencyItem, HuffmanNodeForPQ, HuffmanCodeItem, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from '@/components/ui/badge';
 
 interface HuffmanCodingVisualizationPanelProps {
