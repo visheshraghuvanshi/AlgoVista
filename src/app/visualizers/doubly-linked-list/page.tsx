@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local import
 import { DoublyLinkedListCodePanel } from './DoublyLinkedListCodePanel'; 
-import { LinkedListControlsPanel, type LinkedListOperation, ALL_OPERATIONS } from '@/components/algo-vista/LinkedListControlsPanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DOUBLY_LL_LINE_MAPS, generateDoublyLinkedListSteps } from './doubly-linked-list-logic';
@@ -18,7 +18,7 @@ const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
 
-const DLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition', 'traverse'];
+const DLL_AVAILABLE_OPS_LOCAL: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition', 'traverse'];
 
 
 export default function DoublyLinkedListPage() {
@@ -74,20 +74,22 @@ export default function DoublyLinkedListPage() {
         positionToUse = Number(posOrSecondList);
     }
 
-    const currentOpDetails = ALL_OPERATIONS.find(details => details.value === op);
-    if (currentOpDetails?.needsValue && operationValueToUse === undefined) {
+    const currentOpDetails = ALL_OPERATIONS_LOCAL.find(details => details.value === op);
+    if (currentOpDetails?.needsValue && (operationValueToUse === undefined || String(operationValueToUse).trim() === '')) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
         return;
     }
-    if (currentOpDetails?.needsPosition && positionToUse === undefined) {
+    if (currentOpDetails?.needsPosition && (positionToUse === undefined || String(positionToUse).trim() === '')) {
         toast({ title: "Position Required", description: `Please enter a position for ${op}.`, variant: "destructive" });
         return;
     }
+
 
     let listStringToUse = listStringForLogicRef.current;
     if (op === 'init') {
         listStringToUse = initialListStr;
     }
+
 
     const newSteps = generateDoublyLinkedListSteps(listStringToUse, op, operationValueToUse, positionToUse);
     setSteps(newSteps);
@@ -102,7 +104,7 @@ export default function DoublyLinkedListPage() {
 
        if (lastStep.status === 'failure') {
         toast({ title: "Operation Failed", description: lastStep.message, variant: "destructive" });
-      } else if (lastStep.status === 'success' || (lastStep.message && op !== 'init')) {
+      } else if (lastStep.status === 'success' || (lastStep.message && op !== 'init')) { 
         toast({ title: op.charAt(0).toUpperCase() + op.slice(1), description: lastStep.message });
       }
     } else {
@@ -111,12 +113,13 @@ export default function DoublyLinkedListPage() {
   }, [toast, updateVisualStateFromStep, initialListStr]);
   
   useEffect(() => { 
-    listStringForLogicRef.current = initialListStr;
+    listStringForLogicRef.current = initialListStr; 
     if (selectedOperation === 'init') {
       handleOperationExecution('init', initialListStr);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialListStr]);
+  }, [initialListStr]); 
+
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -158,22 +161,24 @@ export default function DoublyLinkedListPage() {
   }, []);
 
 
-  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
-  
+  if (!algorithmMetadata) {
+    return (
+      <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container mx-auto p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>
+    );
+  }
   const algoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="doubly" /></div>
+          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} tailId={currentTailId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="doubly" /></div>
           <div className="lg:w-2/5 xl:w-1/3"><DoublyLinkedListCodePanel currentLine={currentLine} currentOperation={selectedOperation} /></div>
         </div>
         <LinkedListControlsPanel
@@ -196,7 +201,7 @@ export default function DoublyLinkedListPage() {
                   setIsFinished(true);
               }
           }}
-          availableOperations={DLL_AVAILABLE_OPS}
+          availableOperations={DLL_AVAILABLE_OPS_LOCAL}
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
           isAlgoImplemented={true} minSpeed={MIN_SPEED} maxSpeed={MAX_SPEED}
         />
@@ -206,4 +211,3 @@ export default function DoublyLinkedListPage() {
     </div>
   );
 }
-

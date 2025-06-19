@@ -1,5 +1,5 @@
 
-import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from './types'; // Local import
 
 // Conceptual Line Maps - adjust based on actual code snippets shown
 export const DOUBLY_LL_LINE_MAPS: Record<string, Record<string, number>> = {
@@ -163,7 +163,6 @@ export const generateDoublyLinkedListSteps = (
 
       if (position === 0) { // Insert at head
         addStep(lineMap.posZeroCheck, `Position 0. Inserting at head.`, undefined, newNodeAtPosId);
-        newNodeAtPosId.nextId = headId; // This is wrong. newNodeAtPosId is string.
         actualListNodes.get(newNodeAtPosId)!.nextId = headId;
         if (headId) actualListNodes.get(headId)!.prevId = newNodeAtPosId;
         else tailId = newNodeAtPosId; // List was empty
@@ -231,7 +230,7 @@ export const generateDoublyLinkedListSteps = (
           actualListNodes.delete(deletedId);
           addStep(lineMap.end, `Deleted node at position ${position}.`, undefined,undefined,undefined,'success');
         } else {
-           addStep(lineMap.posNotFound, `Position ${position} out of bounds. Nothing deleted.`, undefined,undefined,undefined,'failure');
+           addStep(lineMap.posNotFound, `Position ${position} out of bounds. Nothing deleted. List length ${count}.`, undefined,undefined,undefined,'failure');
         }
       }
       break;
@@ -276,4 +275,3 @@ export const generateDoublyLinkedListSteps = (
   }
   return localSteps;
 };
-

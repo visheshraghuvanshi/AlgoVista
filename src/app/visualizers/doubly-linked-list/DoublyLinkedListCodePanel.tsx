@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
+import type { LinkedListOperation } from './types'; // Local import
 
 // Updated to include Python, Java, C++
 export const DOUBLY_LINKED_LIST_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {
@@ -153,7 +154,7 @@ export const DOUBLY_LINKED_LIST_OPERATIONS_CODE: Record<string, Record<string, s
   "C++": {
     structure: [
       "struct Node { int data; Node *next, *prev; Node(int d):data(d),next(nullptr),prev(nullptr){} };",
-      "class DoublyLinkedList { public: Node *head, *tail; DoublyLinkedList():head(nullptr),tail(nullptr){} };",
+      "class DoublyLinkedList{ public: Node *head, *tail; DoublyLinkedList():head(nullptr),tail(nullptr){} };",
     ],
     insertHead: [
       "    void insertHead(int data) { /* ... */ }",
@@ -162,7 +163,7 @@ export const DOUBLY_LINKED_LIST_OPERATIONS_CODE: Record<string, Record<string, s
       "    void insertTail(int data) { /* ... */ }",
     ],
     insertAtPosition: [
-      "    void insertAtPosition(int data, int position) { /* ... */ }",
+      "    void insertAtPosition(int data, int pos) { /* ... */ }",
     ],
     deleteByValue: [
       "    bool deleteByValue(int data) { /* ... */ }",
