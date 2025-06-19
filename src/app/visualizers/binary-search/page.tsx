@@ -173,7 +173,16 @@ export default function BinarySearchVisualizerPage() {
 
     if (parsedArray !== null && parsedTarget !== null) {
       if (notifySort) { 
-        setInputValue(parsedArray.join(','));
+        const sortedArrString = parsedArray.join(',');
+        if(inputValue !== sortedArrString) {
+            // This call to setInputValue will trigger the inputValue useEffect,
+            // which will then call generateSteps(true) again.
+            // The lastProcessedInputValueRef check should prevent an immediate deeper loop here.
+            setInputValue(sortedArrString); 
+            // Return to avoid generating steps with potentially old inputValue if setInputValue is async.
+            // The useEffect for inputValue will handle the new generation.
+            return; 
+        }
       }
       lastProcessedInputValueRef.current = parsedArray.join(',');
 
@@ -181,7 +190,7 @@ export default function BinarySearchVisualizerPage() {
       setSteps(newSteps);
       setCurrentStepIndex(0);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(newSteps.length <= 1);
 
       if (newSteps.length > 0) {
         const firstStep = newSteps[0];
@@ -204,32 +213,25 @@ export default function BinarySearchVisualizerPage() {
       setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
       setProcessingSubArrayRange(null); setPivotActualIndex(null);
       setIsPlaying(false);
-      setIsFinished(false);
+      setIsFinished(true); 
     }
-  }, [inputValue, targetValue, parseInput, parseTarget, toast, updateStateFromStep]);
+  }, [inputValue, targetValue, parseInput, parseTarget, toast, setInputValue, // Added setInputValue
+      setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, 
+      setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, 
+      setProcessingSubArrayRange, setPivotActualIndex]);
 
 
   useEffect(() => {
-    generateSteps(false); 
+    generateSteps(false); // Initial call and on targetValue change
   }, [targetValue, generateSteps]); 
 
   useEffect(() => {
+    // This effect handles changes to inputValue, including auto-sorting
     if (inputValue !== lastProcessedInputValueRef.current) {
-        const parsedArray = parseInput(inputValue, true); 
-        if (parsedArray) {
-            const newInputValueStr = parsedArray.join(',');
-            if (inputValue !== newInputValueStr) {
-                setInputValue(newInputValueStr); 
-            } else {
-                 generateSteps(true); 
-            }
-             lastProcessedInputValueRef.current = newInputValueStr;
-        } else {
-             generateSteps(true); 
-        }
+      generateSteps(true); // true to allow sorting notification and potentially set sorted inputValue
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, parseInput]); 
+  }, [inputValue, generateSteps]); // parseInput is a dependency of generateSteps
 
 
   useEffect(() => {
@@ -238,10 +240,6 @@ export default function BinarySearchVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -284,7 +282,9 @@ export default function BinarySearchVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps(true); 
+    setInputValue('1,2,3,4,5,6,7,8,9'); // Reset input, which will trigger useEffects
+    setTargetValue('7');
+    // generateSteps will be called by useEffect due to inputValue change
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
