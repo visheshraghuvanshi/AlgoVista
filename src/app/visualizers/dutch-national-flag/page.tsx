@@ -4,10 +4,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from './VisualizationPanel'; // Local import
-import { DutchNationalFlagCodePanel, DUTCH_NATIONAL_FLAG_CODE_SNIPPETS } from './DutchNationalFlagCodePanel'; 
-import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import { VisualizationPanel } from './VisualizationPanel'; // Localized import
+import { DutchNationalFlagCodePanel } from './DutchNationalFlagCodePanel'; 
+import { SortingControlsPanel } from './SortingControlsPanel'; // Localized import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Localized import
 import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react'; // Keep AlertTriangle for error states
@@ -27,7 +27,7 @@ export default function DutchNationalFlagVisualizerPage() {
   
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
+  
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [swappingIndices, setSwappingIndices] = useState<number[]>([]);
@@ -69,9 +69,9 @@ export default function DutchNationalFlagVisualizerPage() {
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
       setPivotActualIndex(currentS.pivotActualIndex || null);
-      setAuxiliaryData(currentS.auxiliaryData || null); // Ensure auxData is updated
+      setAuxiliaryData(currentS.auxiliaryData || null);
     }
-  }, [steps, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setPivotActualIndex, setAuxiliaryData]); // Added setters
+  }, [steps]);
   
   const generateSteps = useCallback(() => {
     if (animationTimeoutRef.current) {
@@ -96,7 +96,7 @@ export default function DutchNationalFlagVisualizerPage() {
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
         setPivotActualIndex(firstStep.pivotActualIndex || null);
-        setAuxiliaryData(firstStep.auxiliaryData || null); // Set auxData for the first step
+        setAuxiliaryData(firstStep.auxiliaryData || null);
       } else { 
         setDisplayedData(parsedArray); 
         setActiveIndices([]); setSwappingIndices([]); setSortedIndices([]); setCurrentLine(null);
@@ -210,7 +210,7 @@ export default function DutchNationalFlagVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <Layers className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> {/* Changed icon */}
+          <Layers className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" /> 
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
@@ -239,7 +239,6 @@ export default function DutchNationalFlagVisualizerPage() {
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <DutchNationalFlagCodePanel
-              codeSnippets={DUTCH_NATIONAL_FLAG_CODE_SNIPPETS}
               currentLine={currentLine}
             />
           </div>

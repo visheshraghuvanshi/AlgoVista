@@ -9,44 +9,121 @@ import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Define and export code snippets directly within this file
+export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
+  JavaScript: [
+    "function dutchNationalFlagSort(arr) {",             // 1
+    "  let low = 0, mid = 0, high = arr.length - 1;",    // 2
+    "  while (mid <= high) {",                           // 3
+    "    switch (arr[mid]) {",
+    "      case 0: // Element is 0",                     // 4
+    "        [arr[low], arr[mid]] = [arr[mid], arr[low]];", // 5
+    "        low++; mid++; break;",                       // 6
+    "      case 1: // Element is 1",                     // 8
+    "        mid++; break;",                             // 9
+    "      case 2: // Element is 2",                     // 11
+    "        [arr[mid], arr[high]] = [arr[high], arr[mid]];", // 12
+    "        high--; break;",                            // 13
+    "    }",                                             // (End switch) maps to 15 conceptually
+    "  }",                                               // 16
+    "  return arr;",                                      // 17
+    "}",                                                  // 18
+  ],
+  Python: [
+    "def dutch_national_flag_sort(arr):",
+    "    low, mid, high = 0, 0, len(arr) - 1",
+    "    while mid <= high:",
+    "        if arr[mid] == 0:",
+    "            arr[low], arr[mid] = arr[mid], arr[low]",
+    "            low += 1",
+    "            mid += 1",
+    "        elif arr[mid] == 1:",
+    "            mid += 1",
+    "        else: # arr[mid] == 2",
+    "            arr[mid], arr[high] = arr[high], arr[mid]",
+    "            high -= 1",
+    "    return arr",
+  ],
+  Java: [
+    "public class DutchNationalFlag {",
+    "    public static void sort(int[] arr) {",
+    "        int low = 0, mid = 0, high = arr.length - 1;",
+    "        int temp;",
+    "        while (mid <= high) {",
+    "            switch (arr[mid]) {",
+    "                case 0:",
+    "                    temp = arr[low]; arr[low] = arr[mid]; arr[mid] = temp;",
+    "                    low++; mid++; break;",
+    "                case 1:",
+    "                    mid++; break;",
+    "                case 2:",
+    "                    temp = arr[mid]; arr[mid] = arr[high]; arr[high] = temp;",
+    "                    high--; break;",
+    "            }",
+    "        }",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "#include <algorithm> // For std::swap",
+    "void dutchNationalFlagSort(std::vector<int>& arr) {",
+    "    int low = 0, mid = 0, high = arr.size() - 1;",
+    "    while (mid <= high) {",
+    "        switch (arr[mid]) {",
+    "            case 0:",
+    "                std::swap(arr[low++], arr[mid++]);",
+    "                break;",
+    "            case 1:",
+    "                mid++;",
+    "                break;",
+    "            case 2:",
+    "                std::swap(arr[mid], arr[high--]);",
+    "                break;",
+    "        }",
+    "    }",
+    "}",
+  ],
+};
+
+
 interface DutchNationalFlagCodePanelProps {
-  codeSnippets: { [language: string]: string[] };
+  // codeSnippets prop is removed as it's now internal
   currentLine: number | null;
 }
 
-export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchNationalFlagCodePanelProps) {
+export function DutchNationalFlagCodePanel({ currentLine }: DutchNationalFlagCodePanelProps) {
   const { toast } = useToast();
-
-  const languages = useMemo(() => Object.keys(codeSnippets || {}), [codeSnippets]);
-
+  // Use the internally defined snippets
+  const languages = useMemo(() => Object.keys(DUTCH_NATIONAL_FLAG_CODE_SNIPPETS), []);
+  
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
     if (languages.length > 0) {
       return languages.includes("JavaScript") ? "JavaScript" : languages[0];
     }
-    return "Info"; // Default if no languages or codeSnippets is initially empty/undefined
+    return "Info"; 
   });
 
-  // This effect ensures that selectedLanguage is valid if codeSnippets (and thus languages) changes.
   useEffect(() => {
-    if (languages.length > 0) {
-      // Only update if the current selectedLanguage is NOT in the new list of languages
-      if (!languages.includes(selectedLanguage)) {
-        setSelectedLanguage(languages.includes("JavaScript") ? "JavaScript" : languages[0]);
+    setSelectedLanguage(prevSelectedLang => {
+      if (languages.length > 0) {
+        if (languages.includes(prevSelectedLang)) {
+          return prevSelectedLang; 
+        }
+        return languages.includes("JavaScript") ? "JavaScript" : languages[0];
+      } else {
+        return "Info";
       }
-    } else {
-      // If there are no languages, default to "Info"
-      if (selectedLanguage !== "Info") {
-        setSelectedLanguage("Info");
-      }
-    }
-  }, [languages]); // Only re-run if the 'languages' array itself changes
+    });
+  }, [languages]);
 
   const handleSelectedLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
   };
 
   const handleCopyCode = () => {
-    const codeToCopy = codeSnippets[selectedLanguage]?.join('\n') || '';
+    // Use internal snippets
+    const codeToCopy = DUTCH_NATIONAL_FLAG_CODE_SNIPPETS[selectedLanguage as keyof typeof DUTCH_NATIONAL_FLAG_CODE_SNIPPETS]?.join('\n') || '';
     if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => {
@@ -59,14 +136,7 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
         toast({ title: "No Code to Copy", description: "No code available for selected language.", variant: "default" });
     }
   };
-  
-  const currentCodeLines = useMemo(() => {
-    return selectedLanguage === 'Info' || !codeSnippets[selectedLanguage] 
-           ? [] 
-           : (codeSnippets[selectedLanguage] || []);
-  }, [selectedLanguage, codeSnippets]);
 
-  // tabValue ensures that the Tabs component always receives a valid value from the 'languages' list or 'Info'
   const tabValue = useMemo(() => {
     if (languages.includes(selectedLanguage)) {
       return selectedLanguage;
@@ -76,6 +146,10 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
     }
     return "Info";
   }, [languages, selectedLanguage]);
+  
+  const currentCodeLines = useMemo(() => {
+    return selectedLanguage === 'Info' ? [] : (DUTCH_NATIONAL_FLAG_CODE_SNIPPETS[selectedLanguage as keyof typeof DUTCH_NATIONAL_FLAG_CODE_SNIPPETS] || []);
+  }, [selectedLanguage]);
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -98,17 +172,17 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
                 </TabsTrigger>
               ))}
             </TabsList>
-            {/* Render TabsContent only for the currently active tabValue to potentially optimize */}
-            <TabsContent key={tabValue} value={tabValue} className="m-0 flex-grow overflow-hidden flex flex-col">
-                <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            {languages.map((lang) => (
+              <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
+                <ScrollArea key={`${lang}-scrollarea`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                   <pre className="font-code text-sm p-4">
-                    {currentCodeLines.map((line, index) => (
+                    {(DUTCH_NATIONAL_FLAG_CODE_SNIPPETS[lang as keyof typeof DUTCH_NATIONAL_FLAG_CODE_SNIPPETS] || []).map((line, index) => (
                       <div
-                        key={`${tabValue}-line-${index}`}
+                        key={`${lang}-line-${index}`}
                         className={`px-2 py-0.5 rounded transition-colors duration-150 ${
-                          index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"
+                          index + 1 === currentLine && lang === tabValue ? "bg-accent text-accent-foreground" : "text-foreground"
                         }`}
-                        aria-current={index + 1 === currentLine ? "step" : undefined}
+                        aria-current={index + 1 === currentLine && lang === tabValue ? "step" : undefined}
                       >
                         <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
                           {index + 1}
@@ -119,10 +193,11 @@ export function DutchNationalFlagCodePanel({ codeSnippets, currentLine }: DutchN
                   </pre>
                 </ScrollArea>
               </TabsContent>
+            ))}
           </Tabs>
         ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
-            <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+            <ScrollArea key={`${tabValue}-scrollarea-single`} className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
               <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this visualizer.</p>
               </pre>
