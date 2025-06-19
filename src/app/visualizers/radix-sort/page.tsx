@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './RadixSortVisualizationPanel'; // Changed to specific import
 import { RadixSortCodePanel, RADIX_SORT_CODE_SNIPPETS } from './RadixSortCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { RADIX_SORT_LINE_MAP, generateRadixSortSteps } from './radix-sort-logic';
@@ -183,14 +183,14 @@ export default function RadixSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata) {
+  if (!algorithmMetadata) { // Check against local metadata
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -221,29 +221,10 @@ export default function RadixSortVisualizerPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <VisualizationPanel 
-              data={displayedData} 
-              activeIndices={activeIndices}
-              swappingIndices={swappingIndices}
-              sortedIndices={sortedIndices}
-              processingSubArrayRange={processingSubArrayRange}
-              pivotActualIndex={pivotActualIndex}
-            />
-             {auxiliaryData && (
-                <Card className="mt-4">
-                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Current Pass Info</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
-                        {auxiliaryData.exponent !== undefined && <p><strong>Exponent (Digit Place):</strong> {auxiliaryData.exponent}</p>}
-                        {auxiliaryData.countArray && <p><strong>Count Array (Digit Frequencies):</strong> <span className="font-mono text-xs break-all">[{auxiliaryData.countArray.join(', ')}]</span></p>}
-                         {auxiliaryData.outputArray && <p><strong>Output Array (Current Pass):</strong> <span className="font-mono text-xs break-all">[{auxiliaryData.outputArray.join(', ')}]</span></p>}
-                         {auxiliaryData.currentDigitProcessing !== undefined && <p><strong>Processing Digit:</strong> {auxiliaryData.currentDigitProcessing}</p>}
-                    </CardContent>
-                </Card>
-            )}
+            <VisualizationPanel step={steps[currentStepIndex]} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <RadixSortCodePanel 
-              codeSnippets={RADIX_SORT_CODE_SNIPPETS} 
               currentLine={currentLine}
             />
           </div>
@@ -266,10 +247,9 @@ export default function RadixSortVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-        {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
-

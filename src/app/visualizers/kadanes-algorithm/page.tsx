@@ -4,15 +4,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VisualizationPanel } from '@/components/algo-vista/visualization-panel';
+import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { KadanesAlgorithmCodePanel, KADANES_ALGORITHM_CODE_SNIPPETS_REFINED } from './KadanesAlgorithmCodePanel'; 
-import { SortingControlsPanel } from '@/components/algo-vista/sorting-controls-panel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmStep } from '@/types';
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { KADANES_ALGORITHM_LINE_MAP, generateKadanesAlgorithmSteps } from './kadanes-algorithm-logic';
 import { algorithmMetadata } from './metadata'; 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added
+
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -25,7 +27,7 @@ export default function KadanesAlgorithmVisualizerPage() {
   
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
+  
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [swappingIndices, setSwappingIndices] = useState<number[]>([]);
@@ -158,14 +160,14 @@ export default function KadanesAlgorithmVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algorithmMetadata || !algoDetails) {
+  if (!algorithmMetadata || !localAlgoDetails) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -233,10 +235,9 @@ export default function KadanesAlgorithmVisualizerPage() {
             maxSpeed={MAX_SPEED}
           />
         </div>
-         <AlgorithmDetailsCard {...algoDetails} />
+         <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-

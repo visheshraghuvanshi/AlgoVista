@@ -6,18 +6,20 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { BucketSortVisualizationPanel } from './BucketSortVisualizationPanel';
 import { BucketSortCodePanel } from './BucketSortCodePanel'; 
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { BucketSortStep } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { BucketSortStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Rows, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react'; // Using Rows as an icon for buckets
+import { AlertTriangle, Rows, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react'; 
 import { generateBucketSortSteps } from './bucket-sort-logic';
 import { algorithmMetadata } from './metadata'; 
-import { BUCKET_SORT_CODE_SNIPPETS } from './BucketSortCodePanel'; // Import snippets
+import { BUCKET_SORT_CODE_SNIPPETS } from './BucketSortCodePanel'; 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { SortingControlsPanel } from './SortingControlsPanel'; // Local import
+
 
 const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100; 
@@ -87,13 +89,13 @@ export default function BucketSortVisualizerPage() {
       if (newSteps.length > 0) {
         setCurrentStepData(newSteps[0]);
       } else { 
-        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed"});
+        setCurrentStepData({array: parsedData, activeIndices:[], swappingIndices:[], sortedIndices:[], currentLine: null, message:"Input processed", phase: 'initial', buckets: Array.from({length:numBuckets}, (_,i)=>({id:i, elements:[]}))});
       }
     } else {
         setSteps([]);
         setCurrentStepIndex(0);
         setCurrentStepData(null);
-        setIsPlaying(false); setIsFinished(false);
+        setIsPlaying(false); setIsFinished(true); 
     }
   }, [inputValue, numBuckets, parseInput, toast]);
 
@@ -108,10 +110,6 @@ export default function BucketSortVisualizerPage() {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         updateStateFromStep(nextStepIndex);
-        if (nextStepIndex === steps.length - 1) {
-          setIsPlaying(false);
-          setIsFinished(true);
-        }
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length -1) {
         setIsPlaying(false);
@@ -131,10 +129,16 @@ export default function BucketSortVisualizerPage() {
 
   const handleNumBucketsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value, 10);
-    if (!isNaN(val) && val > 0 && val <= 10) {
+    if (!isNaN(val) && val > 0 && val <= 10) { // Limit buckets for viz
         setNumBuckets(val);
     } else if (e.target.value === "") {
         setNumBuckets(DEFAULT_NUM_BUCKETS); 
+    } else if (val > 10) {
+        toast({title: "Max Buckets", description: "Visualizer supports up to 10 buckets.", variant: "default"});
+        setNumBuckets(10);
+    } else if (val <= 0 && e.target.value !== "") {
+        toast({title: "Min Buckets", description: "At least 1 bucket required.", variant: "default"});
+        setNumBuckets(1);
     }
   };
 
@@ -156,7 +160,7 @@ export default function BucketSortVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length -1) {
+    if (isFinished || currentStepIndex >= steps.length -1) {
        toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step again." : "No data or steps to visualize.", variant: "default" });
       return;
     }
@@ -177,7 +181,7 @@ export default function BucketSortVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false);
-    setIsFinished(false);
+    setIsFinished(false); 
     if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
     }
@@ -189,7 +193,7 @@ export default function BucketSortVisualizerPage() {
     setAnimationSpeed(speedValue);
   };
 
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -222,7 +226,7 @@ export default function BucketSortVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {algorithmMetadata.description} (Input non-negative integers for best results with this visualization).
+            {algorithmMetadata.description} (Note: Assumes non-negative integers for visualization).
           </p>
         </div>
 
@@ -237,22 +241,22 @@ export default function BucketSortVisualizerPage() {
           </div>
         </div>
         
-        <Card className="shadow-xl rounded-xl mb-6">
+         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Input</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="customInput" className="text-sm font-medium">
-                  Input Array (comma-separated non-negative numbers)
+                <Label htmlFor="customInputBS" className="text-sm font-medium">
+                  Input Array (non-negative, comma-separated)
                 </Label>
                 <Input
-                  id="customInput"
+                  id="customInputBS"
                   type="text"
                   value={inputValue}
                   onChange={(e) => handleInputChange(e.target.value)}
                   placeholder="e.g., 29,25,3,49"
-                  className="w-full text-base"
-                  disabled={isPlaying || !isAlgoImplemented}
+                  className="w-full"
+                  disabled={isPlaying}
                 />
               </div>
               <div className="space-y-2">
@@ -265,62 +269,56 @@ export default function BucketSortVisualizerPage() {
                   value={numBuckets}
                   onChange={handleNumBucketsChange}
                   min="1" max="10"
-                  className="w-full text-base"
-                  disabled={isPlaying || !isAlgoImplemented}
+                  className="w-full"
+                  disabled={isPlaying}
                 />
               </div>
             </div>
-             <div className="flex items-center justify-start">
+            <Button onClick={generateSteps} disabled={isPlaying} className="w-full md:w-auto">Run / Reset Steps</Button>
+            <div className="flex items-center justify-start pt-4 border-t">
                 <Button
                     onClick={handleReset}
                     variant="outline"
-                    disabled={isPlaying && isAlgoImplemented}
+                    disabled={isPlaying}
                     aria-label="Reset algorithm and input"
                 >
-                    <RotateCcw className="mr-2 h-4 w-4" /> Reset Data & Algorithm
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset to Defaults
                 </Button>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                 {!isPlaying ? (
-                  <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || !isAlgoImplemented} aria-label="Play algorithm animation" className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
+                  <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
                     <Play className="mr-2 h-5 w-5" /> Play
                   </Button>
                 ) : (
-                  <Button onClick={handlePause} aria-label="Pause algorithm animation" className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg" disabled={!isAlgoImplemented}>
+                  <Button onClick={handlePause} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
                     <Pause className="mr-2 h-5 w-5" /> Pause
                   </Button>
                 )}
-                <Button onClick={handleStep} variant="outline" disabled={isPlaying || isFinished || steps.length <=1 || !isAlgoImplemented} aria-label="Step forward in algorithm animation" size="lg">
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg">
                   <SkipForward className="mr-2 h-5 w-5" /> Step
                 </Button>
               </div>
 
               <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
                 <Label htmlFor="speedControl" className="text-sm font-medium flex items-center">
-                  <Gauge className="mr-2 h-4 w-4 text-muted-foreground" /> Animation Speed (Delay)
+                  <Gauge className="mr-2 h-4 w-4 text-muted-foreground" /> Animation Speed
                 </Label>
                 <div className="flex items-center gap-2">
                   <FastForward className="h-4 w-4 text-muted-foreground transform rotate-180" />
-                  <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => handleSpeedChange(v[0])} disabled={isPlaying || !isAlgoImplemented} className="flex-grow" />
+                  <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => handleSpeedChange(v[0])} disabled={isPlaying} className="flex-grow" />
                   <FastForward className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
-            {!isAlgoImplemented && (
-              <p className="text-sm text-center text-amber-500 dark:text-amber-400">
-                Interactive visualization for this algorithm is not yet implemented. Input and controls are disabled.
-              </p>
-            )}
           </CardContent>
         </Card>
-        {algoDetails && <AlgorithmDetailsCard {...algoDetails} />}
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>
   );
 }
-
-
