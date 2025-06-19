@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -53,16 +54,16 @@ export default function DSUVisualizerPage() {
         toast({ title: "Invalid Size", description: `Number of elements must be between 1 and ${MAX_NUM_ELEMENTS}.`, variant: "destructive" });
         return;
     }
-    const initialSteps = generateDSUSteps(numElements, 'initial', 0, 0); // Dummy ops for init
+    const initialSteps = generateDSUSteps(numElements, 'initial', 0, 0); 
     if (initialSteps.length > 0) {
         const initState = initialSteps[0];
         dsuStructureRef.current = { parent: [...initState.parentArray], rank: [...(initState.rankArray || [])] };
         setCurrentStep(initState);
-        setSteps([initState]); // Only show initial state
-        setIsFinished(true); // No animation for init
+        setSteps([initState]); 
+        setIsFinished(true); 
         setCurrentStepIndex(0);
     }
-  }, [numElements, toast]);
+  }, [numElements, toast, setCurrentStep, setSteps, setIsFinished, setCurrentStepIndex]);
 
   useEffect(() => {
     initializeDSU();
@@ -74,11 +75,11 @@ export default function DSUVisualizerPage() {
     }
   }, [steps]);
   
-  const handleExecuteOperation = () => {
+  const handleExecuteOperation = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const elA = parseInt(elementAInput, 10);
-    const elB = currentOperation === 'union' ? parseInt(elementBInput, 10) : -1; // -1 if not union
+    const elB = currentOperation === 'union' ? parseInt(elementBInput, 10) : -1; 
 
     if (isNaN(elA) || (currentOperation === 'union' && isNaN(elB))) {
       toast({ title: "Invalid Input", description: "Element(s) must be numbers.", variant: "destructive" });
@@ -93,26 +94,23 @@ export default function DSUVisualizerPage() {
       return;
     }
 
-
     const newSteps = generateDSUSteps(numElements, currentOperation, elA, elB, dsuStructureRef.current);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) {
-        updateVisualStateFromStep(0);
-        // Update the ref with the final state from the operation
+        setCurrentStep(newSteps[0]); // Directly set the first step's state
         const lastStep = newSteps[newSteps.length - 1];
         dsuStructureRef.current = { parent: [...lastStep.parentArray], rank: [...(lastStep.rankArray || [])] };
     } else {
-        // Re-show current DSU state if op didn't produce steps (e.g. error)
         setCurrentStep({
             parentArray: [...dsuStructureRef.current.parent],
             rankArray: [...dsuStructureRef.current.rank],
             operation: 'initial', elementsInvolved: [], message: "Error in operation.", currentLine: null, activeIndices: [],
         });
     }
-  };
+  }, [elementAInput, currentOperation, elementBInput, numElements, toast, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setCurrentStep]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -134,13 +132,13 @@ export default function DSUVisualizerPage() {
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(true);
-    setNumElements(DEFAULT_NUM_ELEMENTS); // This triggers re-initialization via useEffect
+    setNumElements(DEFAULT_NUM_ELEMENTS); 
     setElementAInput("1");
     setElementBInput("2");
     setCurrentOperation('union');
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; // Use local type
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; 
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -224,3 +222,4 @@ export default function DSUVisualizerPage() {
     </div>
   );
 }
+

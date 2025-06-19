@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -14,11 +15,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { HashTableVisualizationPanel from './HashTableVisualizationPanel';
+import { HashTableVisualizationPanel } from './HashTableVisualizationPanel';
 import { HashTableCodePanel } from './HashTableCodePanel';
 import { generateHashTableSteps, createInitialHashTable, HASH_TABLE_LINE_MAP } from './hash-table-logic';
 
-const DEFAULT_ANIMATION_SPEED = 700; // Not used as operations are discrete
+const DEFAULT_ANIMATION_SPEED = 700; 
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
 const DEFAULT_TABLE_SIZE = 7;
@@ -34,11 +35,18 @@ export default function HashTableVisualizerPage() {
   const [valueInput, setValueInput] = useState<HashValue>("Alice");
   const [selectedOperation, setSelectedOperation] = useState<HashTableOperationType>('insert');
   
+  const [steps, setSteps] = useState<HashTableStep[]>([]);
   const [currentStep, setCurrentStep] = useState<HashTableStep | null>(null);
-  // Steps array and animation controls are less relevant for discrete operations
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const hashTableRef = useRef<HashTableEntry[][]>(createInitialHashTable(DEFAULT_TABLE_SIZE));
-  const [insertedWords, setInsertedWords] = useState<string[]>([]); // For displaying current state
+  const [insertedWords, setInsertedWords] = useState<string[]>([]); 
+
 
   useEffect(() => { 
     setIsClient(true); 
@@ -56,14 +64,23 @@ export default function HashTableVisualizerPage() {
         activeIndices: [], swappingIndices: [], sortedIndices: [],
     };
     setCurrentStep(initialStep);
-    setInsertedWords([]); // Clear displayed words on re-init
-  }, [tableSize, toast]);
+    setSteps([initialStep]); 
+    setInsertedWords([]); 
+    setIsFinished(true);
+    setCurrentStepIndex(0);
+  }, [tableSize, toast, setCurrentStep, setSteps, setIsFinished, setCurrentStepIndex, setInsertedWords]);
 
   useEffect(() => {
     initializeTable();
   }, [tableSize, initializeTable]);
   
-  const handleExecuteOperation = () => {
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
+  }, [steps, setCurrentStep]);
+  
+  const handleExecuteOperation = useCallback(() => {
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    
     const currentKeyStr = String(keyInput).trim();
     const currentValueStr = String(valueInput).trim();
 
@@ -80,13 +97,18 @@ export default function HashTableVisualizerPage() {
         currentValue = isNaN(Number(currentValueStr)) ? currentValueStr : Number(currentValueStr);
     }
 
-    // For discrete operations, we just generate the final state after the operation
-    const resultingSteps = generateHashTableSteps(hashTableRef.current, tableSize, selectedOperation as 'insert'|'search'|'delete', currentKey, currentValue);
-    const finalStep = resultingSteps[resultingSteps.length - 1]; // The outcome of the operation
-    
-    if (finalStep) {
-        hashTableRef.current = [...finalStep.buckets]; // Persist the new state
-        setCurrentStep(finalStep); // Display the final state
+    const newSteps = generateHashTableSteps(hashTableRef.current, tableSize, selectedOperation as 'insert'|'search'|'delete', currentKey, currentValue);
+    setSteps(newSteps);
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+
+    if (newSteps.length > 0) {
+        const finalStep = newSteps[newSteps.length - 1];
+        setCurrentStep(finalStep); 
+        if(finalStep.buckets) {
+            hashTableRef.current = [...finalStep.buckets];
+        }
         
         if (selectedOperation === 'insert') {
             const wordKey = String(finalStep.currentKey);
@@ -99,27 +121,49 @@ export default function HashTableVisualizerPage() {
             const wordKey = String(finalStep.currentKey);
             setInsertedWords(prev => prev.filter(w => w !== wordKey));
         }
-
         toast({title: `${selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)} Complete`, description: finalStep.message});
     } else {
-        // Show current state if operation failed or produced no steps
-        const currentTableState = [...hashTableRef.current];
-         setCurrentStep({
-            buckets: currentTableState, tableSize, operation: selectedOperation,
+        setCurrentStep({
+            buckets: [...hashTableRef.current], tableSize, operation: selectedOperation,
             message: "Operation did not change state or an error occurred.", currentLine: null,
             activeIndices: [], swappingIndices: [], sortedIndices: []
         });
     }
-  };
+  },[keyInput, valueInput, selectedOperation, tableSize, toast, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setCurrentStep, insertedWords, setInsertedWords]);
 
+  useEffect(() => {
+    if (selectedOperation === 'init') {
+        initializeTable();
+    }
+  }, [selectedOperation, initializeTable]);
+
+  useEffect(() => {
+    if (isPlaying && currentStepIndex < steps.length - 1) {
+      animationTimeoutRef.current = setTimeout(() => {
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+      }, animationSpeed);
+    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
+      setIsPlaying(false); setIsFinished(true);
+    }
+    return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+
+  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
+  const handlePause = () => setIsPlaying(false);
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    if (nextIdx === steps.length - 1) setIsFinished(true);
+  };
   const handleReset = () => { 
-    setTableSize(DEFAULT_TABLE_SIZE); // This will trigger initializeTable via useEffect
+    setIsPlaying(false); setIsFinished(true);
+    setTableSize(DEFAULT_TABLE_SIZE); 
     setKeyInput("name");
     setValueInput("Alice");
     setSelectedOperation('insert');
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata }; // Use local type
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -152,9 +196,10 @@ export default function HashTableVisualizerPage() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="htOperationSelect">Operation</Label>
-                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as HashTableOperationType)}>
+                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as HashTableOperationType)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="init">Initialize/Clear Table</SelectItem>
                     <SelectItem value="insert">Insert (Key, Value)</SelectItem>
                     <SelectItem value="search">Search (Key)</SelectItem>
                     <SelectItem value="delete">Delete (Key)</SelectItem>
@@ -163,25 +208,37 @@ export default function HashTableVisualizerPage() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="keyInputHT">Key (string/number)</Label>
-                <Input id="keyInputHT" value={keyInput.toString()} onChange={e => setKeyInput(e.target.value)} />
+                <Input id="keyInputHT" value={keyInput.toString()} onChange={e => setKeyInput(e.target.value)} disabled={isPlaying && selectedOperation !== 'init'} />
               </div>
               {selectedOperation === 'insert' && (
                 <div className="space-y-1">
                   <Label htmlFor="valueInputHT">Value (string/number)</Label>
-                  <Input id="valueInputHT" value={valueInput.toString()} onChange={e => setValueInput(e.target.value)} />
+                  <Input id="valueInputHT" value={valueInput.toString()} onChange={e => setValueInput(e.target.value)} disabled={isPlaying && selectedOperation !== 'init'} />
                 </div>
               )}
             </div>
-            <Button onClick={handleExecuteOperation} className="w-full md:w-auto">
-                {selectedOperation === 'insert' ? <PlusCircle /> : selectedOperation === 'search' ? <SearchIcon /> : <Trash2 />}
+            <Button onClick={handleExecuteOperation} disabled={isPlaying} className="w-full md:w-auto">
+                {selectedOperation === 'insert' ? <PlusCircle /> : selectedOperation === 'search' ? <SearchIcon /> : selectedOperation === 'delete' ? <Trash2 /> : <RotateCcw />}
                 Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
             </Button>
             
             <div className="flex items-center justify-start pt-4 border-t">
-                <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Hash Table & Controls</Button>
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset All</Button>
             </div>
-             <div className="mt-2 p-2 border rounded-md bg-background">
-                <p className="text-xs font-semibold text-muted-foreground">Current Keys in Table:</p>
+             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="flex gap-2">
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                             : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+              </div>
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
+                <Label htmlFor="speedControl">Animation Speed</Label>
+                <Slider id="speedControl" min={MIN_SPEED} max={MAX_SPEED} step={50} value={[animationSpeed]} onValueChange={(v) => setAnimationSpeed(v[0])} disabled={isPlaying} />
+                <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
+              </div>
+            </div>
+            <div className="mt-2 p-2 border rounded-md bg-background">
+                <p className="text-xs font-semibold text-muted-foreground">Keys in Table:</p>
                 <div className="flex flex-wrap gap-1 text-xs">
                     {insertedWords.length > 0 ? insertedWords.map((w, i) => <Badge key={i} variant="secondary">{w}</Badge>) : "(empty)"}
                 </div>
@@ -194,3 +251,4 @@ export default function HashTableVisualizerPage() {
     </div>
   );
 }
+

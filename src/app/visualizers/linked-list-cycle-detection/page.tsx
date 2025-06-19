@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -26,11 +27,11 @@ export default function LinkedListCycleDetectionPage() {
   const { toast } = useToast();
 
   const [initialListStr, setInitialListStr] = useState('1,2,3,4,5,6');
-  const [cycleConnectsTo, setCycleConnectsTo] = useState('3'); // Value where tail connects to form cycle
+  const [cycleConnectsTo, setCycleConnectsTo] = useState('3'); 
 
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-
+  
   const [currentNodes, setCurrentNodes] = useState<LinkedListNodeVisual[]>([]);
   const [currentHeadId, setCurrentHeadId] = useState<string | null>(null);
   const [currentAuxPointers, setCurrentAuxPointers] = useState<Record<string, string | null>>({});
@@ -54,8 +55,8 @@ export default function LinkedListCycleDetectionPage() {
       setCurrentLine(currentS.currentLine);
       if (currentS.isCycleDetected !== undefined) setIsCycleActuallyDetected(currentS.isCycleDetected);
     }
-  }, [steps]);
-
+  }, [steps, setCurrentNodes, setCurrentHeadId, setCurrentAuxPointers, setCurrentMessage, setCurrentLine, setIsCycleActuallyDetected]);
+  
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
 
@@ -66,10 +67,23 @@ export default function LinkedListCycleDetectionPage() {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-    setIsCycleActuallyDetected(false); // Reset detection status
-    if (newSteps.length > 0) updateVisualStateFromStep(0);
-    else setCurrentNodes([]);
-  }, [initialListStr, cycleConnectsTo, updateVisualStateFromStep]);
+    setIsCycleActuallyDetected(false); 
+    if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setCurrentNodes(firstStep.nodes);
+        setCurrentHeadId(firstStep.headId ?? null);
+        setCurrentAuxPointers(firstStep.auxiliaryPointers || {});
+        setCurrentMessage(firstStep.message);
+        setCurrentLine(firstStep.currentLine);
+        if (firstStep.isCycleDetected !== undefined) setIsCycleActuallyDetected(firstStep.isCycleDetected);
+    } else {
+        setCurrentNodes([]);
+        setCurrentHeadId(null);
+        setCurrentAuxPointers({});
+        setCurrentMessage("Error generating steps or empty list.");
+        setCurrentLine(null);
+    }
+  }, [initialListStr, cycleConnectsTo, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setIsCycleActuallyDetected, setCurrentNodes, setCurrentHeadId, setCurrentAuxPointers, setCurrentMessage, setCurrentLine]);
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -95,7 +109,7 @@ export default function LinkedListCycleDetectionPage() {
     setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4,5,6'); setCycleConnectsTo('3');
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { // Use local type
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { 
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -153,3 +167,4 @@ export default function LinkedListCycleDetectionPage() {
     </div>
   );
 }
+
