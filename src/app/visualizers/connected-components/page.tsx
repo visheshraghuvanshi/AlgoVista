@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { ConnectedComponentsCodePanel } from './ConnectedComponentsCodePanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, SigmaSquare } from 'lucide-react';
@@ -96,7 +96,7 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
       "    def dfs(u, current_component):",
       "        visited[u] = True",
       "        current_component.append(u)",
-      "        for v in graph.get(u, []):",
+      "        for v in graph.get(u, []):", # Assume keys are already int
       "            if not visited[v]:",
       "                dfs(v, current_component)",
       "    for i in range(num_nodes):",
@@ -238,7 +238,7 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
     directed: [
       "#include <vector>",
       "#include <stack>",
-      "#include <algorithm>", // For std::fill
+      "#include <algorithm> // For std::fill",
       "// adj: std::vector<std::vector<int>> for nodes 0 to V-1",
       "void dfs1_cpp(int u, const std::vector<std::vector<int>>& adj, std::vector<bool>& visited, std::stack<int>& st) {",
       "    visited[u] = true;",
@@ -297,9 +297,8 @@ const MAX_SPEED = 2000;
 export default function ConnectedComponentsVisualizerPage() {
   const { toast } = useToast();
   
-  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0;3:4;4:5;5:3;6'); 
-  const [startNodeValue, setStartNodeValue] = useState('0'); // Not used by current logic but kept for panel consistency
-  const [isDirected, setIsDirected] = useState(false);
+  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0;3:4;4:5;5:3;6'); // Example with multiple components
+  const [isDirected, setIsDirected] = useState(false); // Default to undirected
   
   const [steps, setSteps] = useState<GraphAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -355,15 +354,14 @@ export default function ConnectedComponentsVisualizerPage() {
       if (newSteps[0].message && (newSteps[0].message.includes("Invalid") || newSteps[0].message.includes("empty")) ){
            toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
       }
+      const lastStepMsg = newSteps[newSteps.length-1]?.message || "";
+      if (lastStepMsg.includes("Found")) { // Check for "Found X components" or "Found X SCCs"
+           toast({title:"Components Found!", description: lastStepMsg});
+      }
+
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
-      const edgesFromAdj: GraphEdge[] = [];
-      parsedData.adj.forEach((neighbors, sourceId) => {
-        neighbors.forEach(targetId => edgesFromAdj.push({id: `${sourceId}-${targetId}`, source:sourceId, target:targetId, color: 'grey', isDirected}));
-      });
-      setCurrentEdges(edgesFromAdj);
-      setCurrentAuxiliaryData([]);
-      setCurrentLine(null);
+      setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
     }
   }, [graphInputValue, isDirected, toast, updateStateFromStep]);
 
@@ -388,7 +386,6 @@ export default function ConnectedComponentsVisualizerPage() {
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
   const handleGraphInputChange = (value: string) => setGraphInputValue(value);
-  const handleStartNodeChange = (value: string) => setStartNodeValue(value);
 
   const handlePlay = () => {
     if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
@@ -423,7 +420,6 @@ export default function ConnectedComponentsVisualizerPage() {
     setGraphInputValue('0:1;1:2;2:0;3:4;4:5;5:3;6');
     setIsDirected(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // generateSteps will be called by useEffect due to input changes
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -464,12 +460,12 @@ export default function ConnectedComponentsVisualizerPage() {
         </div>
         <div className="flex items-center space-x-2 mb-4 justify-center">
           <Switch
-            id="directed-toggle"
+            id="directed-toggle-cc"
             checked={isDirected}
             onCheckedChange={setIsDirected}
             disabled={isPlaying}
           />
-          <Label htmlFor="directed-toggle">Directed Graph (for SCCs)</Label>
+          <Label htmlFor="directed-toggle-cc">Directed Graph (for SCCs via Kosaraju's)</Label>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -495,7 +491,7 @@ export default function ConnectedComponentsVisualizerPage() {
             onReset={handleReset}
             onGraphInputChange={handleGraphInputChange}
             graphInputValue={graphInputValue}
-            showStartNodeInput={false} // Not strictly needed, DFS starts from all unvisited
+            showStartNodeInput={false} // Not strictly needed for CC/SCC as it processes all nodes
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -503,8 +499,8 @@ export default function ConnectedComponentsVisualizerPage() {
             isAlgoImplemented={isAlgoImplemented}
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
-            graphInputPlaceholder="e.g., 0:1;1:2;3:4 (undirected or directed)"
-            onExecute={generateSteps}
+            graphInputPlaceholder="e.g., 0:1;1:2;3:4 (adj list)"
+            onExecute={generateSteps} 
             executeButtonText={isDirected ? "Find SCCs" : "Find Components"}
           />
         </div>
@@ -514,3 +510,4 @@ export default function ConnectedComponentsVisualizerPage() {
     </div>
   );
 }
+

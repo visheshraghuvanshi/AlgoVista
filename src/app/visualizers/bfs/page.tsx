@@ -1,13 +1,14 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { BfsCodePanel, BFS_CODE_SNIPPETS_ALL_LANG } from './BfsCodePanel'; 
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; // Ensure this path is correct
-import type { GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { GraphNode, GraphEdge, GraphAlgorithmStep, AlgorithmMetadata } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { BFS_LINE_MAP, generateBfsSteps, parseGraphInput } from './bfs-logic';
@@ -20,7 +21,7 @@ const MAX_SPEED = 2000;
 export default function BfsVisualizerPage() {
   const { toast } = useToast();
 
-  const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:0,3;2:0,4;3:1;4:2'); 
+  const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:0,3;2:0,4;3:1;4:2,5;5:4'); 
   const [startNodeValue, setStartNodeValue] = useState('0');
   
   const [steps, setSteps] = useState<GraphAlgorithmStep[]>([]);
@@ -223,3 +224,4 @@ export default function BfsVisualizerPage() {
     </div>
   );
 }
+

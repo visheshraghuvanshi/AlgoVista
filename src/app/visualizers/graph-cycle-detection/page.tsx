@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { GraphCycleDetectionCodePanel } from './GraphCycleDetectionCodePanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertOctagon, RefreshCwCcw } from 'lucide-react'; // RefreshCwCcw for cycle
@@ -244,6 +244,7 @@ export default function GraphCycleDetectionVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description);
 
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
@@ -435,7 +436,7 @@ export default function GraphCycleDetectionVisualizerPage() {
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
             graphInputPlaceholder="e.g., 0:1;1:2;2:0 (adj list)"
-            onExecute={generateSteps}
+            onExecute={generateSteps} 
             executeButtonText="Detect Cycles"
           />
         </div>
@@ -445,3 +446,4 @@ export default function GraphCycleDetectionVisualizerPage() {
     </div>
   );
 }
+

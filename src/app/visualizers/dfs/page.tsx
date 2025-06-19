@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { DfsCodePanel } from './DfsCodePanel'; 
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DFS_LINE_MAP, generateDfsSteps, parseGraphInput } from './dfs-logic';
@@ -229,8 +229,8 @@ export default function DfsVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
-      toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated.", variant: "default" });
+    if (isFinished || currentStepIndex >= steps.length - 1) { // Check currentStepIndex to prevent overshooting
+      toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated or already at end.", variant: "default" });
       return;
     }
     setIsPlaying(false);
@@ -242,6 +242,7 @@ export default function DfsVisualizerPage() {
       if (nextStepIndex === steps.length - 1) setIsFinished(true);
     }
   };
+  
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
@@ -323,3 +324,4 @@ export default function DfsVisualizerPage() {
     </div>
   );
 }
+

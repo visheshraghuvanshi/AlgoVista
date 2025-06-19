@@ -4,16 +4,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { TopologicalSortCodePanel } from './TopologicalSortCodePanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, ListTree } from 'lucide-react';
 import { generateTopologicalSortSteps } from './topological-sort-logic';
-import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic';
+import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; // Reusing a compatible parser
 
 const TOPOLOGICAL_SORT_CODE_SNIPPETS = {
   JavaScript: [
@@ -355,3 +355,4 @@ export default function TopologicalSortVisualizerPage() {
     </div>
   );
 }
+
