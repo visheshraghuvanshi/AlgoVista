@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DPAlgorithmStep } from '@/types';
+import type { DPAlgorithmStep } from './types'; // Local import
 
 interface LCSVisualizationPanelProps {
   step: DPAlgorithmStep | null;
@@ -32,6 +32,7 @@ export function LCSVisualizationPanel({ step }: LCSVisualizationPanelProps) {
       if (highlight.type === 'current') return 'bg-accent text-accent-foreground scale-110 shadow-lg z-10';
       if (highlight.type === 'dependency') return 'bg-primary/30 dark:bg-primary/40';
       if (highlight.type === 'result') return 'bg-green-500/80 text-white'; // Used for final path
+      if (highlight.type === 'path') return 'bg-blue-500/30 dark:bg-blue-700/40'; // For highlighting cells during path reconstruction
     }
     if (r === 0 || c === 0) return 'bg-muted/50 text-muted-foreground'; // Base case cells
     return 'bg-card text-card-foreground';
@@ -60,7 +61,7 @@ export function LCSVisualizationPanel({ step }: LCSVisualizationPanelProps) {
             <tbody>
               {Array.from({ length: str1.length + 1 }).map((_, i) => (
                 <tr key={`row-${i}`}>
-                  <td className="p-1 border text-xs text-muted-foreground sticky left-0 bg-card z-20 font-mono">
+                  <td className="p-1 border text-xs text-muted-foreground sticky left-0 bg-card z-10 font-mono">
                     {i === 0 ? '"" (s1)' : str1[i-1]}
                   </td>
                   {(dpTable as number[][])[i]?.map((cellValue, j) => (

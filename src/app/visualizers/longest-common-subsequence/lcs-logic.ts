@@ -1,5 +1,5 @@
 
-import type { DPAlgorithmStep } from '@/types';
+import type { DPAlgorithmStep } from './types'; // Local import
 
 export const LCS_LINE_MAP = {
   functionDeclare: 1,

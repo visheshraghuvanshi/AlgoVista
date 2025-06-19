@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { EditDistanceVisualizationPanel } from './EditDistanceVisualizationPanel';
-import { EditDistanceCodePanel, EDIT_DISTANCE_CODE_SNIPPETS } from './EditDistanceCodePanel'; // Import snippets
-import { generateEditDistanceSteps } from './edit-distance-logic';
+import { EditDistanceVisualizationPanel } from './EditDistanceVisualizationPanel'; // Local import
+import { EditDistanceCodePanel, EDIT_DISTANCE_CODE_SNIPPETS } from './EditDistanceCodePanel'; 
+import { generateEditDistanceSteps } from './edit-distance-logic'; // Local import
 
 const DEFAULT_ANIMATION_SPEED = 400;
 const MIN_SPEED = 50;
@@ -73,7 +73,7 @@ export default function EditDistanceVisualizerPage() {
 
   }, [string1Input, string2Input, toast, updateVisualStateFromStep]);
   
-  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+  useEffect(() => { handleGenerateSteps(); }, [string1Input, string2Input, handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -90,7 +90,7 @@ export default function EditDistanceVisualizerPage() {
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 

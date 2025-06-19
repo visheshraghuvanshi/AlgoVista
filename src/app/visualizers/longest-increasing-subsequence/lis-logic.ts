@@ -1,5 +1,5 @@
 
-import type { DPAlgorithmStep } from '@/types';
+import type { DPAlgorithmStep } from './types'; // Local import
 
 export const LIS_LINE_MAP_N2 = {
   funcDeclare: 1,
@@ -61,7 +61,7 @@ export const generateLIS_N2_Steps = (nums: number[]): DPAlgorithmStep[] => {
   let maxLength = 1;
   addStep(localSteps, lm.initMaxLength, nums, dp, `Initialize maxLength = 1.`, undefined, undefined, maxLength);
 
-  for (let i = 0; i < n; i++) { // Changed to 0 to n-1 to match typical array indexing for dp[i]
+  for (let i = 0; i < n; i++) { 
     addStep(localSteps, lm.outerLoopI, nums, dp, `Outer loop: i = ${i}. Processing nums[${i}] = ${nums[i]}.`, i, undefined, maxLength);
     for (let j = 0; j < i; j++) {
       addStep(localSteps, lm.innerLoopJ, nums, dp, `  Inner loop: j = ${j}. Checking nums[${j}] = ${nums[j]}.`, i, j, maxLength);

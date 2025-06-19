@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DPAlgorithmStep } from '@/types';
+import type { DPAlgorithmStep } from './types'; // Local import
 
 interface EditDistanceVisualizationPanelProps {
   step: DPAlgorithmStep | null;
@@ -59,7 +59,7 @@ export function EditDistanceVisualizationPanel({ step }: EditDistanceVisualizati
             <tbody>
               {Array.from({ length: str1.length + 1 }).map((_, i) => (
                 <tr key={`row-${i}`}>
-                  <td className="p-1 border text-xs text-muted-foreground sticky left-0 bg-card z-20 font-mono">
+                  <td className="p-1 border text-xs text-muted-foreground sticky left-0 bg-card z-10 font-mono">
                     {i === 0 ? '"" (s1)' : str1[i-1]}
                   </td>
                   {(dpTable as number[][])[i]?.map((cellValue, j) => (

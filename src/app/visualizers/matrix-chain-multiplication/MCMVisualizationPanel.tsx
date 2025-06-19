@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DPAlgorithmStep } from '@/types';
+import type { DPAlgorithmStep } from './types'; // Local import
 
 interface MCMVisualizationPanelProps {
   step: DPAlgorithmStep | null;
@@ -52,7 +52,7 @@ export function MCMVisualizationPanel({ step }: MCMVisualizationPanelProps) {
             <table className="min-w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="p-1 border text-xs text-muted-foreground sticky top-0 bg-card z-20">i \ j</th>
+                  <th className="p-1 border text-xs text-muted-foreground sticky top-0 bg-card z-20">i \\ j</th>
                   {Array.from({ length: nMatrices }, (_, j) => (
                     <th key={`col-h-${j+1}`} className="p-1 border text-xs text-muted-foreground sticky top-0 bg-card z-20">A<sub>{j+1}</sub></th>
                   ))}

@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { LISVisualizationPanel } from './LISVisualizationPanel';
-import { LISCodePanel, LIS_CODE_SNIPPETS_N2 } from './LISCodePanel'; // Import snippets
+import { LISVisualizationPanel } from './LISVisualizationPanel'; // Local import
+import { LISCodePanel, LIS_CODE_SNIPPETS_N2 } from './LISCodePanel'; // Local import
 import { generateLIS_N2_Steps, LIS_LINE_MAP_N2 } from './lis-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 600;

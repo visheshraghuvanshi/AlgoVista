@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, SquareFunction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { MCMVisualizationPanel } from './MCMVisualizationPanel';
-import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; // Import snippets
-import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic';
+import { MCMVisualizationPanel } from './MCMVisualizationPanel'; // Local import
+import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; 
+import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic'; // Local import
 
 const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 50;

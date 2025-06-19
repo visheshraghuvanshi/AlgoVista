@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DPAlgorithmStep } from '@/types'; 
+import type { DPAlgorithmStep } from './types'; // Local import
 import { Badge } from '@/components/ui/badge';
 
 interface LISVisualizationPanelProps {
