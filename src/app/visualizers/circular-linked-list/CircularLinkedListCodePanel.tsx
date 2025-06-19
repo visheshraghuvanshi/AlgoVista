@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
+import type { LinkedListOperation } from './types'; // Local import
 
 // Updated to include Python, Java, C++
 export const CIRCULAR_LINKED_LIST_OPERATIONS_CODE: Record<string, Record<string, string[]>> = {

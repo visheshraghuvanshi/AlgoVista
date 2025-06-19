@@ -1,11 +1,11 @@
 
-import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from './types'; // Local import
 
 export const CIRCULAR_LL_LINE_MAPS: Record<string, Record<string, number>> = {
   insertHead: { start: 1, newNode: 2, emptyCheck: 3, pointToSelf: 4, findTailLoop: 5, linkNewToHead: 6, linkTailToNew: 7, updateHead: 8, end: 9 },
   insertAtPosition: {
     func: 1, newNode: 2, posZeroCheck: 3, initTraverse: 4, traverseLoop: 5, 
-    insertAfterPrev: 6, updateTailNextIfInsertingAfterTail: 7, // Special for circular
+    insertAfterPrev: 6, updateTailNextIfInsertingAfterTail: 7, 
     posNotFound: 8, end: 9,
   },
   deleteAtPosition: {
@@ -42,7 +42,7 @@ function createVisualCLLNodes(
     
     const visualNodes: LinkedListNodeVisual[] = [];
     let currentVisId: string | null = currentHeadId;
-    const visitedInRender = new Set<string>(); // Prevent infinite loop for bad cycle in render
+    const visitedInRender = new Set<string>(); 
     
     do {
         if (!currentVisId || visitedInRender.has(currentVisId)) break;
@@ -204,25 +204,25 @@ export const generateCircularLinkedListSteps = (
         }
         
         addStep(lineMap.findNodeToDelete, `Traversing to position ${position} for deletion.`, currentDelPos);
-        // Find node to delete AND its predecessor (which is tail if deleting head)
+        
         let tailFinder = headId;
         while(actualListNodes.get(tailFinder)!.nextId !== headId) {
             tailFinder = actualListNodes.get(tailFinder)!.nextId!;
         }
-        prevDelPos = tailFinder; // Initially assume prev is the actual tail if deleting head
+        prevDelPos = tailFinder; 
         
-        if (position === 0) { // Deleting head
+        if (position === 0) { 
             addStep(lineMap.posZeroCheck, `Deleting head ${actualListNodes.get(headId)?.value}.`, headId);
             const deletedId = headId;
             headId = actualListNodes.get(headId)!.nextId;
-            actualListNodes.get(prevDelPos)!.nextId = headId; // Tail points to new head
+            actualListNodes.get(prevDelPos)!.nextId = headId; 
             actualListNodes.delete(deletedId);
             addStep(lineMap.end, `Deleted head. New head is ${headId ? actualListNodes.get(headId)?.value : 'null'}. Tail points to new head.`, headId,undefined,undefined,'success');
         } else {
-            currentDelPos = headId; // Reset current for traversal
+            currentDelPos = headId; 
             prevDelPos = null;
             for(countDelPos = 0; countDelPos < position; countDelPos++){
-                if (actualListNodes.get(currentDelPos)!.nextId === headId && countDelPos < position -1){ // Reached end before finding position
+                if (actualListNodes.get(currentDelPos)!.nextId === headId && countDelPos < position -1){ 
                      addStep(lineMap.posNotFound, `Position ${position} out of bounds. List length ${countDelPos+1}.`, undefined,undefined,undefined,'failure');
                      return localSteps;
                 }
@@ -230,16 +230,14 @@ export const generateCircularLinkedListSteps = (
                 currentDelPos = actualListNodes.get(currentDelPos)!.nextId!;
                  addStep(lineMap.traverseLoop, `At index ${countDelPos}, node ${actualListNodes.get(prevDelPos!)?.value}. Target pos: ${position}.`, prevDelPos);
             }
-             // currentDelPos is now the node to delete, prevDelPos is its predecessor
+            
             if (currentDelPos) {
                 addStep(lineMap.deleteNodeLogic, `Node to delete at pos ${position} is ${actualListNodes.get(currentDelPos)?.value}.`, currentDelPos);
                 actualListNodes.get(prevDelPos!)!.nextId = actualListNodes.get(currentDelPos)!.nextId;
-                if (currentDelPos === headId && actualListNodes.get(currentDelPos)!.nextId === headId) { // Very specific: deleting the only node via non-zero pos if logic allows
+                if (currentDelPos === headId && actualListNodes.get(currentDelPos)!.nextId === headId) { 
                     headId = null;
                 } else if (actualListNodes.get(prevDelPos!)!.nextId === headId && currentDelPos === headId) {
-                    // This case means we looped around and prev is now tail, current is head (deleting head via non-zero pos)
-                    // This should have been caught by pos === 0 case, but as a safeguard:
-                    headId = actualListNodes.get(headId)!.nextId; // new head
+                    headId = actualListNodes.get(headId)!.nextId; 
                 }
                 actualListNodes.delete(currentDelPos);
                 addStep(lineMap.end, `Deleted node at position ${position}.`, prevDelPos,undefined,undefined,'success');
@@ -254,7 +252,7 @@ export const generateCircularLinkedListSteps = (
         addStep(lineMap.initCurrent, "Traversing list.", headId);
         let currentTravId: string | null = headId;
         let travCount = 0; 
-        const maxTrav = actualListNodes.size + 2; // Safety break for traversal
+        const maxTrav = actualListNodes.size + 2; 
         do {
             if (!currentTravId || travCount > maxTrav) break;
             const currentNode = actualListNodes.get(currentTravId);
@@ -272,4 +270,3 @@ export const generateCircularLinkedListSteps = (
   }
   return localSteps;
 };
-

@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; 
 import { CircularLinkedListCodePanel } from './CircularLinkedListCodePanel'; 
-import { LinkedListControlsPanel, type LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import { LinkedListControlsPanel } from './LinkedListControlsPanel'; 
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, AlgorithmDetailsProps } from './types'; 
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { CIRCULAR_LL_LINE_MAPS, generateCircularLinkedListSteps } from './circular-linked-list-logic';
@@ -18,7 +18,7 @@ const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
 
-const CLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertAtPosition', 'deleteAtPosition', 'traverse'];
+const CLL_AVAILABLE_OPS_LOCAL: LinkedListOperation[] = ['init', 'insertHead', 'insertAtPosition', 'deleteAtPosition', 'traverse'];
 
 
 export default function CircularLinkedListPage() {
@@ -72,12 +72,15 @@ export default function CircularLinkedListPage() {
         positionToUse = Number(posOrSecondList);
     }
 
-    const currentOpDetails = CLL_AVAILABLE_OPS.find(details => details === op); // Simplified check
-    if ((op === 'insertHead' || op === 'insertAtPosition') && operationValueToUse === undefined) {
+    // Using ALL_OPERATIONS_LOCAL from local types.ts for currentOpDetails
+    const { ALL_OPERATIONS_LOCAL } = require('./types'); 
+    const currentOpDetails = ALL_OPERATIONS_LOCAL.find((details: {value: LinkedListOperation}) => details.value === op);
+
+    if (currentOpDetails?.needsValue && (operationValueToUse === undefined || String(operationValueToUse).trim() === '')) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
         return;
     }
-    if ((op === 'insertAtPosition' || op === 'deleteAtPosition') && positionToUse === undefined) {
+    if (currentOpDetails?.needsPosition && (positionToUse === undefined || String(positionToUse).trim() === '')) {
         toast({ title: "Position Required", description: `Please enter a position for ${op}.`, variant: "destructive" });
         return;
     }
@@ -205,7 +208,7 @@ export default function CircularLinkedListPage() {
                   setIsFinished(true);
               }
           }}
-          availableOperations={CLL_AVAILABLE_OPS}
+          availableOperations={CLL_AVAILABLE_OPS_LOCAL}
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
           isAlgoImplemented={true} minSpeed={MIN_SPEED} maxSpeed={MAX_SPEED}
         />
@@ -215,4 +218,3 @@ export default function CircularLinkedListPage() {
     </div>
   );
 }
-
