@@ -5,31 +5,34 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, BaseConversionStep } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Construction } from 'lucide-react'; 
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Repeat } from 'lucide-react'; // Repeat for base conversion
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 
-import { algorithmMetadata } from './metadata'; // Local import
 import { BaseConversionsCodePanel } from './BaseConversionsCodePanel';
 import { BaseConversionsVisualizationPanel } from './BaseConversionsVisualizationPanel';
-import { generateBaseConversionSteps, type BaseConversionStep } from './base-conversions-logic';
+import { generateBaseConversionSteps } from './base-conversions-logic';
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1800;
+const DEFAULT_NUMBER_INPUT = "42";
+const DEFAULT_FROM_BASE = "10";
+const DEFAULT_TO_BASE = "2";
 
 export default function BaseConversionsVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   
-  const [numberInput, setNumberInput] = useState("42");
-  const [fromBaseInput, setFromBaseInput] = useState("10");
-  const [toBaseInput, setToBaseInput] = useState("2");
+  const [numberInput, setNumberInput] = useState(DEFAULT_NUMBER_INPUT);
+  const [fromBaseInput, setFromBaseInput] = useState(DEFAULT_FROM_BASE);
+  const [toBaseInput, setToBaseInput] = useState(DEFAULT_TO_BASE);
 
   const [steps, setSteps] = useState<BaseConversionStep[]>([]);
   const [currentStep, setCurrentStep] = useState<BaseConversionStep | null>(null);
@@ -61,18 +64,22 @@ export default function BaseConversionsVisualizerPage() {
       toast({ title: "Invalid Base", description: "Bases must be integers between 2 and 36.", variant: "destructive" });
       return;
     }
-    if (fromBase !== 10) {
+    
+    // Validate numberInput based on fromBase
+    if (fromBase !== 10) { // For non-decimal, check if digits are valid for that base
         const validChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".slice(0, fromBase);
-        if (!numberInput.split('').every(char => validChars.includes(char.toUpperCase()))) {
+        const inputToCheck = numberInput.toUpperCase();
+        if (!inputToCheck.split('').every(char => validChars.includes(char))) {
             toast({ title: "Invalid Number", description: `Number "${numberInput}" contains invalid characters for base ${fromBase}.`, variant: "destructive" });
             return;
         }
-    } else { 
+    } else { // For decimal input, just check if it's a valid integer representation
         if (isNaN(parseInt(numberInput,10))) {
              toast({ title: "Invalid Decimal Number", description: `"${numberInput}" is not a valid decimal number.`, variant: "destructive" });
             return;
         }
     }
+
 
     const newSteps = generateBaseConversionSteps(numberInput, fromBase, toBase);
     setSteps(newSteps);
@@ -80,11 +87,11 @@ export default function BaseConversionsVisualizerPage() {
     setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-  }, [numberInput, fromBaseInput, toBaseInput, toast, updateVisualStateFromStep]);
+  }, [numberInput, fromBaseInput, toBaseInput, toast]); 
   
   useEffect(() => { 
     handleConvert();
-  }, [handleConvert]);
+  }, [handleConvert]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -113,9 +120,9 @@ export default function BaseConversionsVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false);
     setIsFinished(true);
-    setNumberInput("42");
-    setFromBaseInput("10");
-    setToBaseInput("2");
+    setNumberInput(DEFAULT_NUMBER_INPUT);
+    setFromBaseInput(DEFAULT_FROM_BASE);
+    setToBaseInput(DEFAULT_TO_BASE);
   };
   
   const algoDetails: AlgorithmDetailsProps = {
@@ -134,7 +141,7 @@ export default function BaseConversionsVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <Construction className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <Repeat className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
@@ -190,3 +197,4 @@ export default function BaseConversionsVisualizerPage() {
     </div>
   );
 }
+

@@ -1,62 +1,62 @@
 
-import type { PriorityQueueStep, PriorityQueueItem } from '@/types';
+import type { PriorityQueueStep, PriorityQueueItem } from './types'; // Local import
 
 // Conceptual Min-Heap based Priority Queue
 export const PRIORITY_QUEUE_LINE_MAP = {
   // General
   classDef: 1,
   constructor: 2,
-  // Helper methods (conceptual lines)
+  // Helper methods (conceptual lines for code panel - actual steps are within ops)
   getParentIndex: 3, getLeftChildIndex: 4, getRightChildIndex: 5, swap: 6,
 
   // Enqueue (Insert into heap)
   enqueueStart: 7,
   enqueuePushToArray: 8,
   enqueueCallHeapifyUp: 9,
-  enqueueEnd: 10,
+  // enqueueEnd: 10, // Implicit step
 
-  // Heapify Up
-  heapifyUpStart: 11,
-  heapifyUpGetParent: 12,
-  heapifyUpLoop: 13, // while (index > 0 && heap[index].priority < heap[parent].priority)
-  heapifyUpSwap: 14,
-  heapifyUpUpdateIndex: 15,
-  heapifyUpUpdateParent: 16, // Re-calculate parent for next iteration
-  heapifyUpLoopEnd: 17,
-  heapifyUpEnd: 18,
+  // Heapify Up (part of enqueue)
+  heapifyUpStart: 10, // Adjusted to be unique
+  heapifyUpGetParent: 11,
+  heapifyUpLoop: 12, 
+  heapifyUpSwap: 13,
+  heapifyUpUpdateIndex: 14,
+  heapifyUpUpdateParent: 15, 
+  heapifyUpLoopEnd: 16,
+  // heapifyUpEnd: 18, // Implicit
 
   // Dequeue (Extract Min from heap)
-  dequeueStart: 19,
-  dequeueCheckEmpty: 20,
-  dequeueReturnNullIfEmpty: 21,
-  dequeueCheckSingleElement: 22,
-  dequeuePopSingle: 23,
-  dequeueStoreMin: 24,
-  dequeueMoveLastToRoot: 25,
-  dequeueCallHeapifyDown: 26,
-  dequeueReturnMin: 27,
-  dequeueEnd: 28,
+  dequeueStart: 17, // Adjusted
+  dequeueCheckEmpty: 18,
+  // dequeueReturnNullIfEmpty: 21, // Implicit in message
+  dequeueCheckSingleElement: 19,
+  dequeuePopSingle: 20,
+  dequeueStoreMin: 21,
+  dequeueMoveLastToRoot: 22,
+  dequeueCallHeapifyDown: 23,
+  dequeueReturnMin: 24,
+  // dequeueEnd: 28, // Implicit
 
-  // Heapify Down
-  heapifyDownStart: 29,
-  heapifyDownInitSmallest: 30,
-  heapifyDownGetChildren: 31, // Get left & right
-  heapifyDownCheckLeft: 32, // if left < size && heap[left].priority < heap[smallest].priority
-  heapifyDownUpdateSmallestLeft: 33,
-  heapifyDownCheckRight: 34, // if right < size && heap[right].priority < heap[smallest].priority
-  heapifyDownUpdateSmallestRight: 35,
-  heapifyDownIfSmallestNotIndex: 36,
-  heapifyDownSwap: 37,
-  heapifyDownRecurse: 38, // Or update index and loop
-  heapifyDownEndIf: 39,
-  heapifyDownEnd: 40,
+  // Heapify Down (part of dequeue)
+  heapifyDownStart: 25, // Adjusted
+  heapifyDownInitSmallest: 26,
+  heapifyDownGetChildren: 27, 
+  heapifyDownCheckLeft: 28, 
+  heapifyDownUpdateSmallestLeft: 29,
+  heapifyDownCheckRight: 30, 
+  heapifyDownUpdateSmallestRight: 31,
+  heapifyDownIfSmallestNotIndex: 32,
+  heapifyDownSwap: 33,
+  heapifyDownRecurse: 34, 
+  heapifyDownEndIf: 35,
+  // heapifyDownEnd: 40, // Implicit
 
   // Peek
-  peekStart: 41,
-  peekCheckEmpty: 42,
-  peekReturnNullIfEmpty: 43,
-  peekReturnTop: 44,
-  peekEnd: 45,
+  peekStart: 36, // Adjusted
+  peekCheckEmpty: 37,
+  // peekReturnNullIfEmpty: 43, // Implicit
+  peekReturnTop: 38,
+  // peekEnd: 45, // Implicit
 };
 
 const addStep = (
@@ -83,7 +83,7 @@ const addStep = (
 // Helper: Min-Heapify Up
 function heapifyUp(heap: PriorityQueueItem[], index: number, localSteps: PriorityQueueStep[], opType: PriorityQueueStep['operation']) {
   const lm = PRIORITY_QUEUE_LINE_MAP;
-  addStep(localSteps, lm.heapifyUpStart, heap, opType, `HeapifyUp starting at index ${index} (value: ${heap[index].value}, prio: ${heap[index].priority}).`, [index]);
+  addStep(localSteps, lm.heapifyUpStart, heap, opType, `HeapifyUp starting at index ${index} (value: ${heap[index]?.value}, prio: ${heap[index]?.priority}).`, [index]);
   let currentIndex = index;
   let parentIndex = Math.floor((currentIndex - 1) / 2);
   addStep(localSteps, lm.heapifyUpGetParent, heap, opType, `Parent of ${currentIndex} is ${parentIndex}.`, [currentIndex, parentIndex]);
@@ -98,7 +98,7 @@ function heapifyUp(heap: PriorityQueueItem[], index: number, localSteps: Priorit
     addStep(localSteps, lm.heapifyUpUpdateParent, heap, opType, `New parent index is ${parentIndex}.`, [currentIndex, parentIndex]);
   }
   addStep(localSteps, lm.heapifyUpLoopEnd, heap, opType, `HeapifyUp loop condition false or index is 0.`, [currentIndex]);
-  addStep(localSteps, lm.heapifyUpEnd, heap, opType, `HeapifyUp complete for original index ${index}.`);
+  // addStep(localSteps, lm.heapifyUpEnd, heap, opType, `HeapifyUp complete for original index ${index}.`);
 }
 
 // Helper: Min-Heapify Down
@@ -139,7 +139,7 @@ function heapifyDown(heap: PriorityQueueItem[], index: number, localSteps: Prior
       break; // Heap property satisfied
     }
   }
-   addStep(localSteps, lm.heapifyDownEnd, heap, opType, `HeapifyDown complete for original index ${index}.`);
+  // addStep(localSteps, lm.heapifyDownEnd, heap, opType, `HeapifyDown complete for original index ${index}.`);
 }
 
 
@@ -174,7 +174,7 @@ export const generatePriorityQueueSteps = (
       addStep(localSteps, lm.enqueueCallHeapifyUp, heap, operation, `Calling HeapifyUp for last element (index ${heap.length - 1}).`, [heap.length - 1]);
       heapifyUp(heap, heap.length - 1, localSteps, operation);
       
-      addStep(localSteps, lm.enqueueEnd, heap, operation, `Enqueue of "${itemValue}" (prio ${itemPriority}) complete.`);
+      // addStep(localSteps, lm.enqueueEnd, heap, operation, `Enqueue of "${itemValue}" (prio ${itemPriority}) complete.`);
       break;
 
     case 'dequeue':
@@ -183,7 +183,7 @@ export const generatePriorityQueueSteps = (
       
       addStep(localSteps, lm.dequeueCheckEmpty, heap, operation, `Is PQ empty? (size: ${heap.length})`);
       if (heap.length === 0) {
-        addStep(localSteps, lm.dequeueReturnNullIfEmpty, heap, operation, "PQ is empty. Cannot dequeue.");
+        addStep(localSteps, lm.dequeueStart, heap, operation, "PQ is empty. Cannot dequeue."); // Use dequeueStart for 'no operation' message
         processedItem = null;
         break;
       }
@@ -202,7 +202,7 @@ export const generatePriorityQueueSteps = (
         heapifyDown(heap, 0, localSteps, operation);
       }
       addStep(localSteps, lm.dequeueReturnMin, heap, operation, `Dequeued item "${processedItem.value}".`);
-      addStep(localSteps, lm.dequeueEnd, heap, operation, "Dequeue complete.");
+      // addStep(localSteps, lm.dequeueEnd, heap, operation, "Dequeue complete.");
       break;
 
     case 'peek':
@@ -210,15 +210,16 @@ export const generatePriorityQueueSteps = (
       addStep(localSteps, lm.peekStart, heap, operation, message, heap.length > 0 ? [0] : []);
       addStep(localSteps, lm.peekCheckEmpty, heap, operation, `Is PQ empty? (size: ${heap.length})`, heap.length > 0 ? [0] : []);
       if (heap.length === 0) {
-        addStep(localSteps, lm.peekReturnNullIfEmpty, heap, operation, "PQ is empty. Nothing to peek.");
+        addStep(localSteps, lm.peekStart, heap, operation, "PQ is empty. Nothing to peek."); // Use peekStart for 'no operation' message
         processedItem = null;
       } else {
         processedItem = heap[0];
         addStep(localSteps, lm.peekReturnTop, heap, operation, `Front item is "${processedItem.value}" (prio ${processedItem.priority}).`, [0], processedItem);
       }
-      addStep(localSteps, lm.peekEnd, heap, operation, "Peek complete.", heap.length > 0 ? [0] : []);
+      // addStep(localSteps, lm.peekEnd, heap, operation, "Peek complete.", heap.length > 0 ? [0] : []);
       break;
   }
+  addStep(localSteps, null, heap, operation, `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation finished.`);
   return localSteps;
 };
 

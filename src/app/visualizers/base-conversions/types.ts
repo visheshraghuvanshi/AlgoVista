@@ -29,7 +29,7 @@ export interface AlgorithmDetailsProps {
 
 // Base Conversions specific step type
 export interface BaseConversionStep {
-  array: []; // Not directly used
+  array: []; // Not directly used for bar visualization, but part of generic step
   activeIndices: number[];    
   swappingIndices: number[];  
   sortedIndices: number[];    
@@ -39,10 +39,11 @@ export interface BaseConversionStep {
     originalNumber: string;
     fromBase: number;
     toBase: number;
-    currentValue: string | number; 
-    intermediateResult?: string; 
+    currentValue: string | number; // Current digit or number being processed
+    intermediateResult?: string; // e.g., current string being built, or current decimal sum
     finalResult?: string;
-    equation?: string; 
-    message: string;
+    equation?: string; // e.g., "2 * 16^1 + 10 * 16^0 = 42"
+    message: string; // For specific messages related to this step in aux data
   };
 }
+

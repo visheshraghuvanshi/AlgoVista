@@ -1,5 +1,4 @@
 // src/app/visualizers/deque-operations/deque-logic.ts
-import type { AlgorithmStep } from '@/types'; // Generic type, if specific fields aren't needed from global
 import type { DequeAlgorithmStep } from './types'; // Local, more specific type
 
 export const DEQUE_LINE_MAP = {
@@ -7,28 +6,28 @@ export const DEQUE_LINE_MAP = {
   constructor: 2,
   addFrontStart: 3,
   addFrontOp: 4, 
-  addFrontEnd: 5,
-  addRearStart: 6,
-  addRearOp: 7,   
-  addRearEnd: 8,
-  removeFrontStart: 9,
-  removeFrontCheckEmpty: 10,
-  removeFrontOp: 11, 
-  removeFrontEnd: 12,
-  removeRearStart: 13,
-  removeRearCheckEmpty: 14,
-  removeRearOp: 15,  
-  removeRearEnd: 16,
-  peekFrontStart: 17,
-  peekFrontCheckEmpty: 18,
-  peekFrontReturn: 19,
-  peekFrontEnd: 20,
-  peekRearStart: 21,
-  peekRearCheckEmpty: 22,
-  peekRearReturn: 23,
-  peekRearEnd: 24,
-  isEmpty: 25,
-  size: 26,
+  // addFrontEnd: 5, // Implicit line after addFrontOp
+  addRearStart: 5,
+  addRearOp: 6,   
+  // addRearEnd: 8,
+  removeFrontStart: 7,
+  removeFrontCheckEmpty: 8,
+  removeFrontOp: 9, 
+  // removeFrontEnd: 12,
+  removeRearStart: 10,
+  removeRearCheckEmpty: 11,
+  removeRearOp: 12,  
+  // removeRearEnd: 16,
+  peekFrontStart: 13,
+  peekFrontCheckEmpty: 14,
+  peekFrontReturn: 15,
+  // peekFrontEnd: 20,
+  peekRearStart: 16,
+  peekRearCheckEmpty: 17,
+  peekRearReturn: 18,
+  // peekRearEnd: 24,
+  isEmpty: 19,
+  size: 20,
 };
 
 export const generateDequeSteps = (
@@ -74,7 +73,7 @@ export const generateDequeSteps = (
       processedVal = value;
       deque.unshift(value);
       addStep(lm.addFrontOp, deque, [0], `${message} Added ${value}.`, `Added ${value} to front`);
-      addStep(lm.addFrontEnd, deque, [0], `AddFront complete. Deque: [${deque.join(', ')}]`);
+      // addStep(lm.addFrontEnd, deque, [0], `AddFront complete. Deque: [${deque.join(', ')}]`);
       break;
     case 'addRear':
       if (value === undefined) { addStep(null, deque, [], "Error: Value undefined for addRear."); return localSteps; }
@@ -83,7 +82,7 @@ export const generateDequeSteps = (
       processedVal = value;
       deque.push(value);
       addStep(lm.addRearOp, deque, [deque.length - 1], `${message} Added ${value}.`, `Added ${value} to rear`);
-      addStep(lm.addRearEnd, deque, [deque.length - 1], `AddRear complete. Deque: [${deque.join(', ')}]`);
+      // addStep(lm.addRearEnd, deque, [deque.length - 1], `AddRear complete. Deque: [${deque.join(', ')}]`);
       break;
     case 'removeFront':
       message = "Removing from front...";
@@ -96,7 +95,7 @@ export const generateDequeSteps = (
         processedVal = deque.shift();
         addStep(lm.removeFrontOp, deque, [], `${message} Removed ${processedVal}.`, `Removed ${processedVal} from front`);
       }
-      addStep(lm.removeFrontEnd, deque, [], `RemoveFront complete. Deque: [${deque.join(', ')}]`);
+      // addStep(lm.removeFrontEnd, deque, [], `RemoveFront complete. Deque: [${deque.join(', ')}]`);
       break;
     case 'removeRear':
       message = "Removing from rear...";
@@ -109,7 +108,7 @@ export const generateDequeSteps = (
         processedVal = deque.pop();
         addStep(lm.removeRearOp, deque, [], `${message} Removed ${processedVal}.`, `Removed ${processedVal} from rear`);
       }
-      addStep(lm.removeRearEnd, deque, [], `RemoveRear complete. Deque: [${deque.join(', ')}]`);
+      // addStep(lm.removeRearEnd, deque, [], `RemoveRear complete. Deque: [${deque.join(', ')}]`);
       break;
     case 'peekFront':
       message = "Peeking front...";
@@ -122,7 +121,7 @@ export const generateDequeSteps = (
         processedVal = deque[0];
         addStep(lm.peekFrontReturn, deque, [0], `${message} Front is ${processedVal}.`, `Peeked front: ${processedVal}`);
       }
-      addStep(lm.peekFrontEnd, deque, deque.length > 0 ? [0] : [], `PeekFront complete.`);
+      // addStep(lm.peekFrontEnd, deque, deque.length > 0 ? [0] : [], `PeekFront complete.`);
       break;
     case 'peekRear':
       message = "Peeking rear...";
@@ -135,8 +134,11 @@ export const generateDequeSteps = (
         processedVal = deque[deque.length - 1];
         addStep(lm.peekRearReturn, deque, [deque.length - 1], `${message} Rear is ${processedVal}.`, `Peeked rear: ${processedVal}`);
       }
-      addStep(lm.peekRearEnd, deque, deque.length > 0 ? [deque.length-1] : [], `PeekRear complete.`);
+      // addStep(lm.peekRearEnd, deque, deque.length > 0 ? [deque.length-1] : [], `PeekRear complete.`);
       break;
   }
+  // Add a final step to show the end state clearly
+  addStep(null, deque, [], `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation finished.`);
   return localSteps;
 };
+

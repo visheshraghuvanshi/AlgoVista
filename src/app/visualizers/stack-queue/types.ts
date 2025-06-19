@@ -1,3 +1,4 @@
+
 // src/app/visualizers/stack-queue/types.ts
 
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
@@ -43,3 +44,4 @@ export interface StackQueueAlgorithmStep {
   lastOperation?: string; 
   processedValue?: string | number | null | undefined; 
 }
+

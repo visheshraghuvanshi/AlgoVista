@@ -17,11 +17,11 @@ export const algorithmMetadata: AlgorithmMetadata = {
 ### Core Operations:
 The names of operations can vary slightly depending on the programming language or library. Common operations include:
 
-1.  **AddFirst (or PushFront, AddHead, EnqueueFront)**: Adds an element to the front (head) of the deque.
+1.  **AddFront (or PushFront, AddHead, EnqueueFront)**: Adds an element to the front (head) of the deque.
     *   *How it works*: The new element becomes the new head. Existing elements shift (conceptually, if array-based) or pointers are updated (if list-based).
 2.  **AddLast (or PushBack, AddTail, EnqueueRear)**: Adds an element to the back (tail) of the deque.
     *   *How it works*: The new element becomes the new tail.
-3.  **RemoveFirst (or PopFront, RemoveHead, DequeueFront)**: Removes and returns the element from the front (head) of the deque.
+3.  **RemoveFront (or PopFront, RemoveHead, DequeueFront)**: Removes and returns the element from the front (head) of the deque.
     *   *How it works*: The element after the original head becomes the new head. Returns an error or special value if the deque is empty.
 4.  **RemoveLast (or PopBack, RemoveTail, DequeueRear)**: Removes and returns the element from the back (tail) of the deque.
     *   *How it works*: The element before the original tail becomes the new tail. Returns an error or special value if the deque is empty.
@@ -35,13 +35,14 @@ The names of operations can vary slightly depending on the programming language 
 ### Common Implementations:
 -   **Doubly Linked List**: Each node points to the next and previous elements. Adding or removing from either end is O(1) as head and tail pointers allow direct access.
 -   **Dynamic Array (often with a Circular Buffer)**: A resizable array can be used. To achieve O(1) amortized time for additions/removals at both ends, a circular buffer approach is often employed. This involves using head and tail indices that can wrap around the array, avoiding costly element shifting for most operations. Resizing the array (when full or too empty) can take O(N) time but is amortized over many O(1) operations.
+    *AlgoVista visualizes a simple array-based implementation where \\\`unshift\\\` (addFront) and \\\`shift\\\` (removeFront) might have O(N) implications in a naive array.*
 
 ### Advantages:
 -   Highly versatile, can function as a stack, a queue, or both.
--   Provides O(1) (amortized for array, worst-case for linked list) time complexity for additions and removals at both ends, which is its main advantage over simple stacks or queues if such operations are needed.
+-   Provides O(1) (amortized for efficient array, worst-case for linked list) time complexity for additions and removals at both ends, which is its main advantage over simple stacks or queues if such operations are needed.
 
 ### Disadvantages:
--   Array-based implementations can be more complex to manage (e.g., circular buffer logic, resizing).
+-   Naive array-based implementations (without circular buffer) can be inefficient (O(N)) for front operations.
 -   Linked-list based implementations have the usual overhead of pointer storage.
 
 ### Common Use Cases:

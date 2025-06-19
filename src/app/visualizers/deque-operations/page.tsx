@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, DequeAlgorithmStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Columns, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
@@ -18,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 
 import { DequeOperationsCodePanel } from './DequeOperationsCodePanel';
 import { DequeOperationsVisualizationPanel } from './DequeOperationsVisualizationPanel';
-import { generateDequeSteps, type DequeAlgorithmStep, DEQUE_LINE_MAP } from './deque-logic';
+import { generateDequeSteps, DEQUE_LINE_MAP } from './deque-logic';
 
 const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 100;
@@ -37,6 +37,11 @@ export default function DequeOperationsVisualizerPage() {
   const [currentStep, setCurrentStep] = useState<DequeAlgorithmStep | null>(null);
   
   const dataStructureRef = useRef<(string | number)[]>([]);
+
+  useEffect(() => {
+    setIsClient(true);
+    initializeStructure();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const parseValues = (input: string): (string|number)[] => {
     if (input.trim() === '') return [];
@@ -69,9 +74,8 @@ export default function DequeOperationsVisualizerPage() {
 
 
   useEffect(() => {
-    setIsClient(true);
     initializeStructure();
-  }, [initializeStructure]);
+  }, [initializeStructure, selectedOperation]); // Re-initialize if structure type changes
 
 
   const handleInitialValuesChange = (value: string) => {
@@ -99,18 +103,22 @@ export default function DequeOperationsVisualizerPage() {
         return;
     }
     
+    // Deque operations are typically discrete and don't generate multiple "steps" for animation
+    // So, we directly apply the operation and show the result.
     const resultingSteps = generateDequeSteps([...dataStructureRef.current], selectedOperation, opValue);
-    const finalStep = resultingSteps[resultingSteps.length - 1];
+    const finalStep = resultingSteps[resultingSteps.length - 1]; // The outcome of the operation
     
     if (finalStep) {
-        dataStructureRef.current = [...finalStep.array];
-        setCurrentStep(finalStep);
+        dataStructureRef.current = [...finalStep.array]; // Persist the new state
+        setCurrentStep(finalStep); // Display the final state
         toast({title: `${finalStep.lastOperation || 'Operation'} Complete`, description: finalStep.message});
     } else {
+        // This case should ideally not happen if generateDequeSteps always returns at least one step.
+        // If it does, it means an error in logic generation or an unhandled scenario.
         const currentArrayState = [...dataStructureRef.current];
         setCurrentStep({
             array: currentArrayState, activeIndices: [], swappingIndices: [], sortedIndices: [],
-            currentLine: null, message: "Operation resulted in no change or an error.",
+            currentLine: null, message: "Operation did not change state or an error occurred.",
             frontIndex: currentArrayState.length > 0 ? 0 : -1,
             rearIndex: currentArrayState.length > 0 ? currentArrayState.length - 1 : -1,
             operationType: 'deque'
@@ -156,6 +164,9 @@ export default function DequeOperationsVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
+           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+             Interactive Deque operations. Visualization steps are discrete per operation.
+          </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -201,6 +212,7 @@ export default function DequeOperationsVisualizerPage() {
             <div className="flex items-center justify-start pt-4 border-t">
               <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Deque & Controls</Button>
             </div>
+             {/* Animation controls are removed as operations are discrete */}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />

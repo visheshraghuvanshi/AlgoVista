@@ -59,11 +59,11 @@ A queue operates on the FIFO principle: the first element added to the queue is 
 -   Simulating waiting lines.
 -   CPU task scheduling.
 
-Both data structures are crucial building blocks in computer science and software development.`,
+Both data structures are crucial building blocks in computer science and software development. The AlgoVista visualizer demonstrates simple array-based implementations.`,
   timeComplexities: {
-    best: "Stack (Array/LL): Push O(1), Pop O(1), Peek O(1). Queue (LL/Circular Array): Enqueue O(1), Dequeue O(1), Peek O(1).",
-    average: "Stack (Array/LL): Push O(1), Pop O(1), Peek O(1). Queue (LL/Circular Array): Enqueue O(1), Dequeue O(1), Peek O(1).",
-    worst: "Stack (Dynamic Array Push O(N) amortized if resize), Queue (Simple Array Dequeue O(N)). LL/Circular Array generally O(1) for core ops.",
+    best: "Stack (Array/LL): Push O(1), Pop O(1), Peek O(1). Queue (LL/Efficient Array): Enqueue O(1), Dequeue O(1), Peek O(1).",
+    average: "Stack (Array/LL): Push O(1), Pop O(1), Peek O(1). Queue (LL/Efficient Array): Enqueue O(1), Dequeue O(1), Peek O(1).",
+    worst: "Stack (Dynamic Array Push O(N) amortized if resize), Queue (Simple Array Dequeue O(N), Array Push O(N) amortized if resize). LL/Efficient Array generally O(1).",
   },
   spaceComplexity: "O(N) for storing N elements.",
 };

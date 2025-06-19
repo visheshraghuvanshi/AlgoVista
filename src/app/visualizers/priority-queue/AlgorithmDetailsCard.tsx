@@ -1,5 +1,4 @@
-
-// src/app/visualizers/stack-queue/AlgorithmDetailsCard.tsx
+// src/app/visualizers/priority-queue/AlgorithmDetailsCard.tsx
 "use client";
 
 import React from 'react';

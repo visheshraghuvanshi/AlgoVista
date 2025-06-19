@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BaseConversionStep } from './base-conversions-logic'; // Ensure this type is correctly defined
+import type { BaseConversionStep } from './types'; // Local import
 import { Badge } from '@/components/ui/badge';
 
 interface BaseConversionsVisualizationPanelProps {
@@ -68,3 +68,4 @@ export function BaseConversionsVisualizationPanel({ step }: BaseConversionsVisua
     </Card>
   );
 }
+

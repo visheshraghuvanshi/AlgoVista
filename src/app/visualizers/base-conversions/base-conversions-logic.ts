@@ -1,5 +1,4 @@
 // src/app/visualizers/base-conversions/base-conversions-logic.ts
-import type { AlgorithmStep } from '@/types'; // Use global for now
 import type { BaseConversionStep } from './types'; // Local, more specific type
 
 export const BASE_CONVERSION_LINE_MAP_DEC_TO_BASE = {
@@ -122,3 +121,4 @@ export const generateBaseConversionSteps = (
   
   return localSteps;
 };
+

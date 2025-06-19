@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, PriorityQueueStep, PriorityQueueItem } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, PriorityQueueStep, PriorityQueueItem } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, ListOrdered, PlusCircle, MinusCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ export default function PriorityQueueVisualizerPage() {
 
   const [itemValueInput, setItemValueInput] = useState<string | number>("TaskA");
   const [itemPriorityInput, setItemPriorityInput] = useState<number>(5);
-  const [selectedOperation, setSelectedOperation] = useState<PQOperationType>('enqueue');
+  const [selectedOperation, setSelectedOperation] = useState<PQOperationType>('init'); // Start with 'init'
   
   const [steps, setSteps] = useState<PriorityQueueStep[]>([]);
   const [currentStep, setCurrentStep] = useState<PriorityQueueStep | null>(null);
@@ -44,13 +44,16 @@ export default function PriorityQueueVisualizerPage() {
 
   const pqRef = useRef<PriorityQueueItem[]>(createInitialPriorityQueue());
 
-  useEffect(() => { setIsClient(true); initializePQ(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { 
+    setIsClient(true); 
+    initializePQ();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initializePQ = useCallback(() => {
     pqRef.current = createInitialPriorityQueue();
     const initialStep: PriorityQueueStep = {
-        heapArray: [], operation: 'init', message: "Priority Queue (Min-Heap) initialized.", currentLine: null,
-        activeIndices: [], swappingIndices: [], sortedIndices: [],
+        heapArray: [], operation: 'init', message: "Priority Queue (Min-Heap) initialized. It's empty.", currentLine: null,
+        activeIndices: [], swappingIndices: [], sortedIndices: [], activeHeapIndices: []
     };
     setCurrentStep(initialStep);
     setSteps([initialStep]);
@@ -66,12 +69,18 @@ export default function PriorityQueueVisualizerPage() {
   const handleExecuteOperation = () => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const needsValueAndPrio = selectedOperation === 'enqueue';
-    if (needsValueAndPrio && (String(itemValueInput).trim() === "" || itemPriorityInput === undefined || isNaN(itemPriorityInput))) {
-        toast({title: "Invalid Input", description: "Please provide item value and a numeric priority.", variant: "destructive"}); return;
+    if (selectedOperation === 'init') {
+        initializePQ();
+        toast({title: "Priority Queue Initialized", description: "The PQ is now empty."});
+        return;
     }
 
-    const newSteps = generatePriorityQueueSteps([...pqRef.current], selectedOperation as 'enqueue' | 'dequeue' | 'peek', itemValueInput, itemPriorityInput);
+    const needsValueAndPrio = selectedOperation === 'enqueue';
+    if (needsValueAndPrio && (String(itemValueInput).trim() === "" || itemPriorityInput === undefined || isNaN(itemPriorityInput))) {
+        toast({title: "Invalid Input", description: "Please provide item value and a numeric priority for enqueue.", variant: "destructive"}); return;
+    }
+
+    const newSteps = generatePriorityQueueSteps([...pqRef.current], selectedOperation as 'enqueue'|'dequeue'|'peek', itemValueInput, itemPriorityInput);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -80,6 +89,10 @@ export default function PriorityQueueVisualizerPage() {
         updateStateFromStep(0);
         if(newSteps[newSteps.length - 1].heapArray) {
             pqRef.current = [...newSteps[newSteps.length - 1].heapArray];
+        }
+        const lastStep = newSteps[newSteps.length - 1];
+        if (lastStep.message && lastStep.operation !== 'init') {
+             toast({title: `${lastStep.lastOperation || 'Operation'} Status`, description: lastStep.message});
         }
     } else {
         setCurrentStep({ ...currentStep!, message: "Operation did not produce steps." });
@@ -138,6 +151,7 @@ export default function PriorityQueueVisualizerPage() {
                 <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as PQOperationType)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="init">Initialize/Clear PQ</SelectItem>
                     <SelectItem value="enqueue">Enqueue (Value, Priority)</SelectItem>
                     <SelectItem value="dequeue">Dequeue (Extract Min)</SelectItem>
                     <SelectItem value="peek">Peek (Min)</SelectItem>
@@ -158,7 +172,7 @@ export default function PriorityQueueVisualizerPage() {
               )}
             </div>
             <Button onClick={handleExecuteOperation} disabled={isPlaying} className="w-full md:w-auto">
-                {selectedOperation === 'enqueue' ? <PlusCircle /> : selectedOperation === 'dequeue' ? <MinusCircle /> : <Eye />}
+                {selectedOperation === 'enqueue' ? <PlusCircle /> : selectedOperation === 'dequeue' ? <MinusCircle /> : selectedOperation === 'peek' ? <Eye /> : <RotateCcw />}
                 Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
             </Button>
             

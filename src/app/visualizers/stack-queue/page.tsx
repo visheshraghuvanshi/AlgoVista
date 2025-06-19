@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, StackQueueAlgorithmStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Layers, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
@@ -15,9 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+
 import { STACK_QUEUE_CODE_SNIPPETS, StackQueueCodeSnippetsPanel } from './StackQueueCodeSnippets';
 import { StackQueueVisualizationPanel } from './StackQueueVisualizationPanel';
-import { generateStackSteps, generateQueueSteps, type StackQueueAlgorithmStep, STACK_LINE_MAP, QUEUE_LINE_MAP } from './stack-queue-logic';
+import { generateStackSteps, generateQueueSteps, STACK_LINE_MAP, QUEUE_LINE_MAP } from './stack-queue-logic';
 
 const DEFAULT_ANIMATION_SPEED = 600; 
 const MIN_SPEED = 100;
@@ -113,21 +114,22 @@ export default function StackQueueVisualizerPage() {
     }
     
     let operationResultStep: StackQueueAlgorithmStep | undefined;
+    let newSteps: StackQueueAlgorithmStep[] = [];
 
     if (selectedStructure === 'stack') {
-      const tempSteps = generateStackSteps([...dataStructureRef.current], selectedStackOp, opValue);
-      operationResultStep = tempSteps[tempSteps.length -1]; 
-      if(operationResultStep) dataStructureRef.current = [...operationResultStep.array];
+      newSteps = generateStackSteps([...dataStructureRef.current], selectedStackOp, opValue);
     } else { 
-      const tempSteps = generateQueueSteps([...dataStructureRef.current], selectedQueueOp, opValue);
-      operationResultStep = tempSteps[tempSteps.length -1];
-      if(operationResultStep) dataStructureRef.current = [...operationResultStep.array];
+      newSteps = generateQueueSteps([...dataStructureRef.current], selectedQueueOp, opValue);
     }
     
-    if (operationResultStep) {
-        setCurrentStep(operationResultStep);
-        setSteps([operationResultStep]); 
-        toast({title: `${operationResultStep.lastOperation || 'Operation'} Complete`, description: operationResultStep.message});
+    setSteps(newSteps); // Set all generated steps for potential animation
+    if (newSteps.length > 0) {
+      operationResultStep = newSteps[newSteps.length -1]; // Display the final state
+      if(operationResultStep) {
+          dataStructureRef.current = [...operationResultStep.array];
+          setCurrentStep(operationResultStep);
+          toast({title: `${operationResultStep.lastOperation || 'Operation'} Complete`, description: operationResultStep.message});
+      }
     } else {
         const currentArrayState = [...dataStructureRef.current];
         setCurrentStep({
@@ -242,6 +244,7 @@ export default function StackQueueVisualizerPage() {
             <div className="flex items-center justify-start pt-4 border-t">
               <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Structure & Controls</Button>
             </div>
+             {/* Animation controls are removed as operations are discrete */}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />

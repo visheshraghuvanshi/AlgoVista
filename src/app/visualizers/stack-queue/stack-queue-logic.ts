@@ -1,53 +1,40 @@
 // src/app/visualizers/stack-queue/stack-queue-logic.ts
-import type { AlgorithmStep } from '@/types'; // Using generic AlgorithmStep from global for now
-// If StackQueueAlgorithmStep becomes very different, define it locally.
-
-// For now, let's define StackQueueAlgorithmStep locally to match the page's expectation.
-export interface StackQueueAlgorithmStep extends AlgorithmStep {
-  array: (string | number)[]; // Represents the stack or queue
-  topIndex?: number; // For stack visualization
-  frontIndex?: number; // For queue visualization
-  rearIndex?: number; // For queue visualization
-  operationType: 'stack' | 'queue';
-  lastOperation?: string; 
-  processedValue?: string | number | null | undefined; 
-}
-
+import type { StackQueueAlgorithmStep } from './types'; // Local import
 
 export const STACK_LINE_MAP = {
   classDef: 1, 
   constructor: 2, 
   pushStart: 3, 
   pushToArray: 4, 
-  pushEnd: 5, 
-  popStart: 6, 
-  popCheckEmpty: 7, 
-  popFromArray: 8, 
-  popEnd: 9, 
-  peekStart: 10, 
-  peekCheckEmpty: 11, 
-  peekReturnTop: 12, 
-  peekEnd: 13, 
-  isEmpty: 14, 
-  size: 15, 
+  // pushEnd: 5, // Implicit line after pushToArray
+  popStart: 5, 
+  popCheckEmpty: 6, 
+  popFromArray: 7, 
+  // popEnd: 9, // Implicit
+  peekStart: 8, 
+  peekCheckEmpty: 9, 
+  peekReturnTop: 10, 
+  // peekEnd: 13, // Implicit
+  isEmpty: 11, 
+  size: 12, 
 };
 
 export const QUEUE_LINE_MAP = {
-  classDef: 17, 
-  constructor: 18, 
-  enqueueStart: 19, 
-  enqueueToArray: 20, 
-  enqueueEnd: 21, 
-  dequeueStart: 22, 
-  dequeueCheckEmpty: 23, 
-  dequeueFromArray: 24, 
-  dequeueEnd: 25, 
-  frontStart: 26, 
-  frontCheckEmpty: 27, 
-  frontReturnFirst: 28, 
-  frontEnd: 29, 
-  isEmpty: 30, 
-  size: 31, 
+  classDef: 14, // Start line numbers for queue assuming stack code is lines 1-13
+  constructor: 15, 
+  enqueueStart: 16, 
+  enqueueToArray: 17, 
+  // enqueueEnd: 21, 
+  dequeueStart: 18, 
+  dequeueCheckEmpty: 19, 
+  dequeueFromArray: 20, 
+  // dequeueEnd: 25, 
+  frontStart: 21, 
+  frontCheckEmpty: 22, 
+  frontReturnFirst: 23, 
+  // frontEnd: 29, 
+  isEmpty: 24, 
+  size: 25, 
 };
 
 
@@ -96,7 +83,7 @@ export const generateStackSteps = (
       processedVal = value;
       stack.push(value);
       addStep(lm.pushToArray, stack, [stack.length - 1], `${message} Added ${value}.`, `Pushed ${value}`);
-      addStep(lm.pushEnd, stack, [stack.length - 1], `Push ${value} complete. Stack: [${stack.join(', ')}]`);
+      // addStep(lm.pushEnd, stack, [stack.length - 1], `Push ${value} complete. Stack: [${stack.join(', ')}]`);
       break;
     case 'pop':
       message = "Popping from stack...";
@@ -109,7 +96,7 @@ export const generateStackSteps = (
         processedVal = stack.pop();
         addStep(lm.popFromArray, stack, [], `${message} Popped ${processedVal}.`, `Popped ${processedVal}`);
       }
-      addStep(lm.popEnd, stack, stack.length > 0 ? [stack.length - 1] : [], `Pop complete. Stack: [${stack.join(', ')}]`);
+      // addStep(lm.popEnd, stack, stack.length > 0 ? [stack.length - 1] : [], `Pop complete. Stack: [${stack.join(', ')}]`);
       break;
     case 'peek':
       message = "Peeking top of stack...";
@@ -122,9 +109,11 @@ export const generateStackSteps = (
         processedVal = stack[stack.length - 1];
         addStep(lm.peekReturnTop, stack, [stack.length - 1], `${message} Top element is ${processedVal}.`, `Peeked ${processedVal}`);
       }
-      addStep(lm.peekEnd, stack, stack.length > 0 ? [stack.length - 1] : [], `Peek complete. Stack: [${stack.join(', ')}]`);
+      // addStep(lm.peekEnd, stack, stack.length > 0 ? [stack.length - 1] : [], `Peek complete. Stack: [${stack.join(', ')}]`);
       break;
   }
+   // Add a final step to show the end state clearly
+  addStep(null, stack, [], `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation finished.`);
   return localSteps;
 };
 
@@ -174,7 +163,7 @@ export const generateQueueSteps = (
       processedVal = value;
       queue.push(value); 
       addStep(lm.enqueueToArray, queue, [queue.length - 1], `${message} Added ${value} to rear.`, `Enqueued ${value}`);
-      addStep(lm.enqueueEnd, queue, [queue.length - 1], `Enqueue ${value} complete. Queue: [${queue.join(', ')}]`);
+      // addStep(lm.enqueueEnd, queue, [queue.length - 1], `Enqueue ${value} complete. Queue: [${queue.join(', ')}]`);
       break;
     case 'dequeue':
       message = "Dequeuing from queue...";
@@ -187,7 +176,7 @@ export const generateQueueSteps = (
         processedVal = queue.shift(); 
         addStep(lm.dequeueFromArray, queue, [], `${message} Dequeued ${processedVal} from front.`, `Dequeued ${processedVal}`);
       }
-      addStep(lm.dequeueEnd, queue, [], `Dequeue complete. Queue: [${queue.join(', ')}]`);
+      // addStep(lm.dequeueEnd, queue, [], `Dequeue complete. Queue: [${queue.join(', ')}]`);
       break;
     case 'front':
       message = "Peeking front of queue...";
@@ -200,8 +189,14 @@ export const generateQueueSteps = (
         processedVal = queue[0];
         addStep(lm.frontReturnFirst, queue, [0], `${message} Front element is ${processedVal}.`, `Front is ${processedVal}`);
       }
-      addStep(lm.frontEnd, queue, queue.length > 0 ? [0] : [], `Front peek complete. Queue: [${queue.join(', ')}]`);
+      // addStep(lm.frontEnd, queue, queue.length > 0 ? [0] : [], `Front peek complete. Queue: [${queue.join(', ')}]`);
       break;
   }
+  addStep(null, queue, [], `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation finished.`);
   return localSteps;
 };
+
+export const createInitialPriorityQueue = (): any[] => { // Changed from PriorityQueueItem to any for stack/queue
+  return [];
+};
+
