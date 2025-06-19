@@ -1,11 +1,11 @@
-
+// src/app/visualizers/tower-of-hanoi/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 
-import { algorithmMetadata } from './metadata';
+import { algorithmMetadata } from './metadata'; // Local import
 import { TowerOfHanoiCodePanel } from './TowerOfHanoiCodePanel';
 import { TowerOfHanoiVisualizationPanel } from './TowerOfHanoiVisualizationPanel';
 import { generateTowerOfHanoiSteps, type TowerOfHanoiStep, TOWER_OF_HANOI_LINE_MAP } from './tower-of-hanoi-logic';
@@ -23,7 +23,7 @@ const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 200;
 const MAX_SPEED = 2000;
 const DEFAULT_NUM_DISKS = 3;
-const MAX_DISKS_FOR_VIS = 6; // Performance degrades quickly
+const MAX_DISKS_FOR_VIS = 6; 
 
 export default function TowerOfHanoiVisualizerPage() {
   const { toast } = useToast();
@@ -41,7 +41,7 @@ export default function TowerOfHanoiVisualizerPage() {
   const handleNumDisksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = parseInt(e.target.value, 10);
     if (isNaN(val)) val = 1;
-    val = Math.max(1, Math.min(val, MAX_DISKS_FOR_VIS)); // Clamp between 1 and MAX_DISKS_FOR_VIS
+    val = Math.max(1, Math.min(val, MAX_DISKS_FOR_VIS)); 
     setNumDisks(val);
   };
 
@@ -61,7 +61,7 @@ export default function TowerOfHanoiVisualizerPage() {
 
   useEffect(() => {
     generateNewSteps();
-  }, [generateNewSteps]); // Regenerate steps when numDisks changes
+  }, [generateNewSteps]); 
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -101,8 +101,9 @@ export default function TowerOfHanoiVisualizerPage() {
   };
   const handleReset = () => {
     setIsPlaying(false);
-    setIsFinished(true); // New steps will set this
-    generateNewSteps();
+    setIsFinished(true); 
+    setNumDisks(DEFAULT_NUM_DISKS); 
+    // generateNewSteps will be called by useEffect on numDisks change
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -146,12 +147,11 @@ export default function TowerOfHanoiVisualizerPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                 <div className="space-y-1">
                     <Label htmlFor="numDisksInput" className="text-sm font-medium">Number of Disks (1-{MAX_DISKS_FOR_VIS})</Label>
-                    <Input id="numDisksInput" type="number" value={numDisks} onChange={handleNumDisksChange} min="1" max={MAX_DISKS_FOR_VIS} disabled={isPlaying} />
+                    <Input id="numDisksInput" type="number" value={numDisks} onChange={handleNumDisksChange} min="1" max={MAX_DISKS_FOR_VIS.toString()} disabled={isPlaying} />
                 </div>
                  <Button onClick={generateNewSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Start / Reset Simulation</Button>
             </div>
             <div className="flex items-center justify-start pt-4 border-t">
-                {/* Reset button is now combined with Start for simplicity */}
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">

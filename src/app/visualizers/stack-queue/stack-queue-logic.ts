@@ -1,51 +1,53 @@
+// src/app/visualizers/stack-queue/stack-queue-logic.ts
+import type { AlgorithmStep } from '@/types'; // Using generic AlgorithmStep from global for now
+// If StackQueueAlgorithmStep becomes very different, define it locally.
 
-import type { AlgorithmStep } from '@/types';
-
+// For now, let's define StackQueueAlgorithmStep locally to match the page's expectation.
 export interface StackQueueAlgorithmStep extends AlgorithmStep {
+  array: (string | number)[]; // Represents the stack or queue
   topIndex?: number; // For stack visualization
   frontIndex?: number; // For queue visualization
   rearIndex?: number; // For queue visualization
   operationType: 'stack' | 'queue';
-  lastOperation?: string; // e.g., "Pushed 5", "Popped 3", "Enqueued 7"
-  processedValue?: string | number | null | undefined; // Value that was pushed, popped, enqueued, dequeued
+  lastOperation?: string; 
+  processedValue?: string | number | null | undefined; 
 }
 
 
 export const STACK_LINE_MAP = {
-  classDef: 1, // class Stack {
-  constructor: 2, // constructor() { this.items = []; }
-  pushStart: 3, // push(element) {
-  pushToArray: 4, // this.items.push(element);
-  pushEnd: 5, // }
-  popStart: 6, // pop() {
-  popCheckEmpty: 7, // if (this.isEmpty()) return null;
-  popFromArray: 8, // return this.items.pop();
-  popEnd: 9, // }
-  peekStart: 10, // peek() {
-  peekCheckEmpty: 11, // if (this.isEmpty()) return null;
-  peekReturnTop: 12, // return this.items[this.items.length - 1];
-  peekEnd: 13, // }
-  isEmpty: 14, // isEmpty() { return this.items.length === 0; }
-  size: 15, // size() { return this.items.length; }
+  classDef: 1, 
+  constructor: 2, 
+  pushStart: 3, 
+  pushToArray: 4, 
+  pushEnd: 5, 
+  popStart: 6, 
+  popCheckEmpty: 7, 
+  popFromArray: 8, 
+  popEnd: 9, 
+  peekStart: 10, 
+  peekCheckEmpty: 11, 
+  peekReturnTop: 12, 
+  peekEnd: 13, 
+  isEmpty: 14, 
+  size: 15, 
 };
 
 export const QUEUE_LINE_MAP = {
-  // Conceptual lines based on a simple array implementation for the snippets
-  classDef: 17, // class Queue {
-  constructor: 18, // constructor() { this.items = []; }
-  enqueueStart: 19, // enqueue(element) {
-  enqueueToArray: 20, // this.items.push(element); // Adds to rear
-  enqueueEnd: 21, // }
-  dequeueStart: 22, // dequeue() {
-  dequeueCheckEmpty: 23, // if (this.isEmpty()) return null;
-  dequeueFromArray: 24, // return this.items.shift(); // Removes from front
-  dequeueEnd: 25, // }
-  frontStart: 26, // front() {
-  frontCheckEmpty: 27, // if (this.isEmpty()) return null;
-  frontReturnFirst: 28, // return this.items[0];
-  frontEnd: 29, // }
-  isEmpty: 30, // isEmpty() { return this.items.length === 0; }
-  size: 31, // size() { return this.items.length; }
+  classDef: 17, 
+  constructor: 18, 
+  enqueueStart: 19, 
+  enqueueToArray: 20, 
+  enqueueEnd: 21, 
+  dequeueStart: 22, 
+  dequeueCheckEmpty: 23, 
+  dequeueFromArray: 24, 
+  dequeueEnd: 25, 
+  frontStart: 26, 
+  frontCheckEmpty: 27, 
+  frontReturnFirst: 28, 
+  frontEnd: 29, 
+  isEmpty: 30, 
+  size: 31, 
 };
 
 
@@ -140,7 +142,7 @@ export const generateQueueSteps = (
   const addStep = (
     line: number | null,
     currentArrState: (string | number)[],
-    activeIdx: number[] = [], // For queue, could be front or rear
+    activeIdx: number[] = [], 
     msg: string = message,
     lastOpMsg?: string,
   ) => {
@@ -170,7 +172,7 @@ export const generateQueueSteps = (
       message = `Enqueuing ${value}...`;
       addStep(lm.enqueueStart, queue, [], message);
       processedVal = value;
-      queue.push(value); // Simple array push for enqueue (adds to rear)
+      queue.push(value); 
       addStep(lm.enqueueToArray, queue, [queue.length - 1], `${message} Added ${value} to rear.`, `Enqueued ${value}`);
       addStep(lm.enqueueEnd, queue, [queue.length - 1], `Enqueue ${value} complete. Queue: [${queue.join(', ')}]`);
       break;
@@ -182,7 +184,7 @@ export const generateQueueSteps = (
         addStep(null, queue, [], `${message} Queue is empty. Cannot dequeue.`);
         processedVal = null;
       } else {
-        processedVal = queue.shift(); // Simple array shift for dequeue (removes from front)
+        processedVal = queue.shift(); 
         addStep(lm.dequeueFromArray, queue, [], `${message} Dequeued ${processedVal} from front.`, `Dequeued ${processedVal}`);
       }
       addStep(lm.dequeueEnd, queue, [], `Dequeue complete. Queue: [${queue.join(', ')}]`);
@@ -203,4 +205,3 @@ export const generateQueueSteps = (
   }
   return localSteps;
 };
-    

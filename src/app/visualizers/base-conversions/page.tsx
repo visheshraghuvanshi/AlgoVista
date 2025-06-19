@@ -1,25 +1,23 @@
-
+// src/app/visualizers/base-conversions/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Construction } from 'lucide-react'; // Added Construction
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Construction } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 
-import { algorithmMetadata } from './metadata'; 
-import { BASE_CONVERSION_CODE_SNIPPETS } from './BaseConversionsCodePanel'; // Using existing panel structure
+import { algorithmMetadata } from './metadata'; // Local import
+import { BaseConversionsCodePanel } from './BaseConversionsCodePanel';
 import { BaseConversionsVisualizationPanel } from './BaseConversionsVisualizationPanel';
 import { generateBaseConversionSteps, type BaseConversionStep } from './base-conversions-logic';
-import { BaseConversionsCodePanel } from './BaseConversionsCodePanel';
-
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -63,20 +61,18 @@ export default function BaseConversionsVisualizerPage() {
       toast({ title: "Invalid Base", description: "Bases must be integers between 2 and 36.", variant: "destructive" });
       return;
     }
-    // Basic validation for number input against its base (more complex for non-decimal)
     if (fromBase !== 10) {
         const validChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".slice(0, fromBase);
         if (!numberInput.split('').every(char => validChars.includes(char.toUpperCase()))) {
             toast({ title: "Invalid Number", description: `Number "${numberInput}" contains invalid characters for base ${fromBase}.`, variant: "destructive" });
             return;
         }
-    } else { // fromBase is 10
+    } else { 
         if (isNaN(parseInt(numberInput,10))) {
              toast({ title: "Invalid Decimal Number", description: `"${numberInput}" is not a valid decimal number.`, variant: "destructive" });
             return;
         }
     }
-
 
     const newSteps = generateBaseConversionSteps(numberInput, fromBase, toBase);
     setSteps(newSteps);
@@ -120,11 +116,6 @@ export default function BaseConversionsVisualizerPage() {
     setNumberInput("42");
     setFromBaseInput("10");
     setToBaseInput("2");
-    // handleConvert will be called by input changes
-    const newSteps = generateBaseConversionSteps("42", 10, 2);
-    setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
   };
   
   const algoDetails: AlgorithmDetailsProps = {

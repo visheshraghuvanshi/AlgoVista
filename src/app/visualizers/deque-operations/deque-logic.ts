@@ -1,33 +1,23 @@
-
-import type { AlgorithmStep } from '@/types'; // Use generic AlgorithmStep
-
-// Adjusted StackQueueAlgorithmStep for Deque specific needs if any (can reuse for now)
-export interface DequeAlgorithmStep extends AlgorithmStep {
-  // 'array' field from AlgorithmStep will hold deque elements
-  frontIndex?: number; 
-  rearIndex?: number;  
-  operationType: 'deque'; // Distinguish from stack/queue if needed
-  lastOperation?: string; 
-  processedValue?: string | number | null | undefined; 
-}
+// src/app/visualizers/deque-operations/deque-logic.ts
+import type { AlgorithmStep } from '@/types'; // Generic type, if specific fields aren't needed from global
+import type { DequeAlgorithmStep } from './types'; // Local, more specific type
 
 export const DEQUE_LINE_MAP = {
-  // Conceptual based on array implementation
   classDef: 1,
   constructor: 2,
   addFrontStart: 3,
-  addFrontOp: 4, // e.g., unshift
+  addFrontOp: 4, 
   addFrontEnd: 5,
   addRearStart: 6,
-  addRearOp: 7,   // e.g., push
+  addRearOp: 7,   
   addRearEnd: 8,
   removeFrontStart: 9,
   removeFrontCheckEmpty: 10,
-  removeFrontOp: 11, // e.g., shift
+  removeFrontOp: 11, 
   removeFrontEnd: 12,
   removeRearStart: 13,
   removeRearCheckEmpty: 14,
-  removeRearOp: 15,  // e.g., pop
+  removeRearOp: 15,  
   removeRearEnd: 16,
   peekFrontStart: 17,
   peekFrontCheckEmpty: 18,
@@ -55,7 +45,7 @@ export const generateDequeSteps = (
   const addStep = (
     line: number | null,
     currentArrState: (string | number)[],
-    activeIdx: number[] = [], // Can highlight front/rear or element being processed
+    activeIdx: number[] = [], 
     msg: string = message,
     lastOpMsg?: string,
   ) => {

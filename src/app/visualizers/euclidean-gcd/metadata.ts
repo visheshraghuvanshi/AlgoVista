@@ -1,5 +1,5 @@
-
-import type { AlgorithmMetadata } from '@/types';
+// src/app/visualizers/euclidean-gcd/metadata.ts
+import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'euclidean-gcd',

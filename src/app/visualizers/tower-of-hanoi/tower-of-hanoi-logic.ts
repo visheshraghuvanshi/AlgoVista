@@ -1,22 +1,16 @@
-
-import type { AlgorithmStep } from '@/types';
-
-// Specific step type for Tower of Hanoi
-export interface TowerOfHanoiStep extends AlgorithmStep {
-  pegStates: { [key: string]: number[] }; // e.g., { A: [3,2,1], B: [], C: [] }
-  lastMove?: { disk: number; fromPeg: string; toPeg: string };
-  numDisks: number;
-}
+// src/app/visualizers/tower-of-hanoi/tower-of-hanoi-logic.ts
+import type { AlgorithmStep } from '@/types'; // Use global for now
+import type { TowerOfHanoiStep } from './types'; // Local, more specific type
 
 export const TOWER_OF_HANOI_LINE_MAP = {
   funcDeclare: 1,
   baseCaseN1: 2,
-  logMoveN1: 3, // console.log for base case move
+  logMoveN1: 3, 
   returnBase: 4,
-  recursiveCall1: 5, // Move n-1 from source to auxiliary
-  logMoveN: 6,       // Move nth disk from source to target
-  recursiveCall2: 7, // Move n-1 from auxiliary to target
-  funcEnd: 8,        // End of main recursive function (conceptual)
+  recursiveCall1: 5, 
+  logMoveN: 6,       
+  recursiveCall2: 7, 
+  funcEnd: 8,        
 };
 
 let stepCounter = 0;
@@ -29,19 +23,16 @@ function addStep(
   message: string,
   move?: { disk: number; fromPeg: string; toPeg: string }
 ) {
-  // Deep clone pegStates to avoid mutation issues across steps
   const clonedPegStates: { [key: string]: number[] } = {};
   for (const peg in currentPegStates) {
     clonedPegStates[peg] = [...currentPegStates[peg]];
   }
 
   steps.push({
-    // Standard AlgorithmStep fields (array is not directly used here)
-    array: [], // Not applicable for Tower of Hanoi in this way
-    activeIndices: move ? [move.disk] : [], // Highlight the disk being moved
+    array: [], 
+    activeIndices: move ? [move.disk] : [], 
     swappingIndices: [],
-    sortedIndices: [], // Not applicable
-    // TowerOfHanoiStep specific fields
+    sortedIndices: [], 
     pegStates: clonedPegStates,
     lastMove: move,
     numDisks: numDisksGlobal,
@@ -61,7 +52,7 @@ export const generateTowerOfHanoiSteps = (
   stepCounter = 0;
 
   const pegs: { [key: string]: number[] } = { A: [], B: [], C: [] };
-  pegs[source] = Array.from({ length: numDisks }, (_, i) => numDisks - i); // Initialize source peg
+  pegs[source] = Array.from({ length: numDisks }, (_, i) => numDisks - i); 
 
   addStep(localSteps, numDisks, pegs, null, `Initial state: ${numDisks} disks on peg ${source}.`);
 
@@ -101,4 +92,3 @@ export const generateTowerOfHanoiSteps = (
   addStep(localSteps, numDisks, pegs, null, `Tower of Hanoi complete. All ${numDisks} disks moved to peg ${target}.`);
   return localSteps;
 };
-

@@ -1,12 +1,12 @@
-
+// src/app/visualizers/euclidean-gcd/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
-import { algorithmMetadata } from './metadata'; 
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,19 +19,18 @@ import { EuclideanGcdCodePanel } from './EuclideanGcdCodePanel';
 import { EuclideanGcdVisualizationPanel } from './EuclideanGcdVisualizationPanel';
 import { generateEuclideanGcdSteps, type EuclideanGcdStep } from './euclidean-gcd-logic';
 
-
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
 const DEFAULT_BASE = "48";
-const DEFAULT_EXPONENT = "18"; // Renaming from problem context - GCD takes two numbers, not base/exp
+const DEFAULT_EXPONENT = "18";
 
 export default function EuclideanGcdVisualizerPage() {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   
-  const [numberAInput, setNumberAInput] = useState(DEFAULT_BASE); // Use A for first number
-  const [numberBInput, setNumberBInput] = useState(DEFAULT_EXPONENT); // Use B for second number
+  const [numberAInput, setNumberAInput] = useState(DEFAULT_BASE);
+  const [numberBInput, setNumberBInput] = useState(DEFAULT_EXPONENT);
 
   const [steps, setSteps] = useState<EuclideanGcdStep[]>([]);
   const [currentStep, setCurrentStep] = useState<EuclideanGcdStep | null>(null);
@@ -66,7 +65,6 @@ export default function EuclideanGcdVisualizerPage() {
         toast({ title: "Invalid Input", description: "Please enter positive integers for GCD.", variant: "destructive" });
         return;
     }
-
 
     const newSteps = generateEuclideanGcdSteps(numA, numB);
     setSteps(newSteps);
@@ -131,7 +129,6 @@ export default function EuclideanGcdVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -180,4 +177,3 @@ export default function EuclideanGcdVisualizerPage() {
     </div>
   );
 }
-    

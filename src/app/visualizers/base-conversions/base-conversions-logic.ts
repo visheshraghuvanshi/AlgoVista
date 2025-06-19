@@ -1,5 +1,6 @@
-
-import type { AlgorithmStep } from '@/types';
+// src/app/visualizers/base-conversions/base-conversions-logic.ts
+import type { AlgorithmStep } from '@/types'; // Use global for now
+import type { BaseConversionStep } from './types'; // Local, more specific type
 
 export const BASE_CONVERSION_LINE_MAP_DEC_TO_BASE = {
   funcDeclare: 1,
@@ -24,19 +25,6 @@ export const BASE_CONVERSION_LINE_MAP_BASE_TO_DEC = {
   returnResult: 18,
 };
 
-export interface BaseConversionStep extends AlgorithmStep {
-  auxiliaryData: {
-    originalNumber: string;
-    fromBase: number;
-    toBase: number;
-    currentValue: string | number; // Can be number during dec-to-base, string for base-to-dec
-    intermediateResult?: string; // e.g. remainders collected, sum accumulated
-    finalResult?: string;
-    equation?: string; // e.g. 42 / 2 = 21 R 0
-    message: string;
-  };
-}
-
 const DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export const generateBaseConversionSteps = (
@@ -49,7 +37,7 @@ export const generateBaseConversionSteps = (
   const addStep = (
     line: number | null,
     message: string,
-    currentVal: string | number,
+    currentVal: string | number, 
     intermediate?: string,
     final?: string,
     eq?: string
@@ -68,7 +56,6 @@ export const generateBaseConversionSteps = (
     });
   };
 
-  // Step 1: Convert fromBase to Decimal (if not already decimal)
   let decimalValue = 0;
   let numToConvert = numberStr;
 
@@ -86,7 +73,7 @@ export const generateBaseConversionSteps = (
       
       if (digitValue === -1 || digitValue >= fromBase) {
         addStep(lm.checkInvalidDigit, `Invalid digit '${char}' for base ${fromBase}. Aborting.`, char);
-        return localSteps; // Or throw error
+        return localSteps; 
       }
       addStep(lm.getDigitValue, `Digit '${char}' has value ${digitValue}.`, char, `Sum: ${tempDecimal}, Power: ${power}`);
       
@@ -97,7 +84,7 @@ export const generateBaseConversionSteps = (
       addStep(lm.incrementPower, `Increment power to ${power}.`, char, `Sum: ${tempDecimal}, Power: ${power}`);
     }
     decimalValue = tempDecimal;
-    numToConvert = decimalValue.toString(); // Now use decimal for next step
+    numToConvert = decimalValue.toString(); 
     addStep(lm.returnResult, `Decimal equivalent of "${numberStr}" (base ${fromBase}) is ${decimalValue}.`, decimalValue, `Final Sum: ${decimalValue}`);
   } else {
     decimalValue = parseInt(numberStr, 10);
@@ -108,7 +95,6 @@ export const generateBaseConversionSteps = (
      addStep(null, `Input "${numberStr}" is already in Decimal (base 10). Value: ${decimalValue}.`, decimalValue);
   }
 
-  // Step 2: Convert Decimal to toBase (if not already decimal)
   if (toBase !== 10) {
     const lm = BASE_CONVERSION_LINE_MAP_DEC_TO_BASE;
     addStep(lm.funcDeclare, `Convert Decimal ${decimalValue} to Base ${toBase}.`, decimalValue);
@@ -130,7 +116,7 @@ export const generateBaseConversionSteps = (
       addStep(lm.updateNum, `Update number = floor(${tempNum*toBase + remainder} / ${toBase}) = ${tempNum}.`, tempNum, resultStr);
     }
     addStep(lm.returnResult, `Final result in base ${toBase}: "${resultStr}".`, tempNum, resultStr, resultStr);
-  } else { // Target is decimal, and we already have decimalValue
+  } else { 
      addStep(null, `Target base is 10. Result is ${decimalValue}.`, decimalValue, decimalValue.toString(), decimalValue.toString());
   }
   

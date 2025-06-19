@@ -1,4 +1,4 @@
-
+// src/app/visualizers/stack-queue/StackQueueCodeSnippets.tsx
 "use client";
 
 import React, {useState} from 'react';
@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { STACK_LINE_MAP, QUEUE_LINE_MAP } from './stack-queue-logic';
+import { STACK_LINE_MAP, QUEUE_LINE_MAP } from './stack-queue-logic'; // Local import
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export const STACK_QUEUE_CODE_SNIPPETS: Record<string, Record<string, string[]>> = {
@@ -68,14 +68,14 @@ export const STACK_QUEUE_CODE_SNIPPETS: Record<string, Record<string, string[]>>
       "class Queue:",
       "    def __init__(self): self.items = deque()",
       "    def enqueue(self, element): self.items.append(element)",
-      "    def dequeue(self): # Corrected indentation",
-      "        if not self.items: return None # Corrected is_empty and items access",
+      "    def dequeue(self):",
+      "        if not self.items: return None",
       "        return self.items.popleft()",
       "    def front(self):",
-      "        if not self.items: return None # Corrected is_empty and items access",
+      "        if not self.items: return None",
       "        return self.items[0]",
-      "    def is_empty(self): return len(self.items) == 0 # Corrected method def",
-      "    def size(self): return len(self.items)", // Corrected method def
+      "    def is_empty(self): return len(self.items) == 0",
+      "    def size(self): return len(self.items)", 
     ]
   },
   Java: {
@@ -215,12 +215,10 @@ export function StackQueueCodeSnippetsPanel({ currentLine, structureType }: Stac
               let lineIsHighlighted = false;
               if(currentLine) {
                 if (structureType === 'stack') {
-                    const lineMapValues = Object.values(STACK_LINE_MAP);
                     if (index + 1 === currentLine) lineIsHighlighted = true;
 
                 } else if (structureType === 'queue') {
-                    const lineMapValues = Object.values(QUEUE_LINE_MAP);
-                     if (index + 1 === (currentLine - 16) ) lineIsHighlighted = true; // Adjusted base for Queue lines
+                     if (index + 1 === (currentLine - (Object.keys(STACK_LINE_MAP).length + 1)) ) lineIsHighlighted = true; // Adjusted base for Queue lines
                 }
               }
 
@@ -238,4 +236,3 @@ export function StackQueueCodeSnippetsPanel({ currentLine, structureType }: Stac
     </Card>
   );
 }
-

@@ -1,22 +1,21 @@
-
+// src/app/visualizers/linked-list-reversal/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from '@/components/algo-vista/LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; 
 import { LinkedListReversalCodePanel } from './LinkedListReversalCodePanel'; 
-import { LinkedListControlsPanel, type LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types'; 
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { generateLinkedListReversalSteps, REVERSAL_ITERATIVE_LINE_MAP, REVERSAL_RECURSIVE_LINE_MAP } from './linked-list-reversal-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata'; 
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -95,16 +94,15 @@ export default function LinkedListReversalPage() {
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
-  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
+  const handlePlay = () => { if (!isFinished && steps.length > 1 && reversalType !== 'init') { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) return;
+    if (isFinished || currentStepIndex >= steps.length - 1 || reversalType === 'init') return;
     setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4'); setReversalType('iterative');
-    // handleGenerateSteps will be called by useEffect due to state changes
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -153,9 +151,9 @@ export default function LinkedListReversalPage() {
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
-                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
+                {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1 || reversalType === 'init'} size="lg"><Play className="mr-2"/>Play</Button> 
                              : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
-                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1} size="lg"><SkipForward className="mr-2"/>Step</Button>
+                <Button onClick={handleStep} variant="outline" disabled={isFinished || steps.length <=1 || reversalType === 'init'} size="lg"><SkipForward className="mr-2"/>Step</Button>
               </div>
               <div className="w-full sm:w-1/2 md:w-1/3 space-y-2">
                 <Label htmlFor="speedControl">Animation Speed</Label>

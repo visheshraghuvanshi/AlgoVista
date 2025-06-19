@@ -1,5 +1,5 @@
-
-import type { AlgorithmMetadata } from '@/types';
+// src/app/visualizers/stack-queue/metadata.ts
+import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'stack-queue',

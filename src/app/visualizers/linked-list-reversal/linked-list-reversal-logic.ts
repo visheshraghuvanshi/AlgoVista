@@ -1,5 +1,5 @@
-
-import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+// src/app/visualizers/linked-list-reversal/linked-list-reversal-logic.ts
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from './types'; // Local import
 
 export const REVERSAL_ITERATIVE_LINE_MAP = {
   funcDeclare: 1,
@@ -67,7 +67,6 @@ function createVisualNodesFromState(
     });
     currentId = nodeData.nextId;
   }
-  // If list becomes empty, show empty state
   if(visualNodes.length === 0 && nodeMap.size > 0 && currentHeadId === null) {
       // This can happen if head is null after reversal completion
   }
@@ -83,7 +82,6 @@ export const generateLinkedListReversalSteps = (
   nodeIdCounter = 3000; // Reset counter
   const parsedInitialNodes = parseListString(initialListString);
   
-  // Actual list structure (simulated)
   const listNodes = new Map<string, { value: string | number, nextId: string | null }>();
   parsedInitialNodes.forEach((pNode, index) => {
     listNodes.set(pNode.id, {
@@ -123,7 +121,7 @@ export const generateLinkedListReversalSteps = (
       nextNode = currentData.nextId;
       addStep(lm.storeNext, `Store nextNode = current.next (${nextNode ? listNodes.get(nextNode)?.value : 'null'})`, { head: headId, current, prev, nextNode });
       
-      currentData.nextId = prev; // Reverse pointer
+      currentData.nextId = prev; 
       addStep(lm.reversePointer, `Reverse: current.next = prev (${prev ? listNodes.get(prev)?.value : 'null'})`, { head: headId, current, prev, nextNode });
       
       prev = current;
@@ -134,10 +132,10 @@ export const generateLinkedListReversalSteps = (
     }
     addStep(lm.loopEnd, "Loop finished. current is null.", { head: headId, current, prev, nextNode });
     
-    headId = prev; // Update head to the new head
+    headId = prev; 
     addStep(lm.returnPrev, `New head is prev (${headId ? listNodes.get(headId)?.value : 'null'}). Reversal complete.`, { head: headId });
 
-  } else { // Recursive (simplified visualization steps)
+  } else { 
     const lm = REVERSAL_RECURSIVE_LINE_MAP;
     
     function reverseRecursiveHelper(currentRecursiveHeadId: string | null): string | null {
@@ -153,19 +151,15 @@ export const generateLinkedListReversalSteps = (
 
         const nextNodeForRecCallId = currentRecursiveNodeData.nextId;
         addStep(lm.recursiveCall, `Recursive call: reverseRecursive(${listNodes.get(nextNodeForRecCallId)?.value})`, { currentRecHead: currentRecursiveHeadId, nextRecCall: nextNodeForRecCallId });
-        const restId = reverseRecursiveHelper(nextNodeForRecCallId); // This is the new head of the reversed sublist
+        const restId = reverseRecursiveHelper(nextNodeForRecCallId); 
 
-        // After recursive call returns, 'rest' is the new head of the already reversed part of the list.
-        // currentRecursiveHeadId is the node that was originally before 'rest'.
-        // Its 'next' (nextNodeForRecCallId) is now the TAIL of the reversed 'rest' part.
-        // So, currentRecursiveNodeData.nextId still points to what is now the tail of 'rest'.
         const originalNextNodeData = listNodes.get(nextNodeForRecCallId)!;
-        originalNextNodeData.nextId = currentRecursiveHeadId; // Point tail of 'rest' back to currentRecursiveHeadId
-         listNodes.set(nextNodeForRecCallId, originalNextNodeData); // Update map
+        originalNextNodeData.nextId = currentRecursiveHeadId; 
+         listNodes.set(nextNodeForRecCallId, originalNextNodeData); 
         addStep(lm.reverseLink1, `head.next.next = head ((${listNodes.get(nextNodeForRecCallId)?.value}).next = ${listNodes.get(currentRecursiveHeadId)?.value})`, { currentRecHead: currentRecursiveHeadId, newTailOfRest: nextNodeForRecCallId });
 
-        currentRecursiveNodeData.nextId = null; // currentRecursiveHeadId becomes the new tail of its segment
-        listNodes.set(currentRecursiveHeadId, currentRecursiveNodeData); // Update map
+        currentRecursiveNodeData.nextId = null; 
+        listNodes.set(currentRecursiveHeadId, currentRecursiveNodeData); 
         addStep(lm.setNullNext, `head.next = null ((${listNodes.get(currentRecursiveHeadId)?.value}).next = null)`, { currentRecHead: currentRecursiveHeadId });
         
         addStep(lm.returnRest, `Return new head of reversed list: ${restId ? listNodes.get(restId)?.value : 'null'}`, { propagatedHead: restId });

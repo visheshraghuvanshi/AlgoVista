@@ -1,5 +1,5 @@
-
-import type { AlgorithmMetadata } from '@/types';
+// src/app/visualizers/base-conversions/metadata.ts
+import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'base-conversions',

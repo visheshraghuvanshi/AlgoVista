@@ -1,11 +1,12 @@
+// src/app/visualizers/stack-queue/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
-import { algorithmMetadata } from './metadata';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Layers, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import { STACK_QUEUE_CODE_SNIPPETS, StackQueueCodeSnippetsPanel } from './StackQ
 import { StackQueueVisualizationPanel } from './StackQueueVisualizationPanel';
 import { generateStackSteps, generateQueueSteps, type StackQueueAlgorithmStep, STACK_LINE_MAP, QUEUE_LINE_MAP } from './stack-queue-logic';
 
-const DEFAULT_ANIMATION_SPEED = 600; // Not used as Play/Pause are removed
+const DEFAULT_ANIMATION_SPEED = 600; 
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
 
@@ -39,9 +40,13 @@ export default function StackQueueVisualizerPage() {
 
   const [steps, setSteps] = useState<StackQueueAlgorithmStep[]>([]);
   const [currentStep, setCurrentStep] = useState<StackQueueAlgorithmStep | null>(null);
-  // currentStepIndex and animation controls are less relevant for discrete operations
-
+  
   const dataStructureRef = useRef<(string | number)[]>([]);
+
+  useEffect(() => {
+    setIsClient(true);
+    initializeStructure();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const parseValues = (input: string): (string|number)[] => {
     if (input.trim() === '') return [];
@@ -76,14 +81,12 @@ export default function StackQueueVisualizerPage() {
 
 
   useEffect(() => {
-    setIsClient(true);
     initializeStructure();
-  }, [initializeStructure]);
+  }, [initializeStructure, selectedStructure]); // Re-initialize if structure type changes
 
 
   const handleInitialValuesChange = (value: string) => {
     setInitialValuesInput(value);
-     // Re-initialize with new values
     const parsed = parseValues(value);
     dataStructureRef.current = parsed;
     const initialStepMessage = `${selectedStructure.charAt(0).toUpperCase() + selectedStructure.slice(1)} updated with new initial values.`;
@@ -113,7 +116,7 @@ export default function StackQueueVisualizerPage() {
 
     if (selectedStructure === 'stack') {
       const tempSteps = generateStackSteps([...dataStructureRef.current], selectedStackOp, opValue);
-      operationResultStep = tempSteps[tempSteps.length -1]; // Get the final state from generated steps
+      operationResultStep = tempSteps[tempSteps.length -1]; 
       if(operationResultStep) dataStructureRef.current = [...operationResultStep.array];
     } else { 
       const tempSteps = generateQueueSteps([...dataStructureRef.current], selectedQueueOp, opValue);
@@ -123,12 +126,9 @@ export default function StackQueueVisualizerPage() {
     
     if (operationResultStep) {
         setCurrentStep(operationResultStep);
-        // For discrete ops, we might just show the final step, or a minimal sequence
-        // For simplicity now, just showing the final state of the operation.
         setSteps([operationResultStep]); 
         toast({title: `${operationResultStep.lastOperation || 'Operation'} Complete`, description: operationResultStep.message});
     } else {
-        // Fallback if operation didn't produce a step (e.g., error handled in logic)
         const currentArrayState = [...dataStructureRef.current];
         setCurrentStep({
             array: currentArrayState, activeIndices: [], swappingIndices: [], sortedIndices: [],
@@ -144,10 +144,10 @@ export default function StackQueueVisualizerPage() {
 
   const handleReset = () => {
     setInitialValuesInput("10,20,30");
-    // initializeStructure will be called by initialValuesInput change.
     setOperationValueInput("40");
     setSelectedStackOp('push');
     setSelectedQueueOp('enqueue');
+    // initializeStructure will be called by initialValuesInput change / selectedStructure change
   };
 
   const algoDetails: AlgorithmDetailsProps = {
@@ -171,7 +171,7 @@ export default function StackQueueVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-             Interactive Stack and Queue operations.
+             Interactive Stack and Queue operations. Visualization steps are discrete per operation.
           </p>
         </div>
 
@@ -196,7 +196,6 @@ export default function StackQueueVisualizerPage() {
                 <Label htmlFor="structureType">Structure Type</Label>
                 <Select value={selectedStructure} onValueChange={(val) => {
                     setSelectedStructure(val as StructureType);
-                    initializeStructure(); 
                 }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -243,7 +242,6 @@ export default function StackQueueVisualizerPage() {
             <div className="flex items-center justify-start pt-4 border-t">
               <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Structure & Controls</Button>
             </div>
-            {/* Removed Play/Pause/Step/Speed controls as they are not suitable for discrete operations */}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -252,4 +250,3 @@ export default function StackQueueVisualizerPage() {
     </div>
   );
 }
-

@@ -1,10 +1,12 @@
+// src/app/visualizers/deque-operations/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { Columns, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,12 +16,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 
-import { algorithmMetadata } from './metadata';
 import { DequeOperationsCodePanel } from './DequeOperationsCodePanel';
 import { DequeOperationsVisualizationPanel } from './DequeOperationsVisualizationPanel';
 import { generateDequeSteps, type DequeAlgorithmStep, DEQUE_LINE_MAP } from './deque-logic';
 
-const DEFAULT_ANIMATION_SPEED = 600; // Not used for discrete operations
+const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 100;
 const MAX_SPEED = 1500;
 
@@ -34,8 +35,7 @@ export default function DequeOperationsVisualizerPage() {
   const [operationValueInput, setOperationValueInput] = useState("40");
 
   const [currentStep, setCurrentStep] = useState<DequeAlgorithmStep | null>(null);
-  // Steps array and animation controls are not needed for fully discrete operations
-
+  
   const dataStructureRef = useRef<(string | number)[]>([]);
 
   const parseValues = (input: string): (string|number)[] => {
@@ -98,8 +98,7 @@ export default function DequeOperationsVisualizerPage() {
         toast({title: "Input Needed", description: "Please provide a value for this operation.", variant: "destructive"});
         return;
     }
-
-    // For discrete operations, we generate just one "step" representing the result
+    
     const resultingSteps = generateDequeSteps([...dataStructureRef.current], selectedOperation, opValue);
     const finalStep = resultingSteps[resultingSteps.length - 1];
     
@@ -121,9 +120,20 @@ export default function DequeOperationsVisualizerPage() {
 
   const handleReset = () => {
     setInitialValuesInput("10,20,30");
-    initializeStructure(); 
     setOperationValueInput("40");
     setSelectedOperation('addRear');
+    // initializeStructure will be called by initialValuesInput change if it's a dependency of its useEffect.
+    // For direct re-init based on default values:
+    const parsedDefaults = parseValues("10,20,30");
+    dataStructureRef.current = parsedDefaults;
+    const initialStepData: DequeAlgorithmStep = {
+        array: [...parsedDefaults], activeIndices: [], swappingIndices: [], sortedIndices: [],
+        currentLine: null, message: "Deque reset to default values.",
+        frontIndex: parsedDefaults.length > 0 ? 0 : -1,
+        rearIndex: parsedDefaults.length > 0 ? parsedDefaults.length - 1 : -1,
+        operationType: 'deque', lastOperation: "Reset", processedValue: parsedDefaults.join(', ') || "empty"
+    };
+    setCurrentStep(initialStepData);
   };
 
   const algoDetails: AlgorithmDetailsProps = {
@@ -191,7 +201,6 @@ export default function DequeOperationsVisualizerPage() {
             <div className="flex items-center justify-start pt-4 border-t">
               <Button onClick={handleReset} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Reset Deque & Controls</Button>
             </div>
-            {/* Play/Pause/Step/Speed controls removed as they are not suitable for discrete operations */}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -200,4 +209,3 @@ export default function DequeOperationsVisualizerPage() {
     </div>
   );
 }
-

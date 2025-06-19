@@ -1,4 +1,4 @@
-
+// src/app/visualizers/linked-list-reversal/LinkedListReversalCodePanel.tsx
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -7,12 +7,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added Tabs
-import type { LinkedListOperation } from '@/components/algo-vista/LinkedListControlsPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// No explicit local type for LinkedListOperation needed in this panel if it only receives reversalType.
+// type LinkedListOperation = 'iterative' | 'recursive' | 'init'; // Not used here, but implies what reversalType can be
 
 type ReversalTypeInternal = 'iterative' | 'recursive' | 'init';
 
-// Updated to include Python, Java, C++
 export const REVERSAL_CODE_SNIPPETS: Record<string, Record<ReversalTypeInternal, string[]>> = {
   JavaScript: {
     iterative: [

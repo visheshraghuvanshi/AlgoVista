@@ -1,40 +1,30 @@
-
-import type { AlgorithmStep } from '@/types';
-
-export interface EuclideanGcdStep extends AlgorithmStep {
-  auxiliaryData?: {
-    a: number;
-    b: number;
-    remainder?: number;
-    equation?: string; // e.g., "a = q*b + r"
-    gcd?: number;
-    message?: string; // Specific message for this step in aux display
-  };
-}
+// src/app/visualizers/euclidean-gcd/euclidean-gcd-logic.ts
+import type { AlgorithmStep } from '@/types'; // Use global for now
+import type { EuclideanGcdStep } from './types'; // Local, more specific type
 
 export const EUCLIDEAN_GCD_LINE_MAP = {
-  funcDeclare: 1,       // function gcdIterative(a, b) {
-  whileLoop: 2,         //   while (b !== 0) {
-  storeTemp: 3,         //     let temp = b;
-  calculateRemainder: 4,//     b = a % b;
-  updateA: 5,           //     a = temp;
-  whileLoopEnd: 6,      //   }
-  returnA: 7,           //   return a;
-  funcEnd: 8,           // }
+  funcDeclare: 1,       
+  whileLoop: 2,         
+  storeTemp: 3,         
+  calculateRemainder: 4,
+  updateA: 5,           
+  whileLoopEnd: 6,      
+  returnA: 7,           
+  funcEnd: 8,           
 };
 
 export const generateEuclideanGcdSteps = (initialA: number, initialB: number): EuclideanGcdStep[] => {
   const localSteps: EuclideanGcdStep[] = [];
   const lm = EUCLIDEAN_GCD_LINE_MAP;
 
-  let a = Math.abs(initialA); // Ensure positive values for standard algorithm
+  let a = Math.abs(initialA); 
   let b = Math.abs(initialB);
 
-  if (b > a) { // Ensure a >= b initially for typical presentation
+  if (b > a) { 
     [a, b] = [b, a];
   }
   
-  const originalA = a; // Keep original for final message
+  const originalA = a; 
   const originalB = b;
 
   const addStep = (
@@ -47,26 +37,26 @@ export const generateEuclideanGcdSteps = (initialA: number, initialB: number): E
     gcdVal?: number
   ) => {
     localSteps.push({
-      array: [], // Not used directly for bar visualization
+      array: [], 
       activeIndices: [],
       swappingIndices: [],
       sortedIndices: [],
       currentLine: line,
-      message: message, // Main step message for code panel sync
+      message: message, 
       auxiliaryData: {
         a: currentA,
         b: currentB,
         remainder: remainderVal,
         equation: equation,
         gcd: gcdVal,
-        message: message, // Also include in aux for panel display consistency
+        message: message, 
       },
     });
   };
 
   addStep(lm.funcDeclare, a, b, `Starting Euclidean Algorithm for GCD(${originalA}, ${originalB}). Initial a=${a}, b=${b}.`);
 
-  if (b === 0) { // Handle case where b is initially zero (GCD is a)
+  if (b === 0) { 
     addStep(lm.whileLoop, a, b, `Initial b is 0.`);
     addStep(lm.returnA, a, b, `GCD is a = ${a}.`, undefined, undefined, a);
     addStep(lm.funcEnd, a, b, `Algorithm finished. GCD(${originalA}, ${originalB}) = ${a}.`);
@@ -74,7 +64,7 @@ export const generateEuclideanGcdSteps = (initialA: number, initialB: number): E
   }
 
   let iteration = 0;
-  const maxIterations = 100; // Safety break
+  const maxIterations = 100; 
 
   while (b !== 0 && iteration < maxIterations) {
     iteration++;
