@@ -8,33 +8,34 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; // Local import
 
-export const RAT_IN_MAZE_CODE_SNIPPETS: Record<string, string[]> = {
+
+export const RAT_IN_MAZE_CODE_SNIPPETS = {
   JavaScript: [
-    "function solveMaze(maze) {",
+    "function solveMaze(maze) {",                         // 1
     "  const N = maze.length; const M = maze[0].length;",
-    "  const sol = Array(N).fill(0).map(() => Array(M).fill(0));",
-    "  function isSafe(r, c) {",
-    "    return r >= 0 && r < N && c >= 0 && c < M && maze[r][c] === 1 && sol[r][c] === 0;",
-    "  }",
-    "  function solveUtil(r, c) {",
-    "    if (r === N - 1 && c === M - 1 && maze[r][c] === 1) {",
-    "      sol[r][c] = 1; return true;",
+    "  const sol = Array(N).fill(0).map(() => Array(M).fill(0));", // 2
+    "  function isSafe(r, c) {",                           // 3
+    "    return r >= 0 && r < N && c >= 0 && c < M && maze[r][c] === 1 && sol[r][c] === 0;", // 4,5,6
+    "  }", // isSafeReturnTrue/False are outcomes, not specific lines here
+    "  function solveUtil(r, c) {",                        // 9
+    "    if (r === N - 1 && c === M - 1 && maze[r][c] === 1) {", // 10
+    "      sol[r][c] = 1; return true;",                   // 11,12
     "    }",
-    "    if (isSafe(r, c)) {",
-    "      sol[r][c] = 1;",
-    "      if (solveUtil(r + 1, c)) return true; // Down",
-    "      if (solveUtil(r, c + 1)) return true; // Right",
-    "      // Add other directions (Up, Left) if allowed:",
-    "      // if (solveUtil(r - 1, c)) return true; // Up",
-    "      // if (solveUtil(r, c - 1)) return true; // Left",
-    "      sol[r][c] = 0; // Backtrack",
-    "      return false;",
+    "    if (isSafe(r, c)) {",                              // 13
+    "      sol[r][c] = 1;",                               // 14
+    "      // Try Right first, then Down (or other order)",
+    "      if (solveUtil(r, c + 1)) return true; // Right", // 15,16,17 (Recursive call & return)
+    "      if (solveUtil(r + 1, c)) return true; // Down",  // 18,19,20
+    "      // Add other directions (Up, Left) if allowed here",
+    "      sol[r][c] = 0; // Backtrack",                    // 21
+    "      return false;",                                  // 22
     "    }",
-    "    return false;",
+    "    return false;",                                    // 23
     "  }",
-    "  if (solveUtil(0, 0)) return sol;",
-    "  return null; // No solution",
+    "  if (solveUtil(0, 0)) return sol;",                  // 24
+    "  return null; // No solution",                       // 25
     "}",
   ],
   Python: [
@@ -50,8 +51,8 @@ export const RAT_IN_MAZE_CODE_SNIPPETS: Record<string, string[]> = {
     "            return True",
     "        if is_safe(r, c):",
     "            sol[r][c] = 1",
-    "            if solve_util(r + 1, c): return True # Down",
     "            if solve_util(r, c + 1): return True # Right",
+    "            if solve_util(r + 1, c): return True # Down",
     "            # Add other directions if allowed",
     "            sol[r][c] = 0 # Backtrack",
     "            return False",
@@ -74,9 +75,8 @@ export const RAT_IN_MAZE_CODE_SNIPPETS: Record<string, string[]> = {
     "        }",
     "        if (isSafe(r, c, maze, sol)) {",
     "            sol[r][c] = 1;",
-    "            if (solveMazeUtil(r + 1, c, maze, sol)) return true; // Down",
     "            if (solveMazeUtil(r, c + 1, maze, sol)) return true; // Right",
-    "            // Add other directions if allowed",
+    "            if (solveMazeUtil(r + 1, c, maze, sol)) return true; // Down",
     "            sol[r][c] = 0; // Backtrack",
     "            return false;",
     "        }",
@@ -102,9 +102,8 @@ export const RAT_IN_MAZE_CODE_SNIPPETS: Record<string, string[]> = {
     "    }",
     "    if (isSafe(r, c, N, M, maze, sol)) {",
     "        sol[r][c] = 1;",
-    "        if (solveMazeUtil(r + 1, c, N, M, maze, sol)) return true; // Down",
     "        if (solveMazeUtil(r, c + 1, N, M, maze, sol)) return true; // Right",
-    "        // Add other directions if allowed",
+    "        if (solveMazeUtil(r + 1, c, N, M, maze, sol)) return true; // Down",
     "        sol[r][c] = 0; // Backtrack",
     "        return false;",
     "    }",
@@ -132,13 +131,15 @@ export function RatInAMazeCodePanel({ currentLine }: RatInAMazeCodePanelProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
 
   const handleCopyCode = () => {
-    const codeToCopy = RAT_IN_MAZE_CODE_SNIPPETS[selectedLanguage]?.join('\n') || '';
+    const codeToCopy = RAT_IN_MAZE_CODE_SNIPPETS[selectedLanguage as keyof typeof RAT_IN_MAZE_CODE_SNIPPETS]?.join('\n') || '';
     if (codeToCopy) {
       navigator.clipboard.writeText(codeToCopy)
         .then(() => toast({ title: `${selectedLanguage} Code for Rat in a Maze Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
     }
   };
+
+  const currentCodeLines = RAT_IN_MAZE_CODE_SNIPPETS[selectedLanguage as keyof typeof RAT_IN_MAZE_CODE_SNIPPETS] || [];
 
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
@@ -163,10 +164,10 @@ export function RatInAMazeCodePanel({ currentLine }: RatInAMazeCodePanelProps) {
             <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
               <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
                 <pre className="font-code text-sm p-4">
-                  {RAT_IN_MAZE_CODE_SNIPPETS[lang]?.map((line, index) => (
+                  {RAT_IN_MAZE_CODE_SNIPPETS[lang as keyof typeof RAT_IN_MAZE_CODE_SNIPPETS]?.map((line, index) => (
                     <div
                       key={`ratmaze-${lang}-line-${index}`}
-                      className={`px-2 py-0.5 rounded transition-colors duration-150 ${
+                      className={`px-2 py-0.5 rounded whitespace-pre-wrap ${
                         index + 1 === currentLine && lang === selectedLanguage ? "bg-accent text-accent-foreground" : "text-foreground"
                       }`}
                       aria-current={index + 1 === currentLine && lang === selectedLanguage ? "step" : undefined}

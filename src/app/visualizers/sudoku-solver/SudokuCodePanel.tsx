@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SUDOKU_LINE_MAP } from './sudoku-solver-logic'; // Local import
 
-// Matches the conceptual lines in sudoku-solver-logic.ts
+
 export const SUDOKU_SOLVER_CODE_SNIPPETS = {
   JavaScript: [
     "function solveSudoku(board) {",                            // 1 (solveSudokuFunc)
@@ -215,5 +216,3 @@ export function SudokuCodePanel({ currentLine }: SudokuCodePanelProps) {
     </Card>
   );
 }
-
-    

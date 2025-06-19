@@ -14,20 +14,20 @@ In an **undirected graph**, a **connected component** is a subgraph in which any
 
 **Algorithm to Find Connected Components (using DFS or BFS):**
 1.  **Initialization**:
-    *   Maintain a \`visited\` array/set for all vertices, initialized to false.
-    *   Initialize an empty list to store all found components (e.g., \`componentsList\`).
-2.  **Iterate Through Vertices**: For each vertex \`u\` from 0 to V-1:
-    a.  If \`u\` has not been visited:
-        i.  Start a new graph traversal (DFS or BFS) from \`u\`.
-        ii. All vertices reachable from \`u\` during this traversal belong to the same connected component.
-        iii.Store these vertices as a new component in \`componentsList\`.
-        iv. Mark all these visited vertices in the \`visited\` array.
-3.  **Result**: \`componentsList\` will contain all connected components of the graph.
+    *   Maintain a \\\`visited\\\` array/set for all vertices, initialized to false.
+    *   Initialize an empty list to store all found components (e.g., \\\`componentsList\\\`).
+2.  **Iterate Through Vertices**: For each vertex \\\`u\\\` from 0 to V-1:
+    a.  If \\\`u\\\` has not been visited:
+        i.  Start a new graph traversal (DFS or BFS) from \\\`u\\\`.
+        ii. All vertices reachable from \\\`u\\\` during this traversal belong to the same connected component.
+        iii.Store these vertices as a new component in \\\`componentsList\\\`.
+        iv. Mark all these visited vertices in the \\\`visited\\\` array.
+3.  **Result**: \\\`componentsList\\\` will contain all connected components of the graph.
 -   **Time Complexity**: O(V+E) because DFS/BFS visits each vertex and edge once.
 -   **Space Complexity**: O(V+E) for graph representation, O(V) for visited array and recursion stack/queue.
 
 ### Directed Graphs: Strongly Connected Components (SCCs)
-In a **directed graph**, a **Strongly Connected Component (SCC)** is a subgraph where for any pair of vertices \`u\` and \`v\` in the SCC, there is a directed path from \`u\` to \`v\` AND a directed path from \`v\` to \`u\`.
+In a **directed graph**, a **Strongly Connected Component (SCC)** is a subgraph where for any pair of vertices \\\`u\\\` and \\\`v\\\` in the SCC, there is a directed path from \\\`u\\\` to \\\`v\\\` AND a directed path from \\\`v\\\` to \\\`u\\\`.
 
 **Kosaraju's Algorithm to Find SCCs:**
 This is a popular algorithm that uses two DFS passes.
@@ -37,12 +37,12 @@ This is a popular algorithm that uses two DFS passes.
 2.  **Compute Transpose Graph (G_T)**:
     a.  Create a new graph G_T by reversing the direction of all edges in the original graph G.
 3.  **Second DFS Pass (on G_T)**:
-    a.  Initialize a \`visited\` array for G_T as all false.
+    a.  Initialize a \\\`visited\\\` array for G_T as all false.
     b.  While the stack (from step 1b) is not empty:
-        i.  Pop a vertex \`u\` from the stack.
-        ii. If \`u\` has not been visited in G_T:
-            - Start a DFS traversal from \`u\` in the **transpose graph G_T**.
-            - All vertices reachable from \`u\` in this DFS on G_T form a single Strongly Connected Component.
+        i.  Pop a vertex \\\`u\\\` from the stack.
+        ii. If \\\`u\\\` has not been visited in G_T:
+            - Start a DFS traversal from \\\`u\\\` in the **transpose graph G_T**.
+            - All vertices reachable from \\\`u\\\` in this DFS on G_T form a single Strongly Connected Component.
             - Store this component and mark its vertices as visited.
 4.  **Result**: The collection of components found in step 3b constitutes all SCCs of the graph.
 -   **Time Complexity**: O(V+E) (two DFS passes and graph transpose).
@@ -66,4 +66,3 @@ The AlgoVista visualizer for "Connected Components & SCCs" demonstrates the DFS-
   },
   spaceComplexity: "O(V+E) for graph representation, O(V) for visited array/stack/recursion.",
 };
-

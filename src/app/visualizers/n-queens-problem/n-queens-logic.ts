@@ -1,17 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
-
-// N-Queens specific step data, extending AlgorithmStep is not ideal
-// as 'array' field is not directly applicable.
-// We'll use 'auxiliaryData' to store board state and other info.
-export interface NQueensStep extends AlgorithmStep {
-  board: number[][]; // Represents the N x N board, e.g., 1 for Queen, 0 for empty
-  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' };
-  foundSolutions?: number[][][]; // Array of found board states
-  isSafe?: boolean;
-  message: string;
-  currentLine: number | null;
-}
+import type { NQueensStep } from './types'; // Local import
 
 export const N_QUEENS_LINE_MAP = {
   solveNQueensFunc: 1, // Main function solveNQueens(n)
@@ -116,35 +104,26 @@ export const generateNQueensSteps = (N: number): NQueensStep[] => {
     for (let i = 0; i < N; i++) { 
       addStep(localSteps, board, lm.loopTryRowsInCol, `Trying to place queen at [${i},${col}].`, {row:i, col, action:'checking_safe'});
       if (isSafe(i, col)) {
-        // No specific line for 'isSafe returned true', combined with placeQueen step message
         board[i][col] = 1;
         addStep(localSteps, board, lm.placeQueenOnBoard, `Safe to place queen at [${i},${col}]. Placed.`, { row:i, col, action: 'place' }, true);
 
         addStep(localSteps, board, lm.recursiveCallSolveUtil, `Recursive call: solveUtil(col=${col + 1}).`);
         if (solveNQueensUtil(col + 1)) {
           foundSolutionThisPath = true;
-          // If we only want one solution, we'd return true here.
-          // For all solutions, we continue, so this 'if' branch might not need a specific step unless returning.
-          // addStep(localSteps, board, lm.returnTrueFromRecursive, `Recursive call for col ${col+1} returned true. Propagating.`);
         }
         
-        // Backtrack
         board[i][col] = 0; 
         addStep(localSteps, board, lm.backtrackRemoveQueen, `Backtracking: Removing queen from [${i},${col}].`, { row:i, col, action: 'remove' });
       } else {
-        // isSafe returned false, handled by addStep within isSafe
          addStep(localSteps, board, lm.callIsSafe, `Position [${i},${col}] is NOT safe. Trying next row.`, {row:i, col, action:'checking_safe'}, false);
       }
        addStep(localSteps, board, lm.endIfIsSafe, `Finished checking/processing row ${i} for column ${col}.`);
     }
     addStep(localSteps, board, lm.endLoopTryRows, `Finished all rows for column ${col}.`);
-    // To find all solutions, we don't strictly need to return true/false to guide the search in the same way
-    // as finding a single solution. The crucial part is that solutions are collected.
-    // For visualization clarity, we can indicate if any path from this point led to a solution.
-    if (!foundSolutionThisPath) {
+    if (!foundSolutionThisPath && col !==0) { // Avoid "no solution" message if it's the very first column and no solution is found overall until the end
         addStep(localSteps, board, lm.returnFalseFromSolveUtil, `No solution found starting from placing queen in column ${col} with current board state. Backtracking further if applicable.`);
     }
-    return foundSolutionThisPath; // For this implementation, means "did any placement in this column lead to a solution?"
+    return foundSolutionThisPath;
   }
   
   addStep(localSteps, board, lm.initialSolveCall, `Initial call to solveNQueensUtil(col=0).`);

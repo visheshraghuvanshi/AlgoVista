@@ -56,8 +56,10 @@ export interface GraphAlgorithmStep {
   auxiliaryData?: Array<{
     type: 'set' | 'stack' | 'list'; // For visited, recursionStack, components list, SCC list
     label: string;
-    values: string[] | string; // string for current component/SCC being built for readability
+    values: any; // string[] or string or Record<string, any>
   }>;
+  // Fields from generic AlgorithmStep that are not directly applicable for graphs
+  // but kept for type consistency if generic components are used.
   array?: number[] | string[];
   activeIndices?: number[];
   swappingIndices?: number[];
@@ -86,4 +88,3 @@ export interface GraphControlsPanelProps {
   onExecute?: () => void; 
   executeButtonText?: string;
 }
-

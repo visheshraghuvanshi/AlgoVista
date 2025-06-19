@@ -3,12 +3,12 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { NQueensStep } from './n-queens-logic'; // Ensure this type is correctly defined
+import type { NQueensStep } from './types'; // Local import
 import { Target } from 'lucide-react'; // Using Target as a placeholder for Queen
 
 interface NQueensVisualizationPanelProps {
   step: NQueensStep | null;
-  boardSize: number; // N from N-Queens
+  boardSize?: number; // N from N-Queens, optional as step.board will also have it
 }
 
 export function NQueensVisualizationPanel({ step, boardSize }: NQueensVisualizationPanelProps) {
@@ -22,7 +22,7 @@ export function NQueensVisualizationPanel({ step, boardSize }: NQueensVisualizat
   }
 
   const { board, currentQueen, message } = step;
-  const N = boardSize > 0 ? boardSize : (board.length > 0 ? board.length : 4); // Fallback for board size
+  const N = boardSize && boardSize > 0 ? boardSize : (board.length > 0 ? board.length : 4); // Fallback for board size
 
   // Dynamically calculate cell size
   const panelWidth = 400; // Fixed width for the panel content area
@@ -46,7 +46,7 @@ export function NQueensVisualizationPanel({ step, boardSize }: NQueensVisualizat
                 if (currentQueen.row === rowIndex && currentQueen.col === colIndex) {
                   if (currentQueen.action === 'place') cellBgColor = "bg-green-500/30";
                   else if (currentQueen.action === 'remove') cellBgColor = "bg-red-500/30";
-                  else if (currentQueen.action === 'checking') cellBgColor = "bg-yellow-500/30";
+                  else if (currentQueen.action === 'checking_safe') cellBgColor = "bg-yellow-500/30";
                 }
               }
               

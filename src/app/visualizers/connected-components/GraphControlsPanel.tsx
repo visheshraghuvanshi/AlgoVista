@@ -1,11 +1,12 @@
 
+// src/app/visualizers/connected-components/GraphControlsPanel.tsx
 "use client";
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Network } from "lucide-react";
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Network, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import type { GraphControlsPanelProps } from './types'; // Local import
@@ -17,7 +18,7 @@ export function GraphControlsPanel({
   onReset,
   onGraphInputChange,
   graphInputValue,
-  showStartNodeInput = false, // Not needed for CC/SCC as it processes all nodes
+  showStartNodeInput = false, // Cycle detection doesn't need a specific start node from user
   isPlaying,
   isFinished,
   currentSpeed,
@@ -27,7 +28,7 @@ export function GraphControlsPanel({
   maxSpeed,
   graphInputPlaceholder = "e.g., 0:1;1:2;2:0 (node:neighbors;...)",
   onExecute,
-  executeButtonText = "Find Components",
+  executeButtonText = "Detect Cycles",
 }: GraphControlsPanelProps) {
   
   const handleGraphInputChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +40,7 @@ export function GraphControlsPanel({
   };
 
   const isInputEmpty = graphInputValue.trim() === '';
+
   const commonPlayDisabled = isFinished || isInputEmpty || !isAlgoImplemented;
   const commonStepDisabled = isPlaying || isFinished || isInputEmpty || !isAlgoImplemented;
   
@@ -148,4 +150,3 @@ export function GraphControlsPanel({
     </Card>
   );
 }
-

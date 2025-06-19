@@ -1,5 +1,5 @@
 
-import type { GraphAlgorithmStep, GraphNode, GraphEdge } from '@/types';
+import type { GraphAlgorithmStep, GraphNode, GraphEdge } from './types'; // Local import
 import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; // Reuse parser
 
 export const CONNECTED_COMPONENTS_LINE_MAP_UNDIRECTED = {
@@ -204,7 +204,7 @@ export const generateConnectedComponentsSteps = (graphInput: string, isDirected:
     ];
     if (auxiliaryDataUpdates) {
         if(auxiliaryDataUpdates.finishStack) currentAuxData.push({type:'stack', label:'Finish Order (Stack Top)', values: auxiliaryDataUpdates.finishStack.map((idx:number)=>nodeIdxToLabel.get(idx)!).reverse()});
-        if(auxiliaryDataUpdates.sccsList) currentAuxData.push({type:'set', label:'SCCs Found', values: auxiliaryDataUpdates.sccsList});
+        if(auxiliaryDataUpdates.sccsList) currentAuxData.push({type:'list', label:'SCCs Found', values: auxiliaryDataUpdates.sccsList.map((scc: string[], i: number) => `SCC${i+1}: {${scc.join(',')}}`)});
         if(auxiliaryDataUpdates.currentComponentList) currentAuxData.push({type:'set', label:'Current Component', values: [auxiliaryDataUpdates.currentComponentList]});
     }
 
@@ -254,63 +254,63 @@ export const generateConnectedComponentsSteps = (graphInput: string, isDirected:
 
     function dfs1(u_idx: number) {
         const u_label = nodeIdxToLabel.get(u_idx)!;
-        addStep(lmDirected, 'dfs1FuncStart', `DFS1 from ${u_label}.`, {finishStack: [...finishStack]} , u_idx);
+        addStep(lmDirected, 'dfs1FuncStart', `DFS1 from ${u_label}.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx);
         visited[u_idx] = true;
-        addStep(lmDirected, 'dfs1MarkVisited', `DFS1: Marked ${u_label} visited.`, {finishStack: [...finishStack]} , u_idx);
+        addStep(lmDirected, 'dfs1MarkVisited', `DFS1: Marked ${u_label} visited.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx);
         for (const v_idx of adjNumericOriginal.get(u_idx) || []) {
-            addStep(lmDirected, 'dfs1LoopNeighbors', `DFS1: Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label}.`, {finishStack: [...finishStack]} , u_idx, [u_idx, v_idx]);
+            addStep(lmDirected, 'dfs1LoopNeighbors', `DFS1: Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label}.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx, [u_idx, v_idx]);
             if (!visited[v_idx]) {
-                 addStep(lmDirected, 'dfs1CheckNeighborNotVisited', `DFS1: ${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {finishStack: [...finishStack]} , u_idx, [u_idx, v_idx]);
+                 addStep(lmDirected, 'dfs1CheckNeighborNotVisited', `DFS1: ${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx, [u_idx, v_idx]);
                 dfs1(v_idx);
             }
         }
         finishStack.push(u_idx);
-        addStep(lmDirected, 'dfs1PushToStack', `DFS1: Finished ${u_label}, pushed to stack.`, {finishStack: [...finishStack]} , u_idx);
+        addStep(lmDirected, 'dfs1PushToStack', `DFS1: Finished ${u_label}, pushed to stack. Stack top: ${u_label}`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx);
     }
     for (let i = 0; i < numNodes; i++) {
-         addStep(lmDirected, 'firstDfsLoop', `DFS1 Main Loop: node ${nodeIdxToLabel.get(i)!}. Visited: ${visited[i]}`, {finishStack: [...finishStack]} , i);
+         addStep(lmDirected, 'firstDfsLoop', `DFS1 Main Loop: node ${nodeIdxToLabel.get(i)!}. Visited: ${visited[i]}`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , i);
         if (!visited[i]) dfs1(i);
     }
-    addStep(lmDirected, 'firstDfsLoop', "DFS1 complete. Finish stack created.", {finishStack: [...finishStack] });
+    addStep(lmDirected, 'firstDfsLoop', "DFS1 complete. Finish stack created.", {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!) });
 
-    addStep(lmDirected, 'computeTransposeStart', "Step 2: Compute Transpose Graph.", {finishStack: [...finishStack]});
+    addStep(lmDirected, 'computeTransposeStart', "Step 2: Compute Transpose Graph.", {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)});
     const adjTranspose = new Map<number, number[]>();
     for(let i=0; i<numNodes; ++i) adjTranspose.set(i, []);
     adjNumericOriginal.forEach((neighbors, u_idx) => {
-         addStep(lmDirected, 'computeTransposeLoopU', `Transposing edges from node ${nodeIdxToLabel.get(u_idx)!}.`, {finishStack: [...finishStack]} , u_idx);
+         addStep(lmDirected, 'computeTransposeLoopU', `Transposing edges from node ${nodeIdxToLabel.get(u_idx)!}.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx);
         neighbors.forEach(v_idx => {
             (adjTranspose.get(v_idx) || []).push(u_idx);
-            addStep(lmDirected, 'computeTransposeLoopV', `Added transpose edge ${nodeIdxToLabel.get(v_idx)!} -> ${nodeIdxToLabel.get(u_idx)!}.`, {finishStack: [...finishStack]} , u_idx, [v_idx, u_idx]);
+            addStep(lmDirected, 'computeTransposeLoopV', `Added transpose edge ${nodeIdxToLabel.get(v_idx)!} -> ${nodeIdxToLabel.get(u_idx)!}.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)} , u_idx, [v_idx, u_idx]);
         });
     });
     parsedData.adjT = adjTranspose; 
-    addStep(lmDirected, 'computeTransposeStart', "Transpose graph computed. Switching visualization to Transpose Graph.", {finishStack: [...finishStack]}, undefined, undefined, true);
+    addStep(lmDirected, 'computeTransposeStart', "Transpose graph computed. Switching visualization to Transpose Graph.", {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!)}, undefined, undefined, true);
 
 
     visited.fill(false);
     nodeComponentMap.clear(); 
     const sccs: string[][] = [];
     componentColorIndex = 0;
-    addStep(lmDirected, 'initVisited2', "Step 3: DFS on Transpose. Visited array reset.", {finishStack: [...finishStack], sccsList: []}, undefined, undefined, true);
+    addStep(lmDirected, 'initVisited2', "Step 3: DFS on Transpose. Visited array reset.", {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!), sccsList: []}, undefined, undefined, true);
     
     function dfs2(u_idx: number, currentSCCList: string[]) {
         const u_label = nodeIdxToLabel.get(u_idx)!;
-        addStep(lmDirected, 'dfs2FuncStart', `DFS2 from ${u_label}.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, undefined, true);
+        addStep(lmDirected, 'dfs2FuncStart', `DFS2 from ${u_label}.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, undefined, true);
         visited[u_idx] = true;
         nodeComponentMap.set(u_idx, sccs.length); 
         currentSCCList.push(u_label);
-        addStep(lmDirected, 'dfs2MarkVisited', `DFS2: Marked ${u_label} visited. Added to current SCC.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, undefined, true);
+        addStep(lmDirected, 'dfs2MarkVisited', `DFS2: Marked ${u_label} visited. Added to current SCC.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, undefined, true);
         for (const v_idx of adjTranspose.get(u_idx) || []) {
-             addStep(lmDirected, 'dfs2LoopNeighborsTranspose', `DFS2: Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label} in transpose.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, [u_idx, v_idx], true);
+             addStep(lmDirected, 'dfs2LoopNeighborsTranspose', `DFS2: Checking neighbor ${nodeIdxToLabel.get(v_idx)!} of ${u_label} in transpose.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, [u_idx, v_idx], true);
             if (!visited[v_idx]) {
-                 addStep(lmDirected, 'dfs2CheckNeighborNotVisitedInner', `DFS2: ${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {finishStack: [...finishStack], sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, [u_idx, v_idx], true);
+                 addStep(lmDirected, 'dfs2CheckNeighborNotVisitedInner', `DFS2: ${nodeIdxToLabel.get(v_idx)!} not visited. Recursive call.`, {finishStack: [...finishStack].map(idx => nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`), currentComponentList: currentSCCList.join(',') }, u_idx, [u_idx, v_idx], true);
                 dfs2(v_idx, currentSCCList);
             }
         }
     }
-    const stackCopyForIteration = [...finishStack]; // Iterate over a copy as original stack is modified
+    const stackCopyForIteration = [...finishStack];
     while (stackCopyForIteration.length > 0) {
-        const u_idx = stackCopyForIteration.pop()!; // Process in order of decreasing finish times
+        const u_idx = stackCopyForIteration.pop()!; 
         const u_label_iter = nodeIdxToLabel.get(u_idx)!;
         addStep(lmDirected, 'popFromStack', `Popped ${u_label_iter} from stack. Visited: ${visited[u_idx]}.`, {finishStack: stackCopyForIteration.map(idx=>nodeIdxToLabel.get(idx)!), sccsList: sccs.map((c,i)=>`SCC${i+1}:{${c.join(',')}}`) }, u_idx, undefined, true);
         if (!visited[u_idx]) {
@@ -330,4 +330,3 @@ export const generateConnectedComponentsSteps = (graphInput: string, isDirected:
   }
   return localSteps;
 };
-

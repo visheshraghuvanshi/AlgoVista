@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { N_QUEENS_LINE_MAP } from './n-queens-logic';
+import { N_QUEENS_LINE_MAP } from './n-queens-logic'; // Local import
 
 
 export const N_QUEENS_CODE_SNIPPETS = {

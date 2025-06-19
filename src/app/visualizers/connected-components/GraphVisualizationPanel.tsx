@@ -1,4 +1,5 @@
 
+// src/app/visualizers/connected-components/GraphVisualizationPanel.tsx
 "use client";
 
 import React from 'react';
@@ -192,4 +193,3 @@ export function GraphVisualizationPanel({
     </Card>
   );
 }
-

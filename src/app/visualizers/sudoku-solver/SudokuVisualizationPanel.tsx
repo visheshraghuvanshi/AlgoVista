@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SudokuStep } from '@/types';
+import type { SudokuStep } from './types'; // Local import
 
 interface SudokuVisualizationPanelProps {
   step: SudokuStep | null;
@@ -19,18 +19,18 @@ export function SudokuVisualizationPanel({ step }: SudokuVisualizationPanelProps
     );
   }
 
-  const { board, currentCell, message, isSafe } = step;
-  const N = 9; // Sudoku is 9x9
+  const { board, currentCell, message, isSafe, initialBoard } = step;
+  const N = 9; 
 
   const panelWidth = 400; 
-  const cellSize = Math.max(24, Math.floor((panelWidth - (N + 1) * 1 - 2 * 2) / N)); // 1px gap, 2px borders thick
+  const cellSize = Math.max(24, Math.floor((panelWidth - (N + 1) * 1 - 2 * 2) / N)); 
 
   const getCellBgColor = (r: number, c: number) => {
     if (currentCell) {
       if (currentCell.row === r && currentCell.col === c) {
         if (currentCell.action === 'find_empty') return "bg-blue-400/30 dark:bg-blue-600/30";
         if (currentCell.action === 'try_num' || currentCell.action === 'check_safe') return "bg-yellow-400/40 dark:bg-yellow-600/40";
-        if (currentCell.action === 'place_num') return isSafe ? "bg-green-400/40 dark:bg-green-600/40" : "bg-red-400/40 dark:bg-red-600/40"; // Red if !isSafe
+        if (currentCell.action === 'place_num') return isSafe ? "bg-green-400/40 dark:bg-green-600/40" : "bg-red-400/40 dark:bg-red-600/40";
         if (currentCell.action === 'backtrack_remove') return "bg-orange-400/40 dark:bg-orange-600/40";
       }
     }
@@ -55,13 +55,16 @@ export function SudokuVisualizationPanel({ step }: SudokuVisualizationPanelProps
               let cellClasses = `flex items-center justify-center font-bold text-lg ${getCellBgColor(rIdx, cIdx)}`;
               if (isThickRightBorder) cellClasses += " border-r-2 border-foreground/50";
               if (isThickBottomBorder) cellClasses += " border-b-2 border-foreground/50";
-              if (currentCell && currentCell.row === rIdx && currentCell.col === cIdx && currentCell.num !== undefined) {
-                 // If current cell and a number is being tried/placed
-                cellClasses += currentCell.action === 'place_num' && isSafe ? " text-green-600 dark:text-green-400" : (currentCell.action === 'place_num' && !isSafe ? " text-red-600 dark:text-red-400" : " text-blue-600 dark:text-blue-400");
-              } else if (cellValue !== 0 && step.initialBoard && step.initialBoard[rIdx][cIdx] !== 0) {
+              
+              if (currentCell && currentCell.row === rIdx && currentCell.col === cIdx && currentCell.num !== undefined && board[rIdx][cIdx] === currentCell.num ) {
+                // Number just placed or being actively tried
+                cellClasses += currentCell.action === 'place_num' && isSafe ? " text-green-600 dark:text-green-400" : 
+                               (currentCell.action === 'try_num' ? " text-blue-600 dark:text-blue-400" : 
+                               (currentCell.action === 'place_num' && !isSafe ? " text-red-600 dark:text-red-400 line-through opacity-70" : ""));
+              } else if (cellValue !== 0 && initialBoard && initialBoard[rIdx][cIdx] !== 0) {
                 cellClasses += " text-foreground/70"; // Original numbers slightly dimmer
               } else if (cellValue !==0) {
-                cellClasses += " text-primary dark:text-accent"; // Guessed numbers
+                cellClasses += " text-primary dark:text-accent"; // Guessed numbers by algorithm
               }
 
 
@@ -72,7 +75,7 @@ export function SudokuVisualizationPanel({ step }: SudokuVisualizationPanelProps
                   style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
                   title={`Cell [${rIdx},${cIdx}] - Value: ${cellValue === 0 ? 'Empty' : cellValue}`}
                 >
-                  {cellValue !== 0 ? cellValue : (currentCell && currentCell.row === rIdx && currentCell.col === cIdx && currentCell.num !== undefined ? currentCell.num : "")}
+                  {cellValue !== 0 ? cellValue : (currentCell && currentCell.row === rIdx && currentCell.col === cIdx && currentCell.num !== undefined && currentCell.action === 'try_num' ? <span className="opacity-50">{currentCell.num}</span> : "")}
                 </div>
               );
             })
@@ -82,5 +85,3 @@ export function SudokuVisualizationPanel({ step }: SudokuVisualizationPanelProps
     </Card>
   );
 }
-
-    

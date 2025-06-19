@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, SudokuStep } from '@/types'; 
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, NQueensStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, SquareAsterisk } from 'lucide-react';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { NQueensVisualizationPanel } from './NQueensVisualizationPanel';
 import { NQueensCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; // Import snippets
-import { generateNQueensSteps, type NQueensStep as NQStepLogic, N_QUEENS_LINE_MAP } from './n-queens-logic'; // Use aliased type
+import { generateNQueensSteps, N_QUEENS_LINE_MAP } from './n-queens-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 300; 
 const MIN_SPEED = 20;
@@ -30,8 +30,8 @@ export default function NQueensProblemVisualizerPage() {
 
   const [boardSizeN, setBoardSizeN] = useState(DEFAULT_N_VALUE);
   
-  const [steps, setSteps] = useState<NQStepLogic[]>([]);
-  const [currentStep, setCurrentStep] = useState<NQStepLogic | null>(null);
+  const [steps, setSteps] = useState<NQueensStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<NQueensStep | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -108,7 +108,7 @@ export default function NQueensProblemVisualizerPage() {
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(true); 
+    setIsPlaying(false); setIsFinished(false); 
     setBoardSizeN(DEFAULT_N_VALUE); 
   };
 
@@ -158,7 +158,7 @@ export default function NQueensProblemVisualizerPage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Setup</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; Setup</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                 <div className="space-y-1">
@@ -193,5 +193,3 @@ export default function NQueensProblemVisualizerPage() {
     </div>
   );
 }
-
-    

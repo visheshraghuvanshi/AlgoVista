@@ -13,7 +13,7 @@ import { ConnectedComponentsCodePanel } from './ConnectedComponentsCodePanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, SigmaSquare } from 'lucide-react';
 import { generateConnectedComponentsSteps } from './connected-components-logic';
-import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; 
+import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; // Reusing a compatible parser for initial check
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -96,7 +96,7 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
       "    def dfs(u, current_component):",
       "        visited[u] = True",
       "        current_component.append(u)",
-      "        for v in graph.get(u, []):", # Assume keys are already int
+      "        for v in graph.get(u, []):", // Assume keys are already int
       "            if not visited[v]:",
       "                dfs(v, current_component)",
       "    for i in range(num_nodes):",
@@ -420,6 +420,7 @@ export default function ConnectedComponentsVisualizerPage() {
     setGraphInputValue('0:1;1:2;2:0;3:4;4:5;5:3;6');
     setIsDirected(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    // generateSteps will be called by useEffect due to graphInputValue or isDirected change
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -510,4 +511,3 @@ export default function ConnectedComponentsVisualizerPage() {
     </div>
   );
 }
-

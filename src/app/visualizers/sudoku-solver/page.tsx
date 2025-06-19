@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, SudokuStep } from '@/types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, SudokuStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, BrainCircuit } from 'lucide-react';
@@ -18,7 +18,7 @@ import { SudokuVisualizationPanel } from './SudokuVisualizationPanel';
 import { SudokuCodePanel } from './SudokuCodePanel';
 import { generateSudokuSteps, SUDOKU_LINE_MAP } from './sudoku-solver-logic';
 
-const DEFAULT_ANIMATION_SPEED = 100; // Faster for Sudoku
+const DEFAULT_ANIMATION_SPEED = 100; 
 const MIN_SPEED = 10;
 const MAX_SPEED = 1000;
 const DEFAULT_SUDOKU_PUZZLE = 
@@ -85,7 +85,7 @@ export default function SudokuSolverVisualizerPage() {
     if (!boardArray) {
       setSteps([]); setCurrentStep(null); setIsFinished(true); return;
     }
-    setInitialBoardState(boardArray.map(row => [...row])); // Store initial state
+    setInitialBoardState(boardArray.map(row => [...row])); 
 
     const newSteps = generateSudokuSteps(boardArray);
     setSteps(newSteps);
@@ -98,7 +98,7 @@ export default function SudokuSolverVisualizerPage() {
         const lastStep = newSteps[newSteps.length - 1];
         if (lastStep.solutionFound) {
             toast({title: "Sudoku Solved!", description: "A solution has been found."});
-        } else if (lastStep.message.includes("No solution exists")) {
+        } else if (lastStep.message?.includes("No solution exists")) {
             toast({title: "No Solution", description: "This Sudoku puzzle has no solution.", variant: "default"});
         }
     }
@@ -153,7 +153,7 @@ export default function SudokuSolverVisualizerPage() {
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; Puzzle Input</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> 
               <div className="space-y-1">
                 <Label htmlFor="sudokuPuzzleInput">Sudoku Puzzle (9x9, 0 for empty cells)</Label>
                 <Textarea 
@@ -167,7 +167,7 @@ export default function SudokuSolverVisualizerPage() {
                 />
               </div>
               <div className="flex flex-col justify-end h-full pt-6"> {/* Align button with textarea bottom */}
-                 <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full">Solve / Reset Steps</Button>
+                 <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full mt-auto">Solve / Reset Steps</Button>
               </div>
             </div>
             
@@ -186,6 +186,12 @@ export default function SudokuSolverVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
+             {isFinished && currentStep?.solutionFound && (
+                <p className="text-center text-lg font-semibold text-green-500">Sudoku Solved!</p>
+            )}
+            {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
+                <p className="text-center text-lg font-semibold text-red-500">No Solution Exists.</p>
+            )}
           </CardContent>
         </Card>
         <AlgorithmDetailsCard {...algoDetails} />
@@ -194,6 +200,3 @@ export default function SudokuSolverVisualizerPage() {
     </div>
   );
 }
-
-
-    

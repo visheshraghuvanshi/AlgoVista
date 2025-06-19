@@ -1,5 +1,5 @@
 
-// src/app/visualizers/connected-components/AlgorithmDetailsCard.tsx
+// src/app/visualizers/n-queens-problem/AlgorithmDetailsCard.tsx
 "use client";
 
 import React from 'react';

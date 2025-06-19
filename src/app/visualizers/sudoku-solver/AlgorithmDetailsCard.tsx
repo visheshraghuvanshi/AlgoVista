@@ -1,5 +1,5 @@
 
-// src/app/visualizers/connected-components/AlgorithmDetailsCard.tsx
+// src/app/visualizers/sudoku-solver/AlgorithmDetailsCard.tsx
 "use client";
 
 import React from 'react';

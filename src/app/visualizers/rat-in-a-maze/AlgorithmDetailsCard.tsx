@@ -1,5 +1,5 @@
 
-// src/app/visualizers/connected-components/AlgorithmDetailsCard.tsx
+// src/app/visualizers/rat-in-a-maze/AlgorithmDetailsCard.tsx
 "use client";
 
 import React from 'react';
