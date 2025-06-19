@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,7 +10,7 @@ import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
 import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { GraphCycleDetectionCodePanel } from './GraphCycleDetectionCodePanel';
 import { useToast } from "@/hooks/use-toast";
-import { AlertOctagon, RefreshCwCcw } from 'lucide-react'; // RefreshCwCcw for cycle
+import { AlertTriangle, RefreshCwCcw } from 'lucide-react'; // RefreshCwCcw for cycle
 import { generateGraphCycleDetectionSteps } from './graph-cycle-detection-logic';
 import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; 
 import { Switch } from "@/components/ui/switch";
@@ -78,7 +77,7 @@ const CYCLE_DETECTION_CODE_SNIPPETS = {
       "    visited = [False] * num_nodes",
       "    def dfs(u, parent):",
       "        visited[u] = True",
-      "        for v in graph.get(u, []):", # Assume keys are already int
+      "        for v in graph.get(u, []):", 
       "            if not visited[v]:",
       "                if dfs(v, u): return True",
       "            elif v != parent:",
@@ -97,7 +96,7 @@ const CYCLE_DETECTION_CODE_SNIPPETS = {
       "    def dfs(u):",
       "        visited[u] = True",
       "        recursion_stack[u] = True",
-      "        for v in graph.get(u, []):", # Assume keys are already int
+      "        for v in graph.get(u, []):", 
       "            if not visited[v]:",
       "                if dfs(v): return True",
       "            elif recursion_stack[v]:",
@@ -224,7 +223,6 @@ const CYCLE_DETECTION_CODE_SNIPPETS = {
   }
 };
 
-
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -232,8 +230,8 @@ const MAX_SPEED = 2000;
 export default function GraphCycleDetectionVisualizerPage() {
   const { toast } = useToast();
   
-  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0,3;3:4;4:5;5:3'); // Example with cycle
-  const [isDirected, setIsDirected] = useState(false); // Default to undirected
+  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0,3;3:4;4:5;5:3'); 
+  const [isDirected, setIsDirected] = useState(false); 
   
   const [steps, setSteps] = useState<GraphAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -243,7 +241,6 @@ export default function GraphCycleDetectionVisualizerPage() {
   const [currentAuxiliaryData, setCurrentAuxiliaryData] = useState<GraphAlgorithmStep['auxiliaryData']>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description);
-
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -263,18 +260,20 @@ export default function GraphCycleDetectionVisualizerPage() {
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = baseParseGraphInput(graphInputValue); 
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Format: 'node:neighbor1,neighbor2;...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
     if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Graph malformed or empty.");
         return;
     }
 
@@ -285,26 +284,33 @@ export default function GraphCycleDetectionVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
+      const firstStep = newSteps[0];
+      setCurrentNodes(firstStep.nodes);
+      setCurrentEdges(firstStep.edges);
+      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
+      setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
+      if (firstStep.message && (firstStep.message.includes("Invalid") || firstStep.message.includes("empty")) ){
+           toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
+      }
       const lastStepMsg = newSteps[newSteps.length-1]?.message || "";
       if (lastStepMsg.includes("Cycle WAS found")) {
           toast({title:"Cycle Detected!", description: "The algorithm found a cycle in the graph.", variant: "destructive"});
       } else if (lastStepMsg.includes("NO cycle found")){
           toast({title:"No Cycle Found", description: "The algorithm did not find any cycles."});
-      } else if (newSteps[0].message && (newSteps[0].message.includes("Invalid") || newSteps[0].message.includes("empty")) ){
-           toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
       }
+
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, isDirected, toast, updateStateFromStep]);
+  }, [graphInputValue, isDirected, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, isDirected]); 
+    handleGenerateSteps();
+  }, [handleGenerateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -355,7 +361,6 @@ export default function GraphCycleDetectionVisualizerPage() {
     setGraphInputValue('0:1;1:2;2:0,3;3:4;4:5;5:3');
     setIsDirected(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // generateSteps will be called by useEffect due to input changes
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -427,7 +432,7 @@ export default function GraphCycleDetectionVisualizerPage() {
             onReset={handleReset}
             onGraphInputChange={handleGraphInputChange}
             graphInputValue={graphInputValue}
-            showStartNodeInput={false} // Cycle detection starts from all unvisited nodes
+            showStartNodeInput={false} 
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -436,7 +441,7 @@ export default function GraphCycleDetectionVisualizerPage() {
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
             graphInputPlaceholder="e.g., 0:1;1:2;2:0 (adj list)"
-            onExecute={generateSteps} 
+            onExecute={handleGenerateSteps} 
             executeButtonText="Detect Cycles"
           />
         </div>

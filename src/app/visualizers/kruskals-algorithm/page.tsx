@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -149,20 +148,22 @@ export default function KruskalsVisualizerPage() {
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = parseKruskalInput(numVerticesInput, edgeListInputValue);
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Format: u-v(weight);... Check num vertices and edge indices.", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
     if (parsedData.numVertices === 0 && edgeListInputValue.trim() !== "") {
         toast({ title: "Invalid Input", description: "Number of vertices must be > 0 if edges are provided.", variant: "destructive" });
+        setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Number of vertices must be > 0 if edges are provided.");
         return;
     }
-
 
     const newSteps = generateKruskalsSteps(parsedData.numVertices, parsedData.edges, parsedData.initialNodes);
     setSteps(newSteps);
@@ -171,17 +172,22 @@ export default function KruskalsVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
+      const firstStep = newSteps[0];
+      setCurrentNodes(firstStep.nodes);
+      setCurrentEdges(firstStep.edges);
+      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
+      setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
     } else {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [numVerticesInput, edgeListInputValue, toast, updateStateFromStep]);
+  }, [numVerticesInput, edgeListInputValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numVerticesInput, edgeListInputValue]); 
+    handleGenerateSteps();
+  }, [handleGenerateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -307,7 +313,7 @@ export default function KruskalsVisualizerPage() {
             maxSpeed={MAX_SPEED}
             graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);... (undirected)"
             numVerticesInputPlaceholder="Num Vertices"
-            onExecute={generateSteps} 
+            onExecute={handleGenerateSteps} 
             executeButtonText="Find MST"
           />
         </div>
@@ -317,3 +323,4 @@ export default function KruskalsVisualizerPage() {
     </div>
   );
 }
+

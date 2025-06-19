@@ -1,11 +1,10 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, AlgorithmStep } from './types'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Construction, Code2, Sigma } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select';
 import { VisualizationPanel } from './VisualizationPanel'; // Local import
 import { SegmentTreeCodePanel } from './SegmentTreeCodePanel'; // Local import
 import { generateSegmentTreeSteps, type SegmentTreeOperation } from './segment-tree-logic'; // Local import
@@ -50,7 +49,7 @@ export default function SegmentTreeVisualizerPage() {
 
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true); // Start as finished until an op
+  const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -81,12 +80,12 @@ export default function SegmentTreeVisualizerPage() {
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
-      setDisplayedData(currentS.array); // This is the segment tree array
+      setDisplayedData(currentS.array); 
       setActiveIndices(currentS.activeIndices);
       setCurrentLine(currentS.currentLine);
       setAuxiliaryDisplay(currentS.auxiliaryData || null);
     }
-  }, [steps]);
+  }, [steps, setDisplayedData, setActiveIndices, setCurrentLine, setAuxiliaryDisplay]);
 
   const handleExecuteOperation = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -139,10 +138,22 @@ export default function SegmentTreeVisualizerPage() {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateStateFromStep(0);
-    else { setDisplayedData(selectedOperation === 'build' ? [] : segmentTreeArrayRef.current); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); setIsFinished(true); }
+    if (newSteps.length > 0) {
+        const firstStep = newSteps[0];
+        setDisplayedData(firstStep.array);
+        setActiveIndices(firstStep.activeIndices);
+        setCurrentLine(firstStep.currentLine);
+        setAuxiliaryDisplay(firstStep.auxiliaryData || null);
+    }
+    else { 
+        setDisplayedData(selectedOperation === 'build' ? [] : segmentTreeArrayRef.current); 
+        setActiveIndices([]); 
+        setCurrentLine(null); 
+        setAuxiliaryDisplay(null); 
+        setIsFinished(true); 
+    }
 
-  }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast, updateStateFromStep]);
+  }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast, setDisplayedData, setActiveIndices, setCurrentLine, setAuxiliaryDisplay, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
   useEffect(() => { 
     if (selectedOperation === 'build') handleExecuteOperation();
@@ -180,8 +191,6 @@ export default function SegmentTreeVisualizerPage() {
     setUpdateIndex("2"); setUpdateValue("10");
     segmentTreeArrayRef.current = []; originalArraySizeRef.current = 0;
     setSteps([]); setDisplayedData([]); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); setIsFinished(true);
-    // Re-trigger build if needed, or rely on useEffect for 'build' op
-    // handleExecuteOperation(); // This would re-build with current (possibly default) inputs
   };
 
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -213,7 +222,6 @@ export default function SegmentTreeVisualizerPage() {
                 <VisualizationPanel
                     data={displayedData} 
                     activeIndices={activeIndices}
-                    // Pass other props if VisualizationPanel is generic
                 />
                  {auxiliaryDisplay && (
                     <Card className="mt-4">
@@ -292,3 +300,4 @@ export default function SegmentTreeVisualizerPage() {
     </div>
   );
 }
+

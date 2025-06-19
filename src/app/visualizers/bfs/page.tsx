@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -31,6 +30,7 @@ export default function BfsVisualizerPage() {
   const [currentEdges, setCurrentEdges] = useState<GraphEdge[]>([]);
   const [currentAuxiliaryData, setCurrentAuxiliaryData] = useState<GraphAlgorithmStep['auxiliaryData']>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description); // Added for message display
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -46,28 +46,33 @@ export default function BfsVisualizerPage() {
       setCurrentEdges(currentS.edges);
       setCurrentAuxiliaryData(currentS.auxiliaryData || []);
       setCurrentLine(currentS.currentLine);
+      setCurrentMessage(currentS.message); // Update message
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const generateNewSteps = useCallback(() => { // Renamed from generateSteps to avoid confusion
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = parseGraphInput(graphInputValue);
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Graph format is incorrect. Use 'node:neighbor1,neighbor2;...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
     if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph appears to be malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Graph malformed or empty.");
         return;
     }
 
-
     if (startNodeValue.trim() === '') {
       toast({ title: "Missing Start Node", description: "Please enter a start node ID.", variant: "destructive" });
-       setSteps([]); setCurrentNodes(parseGraphInput(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray'})) || []); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+       setSteps([]); 
+       setCurrentNodes(parseGraphInput(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray'})) || []); 
+       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+       setCurrentMessage("Missing start node.");
       return;
     }
 
@@ -75,26 +80,31 @@ export default function BfsVisualizerPage() {
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1); // Finished if only one step (e.g. error message)
+    setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
-       if (newSteps[0].message && (newSteps[0].message.includes("not found") || newSteps[0].message.includes("empty")) ){
-           toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
+      const firstStep = newSteps[0];
+      setCurrentNodes(firstStep.nodes);
+      setCurrentEdges(firstStep.edges);
+      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
+      setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
+      if (firstStep.message && (firstStep.message.includes("not found") || firstStep.message.includes("empty")) ){
+           toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
       }
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
       setCurrentEdges([]);
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, startNodeValue, toast, updateStateFromStep]);
+  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, startNodeValue]); 
+    generateNewSteps();
+  }, [generateNewSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -145,7 +155,7 @@ export default function BfsVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    generateNewSteps();
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -180,7 +190,7 @@ export default function BfsVisualizerPage() {
             {algorithmMetadata.title}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {steps[currentStepIndex]?.message || algorithmMetadata.description}
+            {currentMessage}
           </p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">

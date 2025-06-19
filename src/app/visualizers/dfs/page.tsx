@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -130,6 +129,7 @@ export default function DfsVisualizerPage() {
   const [currentEdges, setCurrentEdges] = useState<GraphEdge[]>([]);
   const [currentAuxiliaryData, setCurrentAuxiliaryData] = useState<GraphAlgorithmStep['auxiliaryData']>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -145,27 +145,31 @@ export default function DfsVisualizerPage() {
       setCurrentEdges(currentS.edges);
       setCurrentAuxiliaryData(currentS.auxiliaryData || []);
       setCurrentLine(currentS.currentLine);
+      setCurrentMessage(currentS.message);
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const generateNewSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = parseGraphInput(graphInputValue);
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Graph format is incorrect. Use 'node:neighbor1,neighbor2;...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
      if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph appears to be malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Graph malformed or empty.");
         return;
     }
 
     if (startNodeValue.trim() === '') {
       toast({ title: "Missing Start Node", description: "Please enter a start node ID.", variant: "destructive" });
        setSteps([]); setCurrentNodes(parseGraphInput(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray'})) || []); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+       setCurrentMessage("Missing start node.");
       return;
     }
 
@@ -181,6 +185,7 @@ export default function DfsVisualizerPage() {
       setCurrentEdges(firstStep.edges);
       setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
       setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
        if (firstStep.message && (firstStep.message.includes("not found") || firstStep.message.includes("empty")) ){
            toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
       }
@@ -189,14 +194,14 @@ export default function DfsVisualizerPage() {
       setCurrentEdges([]);
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, startNodeValue, toast]);
+  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, startNodeValue]); 
+    generateNewSteps();
+  }, [generateNewSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -217,7 +222,7 @@ export default function DfsVisualizerPage() {
 
   const handlePlay = () => {
     if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
-      toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated. Check input.", variant: "default" });
+      toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated or already at end. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
     setIsPlaying(true); setIsFinished(false);
@@ -247,7 +252,7 @@ export default function DfsVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    generateNewSteps();
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -281,7 +286,7 @@ export default function DfsVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">

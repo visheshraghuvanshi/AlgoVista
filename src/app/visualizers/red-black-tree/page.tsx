@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -53,11 +52,6 @@ export default function RedBlackTreePage() {
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const rbtRef = useRef<RBTreeGraph>(createInitialRBTreeGraph());
 
-  useEffect(() => {
-    handleOperation('build', initialArrayInput);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
-
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
@@ -76,7 +70,7 @@ export default function RedBlackTreePage() {
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const opType = opTypeInput as 'build' | 'insert' | 'search' | 'delete'; // Cast for generateRBTreeSteps
+    const opType = opTypeInput as 'build' | 'insert' | 'search' | 'delete'; 
 
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
@@ -88,17 +82,27 @@ export default function RedBlackTreePage() {
         const opValStr = primaryValue || operationValue;
         if (opValStr.trim() === "") {
             toast({ title: "Input Missing", description: "Please enter a value for the operation.", variant: "destructive" });
+            setSteps([]);setCurrentNodes([]);setCurrentEdges([]);setCurrentPath([]);setCurrentLine(null);setCurrentProcessingNodeId(null);setCurrentMessage("Error: Input missing.");setIsPlaying(false);setIsFinished(true);
             return;
         }
         valueForOp = parseInt(opValStr, 10);
         if (isNaN(valueForOp)) {
             toast({ title: "Invalid Value", description: "Please enter a numeric value for the operation.", variant: "destructive" });
+            setSteps([]);setCurrentNodes([]);setCurrentEdges([]);setCurrentPath([]);setCurrentLine(null);setCurrentProcessingNodeId(null);setCurrentMessage("Error: Invalid value.");setIsPlaying(false);setIsFinished(true);
             return;
         }
     } else if (opTypeInput === 'structure') {
         const currentVisuals = generateRBTreeSteps('structure', undefined, undefined, rbtRef.current);
         setSteps(currentVisuals);
-        updateStateFromStep(0);
+        if (currentVisuals.length > 0) {
+            const firstStep = currentVisuals[0];
+            setCurrentNodes(firstStep.nodes);
+            setCurrentEdges(firstStep.edges);
+            setCurrentPath(firstStep.traversalPath || []);
+            setCurrentLine(firstStep.currentLine);
+            setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
+            setCurrentMessage(firstStep.message || "Displaying current tree structure. Select an operation to visualize.");
+        }
         setIsPlaying(false);
         setIsFinished(true);
         return;
@@ -117,14 +121,17 @@ export default function RedBlackTreePage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-        updateStateFromStep(0);
-        // Update rbtRef with the final state *after* the operation
+        const firstStep = newSteps[0];
+        setCurrentNodes(firstStep.nodes);
+        setCurrentEdges(firstStep.edges);
+        setCurrentPath(firstStep.traversalPath || []);
+        setCurrentLine(firstStep.currentLine);
+        setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
+        setCurrentMessage(firstStep.message || "Step executed.");
+        
         const finalGraphStateFromSteps = newSteps[newSteps.length - 1]?.auxiliaryData?.finalGraphState as RBTreeGraph | undefined;
         if (finalGraphStateFromSteps) {
             rbtRef.current = finalGraphStateFromSteps;
-        } else if (newSteps.length > 0 && opType !== 'search') {
-            // If finalGraphState is not explicitly passed, try to infer from the last step's nodes/root
-            // This part might need refinement based on how generateRBTreeSteps structures its last step
         }
 
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
@@ -136,7 +143,12 @@ export default function RedBlackTreePage() {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  }, [initialArrayInput, operationValue, toast, updateStateFromStep]);
+  }, [initialArrayInput, operationValue, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+
+  useEffect(() => {
+    handleOperation('build', initialArrayInput);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
 
   useEffect(() => {
@@ -270,3 +282,4 @@ export default function RedBlackTreePage() {
     </div>
   );
 }
+

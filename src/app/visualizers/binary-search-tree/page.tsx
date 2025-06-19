@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -76,27 +75,32 @@ export default function BinarySearchTreePage() {
       valueForOp = parseInt(operationValue, 10);
       if (isNaN(valueForOp)) {
         toast({ title: "Invalid Value", description: "Please enter a numeric value for the operation.", variant: "destructive" });
+        setSteps([]);setCurrentNodes([]);setCurrentEdges([]);setCurrentPath([]);setCurrentLine(null);setCurrentProcessingNodeId(null);setCurrentMessage("Error: Invalid value for operation.");setIsPlaying(false);setIsFinished(true);
         return;
       }
     }
     
-    const initialValuesForBuild = selectedOperation === 'build' ? treeInputValue : undefined;
+    let initialValuesForBuild = selectedOperation === 'build' ? treeInputValue : undefined;
+    if (selectedOperation === 'build' && (!initialValuesForBuild || initialValuesForBuild.trim() === '')) {
+        bstStructureRef.current = { rootId: null, nodes: new Map() }; // Reset tree structure
+        initialValuesForBuild = ""; // Ensure it's an empty string for logic
+    }
+
 
     if (selectedOperation === 'structure') {
         const structureDisplaySteps = generateBSTSteps(bstStructureRef, 'structure');
         const displayState = structureDisplaySteps[0] || {nodes:[], edges:[], message:"Current tree structure."};
         setCurrentNodes(displayState.nodes || []);
         setCurrentEdges(displayState.edges || []);
-        setCurrentLine(null);
-        setCurrentPath([]);
-        setCurrentProcessingNodeId(null);
+        setCurrentPath(displayState.traversalPath || []);
+        setCurrentLine(displayState.currentLine);
+        setCurrentProcessingNodeId(displayState.currentProcessingNodeId ?? null);
         setCurrentMessage(displayState.message || "Displaying current tree structure. Select an operation.");
         setSteps([]); 
         setIsPlaying(false);
         setIsFinished(true); 
         return;
     }
-
 
     const newSteps = generateBSTSteps(
       bstStructureRef,
@@ -111,7 +115,14 @@ export default function BinarySearchTreePage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-        updateStateFromStep(0);
+        const firstStep = newSteps[0];
+        setCurrentNodes(firstStep.nodes);
+        setCurrentEdges(firstStep.edges);
+        setCurrentPath(firstStep.traversalPath || []);
+        setCurrentLine(firstStep.currentLine);
+        setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
+        setCurrentMessage(firstStep.message || "Step executed.");
+        
         const lastStep = newSteps[newSteps.length - 1];
         if(lastStep.message?.toLowerCase().includes("error")){
              toast({ title: "Operation Info", description: lastStep.message, variant: "destructive" });
@@ -122,7 +133,7 @@ export default function BinarySearchTreePage() {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  }, [treeInputValue, selectedOperation, operationValue, toast, updateStateFromStep]);
+  }, [treeInputValue, selectedOperation, operationValue, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
   useEffect(() => { 
     bstStructureRef.current = { rootId: null, nodes: new Map() }; 
@@ -225,7 +236,7 @@ export default function BinarySearchTreePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationValue">Value for Operation</Label>
-                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue} />
+                <Input id="operationValue" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} />
               </div>
             </div>
             <Button onClick={handleGenerateSteps} disabled={isPlaying || selectedOperation === 'structure'}>Execute Operation & Generate Steps</Button>
@@ -256,3 +267,4 @@ export default function BinarySearchTreePage() {
     </div>
   );
 }
+

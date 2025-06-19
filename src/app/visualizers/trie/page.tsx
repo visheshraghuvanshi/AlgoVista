@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -55,24 +54,25 @@ export default function TrieVisualizerPage() {
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
-  }, [steps]);
+  }, [steps, setCurrentStep]);
   
-  const handleExecuteOperation = () => {
+  const handleExecuteOperation = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const word = wordInput.trim().toLowerCase(); // Standardize to lowercase
+    const word = wordInput.trim().toLowerCase(); 
      if (!/^[a-z]*$/.test(word) && word !== "") {
         toast({title: "Invalid Input", description: "Please enter words containing only lowercase English letters.", variant: "destructive"});
+        setSteps([]);setCurrentStep(null);setIsFinished(true);
         return;
     }
     if (!word && selectedOperation !== 'init') {
         toast({title: "Input Needed", description: "Please enter a word for the operation.", variant: "destructive"});
+        setSteps([]);setCurrentStep(null);setIsFinished(true);
         return;
     }
     if (word.length > 15) {
       toast({title: "Word Too Long", description: "Max 15 chars for better visualization.", variant: "default"});
     }
-
 
     const newSteps = generateTrieSteps(trieRef.current, selectedOperation as 'insert'|'search'|'startsWith', word);
     setSteps(newSteps);
@@ -81,24 +81,33 @@ export default function TrieVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-        updateVisualStateFromStep(0);
+        const firstStep = newSteps[0];
+        setCurrentStep(firstStep);
         if (newSteps[newSteps.length - 1].nodes && selectedOperation === 'insert') {
-            if (!insertedWords.includes(word)) {
-                setInsertedWords(prev => [...prev, word].sort());
+            if (!insertedWords.includes(word) && word) { // Add word only if it's not empty
+               setInsertedWords(prev => [...prev, word].sort());
             }
         }
-        // Display final result of search/startsWith via toast
         const lastStep = newSteps[newSteps.length-1];
         if (lastStep.operation === 'search' && lastStep.found !== undefined) {
             toast({title: "Search Result", description: `Word "${lastStep.currentWord}" ${lastStep.found ? 'found.' : 'not found.'}`});
         } else if (lastStep.operation === 'startsWith' && lastStep.found !== undefined) {
             toast({title: "StartsWith Result", description: `Prefix "${lastStep.currentWord}" ${lastStep.found ? 'exists.' : 'does not exist.'}`});
+        } else if (lastStep.operation === 'insert' && lastStep.message?.includes("complete")) {
+            toast({title: "Insert Complete", description: `Word "${word}" inserted.`});
         }
 
     } else {
-        setCurrentStep({ ...currentStep!, message: "Operation did not produce steps or encountered an issue." });
+        const currentTrieVisuals = generateTrieSteps(trieRef.current, 'init', '')[0];
+        setCurrentStep(currentTrieVisuals);
     }
-  };
+  },[wordInput, selectedOperation, toast, setSteps, setCurrentStep, setCurrentStepIndex, setIsPlaying, setIsFinished, insertedWords, setInsertedWords]);
+
+  useEffect(() => {
+    if (selectedOperation === 'init') { // Only re-run handleExecuteOperation for 'init' via op change
+        handleExecuteOperation();
+    }
+  }, [selectedOperation, handleExecuteOperation]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -200,3 +209,4 @@ export default function TrieVisualizerPage() {
     </div>
   );
 }
+

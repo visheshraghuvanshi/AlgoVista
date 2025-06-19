@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -149,7 +148,6 @@ const PRIMS_CODE_SNIPPETS = {
   ],
 };
 
-
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -172,7 +170,6 @@ export default function PrimsVisualizerPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description);
 
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
@@ -191,26 +188,30 @@ export default function PrimsVisualizerPage() {
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = parsePrimsInput(numVerticesInput, edgeListInputValue);
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Format: u-v(weight);... Check num vertices and edge indices. Weights must be non-negative.", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
      if (parsedData.numVertices === 0 && edgeListInputValue.trim() !== "") {
         toast({ title: "Invalid Input", description: "Number of vertices must be > 0 if edges are provided.", variant: "destructive" });
+        setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Number of vertices must be > 0 if edges are provided.");
         return;
     }
     const startNodeId = startNodeValue.trim() === '' ? '0' : startNodeValue.trim();
     const startNodeNum = parseInt(startNodeId, 10);
     if(isNaN(startNodeNum) || startNodeNum >= parsedData.numVertices || startNodeNum < 0) {
         toast({ title: "Invalid Start Node", description: `Start node must be between 0 and ${parsedData.numVertices - 1}.`, variant: "destructive" });
+        setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Invalid start node.");
         return;
     }
-
 
     const newSteps = generatePrimsSteps(parsedData.numVertices, parsedData.adj, parsedData.initialNodes, startNodeId);
     setSteps(newSteps);
@@ -219,17 +220,22 @@ export default function PrimsVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
+      const firstStep = newSteps[0];
+      setCurrentNodes(firstStep.nodes);
+      setCurrentEdges(firstStep.edges);
+      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
+      setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
     } else {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [numVerticesInput, edgeListInputValue, startNodeValue, toast, updateStateFromStep]);
+  }, [numVerticesInput, edgeListInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numVerticesInput, edgeListInputValue, startNodeValue]);
+    handleGenerateSteps();
+  }, [handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -360,7 +366,7 @@ export default function PrimsVisualizerPage() {
             graphInputPlaceholder="Edges: 0-1(wt);1-2(wt);... (undirected, non-negative)"
             startNodeInputPlaceholder="Start Node (0-indexed)"
             numVerticesInputPlaceholder="Num Vertices"
-            onExecute={generateSteps} 
+            onExecute={handleGenerateSteps} 
             executeButtonText="Find MST"
           />
         </div>
@@ -370,3 +376,4 @@ export default function PrimsVisualizerPage() {
     </div>
   );
 }
+

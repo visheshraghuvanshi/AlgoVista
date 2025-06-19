@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -7,7 +6,7 @@ import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
 import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; // Local import
-import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import { GraphControlsPanel from './GraphControlsPanel'; // Local import
 import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { TopologicalSortCodePanel } from './TopologicalSortCodePanel';
 import { useToast } from "@/hooks/use-toast";
@@ -143,7 +142,6 @@ const TOPOLOGICAL_SORT_CODE_SNIPPETS = {
   ],
 };
 
-
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -151,7 +149,7 @@ const MAX_SPEED = 2000;
 export default function TopologicalSortVisualizerPage() {
   const { toast } = useToast();
   
-  const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:3;2:3;3:4;4:'); // Example DAG
+  const [graphInputValue, setGraphInputValue] = useState('0:1,2;1:3;2:3;3:4;4:'); 
   
   const [steps, setSteps] = useState<GraphAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -161,7 +159,6 @@ export default function TopologicalSortVisualizerPage() {
   const [currentAuxiliaryData, setCurrentAuxiliaryData] = useState<GraphAlgorithmStep['auxiliaryData']>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description);
-
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -181,31 +178,38 @@ export default function TopologicalSortVisualizerPage() {
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = baseParseGraphInput(graphInputValue); 
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Format: 'node:neighbor1,neighbor2;...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
     if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Graph malformed or empty.");
         return;
     }
 
-    const newSteps = generateTopologicalSortSteps(graphInputValue); // Logic handles parsing internally
+    const newSteps = generateTopologicalSortSteps(graphInputValue);
     setSteps(newSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
-      if (newSteps[0].message && (newSteps[0].message.includes("Invalid") || newSteps[0].message.includes("empty")) ){
-           toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
+      const firstStep = newSteps[0];
+      setCurrentNodes(firstStep.nodes);
+      setCurrentEdges(firstStep.edges);
+      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
+      setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
+      if (firstStep.message && (firstStep.message.includes("Invalid") || firstStep.message.includes("empty")) ){
+           toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
       }
       const lastStepMsg = newSteps[newSteps.length-1]?.message || "";
       if (lastStepMsg.includes("Cycle detected")) {
@@ -217,14 +221,14 @@ export default function TopologicalSortVisualizerPage() {
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, toast, updateStateFromStep]);
+  }, [graphInputValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue]); 
+    handleGenerateSteps();
+  }, [handleGenerateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -272,9 +276,8 @@ export default function TopologicalSortVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
-    setGraphInputValue('0:1,2;1:3;2:3;3:4;4:'); // Reset to default
+    setGraphInputValue('0:1,2;1:3;2:3;3:4;4:'); 
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // generateSteps will be called by useEffect due to graphInputValue change
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -336,7 +339,7 @@ export default function TopologicalSortVisualizerPage() {
             onReset={handleReset}
             onGraphInputChange={handleGraphInputChange}
             graphInputValue={graphInputValue}
-            showStartNodeInput={false} // Topological sort (Kahn's) doesn't need a specific start node
+            showStartNodeInput={false}
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -345,7 +348,7 @@ export default function TopologicalSortVisualizerPage() {
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
             graphInputPlaceholder="e.g., 0:1;1:2;2: (Directed Acyclic Graph)"
-            onExecute={generateSteps} // Allows manual re-trigger if needed
+            onExecute={handleGenerateSteps} 
             executeButtonText="Generate Topological Sort"
           />
         </div>

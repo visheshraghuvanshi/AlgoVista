@@ -1,14 +1,13 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { GraphVisualizationPanel } from '@/components/algo-vista/GraphVisualizationPanel';
+import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { DijkstraCodePanel } from './DijkstraCodePanel'; 
-import { GraphControlsPanel } from '@/components/algo-vista/GraphControlsPanel';
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from '@/types';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard'; 
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { DIJKSTRA_LINE_MAP, generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic';
@@ -156,6 +155,7 @@ export default function DijkstraVisualizerPage() {
   const [currentEdges, setCurrentEdges] = useState<GraphEdge[]>([]);
   const [currentAuxiliaryData, setCurrentAuxiliaryData] = useState<GraphAlgorithmStep['auxiliaryData']>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description); // Added for message display
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -171,30 +171,35 @@ export default function DijkstraVisualizerPage() {
       setCurrentEdges(currentS.edges);
       setCurrentAuxiliaryData(currentS.auxiliaryData || []);
       setCurrentLine(currentS.currentLine);
+      setCurrentMessage(currentS.message); // Update message
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const generateNewSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = parseWeightedGraphInput(graphInputValue);
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Graph format incorrect. Use 'node:n1(w1),n2(w2);...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
      if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Graph malformed or empty.");
         return;
     }
 
     if (startNodeValue.trim() === '') {
       toast({ title: "Missing Start Node", description: "Please enter a start node ID.", variant: "destructive" });
-       setSteps([]); setCurrentNodes(parseWeightedGraphInput(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray', distance: Infinity})) || []); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+       setSteps([]); 
+       setCurrentNodes(parseWeightedGraphInput(graphInputValue)?.nodes.map(n => ({...n, x:0,y:0,color:'gray', distance: Infinity})) || []); 
+       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+       setCurrentMessage("Missing start node.");
       return;
     }
-    // Check for negative weights
     let hasNegativeWeight = false;
     parsedData.adj.forEach(edges => {
         edges.forEach(edge => {
@@ -202,8 +207,7 @@ export default function DijkstraVisualizerPage() {
         });
     });
     if(hasNegativeWeight){
-        toast({ title: "Negative Weights Detected", description: "Dijkstra's algorithm may not work correctly with negative edge weights. Consider Bellman-Ford.", variant: "destructive", duration: 7000 });
-        // Optionally, prevent step generation or allow with warning
+        toast({ title: "Negative Weights Detected", description: "Dijkstra's algorithm requires non-negative edge weights. Results may be incorrect.", variant: "destructive", duration: 7000 });
     }
 
 
@@ -219,12 +223,12 @@ export default function DijkstraVisualizerPage() {
       setCurrentEdges(firstStep.edges);
       setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
       setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
       if (firstStep.message && (firstStep.message.includes("not found") || firstStep.message.includes("empty")) ){
            toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
       }
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey', distance: Infinity})));
-      // Construct edges from adj map if needed for display, even if no steps
       const edgesFromAdj: GraphEdge[] = [];
       parsedData.adj.forEach((neighbors, sourceId) => {
         neighbors.forEach(({target, weight}) => edgesFromAdj.push({id: `${sourceId}-${target}`, source:sourceId, target, weight, color: 'grey', isDirected: true}));
@@ -232,14 +236,14 @@ export default function DijkstraVisualizerPage() {
       setCurrentEdges(edgesFromAdj);
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, startNodeValue, toast]);
+  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, startNodeValue]); 
+    generateNewSteps();
+  }, [generateNewSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -290,7 +294,7 @@ export default function DijkstraVisualizerPage() {
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateSteps();
+    generateNewSteps();
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -324,7 +328,7 @@ export default function DijkstraVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -368,3 +372,4 @@ export default function DijkstraVisualizerPage() {
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -13,11 +12,10 @@ import { ConnectedComponentsCodePanel } from './ConnectedComponentsCodePanel';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, SigmaSquare } from 'lucide-react';
 import { generateConnectedComponentsSteps } from './connected-components-logic';
-import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; // Reusing a compatible parser for initial check
+import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Moved from CodePanel and expanded
 const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
   JavaScript: {
     undirected: [
@@ -96,7 +94,7 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
       "    def dfs(u, current_component):",
       "        visited[u] = True",
       "        current_component.append(u)",
-      "        for v in graph.get(u, []):", // Assume keys are already int
+      "        for v in graph.get(u, []):", 
       "            if not visited[v]:",
       "                dfs(v, current_component)",
       "    for i in range(num_nodes):",
@@ -160,7 +158,7 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
       "    }",
       "    private void dfs(int u, List<List<Integer>> adj, boolean[] visited, List<Integer> comp) {",
       "        visited[u] = true; comp.add(u);",
-      "        for (int v : adj.get(u)) {", // Assumes adj.get(u) is valid
+      "        for (int v : adj.get(u)) {", 
       "            if (!visited[v]) dfs(v, adj, visited, comp);",
       "        }",
       "    }",
@@ -216,11 +214,11 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
   "C++": {
     undirected: [
       "#include <vector>",
-      "#include <map>", // Or use vector<vector<int>> if nodes are 0 to N-1
+      "#include <map>", 
       "// adj: std::vector<std::vector<int>> for nodes 0 to numNodes-1",
       "void dfs_undirected_cpp(int u, const std::vector<std::vector<int>>& adj, std::vector<bool>& visited, std::vector<int>& component) {",
       "    visited[u] = true; component.push_back(u);",
-      "    if (u < adj.size()) { // Bounds check",
+      "    if (u < adj.size()) {",
       "        for (int v : adj[u]) if (!visited[v]) dfs_undirected_cpp(v, adj, visited, component);",
       "    }",
       "}",
@@ -254,7 +252,7 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
       "    for (int u = 0; u < V; ++u) {",
       "        if (u < adj.size()) {",
       "          for (int v : adj[u]) {",
-      "              if (v < adjT.size()) adjT[v].push_back(u);", // Bounds check
+      "              if (v < adjT.size()) adjT[v].push_back(u);", 
       "          }",
       "        }",
       "    }",
@@ -289,7 +287,6 @@ const CONNECTED_COMPONENTS_CODE_SNIPPETS = {
   }
 };
 
-
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -297,8 +294,8 @@ const MAX_SPEED = 2000;
 export default function ConnectedComponentsVisualizerPage() {
   const { toast } = useToast();
   
-  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0;3:4;4:5;5:3;6'); // Example with multiple components
-  const [isDirected, setIsDirected] = useState(false); // Default to undirected
+  const [graphInputValue, setGraphInputValue] = useState('0:1;1:2;2:0;3:4;4:5;5:3;6'); 
+  const [isDirected, setIsDirected] = useState(false); 
   
   const [steps, setSteps] = useState<GraphAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -308,7 +305,6 @@ export default function ConnectedComponentsVisualizerPage() {
   const [currentAuxiliaryData, setCurrentAuxiliaryData] = useState<GraphAlgorithmStep['auxiliaryData']>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentMessage, setCurrentMessage] = useState<string | undefined>(algorithmMetadata.description);
-
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -328,18 +324,20 @@ export default function ConnectedComponentsVisualizerPage() {
     }
   }, [steps]);
   
-  const generateSteps = useCallback(() => {
+  const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedData = baseParseGraphInput(graphInputValue); 
     if (!parsedData) {
       toast({ title: "Invalid Graph Input", description: "Format: 'node:neighbor1,neighbor2;...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+      setCurrentMessage("Invalid graph input.");
       return;
     }
     if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
+        setCurrentMessage("Graph malformed or empty.");
         return;
     }
 
@@ -350,26 +348,31 @@ export default function ConnectedComponentsVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateStateFromStep(0);
-      if (newSteps[0].message && (newSteps[0].message.includes("Invalid") || newSteps[0].message.includes("empty")) ){
-           toast({ title: "Graph Error", description: newSteps[0].message, variant: "destructive" });
+      const firstStep = newSteps[0];
+      setCurrentNodes(firstStep.nodes);
+      setCurrentEdges(firstStep.edges);
+      setCurrentAuxiliaryData(firstStep.auxiliaryData || []);
+      setCurrentLine(firstStep.currentLine);
+      setCurrentMessage(firstStep.message);
+      if (firstStep.message && (firstStep.message.includes("Invalid") || firstStep.message.includes("empty")) ){
+           toast({ title: "Graph Error", description: firstStep.message, variant: "destructive" });
       }
       const lastStepMsg = newSteps[newSteps.length-1]?.message || "";
-      if (lastStepMsg.includes("Found")) { // Check for "Found X components" or "Found X SCCs"
+      if (lastStepMsg.includes("Found")) { 
            toast({title:"Components Found!", description: lastStepMsg});
       }
 
     } else {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey'}))); 
       setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null);
+      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, isDirected, toast, updateStateFromStep]);
+  }, [graphInputValue, isDirected, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {
-    generateSteps();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, isDirected]); 
+    handleGenerateSteps();
+  }, [handleGenerateSteps]); 
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -420,7 +423,6 @@ export default function ConnectedComponentsVisualizerPage() {
     setGraphInputValue('0:1;1:2;2:0;3:4;4:5;5:3;6');
     setIsDirected(false);
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    // generateSteps will be called by useEffect due to graphInputValue or isDirected change
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -492,7 +494,7 @@ export default function ConnectedComponentsVisualizerPage() {
             onReset={handleReset}
             onGraphInputChange={handleGraphInputChange}
             graphInputValue={graphInputValue}
-            showStartNodeInput={false} // Not strictly needed for CC/SCC as it processes all nodes
+            showStartNodeInput={false} 
             isPlaying={isPlaying}
             isFinished={isFinished}
             currentSpeed={animationSpeed}
@@ -501,7 +503,7 @@ export default function ConnectedComponentsVisualizerPage() {
             minSpeed={MIN_SPEED}
             maxSpeed={MAX_SPEED}
             graphInputPlaceholder="e.g., 0:1;1:2;3:4 (adj list)"
-            onExecute={generateSteps} 
+            onExecute={handleGenerateSteps} 
             executeButtonText={isDirected ? "Find SCCs" : "Find Components"}
           />
         </div>
@@ -511,3 +513,4 @@ export default function ConnectedComponentsVisualizerPage() {
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -55,21 +54,25 @@ export default function HuffmanCodingVisualizerPage() {
     if (inputText.length > 50) { 
         toast({ title: "Input Too Long", description: "Consider shorter text for faster visualization (max 50 chars).", variant: "default"});
     }
-    if (new Set(inputText).size > 15) { // Too many unique chars makes tree wide
+    if (new Set(inputText).size > 15) { 
         toast({ title: "Too Many Unique Chars", description: "Max 15 unique chars for better tree display.", variant: "default"});
     }
-
 
     const newSteps = generateHuffmanCodingSteps(inputText);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [inputText, toast, updateVisualStateFromStep]);
+    if (newSteps.length > 0) {
+        setCurrentStep(newSteps[0]);
+    } else {
+        setCurrentStep(null);
+    }
+
+  }, [inputText, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
-  useEffect(() => { handleGenerateSteps(); }, [inputText, handleGenerateSteps]);
+  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -126,8 +129,6 @@ export default function HuffmanCodingVisualizerPage() {
                 <Input id="huffmanInputText" value={inputText} onChange={e => setInputText(e.target.value)} maxLength={50} disabled={isPlaying}/>
               </div>
             </div>
-            {/* Button to re-trigger generation can be useful if input changes don't auto-trigger for some reason, or for explicit user action */}
-            {/* <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto">Generate Huffman Tree & Codes</Button> */}
             
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Input & Simulation</Button>
@@ -152,3 +153,4 @@ export default function HuffmanCodingVisualizerPage() {
     </div>
   );
 }
+
