@@ -1,5 +1,5 @@
 
-import type { AlgorithmStep } from '@/types';
+import type { AlgorithmStep } from './types'; // Local import
 
 export const JUMP_SEARCH_LINE_MAP = {
   functionDeclaration: 1,
@@ -33,6 +33,9 @@ export const generateJumpSearchSteps = (sortedArrToSearch: number[], target: num
   const n = arr.length;
   const lm = JUMP_SEARCH_LINE_MAP;
 
+  let finalFoundIndex = -1;
+  let finalSearchRange: [number, number] | null = null;
+
   const addStep = (
     line: number,
     active: number[] = [],
@@ -43,9 +46,9 @@ export const generateJumpSearchSteps = (sortedArrToSearch: number[], target: num
   ) => {
     localSteps.push({
       array: currentArrState,
-      activeIndices: active.filter(idx => idx >= 0 && idx < n),
+      activeIndices: active.filter(idx => idx >=0 && idx < n),
       swappingIndices: [], // Not used
-      sortedIndices: found.filter(idx => idx >= 0 && idx < n), // Used for found item
+      sortedIndices: found.filter(idx => idx >=0 && idx < n), // Used for found item
       currentLine: line,
       message,
       processingSubArrayRange: processingRange,
@@ -57,8 +60,9 @@ export const generateJumpSearchSteps = (sortedArrToSearch: number[], target: num
   addStep(lm.getN, [], [], null, `n = ${n}.`);
   if (n === 0) {
     addStep(lm.handleEmptyArray, [], [], null, "Array is empty. Target not found.");
-    addStep(lm.returnNotFound);
-    addStep(lm.functionEnd);
+    finalSearchRange = null; // No range for empty array
+    addStep(lm.returnNotFound, [], [], finalSearchRange, "Target not found.");
+    addStep(lm.functionEnd, [], (finalFoundIndex !== -1 ? [finalFoundIndex] : []), finalSearchRange, "Algorithm finished.");
     return localSteps;
   }
 
@@ -68,89 +72,92 @@ export const generateJumpSearchSteps = (sortedArrToSearch: number[], target: num
   let prev = 0;
   addStep(lm.initPrev, [prev], [], null, `Initialize prev = ${prev}`);
   
-  // 'step' in the JS code is the end of the current block being jumped to.
   let step = blockSize;
-  addStep(lm.initStepVar, [Math.min(step, n) - 1], [], [prev, Math.min(step, n) - 1], `Initial block to check ends at index ~${Math.min(step,n)-1}.`);
+  let currentBlockEndVisual = Math.min(step, n) -1;
+  finalSearchRange = [prev, currentBlockEndVisual];
+  addStep(lm.initStepVar, [currentBlockEndVisual], [], finalSearchRange, `Initial block to check ends at index ~${currentBlockEndVisual}.`);
   
   // Phase 1: Jumping to find the block
   let iteration = 0;
   while (iteration < n + 5) { // Safety break
     iteration++;
     const blockEndIndex = Math.min(step, n) - 1;
-    if (blockEndIndex < prev && prev < n) { // step might not have advanced if block size is 0 or 1
-       // This means target is likely in current small block or not found
-       addStep(lm.jumpingLoopCondition, [prev], [], [prev, prev], `Block end index ${blockEndIndex} is not advancing. Checking current 'prev'.`);
-       break;
-    }
-     if (blockEndIndex < 0) { // Should only happen if n=0, handled above, or blockSize=0
+    
+    if (blockEndIndex < 0) { 
         addStep(lm.returnNotFound, [], [], null, "Block end index invalid. Target likely not found.");
-        addStep(lm.functionEnd);
+        finalSearchRange = null;
+        addStep(lm.functionEnd, [], (finalFoundIndex !== -1 ? [finalFoundIndex] : []), finalSearchRange, "Algorithm finished.");
         return localSteps;
     }
-
-
-    addStep(lm.jumpingLoopCondition, [blockEndIndex], [], [prev, blockEndIndex], `Checking block ending at index ${blockEndIndex}.`);
-    addStep(lm.jumpingBlockCheck, [blockEndIndex], [], [prev, blockEndIndex], `Is arr[${blockEndIndex}] (${arr[blockEndIndex]}) < target (${target})?`);
+    finalSearchRange = [prev, blockEndIndex];
+    addStep(lm.jumpingLoopCondition, [blockEndIndex], [], finalSearchRange, `Checking block ending at index ${blockEndIndex}.`);
+    addStep(lm.jumpingBlockCheck, [blockEndIndex], [], finalSearchRange, `Is arr[${blockEndIndex}] (${arr[blockEndIndex]}) < target (${target})?`);
     
     if (arr[blockEndIndex] < target) {
       prev = step;
-      addStep(lm.updatePrevToStep, [prev], [], null, `Yes. Update prev = ${prev}.`);
+      addStep(lm.updatePrevToStep, [prev > 0 ? prev-1 : prev], [], finalSearchRange, `Yes. Update prev to ${prev}.`); // Highlight prev for context
       step += blockSize;
-      addStep(lm.updateStepByBlockSize, [Math.min(step, n) -1], [], [prev, Math.min(step, n) -1], `Jump to next block. New block ends at index ~${Math.min(step,n)-1}.`);
+      currentBlockEndVisual = Math.min(step, n) -1;
+      addStep(lm.updateStepByBlockSize, [currentBlockEndVisual < 0 ? 0 : currentBlockEndVisual], [], [prev, currentBlockEndVisual], `Jump to next block. New block ends at index ~${currentBlockEndVisual}.`);
 
-      addStep(lm.checkPrevOutOfBounds, [prev], [], null, `Is prev (${prev}) >= n (${n})?`);
+      addStep(lm.checkPrevOutOfBounds, [prev > 0 ? prev-1 : prev], [], [prev, currentBlockEndVisual], `Is prev (${prev}) >= n (${n})?`);
       if (prev >= n) {
-        addStep(lm.returnNotFound, [], [], null, "Target not found (jumped past array end).");
-        addStep(lm.functionEnd);
+        addStep(lm.returnNotFound, [], [], [n-1, n-1], "Target not found (jumped past array end).");
+        finalSearchRange = [n-1,n-1];
+        addStep(lm.functionEnd, [], (finalFoundIndex !== -1 ? [finalFoundIndex] : []), finalSearchRange, "Algorithm finished.");
         return localSteps;
       }
     } else {
-      addStep(lm.jumpingBlockCheck, [blockEndIndex], [], [prev, blockEndIndex], `No. Target may be in block [${prev}..${blockEndIndex}].`);
+      addStep(lm.jumpingBlockCheck, [blockEndIndex], [], finalSearchRange, `No. Target may be in block [${prev}..${blockEndIndex}].`);
       break; 
     }
   }
   const linearSearchStart = prev;
-  const linearSearchEnd = Math.min(step, n) - 1;
+  const linearSearchEnd = Math.min(step, n) - 1; // This could be blockEndIndex from previous loop
+  finalSearchRange = [linearSearchStart, linearSearchEnd];
 
-  // Phase 2: Linear search in the identified block
-  addStep(lm.linearSearchLoopCondition, [linearSearchStart], [], [linearSearchStart, linearSearchEnd], `Starting linear search in block [${linearSearchStart}..${linearSearchEnd}]`);
+
+  addStep(lm.linearSearchLoopCondition, [linearSearchStart], [], finalSearchRange, `Starting linear search in block [${linearSearchStart}..${linearSearchEnd}]`);
   
-  iteration = 0; // Reset safety counter
+  iteration = 0; 
   while (iteration < n + 5) {
     iteration++;
-     if (prev > linearSearchEnd || prev >= n) {
-        addStep(lm.returnNotFound, [], [], [linearSearchStart, linearSearchEnd], `Linear search exhausted block. Target not found.`);
-        addStep(lm.functionEnd);
+     if (prev > linearSearchEnd || prev >= n) { // prev is the current linear search index
+        addStep(lm.returnNotFound, [], [], finalSearchRange, `Linear search exhausted block [${linearSearchStart}..${linearSearchEnd}]. Target not found.`);
+        addStep(lm.functionEnd, [], (finalFoundIndex !== -1 ? [finalFoundIndex] : []), finalSearchRange, "Algorithm finished.");
         return localSteps;
     }
 
-    addStep(lm.linearSearchLoopCondition, [prev], [], [linearSearchStart, linearSearchEnd], `Checking arr[${prev}]...`);
-    addStep(lm.linearSearchElementCheck, [prev], [], [linearSearchStart, linearSearchEnd], `Is arr[${prev}] (${arr[prev]}) < target (${target})?`);
+    addStep(lm.linearSearchLoopCondition, [prev], [], finalSearchRange, `Checking arr[${prev}]...`);
+    addStep(lm.linearSearchElementCheck, [prev], [], finalSearchRange, `Is arr[${prev}] (${arr[prev]}) < target (${target})?`);
 
     if (arr[prev] < target) {
       prev++;
-      addStep(lm.incrementPrevLinear, [prev], [], [linearSearchStart, linearSearchEnd], `Yes. Increment prev to ${prev}.`);
+      addStep(lm.incrementPrevLinear, [prev], [], finalSearchRange, `Yes. Increment prev to ${prev}.`);
       
-      addStep(lm.checkPrevEqualsStepOrN, [prev], [], [linearSearchStart, linearSearchEnd], `Is prev (${prev}) now at end of current block search limit (${Math.min(step, n)})?`);
-      if (prev === Math.min(step, n)) { // prev has reached the start of the next block or end of array
-        addStep(lm.returnNotFound, [], [], [linearSearchStart, linearSearchEnd], `Target not found (linear search reached end of block).`);
-        addStep(lm.functionEnd);
+      addStep(lm.checkPrevEqualsStepOrN, [prev], [], finalSearchRange, `Is prev (${prev}) now at end of current block search limit (${Math.min(step, n)})?`);
+      if (prev === Math.min(step, n)) { 
+        addStep(lm.returnNotFound, [], [], finalSearchRange, `Target not found (linear search reached end of block [${linearSearchStart}..${linearSearchEnd}]).`);
+        addStep(lm.functionEnd, [], (finalFoundIndex !== -1 ? [finalFoundIndex] : []), finalSearchRange, "Algorithm finished.");
         return localSteps;
       }
     } else {
-      addStep(lm.linearSearchElementCheck, [prev], [], [linearSearchStart, linearSearchEnd], `No. arr[${prev}] is not less than target.`);
+      addStep(lm.linearSearchElementCheck, [prev], [], finalSearchRange, `No. arr[${prev}] is not less than target.`);
       break;
     }
   }
 
-  // Final check
-  addStep(lm.finalCheckIfFound, [prev], [], [linearSearchStart, linearSearchEnd], `Final check: Is arr[${prev}] (${prev < n ? arr[prev] : 'out of bounds'}) === target (${target})?`);
+  addStep(lm.finalCheckIfFound, [prev], [], finalSearchRange, `Final check: Is arr[${prev}] (${prev < n ? arr[prev] : 'out of bounds'}) === target (${target})?`);
   if (prev < n && arr[prev] === target) {
-    addStep(lm.returnFound, [prev], [prev], null, `Target ${target} found at index ${prev}.`);
+    finalFoundIndex = prev;
+    finalSearchRange = [prev, prev]; // Highlight only the found item
+    addStep(lm.returnFound, [prev], [prev], finalSearchRange, `Target ${target} found at index ${prev}.`);
   } else {
-    addStep(lm.returnNotFound, [], [], null, `Target ${target} not found.`);
+    addStep(lm.returnNotFound, [], [], finalSearchRange, `Target ${target} not found.`);
   }
-  addStep(lm.functionEnd);
+  addStep(lm.functionEnd, [], (finalFoundIndex !== -1 ? [finalFoundIndex] : []), finalSearchRange, "Algorithm finished.");
   return localSteps;
 };
 
+
+    
