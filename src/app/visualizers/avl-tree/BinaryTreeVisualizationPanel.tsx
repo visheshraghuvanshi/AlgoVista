@@ -4,7 +4,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
-import { NODE_COLORS_AVL } from './avl-tree-logic'; 
+import { NODE_COLORS_AVL, TEXT_COLORS_AVL } from './avl-node-colors'; // Corrected import path
 
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
@@ -16,7 +16,7 @@ interface BinaryTreeVisualizationPanelProps {
 
 const SVG_WIDTH = 600; 
 const SVG_HEIGHT_BASE = 300; 
-const NODE_RADIUS = 24; // Increased slightly for more space
+const NODE_RADIUS = 24; 
 
 export function BinaryTreeVisualizationPanel({
   nodes,
@@ -27,7 +27,7 @@ export function BinaryTreeVisualizationPanel({
 }: BinaryTreeVisualizationPanelProps) {
   
   const maxDepthY = nodes.reduce((max, node) => Math.max(max, node.y), 0);
-  const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepthY + NODE_RADIUS * 2 + 70); // Increased buffer for labels
+  const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepthY + NODE_RADIUS * 2 + 70); 
 
   const viewBox = `0 0 ${SVG_WIDTH} ${svgHeight}`;
 
@@ -62,21 +62,17 @@ export function BinaryTreeVisualizationPanel({
                 })}
                 {nodes.map((node) => {
                   let fill = node.color || NODE_COLORS_AVL.DEFAULT;
-                  let textColor = node.textColor || "hsl(var(--primary-foreground))"; // Default for light text
+                  let textColor = TEXT_COLORS_AVL.DEFAULT_TEXT; 
 
-                  // Adjust text color based on fill for better contrast (conceptual)
-                  if (fill === NODE_COLORS_AVL.NEWLY_INSERTED || 
-                      fill === NODE_COLORS_AVL.ROTATION_PIVOT_YELLOW || 
-                      fill === NODE_COLORS_AVL.SLIGHTLY_UNBALANCED_YELLOW) {
-                     textColor = "hsl(var(--accent-foreground))"; // Dark text for light/yellow backgrounds
-                  } else if (fill === NODE_COLORS_AVL.UNBALANCED_NODE_RED || 
-                             fill === NODE_COLORS_AVL.TO_BE_DELETED) {
-                     textColor = "hsl(var(--destructive-foreground))"; // Light text for red
-                  } else if (fill === NODE_COLORS_AVL.BALANCED_GREEN || 
-                             fill === NODE_COLORS_AVL.ACTIVE_COMPARISON || 
-                             fill === NODE_COLORS_AVL.PATH_TRAVERSED || 
-                             fill === NODE_COLORS_AVL.INORDER_SUCCESSOR) {
-                     textColor = "hsl(var(--primary-foreground))"; // Light text for these darker/primary fills
+                  if (node.color) {
+                    // Attempt to find a matching text color key based on the fill color
+                    // This is a bit of a hack; ideally the logic sets both fill and text color.
+                    const colorKey = Object.keys(NODE_COLORS_AVL).find(key => NODE_COLORS_AVL[key as keyof typeof NODE_COLORS_AVL] === node.color);
+                    if (colorKey && TEXT_COLORS_AVL[`${colorKey}_TEXT` as keyof typeof TEXT_COLORS_AVL]) {
+                       textColor = TEXT_COLORS_AVL[`${colorKey}_TEXT` as keyof typeof TEXT_COLORS_AVL];
+                    } else if (node.color === NODE_COLORS_AVL.SLIGHTLY_UNBALANCED_YELLOW || node.color === NODE_COLORS_AVL.NEWLY_INSERTED || node.color === NODE_COLORS_AVL.ROTATION_PIVOT_YELLOW) {
+                        textColor = TEXT_COLORS_AVL.SLIGHTLY_UNBALANCED_YELLOW_TEXT;
+                    }
                   }
                   
                   return (
@@ -91,10 +87,10 @@ export function BinaryTreeVisualizationPanel({
                       />
                       <text
                         x="0"
-                        y="-2" // Shift value slightly up to make space for H/BF
+                        y="-6" // Shift value slightly up to make space for H/BF
                         textAnchor="middle"
                         dy=".3em"
-                        fontSize="10px" 
+                        fontSize="11px" 
                         fill={textColor}
                         fontWeight="bold"
                         className="select-none font-code"
@@ -103,13 +99,13 @@ export function BinaryTreeVisualizationPanel({
                       </text>
                       <text
                         x="0"
-                        y={NODE_RADIUS - 6} // Position H/BF below the value
+                        y={NODE_RADIUS - 10} // Position H/BF below the value
                         textAnchor="middle"
-                        fontSize="7px"
+                        fontSize="8px"
                         fill={textColor}
-                        className="select-none font-code opacity-80"
+                        className="select-none font-code opacity-90"
                       >
-                        (H:{node.height},BF:{node.balanceFactor})
+                        H:{node.height},BF:{node.balanceFactor}
                       </text>
                     </g>
                   );

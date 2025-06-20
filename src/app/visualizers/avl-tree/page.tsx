@@ -10,19 +10,19 @@ import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, AlgorithmDetailsProps, AVLOperationType, AVLTreeGraph, AVLNodeInternal } from './types'; 
 import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
+import { AlertTriangle } from 'lucide-react';
 import {
   generateAVLSteps,
   createInitialAVLTreeGraph,
-  NIL_ID // Import NIL_ID if it's exported and used directly here (e.g., for initial state display)
+  // NIL_ID is not exported/used by page.tsx for AVL, logic uses null
 } from './avl-tree-logic'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Cog, PlusCircle, Search, Trash2, Binary } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Cog, PlusCircle, Search, Trash2, Binary } from 'lucide-react';
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle } from 'lucide-react';
 
 
 const DEFAULT_ANIMATION_SPEED = 1000; 
@@ -71,10 +71,12 @@ export default function AVLTreeVisualizerPage() {
       if (currentS.rotationType && currentS.rotationType !== 'None' && currentS.rotationType !== null) {
         const involvedNodes = currentS.nodesInvolvedInRotation
             ?.map(id => {
-                if (id === NIL_ID) return 'NIL';
-                return avlTreeRef.current.nodesMap.get(id)?.value;
+                if (id === null) return 'NIL_CHILD'; // Handle null if it represents a conceptual NIL child slot (e.g. T2 in rotation)
+                // For AVL, node IDs in rotation will be actual nodes, not a sentinel NIL_ID.
+                const node = avlTreeRef.current.nodesMap.get(id as string); // Cast as string, null handled above
+                return node ? node.value : id; // Fallback to id if somehow node not in map
             })
-            .filter(Boolean)
+            .filter(val => val !== undefined) // Filter out undefined values that might arise if id was not found and not 'NIL_CHILD'
             .join(', ');
         setRotationInfo(`Rotation: ${currentS.rotationType}${involvedNodes ? ` (around/involving ${involvedNodes})` : ''}`);
       } else {
@@ -92,7 +94,7 @@ export default function AVLTreeVisualizerPage() {
     primaryValue?: string 
   ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    setRotationInfo(null); // Clear rotation info on new operation
+    setRotationInfo(null); 
     
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
@@ -119,7 +121,7 @@ export default function AVLTreeVisualizerPage() {
              setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Invalid value."); setIsPlaying(false); setIsFinished(true);
             return;
         }
-        const currentNonNilNodeCount = Array.from(avlTreeRef.current.nodesMap.values()).filter(node => node.id !== avlTreeRef.current.nilNodeId).length;
+        const currentNonNilNodeCount = Array.from(avlTreeRef.current.nodesMap.values()).filter(node => node.value !== null).length;
          if (currentNonNilNodeCount >= MAX_NODES_OVERALL && opType === 'insert') { 
              toast({ title: "Tree Too Large", description: `Max ${MAX_NODES_OVERALL} nodes for insert.`, variant: "default" });
              return;
@@ -225,7 +227,7 @@ export default function AVLTreeVisualizerPage() {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
-  const isOperationWithValue = selectedOperation === 'insert' || selectedOperation === 'delete' || selectedOperation === 'search';
+  const isOperationWithValue = selectedOperation === 'insert' || selectedOperation === 'search' || selectedOperation === 'delete';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -267,7 +269,7 @@ export default function AVLTreeVisualizerPage() {
                   <SelectContent>
                     <SelectItem value="insert">Insert Value</SelectItem>
                     <SelectItem value="search">Search Value</SelectItem>
-                    <SelectItem value="delete">Delete Value (Conceptual)</SelectItem>
+                    <SelectItem value="delete">Delete Value</SelectItem>
                      <SelectItem value="structure">Show Structure Only</SelectItem>
                   </SelectContent>
                 </Select>
@@ -302,7 +304,7 @@ export default function AVLTreeVisualizerPage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              AVL Tree rotations and balancing are complex. Deletion rebalancing shows the first required rotation and notes that further rebalancing might be needed upwards.
+              AVL Tree rotations are complex. Deletion rebalancing shows the first required rotation and notes that further rebalancing might be needed upwards.
             </p>
           </CardContent>
         </Card>
@@ -312,3 +314,6 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
+
+
+    
