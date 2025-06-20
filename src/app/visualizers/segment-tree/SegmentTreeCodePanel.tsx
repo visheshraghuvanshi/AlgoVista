@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
@@ -199,30 +198,82 @@ interface SegmentTreeCodePanelProps {
 
 export function SegmentTreeCodePanel({ currentLine, selectedOperation }: SegmentTreeCodePanelProps) {
   const { toast } = useToast();
-  const languages = useMemo(() => Object.keys(SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build), []);
-  const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : languages[0];
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
+
+  // Languages available for the CURRENT selectedOperation
+  const languagesForTabs = useMemo(() => {
+    const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
+    const currentOpSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
+    const keys = Object.keys(currentOpSnippets);
+    return keys.length > 0 ? keys : ["Info"]; // Fallback if no languages for op
+  }, [selectedOperation]);
   
-  const codeToDisplay = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[selectedOperation]?.[selectedLanguage] || [];
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
+    const currentOpSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
+    const initialLangs = Object.keys(currentOpSnippets);
+    if (initialLangs.length > 0) {
+      return initialLangs.includes("JavaScript") ? "JavaScript" : initialLangs[0];
+    }
+    return "Info";
+  });
+
+  // Effect to update selectedLanguage ONLY when selectedOperation prop changes
+  // and the current selectedLanguage is not valid for the new operation.
+  useEffect(() => {
+    const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
+    const currentOpSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
+    const availableLangsForCurrentOp = Object.keys(currentOpSnippets);
+    
+    if (!availableLangsForCurrentOp.includes(selectedLanguage)) {
+      let newLangToSet = "Info";
+      if (availableLangsForCurrentOp.length > 0) {
+        newLangToSet = availableLangsForCurrentOp.includes("JavaScript") 
+          ? "JavaScript" 
+          : availableLangsForCurrentOp[0];
+      }
+      if (selectedLanguage !== newLangToSet) {
+        setSelectedLanguage(newLangToSet);
+      }
+    }
+  }, [selectedOperation, selectedLanguage]);
+
+
+  const codeToDisplay = useMemo(() => {
+    const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
+    return (SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey]?.[selectedLanguage]) || [];
+  }, [selectedOperation, selectedLanguage]);
+
+  const structureCode = useMemo(() => {
+    // For Segment Tree, the 'build' operation contains the class structure.
+    return (SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build?.[selectedLanguage]) || [];
+  }, [selectedLanguage]);
+  
   const operationLabel = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1);
 
   const handleCopyCode = () => {
-    const classStructureSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build[selectedLanguage] || [];
     let codeStringToCopy = "";
-
     if (selectedOperation === 'build') {
         codeStringToCopy = codeToDisplay.join('\n');
     } else {
-        const classStart = classStructureSnippets.slice(0, classStructureSnippets.findIndex(line => line.includes("build(")) || classStructureSnippets.length).join('\n');
-        const classEnd = selectedLanguage === "Python" ? "" : "}";
+        // For query/update, prepend the class structure part from 'build' snippets
+        const classStructureLines = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build[selectedLanguage] || [];
+        // Find where the _build method ends or where to insert methods
+        let insertPoint = classStructureLines.findIndex(line => line.trim() === "// ... query and update methods ...");
+        if (insertPoint === -1) insertPoint = classStructureLines.length -1; // Default to before last brace if comment not found
+
+        const classStart = classStructureLines.slice(0, insertPoint).join('\n');
+        const classEnd = classStructureLines.slice(insertPoint).join('\n');
+        
         const operationCodeIndented = codeToDisplay.map(line => `    ${line}`).join('\n');
         codeStringToCopy = `${classStart}\n${operationCodeIndented}\n${classEnd}`;
     }
 
-    if (codeStringToCopy) {
+    if (codeStringToCopy.trim()) {
       navigator.clipboard.writeText(codeStringToCopy)
         .then(() => toast({ title: `${selectedLanguage} ${operationLabel} Code Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
+    } else {
+        toast({ title: "Nothing to Copy", variant: "default" });
     }
   };
 
@@ -235,14 +286,14 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
         <div className="flex items-center gap-2">
             <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
                 <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
-                    {languages.map(lang => (
+                    {languagesForTabs.map(lang => (
                         <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
                             {lang}
                         </TabsTrigger>
                     ))}
                 </TabsList>
             </Tabs>
-            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={!codeToDisplay || codeToDisplay.length === 0}>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={codeToDisplay.length === 0}>
                 <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
             </Button>
         </div>
@@ -250,20 +301,30 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
           <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+            {selectedOperation !== 'build' && structureCode.length > 0 && (
+              <>
+                {structureCode.map((line, index) => (
+                  <div key={`struct-${selectedLanguage}-${index}`} className="px-2 py-0.5 rounded text-muted-foreground/70 opacity-70">
+                    <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                    {line}
+                  </div>
+                ))}
+                <div className="my-1 border-b border-dashed border-muted-foreground/30"></div>
+              </>
+            )}
             {codeToDisplay.map((line, index) => (
               <div key={`${operationLabel}-${selectedLanguage}-line-${index}`}
                 className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
-                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
+                  {index + 1 + (selectedOperation !== 'build' && structureCode.length > 0 ? structureCode.length +1 : 0)}
+                </span>
                 {line}
               </div>
             ))}
-            {codeToDisplay.length === 0 && <p className="text-muted-foreground">Select an operation to view code.</p>}
+            {codeToDisplay.length === 0 && <p className="text-muted-foreground">Select an operation to view relevant code.</p>}
           </pre>
         </ScrollArea>
       </CardContent>
     </Card>
   );
 }
-
-
-    
