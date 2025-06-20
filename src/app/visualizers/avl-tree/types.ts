@@ -31,15 +31,16 @@ export interface AlgorithmDetailsProps {
 // --- AVL Tree Specific Types ---
 export interface BinaryTreeNodeVisual {
   id: string;
-  value: string | number | null; // Formatted as "Val (H:h, BF:bf)" by logic
+  value: string | number | null; // The primary value of the node
+  height: number;               // Height of the node
+  balanceFactor: number;        // Balance factor of the node
   x: number;
   y: number;
   color?: string; 
   textColor?: string;
-  height?: number; 
-  balanceFactor?: number; 
   leftId?: string | null;
   rightId?: string | null;
+  // nodeColor specific to RBT, not typically used in basic AVL visual
 }
 
 export interface BinaryTreeEdgeVisual {
@@ -55,12 +56,12 @@ export interface TreeAlgorithmStep {
   traversalPath: (string | number)[]; 
   currentLine: number | null;
   message?: string;
-  currentProcessingNodeId?: string | null;
-  unbalancedNodeId?: string | null;
-  rotationType?: 'LL' | 'RR' | 'LR' | 'RL' | null;
-  nodesInvolvedInRotation?: string[]; 
+  currentProcessingNodeId?: string | null; // Node being actively processed/compared
+  unbalancedNodeId?: string | null;        // ID of the first unbalanced node found
+  rotationType?: 'LL' | 'RR' | 'LR' | 'RL' | 'None' | null; // Type of rotation performed or needed
+  nodesInvolvedInRotation?: string[]; // IDs of nodes directly involved in a rotation (e.g., x, y, z)
   auxiliaryData?: {
-    finalGraphState?: AVLTreeGraph; 
+    finalGraphState?: AVLTreeGraph; // To update the main tree ref after an operation
     [key: string]: any;
   } | null;
 }
@@ -70,6 +71,7 @@ export interface AVLNodeInternal {
   id: string;
   value: number;
   height: number;
+  balanceFactor?: number; // Optional here, but calculated and stored
   leftId: string | null;
   rightId: string | null;
   parentId: string | null; 
@@ -78,6 +80,8 @@ export interface AVLNodeInternal {
 export interface AVLTreeGraph {
   rootId: string | null;
   nodesMap: Map<string, AVLNodeInternal>;
+  // NIL node not typically explicit in AVL like in RBT, but could be if using sentinels
 }
 
 export type AVLOperationType = 'build' | 'insert' | 'delete' | 'search' | 'structure';
+```

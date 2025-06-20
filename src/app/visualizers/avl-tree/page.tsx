@@ -18,20 +18,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Cog, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, FastForward, Cog, PlusCircle, Search, Trash2, Binary } from 'lucide-react';
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle } from 'lucide-react';
+
 
 const DEFAULT_ANIMATION_SPEED = 1000; 
 const MIN_SPEED = 150;
 const MAX_SPEED = 2500;
+const MAX_NODES_VISUALIZATION = 12; // For build
+const MAX_NODES_OVERALL = 15; // For insert
 
 export default function AVLTreeVisualizerPage() {
   const { toast } = useToast();
   
   const [initialValuesInput, setInitialValuesInput] = useState('10,20,30,5,15,25,35,1,8');
   const [operationValueInput, setOperationValueInput] = useState('22'); 
-  const [selectedOperation, setSelectedOperation] = useState<AVLOperationType>('build');
+  const [selectedOperation, setSelectedOperation] = useState<AVLOperationType | 'structure'>('build');
   
   const [steps, setSteps] = useState<TreeAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -43,6 +47,7 @@ export default function AVLTreeVisualizerPage() {
   const [currentProcessingNodeId, setCurrentProcessingNodeId] = useState<string|null>(null);
   const [currentMessage, setCurrentMessage] = useState<string>("Initialize tree or select an operation.");
   const [unbalancedNodeId, setUnbalancedNodeId] = useState<string|null>(null);
+  const [rotationInfo, setRotationInfo] = useState<string | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true);
@@ -61,59 +66,62 @@ export default function AVLTreeVisualizerPage() {
       setCurrentProcessingNodeId(currentS.currentProcessingNodeId ?? null);
       setCurrentMessage(currentS.message || "Step executed.");
       setUnbalancedNodeId(currentS.unbalancedNodeId ?? null);
+      if (currentS.rotationType && currentS.rotationType !== 'None') {
+        const involved = currentS.nodesInvolvedInRotation?.map(id => avlTreeRef.current.nodesMap.get(id)?.value).filter(Boolean).join(', ');
+        setRotationInfo(`Rotation: ${currentS.rotationType}${involved ? ` (around/involving ${involved})` : ''}`);
+      } else {
+        setRotationInfo(null);
+      }
       
-      // Critical: Update avlTreeRef if the step contains the final state of the graph
       if (currentS.auxiliaryData?.finalGraphState) {
-         const finalState = currentS.auxiliaryData.finalGraphState;
-         // Reconstruct Map from object
-         const newNodesMap = new Map<string, AVLNodeInternal>();
-         if (finalState.nodesMap) { // Check if nodesMap exists and is an object
-             Object.entries(finalState.nodesMap).forEach(([key, value]) => {
-                newNodesMap.set(key, value as AVLNodeInternal);
-             });
-         }
-         avlTreeRef.current = { rootId: finalState.rootId, nodesMap: newNodesMap };
+         avlTreeRef.current = currentS.auxiliaryData.finalGraphState as AVLTreeGraph;
       }
     }
   }, [steps]);
   
   const handleOperation = useCallback((
-    opTypeInput: AVLOperationType,
+    opTypeInput: AVLOperationType | 'structure', 
     primaryValue?: string 
   ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
+    let opType = opTypeInput as AVLOperationType; // Assume it's a valid AVLOpType for logic
 
     if (opTypeInput === 'build') {
         valuesForBuild = primaryValue || initialValuesInput;
         const parsedBuildArray = valuesForBuild.split(',').map(s=>s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
-         if (parsedBuildArray.length > 12) { 
-            toast({ title: "Input Too Large", description: "Max 12 nodes for Build AVL for smoother visualization.", variant: "default" });
+         if (parsedBuildArray.length > MAX_NODES_VISUALIZATION) { 
+            toast({ title: "Input Too Large", description: `Max ${MAX_NODES_VISUALIZATION} nodes for Build AVL for smoother visualization.`, variant: "default" });
         }
-        avlTreeRef.current = createInitialAVLTreeGraph();
+        avlTreeRef.current = createInitialAVLTreeGraph(); // Reset tree structure for build
     } else if (opTypeInput === 'insert' || opTypeInput === 'delete' || opTypeInput === 'search') {
+        opType = opTypeInput as AVLOperationType;
         const opValStr = primaryValue || operationValueInput;
         if (opValStr.trim() === "") {
             toast({ title: "Input Missing", description: "Please enter a value for the operation.", variant: "destructive" });
+            setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Input missing for operation."); setIsPlaying(false); setIsFinished(true);
             return;
         }
         valueForOp = parseInt(opValStr, 10);
         if (isNaN(valueForOp) || valueForOp < -999 || valueForOp > 9999) { 
-            toast({ title: "Invalid Value", description: "Value for operation must be a number between -999 and 9999.", variant: "destructive" });
+            toast({ title: "Invalid Value", description: "Value must be a number between -999 and 9999.", variant: "destructive" });
+             setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Invalid value for operation."); setIsPlaying(false); setIsFinished(true);
             return;
         }
-         if (avlTreeRef.current.nodesMap.size >= 15 && opTypeInput === 'insert') { 
-             toast({ title: "Tree Too Large", description: "Max 15 nodes in tree for smoother insert visualization.", variant: "default" });
+        const currentNonNilNodeCount = Array.from(avlTreeRef.current.nodesMap.values()).filter(node => node.value !== null).length;
+         if (currentNonNilNodeCount >= MAX_NODES_OVERALL && opType === 'insert') { 
+             toast({ title: "Tree Too Large", description: `Max ${MAX_NODES_OVERALL} nodes in tree for smoother insert visualization.`, variant: "default" });
              return;
         }
-        if (avlTreeRef.current.nodesMap.size === 0 && (opTypeInput === 'delete' || opTypeInput === 'search')) {
-            toast({ title: `Tree Empty`, description: `Cannot ${opTypeInput} from an empty tree.`, variant: "default" });
+        if (currentNonNilNodeCount === 0 && (opType === 'delete' || opType === 'search')) {
+            toast({ title: `Tree Empty`, description: `Cannot ${opType} from an empty tree.`, variant: "default" });
             return;
         }
     } else if (opTypeInput === 'structure') {
-        const currentVisuals = generateAVLSteps('structure', undefined, undefined, avlTreeRef.current);
+        opType = 'structure'; // For logic function
+        const currentVisuals = generateAVLSteps(opType, undefined, undefined, avlTreeRef.current);
         setSteps(currentVisuals);
         setCurrentStepIndex(0);
         if (currentVisuals.length > 0) updateStateFromStep(0);
@@ -123,7 +131,7 @@ export default function AVLTreeVisualizerPage() {
     }
     
     const newSteps = generateAVLSteps(
-      opTypeInput,
+      opType,
       valuesForBuild,
       valueForOp,
       avlTreeRef.current 
@@ -136,23 +144,13 @@ export default function AVLTreeVisualizerPage() {
 
     if (newSteps.length > 0) {
         updateStateFromStep(0); 
-        const finalGraphStateFromSteps = newSteps[newSteps.length - 1]?.auxiliaryData?.finalGraphState;
-        if (finalGraphStateFromSteps) {
-             const newNodesMap = new Map<string, AVLNodeInternal>();
-             if (finalGraphStateFromSteps.nodesMap) {
-                 Object.entries(finalGraphStateFromSteps.nodesMap).forEach(([key, value]) => {
-                    newNodesMap.set(key, value as AVLNodeInternal);
-                 });
-             }
-             avlTreeRef.current = { rootId: finalGraphStateFromSteps.rootId, nodesMap: newNodesMap };
-        }
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
-        if (lastStepMsg && opTypeInput !== 'build' && opTypeInput !== 'structure' && newSteps.length > 1) { 
-            const opDisplay = opTypeInput.charAt(0).toUpperCase() + opTypeInput.slice(1);
-            if (!lastStepMsg.toLowerCase().includes("fixup") && !lastStepMsg.toLowerCase().includes("rotate")) {
+        if (lastStepMsg && opType !== 'build' && opType !== 'structure' && newSteps.length > 1) { 
+            const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
+            if (!lastStepMsg.toLowerCase().includes("fixup") && !lastStepMsg.toLowerCase().includes("rotate") && !lastStepMsg.toLowerCase().includes("balancing")) {
                  toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 3000 });
             }
-        } else if (opTypeInput === 'build' && newSteps.length > 1 && lastStepMsg) {
+        } else if (opType === 'build' && newSteps.length > 1 && lastStepMsg) {
              toast({ title: "Build AVL Tree", description: lastStepMsg, duration: 2000 });
         }
     } else {
@@ -183,7 +181,7 @@ export default function AVLTreeVisualizerPage() {
 
   const handlePlay = () => {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
-      toast({ title: "Cannot Play", description: isFinished ? "Operation finished." : "No steps. Execute an operation first.", variant: "default" });
+      toast({ title: "Cannot Play", description: isFinished ? "Operation finished. Reset or new op." : "No steps. Execute an operation first.", variant: "default" });
       setIsPlaying(false); return;
     }
     setIsPlaying(true); setIsFinished(false);
@@ -198,23 +196,23 @@ export default function AVLTreeVisualizerPage() {
     if (nextStepIndex === steps.length - 1) setIsFinished(true);
   };
   const handleResetControls = () => { 
-    setIsPlaying(false); setIsFinished(true);
+    setIsPlaying(false); setIsFinished(true); // Mark as finished to prevent auto-play
     const defaultInitialArray = '10,20,30,5,15,25,35,1,8';
     setInitialValuesInput(defaultInitialArray);
     setOperationValueInput('22');
-    setSelectedOperation('insert'); 
+    setSelectedOperation('build'); 
     setCurrentMessage("AVL Tree Reset. Building new tree with default values.");
     handleOperation('build', defaultInitialArray);
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!algoDetails) {
+  if (!localAlgoDetails) {
     return ( <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div> );
   }
 
@@ -227,6 +225,7 @@ export default function AVLTreeVisualizerPage() {
         <div className="mb-8 text-center">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
+           {rotationInfo && <p className="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">{rotationInfo}</p>}
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -250,11 +249,11 @@ export default function AVLTreeVisualizerPage() {
               <div className="space-y-2">
                 <Label htmlFor="initialValuesInputAVL" className="text-sm font-medium flex items-center"><Cog className="mr-2 h-4 w-4"/>Initial Values (for Build)</Label>
                 <Input id="initialValuesInputAVL" value={initialValuesInput} onChange={(e) => setInitialValuesInput(e.target.value)} placeholder="e.g., 10,20,5" disabled={isPlaying} />
-                <Button onClick={() => handleOperation('build', initialValuesInput)} disabled={isPlaying} className="w-full mt-1">Build Tree</Button>
+                <Button onClick={() => handleOperation('build', initialValuesInput)} disabled={isPlaying} className="w-full md:w-auto"><Binary className="mr-2 h-4 w-4"/>Build Tree</Button>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationSelectAVL">Operation</Label>
-                <Select value={selectedOperation} onValueChange={(v) => setSelectedOperation(v as AVLOperationType)} disabled={isPlaying}>
+                <Select value={selectedOperation} onValueChange={(v) => setSelectedOperation(v as AVLOperationType | 'structure')} disabled={isPlaying}>
                   <SelectTrigger id="operationSelectAVL"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="insert">Insert Value</SelectItem>
@@ -294,13 +293,14 @@ export default function AVLTreeVisualizerPage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              AVL Tree rotations and balancing are complex. Deletion rebalancing is shown conceptually for the first imbalance found.
+              AVL Tree rotations and balancing are complex. Deletion rebalancing shows the first required rotation and notes that further rebalancing might be needed upwards.
             </p>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
+```

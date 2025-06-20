@@ -4,19 +4,19 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types'; // Local import
-import { NODE_COLORS_AVL } from './avl-tree-logic'; // Import AVL specific colors
+import { NODE_COLORS_AVL } from './avl-tree-logic'; 
 
 interface BinaryTreeVisualizationPanelProps {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
   traversalPath: (string | number)[]; 
   currentProcessingNodeId?: string | null;
-  unbalancedNodeId?: string | null;
+  unbalancedNodeId?: string | null; // For highlighting the unbalanced node itself
 }
 
 const SVG_WIDTH = 600; 
 const SVG_HEIGHT_BASE = 300; 
-const NODE_RADIUS = 22; // Increased for H/BF
+const NODE_RADIUS = 24; // Increased slightly for more space
 
 export function BinaryTreeVisualizationPanel({
   nodes,
@@ -27,7 +27,7 @@ export function BinaryTreeVisualizationPanel({
 }: BinaryTreeVisualizationPanelProps) {
   
   const maxDepthY = nodes.reduce((max, node) => Math.max(max, node.y), 0);
-  const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepthY + NODE_RADIUS * 2 + 60); 
+  const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepthY + NODE_RADIUS * 2 + 70); // Increased buffer for labels
 
   const viewBox = `0 0 ${SVG_WIDTH} ${svgHeight}`;
 
@@ -61,30 +61,24 @@ export function BinaryTreeVisualizationPanel({
                   );
                 })}
                 {nodes.map((node) => {
-                  const nodeLabel = String(node.value); // Already formatted as "Val (H:h,BF:bf)"
-                  
                   let fill = node.color || NODE_COLORS_AVL.DEFAULT;
-                  let textColor = node.textColor || "hsl(var(--primary-foreground))";
+                  let textColor = node.textColor || "hsl(var(--primary-foreground))"; // Default for light text
 
-                  if (node.id === currentProcessingNodeId && 
-                      fill !== NODE_COLORS_AVL.UNBALANCED_NODE_RED && 
-                      fill !== NODE_COLORS_AVL.NEWLY_INSERTED &&
-                      fill !== NODE_COLORS_AVL.ROTATION_PIVOT_YELLOW &&
-                      fill !== NODE_COLORS_AVL.TO_BE_DELETED &&
-                      fill !== NODE_COLORS_AVL.INORDER_SUCCESSOR
-                     ) {
-                     fill = NODE_COLORS_AVL.ACTIVE_COMPARISON; 
+                  // Adjust text color based on fill for better contrast (conceptual)
+                  if (fill === NODE_COLORS_AVL.NEWLY_INSERTED || 
+                      fill === NODE_COLORS_AVL.ROTATION_PIVOT_YELLOW || 
+                      fill === NODE_COLORS_AVL.SLIGHTLY_UNBALANCED_YELLOW) {
+                     textColor = "hsl(var(--accent-foreground))"; // Dark text for light/yellow backgrounds
+                  } else if (fill === NODE_COLORS_AVL.UNBALANCED_NODE_RED || 
+                             fill === NODE_COLORS_AVL.TO_BE_DELETED) {
+                     textColor = "hsl(var(--destructive-foreground))"; // Light text for red
+                  } else if (fill === NODE_COLORS_AVL.BALANCED_GREEN || 
+                             fill === NODE_COLORS_AVL.ACTIVE_COMPARISON || 
+                             fill === NODE_COLORS_AVL.PATH_TRAVERSED || 
+                             fill === NODE_COLORS_AVL.INORDER_SUCCESSOR) {
+                     textColor = "hsl(var(--primary-foreground))"; // Light text for these darker/primary fills
                   }
-
-                  if (fill === NODE_COLORS_AVL.NEWLY_INSERTED || fill === NODE_COLORS_AVL.ROTATION_PIVOT_YELLOW || fill === NODE_COLORS_AVL.SLIGHTLY_UNBALANCED_YELLOW) {
-                     textColor = "hsl(var(--accent-foreground))"; 
-                  } else if (fill === NODE_COLORS_AVL.UNBALANCED_NODE_RED || fill === NODE_COLORS_AVL.TO_BE_DELETED) {
-                     textColor = "hsl(var(--destructive-foreground))";
-                  } else if (fill === NODE_COLORS_AVL.BALANCED_GREEN || fill === NODE_COLORS_AVL.ACTIVE_COMPARISON || fill === NODE_COLORS_AVL.PATH_TRAVERSED || fill === NODE_COLORS_AVL.INORDER_SUCCESSOR) {
-                     textColor = "hsl(var(--primary-foreground))";
-                  }
-
-
+                  
                   return (
                     <g key={node.id} transform={`translate(${node.x},${node.y})`}>
                       <circle
@@ -97,15 +91,25 @@ export function BinaryTreeVisualizationPanel({
                       />
                       <text
                         x="0"
-                        y="0"
+                        y="-2" // Shift value slightly up to make space for H/BF
                         textAnchor="middle"
                         dy=".3em"
-                        fontSize="7.5px" // Reduced for fitting "Val (H:h,BF:bf)"
+                        fontSize="10px" 
                         fill={textColor}
                         fontWeight="bold"
                         className="select-none font-code"
                       >
-                        {nodeLabel}
+                        {node.value}
+                      </text>
+                      <text
+                        x="0"
+                        y={NODE_RADIUS - 6} // Position H/BF below the value
+                        textAnchor="middle"
+                        fontSize="7px"
+                        fill={textColor}
+                        className="select-none font-code opacity-80"
+                      >
+                        (H:{node.height},BF:{node.balanceFactor})
                       </text>
                     </g>
                   );
@@ -117,7 +121,7 @@ export function BinaryTreeVisualizationPanel({
         <div className="flex-shrink-0 p-2 border rounded-md bg-background">
             <p className="font-semibold text-muted-foreground text-sm">Operation Path/Log:</p>
             <p className="font-code text-xs break-all h-10 overflow-y-auto">
-                {traversalPath.join(' \u2192 ') || '(Path/info will appear here)'}
+                {traversalPath.map(val => String(val)).join(' \u2192 ') || '(Path/info will appear here)'}
             </p>
         </div>
       </CardContent>
