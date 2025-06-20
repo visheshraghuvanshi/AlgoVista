@@ -110,7 +110,11 @@ export const AVL_TREE_CODE_SNIPPETS: Record<string, string[]> = {
     "    if (balance < -1 && this.getBalanceFactor(node.right) > 0) { node.right = this.rotateRight(node.right); return this.rotateLeft(node); }", // 69
     "    return node;",                               // 70 DELETE_RETURN_NODE
     "  }",                                           // 71 DELETE_REC_END
-    "  _minValueNode(node) { /* ... */ }",           // 72 MIN_VALUE_NODE_STUB
+    "  _minValueNode(node) { /* Find min value in subtree (for deletion) */", // 72
+    "    let current = node;",
+    "    while (current.left !== null) current = current.left;",
+    "    return current;",
+    "  }",
     "",
     "  // ROTATIONS (Detailed)",                     // 73 ROTATIONS_SECTION
     "  rotateRight(y) {",                            // 74 ROTATE_RIGHT_FUNC_START
@@ -129,9 +133,27 @@ export const AVL_TREE_CODE_SNIPPETS: Record<string, string[]> = {
     "  }",                                           // 85 ROTATE_LEFT_FUNC_END
     "}",                                             // 86 TREE_CLASS_END
   ],
-  Python: AVL_TREE_CODE_SNIPPETS.Python, // Keep existing Python as it's more concise for display
-  Java: AVL_TREE_CODE_SNIPPETS.Java,
-  "C++": AVL_TREE_CODE_SNIPPETS["C++"],
+  Python: [
+    "# Python AVL Tree code snippet (conceptual)",
+    "# Detailed implementation similar to JavaScript",
+    "# with Python syntax for classes, methods, etc.",
+    "class AVLNode:",
+    "    # ... (Node definition) ...",
+    "class AVLTree:",
+    "    # ... (Tree methods: insert, delete, rotations) ..."
+  ],
+  Java: [
+    "// Java AVL Tree code snippet (conceptual)",
+    "// class AVLNode { ... }",
+    "// class AVLTree { ... }",
+    "// Detailed implementation using Java syntax."
+  ],
+  "C++": [
+    "// C++ AVL Tree code snippet (conceptual)",
+    "// struct AVLNode { ... };",
+    "// class AVLTree { ... };",
+    "// Detailed implementation using C++ syntax."
+  ],
 };
 
 interface AVLTreeCodePanelProps {
@@ -191,3 +213,4 @@ export function AVLTreeCodePanel({ currentLine }: AVLTreeCodePanelProps) {
     </Card>
   );
 }
+
