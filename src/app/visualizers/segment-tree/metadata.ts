@@ -15,7 +15,7 @@ export const algorithmMetadata: AlgorithmMetadata = {
 -   Each **leaf node** represents a single element of the array (e.g., node for \\\`arr[i]\\\` covers interval \\\`[i, i]\\\`).
 -   Each **internal node** stores aggregate information about the union of its children's intervals. For example, if a node represents the interval \\\`[L, R]\\\`, its left child might represent \\\`[L, M]\\\` and its right child \\\`[M+1, R]\\\`, where \\\`M = floor((L+R)/2)\\\`. The value in the internal node would be the result of combining its children's values (e.g., sum of children's sums, min of children's mins).
 
-### Array Representation (Common):
+### Array Representation (Common - Iterative Version):
 Segment trees are often implemented using an array for efficiency (similar to heaps). The iterative implementation visualized here is common in competitive programming.
 -   If the original array has N elements, the segment tree array (\\\`tree[]\\\`) usually has size \\\`2*N\\\`.
 -   **Leaf nodes** (original array elements) are stored at indices \\\`N\\\` to \\\`2N-1\\\` in the tree array. So, \\\`inputArray[i]\\\` corresponds to \\\`tree[N+i]\\\`.
@@ -44,7 +44,7 @@ To query an interval \\\`[L, R)\\\` (L inclusive, R exclusive) in the original a
 2.  Initialize \\\`result\\\` (e.g., 0 for sum, infinity for min).
 3.  Iterate while \\\`L < R\\\`:
     *   If \\\`L\\\` is odd (i.e., \\\`L % 2 === 1\\\`), it means \\\`tree[L]\\\` is a right child, and its segment is fully contained in the current query range. Combine \\\`tree[L]\\\` with \\\`result\\\`, then increment \\\`L\\\` (\\\`L++\\\`) to move past it.
-    *   If \\\`R\\\` is odd (i.e., \\\`R % 2 === 1\\\`), it means \\\`tree[R-1]\` (the left sibling of the node \\\`R\` conceptually points to) is fully contained. Decrement \\\`R\\\` (\\\`R--\\\`) to consider \\\`tree[R]\` (which is now the left sibling), combine \\\`tree[R]\\\` with \\\`result\\\`.
+    *   If \\\`R\\\` is odd (i.e., \\\`R % 2 === 1\\\`), it means \\\`tree[R-1]\` (the left sibling of the node \\\`R\` conceptually points to) is fully contained. Decrement \\\`R\\\` (\\\`R--\\\`) to consider \\\`tree[R]\\\` (which is now the left sibling), combine \\\`tree[R]\\\` with \\\`result\\\`.
     *   Move \\\`L\\\` and \\\`R\\\` to their parents: \\\`L = floor(L/2)\\\`, \\\`R = floor(R/2)\\\`.
 4.  Return \\\`result\\\`.
 
@@ -72,3 +72,6 @@ The AlgoVista visualizer focuses on the iterative array-based implementation for
   },
   spaceComplexity: "O(N) for the tree structure (typically 2N elements in array representation).",
 };
+
+
+    

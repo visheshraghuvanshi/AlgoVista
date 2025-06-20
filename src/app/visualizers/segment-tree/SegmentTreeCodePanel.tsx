@@ -10,27 +10,38 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SegmentTreeOperation } from './types'; // Local import
 
+// Iterative Segment Tree Code Snippets
 export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, Record<string, string[]>> = {
   build: {
     JavaScript: [
-      "// Iterative Segment Tree Build (Sum Query)",
-      "// In constructor or separate build method:",
-      "this.n = inputArray.length;",
-      "this.tree = new Array(2 * this.n).fill(0);",
-      "// Insert leaf nodes in tree:",
-      "for (let i = 0; i < this.n; i++) {",
-      "  this.tree[this.n + i] = inputArray[i];",
+      "// Constructor and Iterative Build (Sum Query)",
+      "constructor(inputArray) {",                                // 1 (map.constructorCall)
+      "  this.n = inputArray.length;",                           // 2 (map.assignN)
+      "  this.tree = new Array(2 * this.n);",                     // 3 (map.initTreeArray)
+      "  // Call build method (or inline build logic)",           // 4 (map.callBuild)
+      "  this._build(inputArray);",
       "}",
-      "// Build the tree by calculating parents:",
-      "for (let i = this.n - 1; i > 0; --i) {",
-      "  this.tree[i] = this.tree[i * 2] + this.tree[i * 2 + 1];",
-      "}",
+      "_build(inputArray) {",                                     // 5 (map.buildFuncStart)
+      "  // Insert leaf nodes in tree:",
+      "  for (let i = 0; i < this.n; i++) {",                      // 6 (map.buildLeafLoop)
+      "    this.tree[this.n + i] = inputArray[i];",              // 7 (map.buildSetLeaf)
+      "  }",
+      "  // Build the tree by calculating parents:",
+      "  for (let i = this.n - 1; i > 0; --i) {",                 // 8 (map.buildInternalLoop)
+      "    this.tree[i] = this.tree[i * 2] + this.tree[i * 2 + 1];",// 9 (map.buildSetInternal)
+      "  }",
+      "}",                                                         // 10 (map.buildFuncEnd)
+                                                                 // 11 (map.classEndBuild - conceptual)
     ],
     Python: [
         "# Iterative Segment Tree Build (Sum Query)",
-        "def build(self, input_array):",
+        "class SegmentTree:",
+        "  def __init__(self, input_array):",
         "    self.n = len(input_array)",
-        "    self.tree = [0] * (2 * self.n)",
+        "    self.tree = [0] * (2 * self.n) # Initialize with appropriate identity",
+        "    self._build(input_array)",
+        "",
+        "  def _build(self, input_array):",
         "    for i in range(self.n):",
         "        self.tree[self.n + i] = input_array[i]",
         "    for i in range(self.n - 1, 0, -1):",
@@ -38,17 +49,23 @@ export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, R
     ],
     Java: [
         "// Iterative Segment Tree Build (Sum Query)",
-        "private int[] tree;",
-        "private int n;",
-        "public SegmentTree(int[] inputArray) {",
-        "    this.n = inputArray.length;",
-        "    this.tree = new int[2 * n];",
-        "    for (int i = 0; i < n; i++) {",
-        "        tree[n + i] = inputArray[i];",
+        "class SegmentTree {",
+        "    private int[] tree;",
+        "    private int n;",
+        "    public SegmentTree(int[] inputArray) {",
+        "        this.n = inputArray.length;",
+        "        this.tree = new int[2 * n];",
+        "        build(inputArray);",
         "    }",
-        "    for (int i = n - 1; i > 0; --i) {",
-        "        tree[i] = tree[i * 2] + tree[i * 2 + 1];",
+        "    private void build(int[] inputArray) {",
+        "        for (int i = 0; i < n; i++) {",
+        "            tree[n + i] = inputArray[i];",
+        "        }",
+        "        for (int i = n - 1; i > 0; --i) {",
+        "            tree[i] = tree[i * 2] + tree[i * 2 + 1];",
+        "        }",
         "    }",
+        "// ... query and update methods ...",
         "}",
     ],
     "C++": [
@@ -61,6 +78,10 @@ export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, R
         "    SegmentTree(const std::vector<int>& inputArray) {",
         "        n = inputArray.size();",
         "        tree.assign(2 * n, 0);",
+        "        build(inputArray);",
+        "    }",
+        "private:",
+        "    void build(const std::vector<int>& inputArray) {",
         "        for (int i = 0; i < n; ++i) {",
         "            tree[n + i] = inputArray[i];",
         "        }",
@@ -68,28 +89,28 @@ export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, R
         "            tree[i] = tree[i * 2] + tree[i * 2 + 1];",
         "        }",
         "    }",
+        "// ... query and update methods ...",
         "};",
     ],
   },
   query: {
     JavaScript: [
-      "// Iterative Segment Tree Query (Sum on [left, right) )",
-      "query(left, right) { // left inclusive, right exclusive",
-      "  let result = 0;",
-      "  left += this.n; right += this.n;",
-      "  for (; left < right; left = Math.floor(left/2), right = Math.floor(right/2)) {",
-      "    if (left % 2 === 1) {",
-      "      result += this.tree[left++];",
+      "query(left, right) { // Range [left, right) sum", // 12 (map.queryFuncStart)
+      "  let result = 0;",                             // 13
+      "  left += this.n; right += this.n;",            // 14
+      "  for (; left < right; left >>= 1, right >>= 1) {", // 15
+      "    if (left % 2 === 1) {",                     // 16
+      "      result += this.tree[left++];",           // 17
       "    }",
-      "    if (right % 2 === 1) {",
-      "      result += this.tree[--right];",
+      "    if (right % 2 === 1) {",                    // 18
+      "      result += this.tree[--right];",          // 19
       "    }",
       "  }",
-      "  return result;",
-      "}",
+      "  return result;",                             // 20
+      "}",                                             // 21
     ],
      Python: [
-        "def query(self, left, right): # [left, right)",
+        "  def query(self, left, right): # [left, right) sum",
         "    result = 0",
         "    left += self.n",
         "    right += self.n",
@@ -105,44 +126,43 @@ export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, R
         "    return result",
     ],
     Java: [
-        "public int query(int left, int right) { // [left, right)",
-        "    int result = 0;",
-        "    left += n;",
-        "    right += n;",
-        "    for (; left < right; left /= 2, right /= 2) {",
-        "        if ((left % 2) == 1) result += tree[left++];",
-        "        if ((right % 2) == 1) result += tree[--right];",
+        "    public int query(int left, int right) { // [left, right) sum",
+        "        int result = 0;",
+        "        left += n;",
+        "        right += n;",
+        "        for (; left < right; left /= 2, right /= 2) {",
+        "            if ((left % 2) == 1) result += tree[left++];",
+        "            if ((right % 2) == 1) result += tree[--right];",
+        "        }",
+        "        return result;",
         "    }",
-        "    return result;",
-        "}",
     ],
     "C++": [
-        "int query(int left, int right) { // [left, right)",
-        "    int result = 0;",
-        "    left += n;",
-        "    right += n;",
-        "    for (; left < right; left /= 2, right /= 2) {",
-        "        if (left % 2 == 1) result += tree[left++];",
-        "        if (right % 2 == 1) result += tree[--right];",
+        "    int query(int left, int right) { // [left, right) sum",
+        "        int result = 0;",
+        "        left += n;",
+        "        right += n;",
+        "        for (; left < right; left /= 2, right /= 2) {",
+        "            if (left % 2 == 1) result += tree[left++];",
+        "            if (right % 2 == 1) result += tree[--right];",
+        "        }",
+        "        return result;",
         "    }",
-        "    return result;",
-        "}",
     ],
   },
   update: {
     JavaScript: [
-      "// Iterative Segment Tree Update (Point Update)",
-      "update(index, value) {",
-      "  let pos = index + this.n;",
-      "  this.tree[pos] = value;",
-      "  while (pos > 1) {",
-      "    pos = Math.floor(pos / 2);",
-      "    this.tree[pos] = this.tree[pos * 2] + this.tree[pos * 2 + 1];",
+      "update(index, value) { // Point update", // 22 (map.updateFuncStart)
+      "  let pos = index + this.n;",          // 23
+      "  this.tree[pos] = value;",            // 24
+      "  while (pos > 1) {",                  // 25
+      "    pos = Math.floor(pos / 2);",      // 26
+      "    this.tree[pos] = this.tree[pos * 2] + this.tree[pos * 2 + 1];", // 27
       "  }",
-      "}",
+      "}",                                     // 28
     ],
     Python: [
-        "def update(self, index, value):",
+        "  def update(self, index, value):",
         "    pos = index + self.n",
         "    self.tree[pos] = value",
         "    while pos > 1:",
@@ -150,24 +170,24 @@ export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, R
         "        self.tree[pos] = self.tree[pos * 2] + self.tree[pos * 2 + 1]",
     ],
     Java: [
-        "public void update(int index, int value) {",
-        "    int pos = index + n;",
-        "    tree[pos] = value;",
-        "    while (pos > 1) {",
-        "        pos /= 2;",
-        "        tree[pos] = tree[pos * 2] + tree[pos * 2 + 1];",
+        "    public void update(int index, int value) {",
+        "        int pos = index + n;",
+        "        tree[pos] = value;",
+        "        while (pos > 1) {",
+        "            pos /= 2;",
+        "            tree[pos] = tree[pos * 2] + tree[pos * 2 + 1];",
+        "        }",
         "    }",
-        "}",
     ],
     "C++": [
-        "void update(int index, int value) {",
-        "    int pos = index + n;",
-        "    tree[pos] = value;",
-        "    while (pos > 1) {",
-        "        pos /= 2;",
-        "        tree[pos] = tree[pos * 2] + tree[pos * 2 + 1];",
+        "    void update(int index, int value) {",
+        "        int pos = index + n;",
+        "        tree[pos] = value;",
+        "        while (pos > 1) {",
+        "            pos /= 2;",
+        "            tree[pos] = tree[pos * 2] + tree[pos * 2 + 1];",
+        "        }",
         "    }",
-        "}",
     ],
   }
 };
@@ -187,52 +207,20 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
   const operationLabel = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1);
 
   const handleCopyCode = () => {
-    const structureSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build[selectedLanguage] || [];
-    let fullCode = "";
+    const classStructureSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build[selectedLanguage] || [];
+    let codeStringToCopy = "";
 
     if (selectedOperation === 'build') {
-        fullCode = codeToDisplay.join('\n');
+        codeStringToCopy = codeToDisplay.join('\n');
     } else {
-        const classStructureLines = {
-            JavaScript: [
-                "class SegmentTree {",
-                "  constructor(inputArray) {",
-                "    this.n = inputArray.length;",
-                "    this.tree = new Array(2 * this.n).fill(0);",
-                "    for (let i = 0; i < this.n; i++) this.tree[this.n + i] = inputArray[i];",
-                "    for (let i = this.n - 1; i > 0; --i) this.tree[i] = this.tree[i*2] + this.tree[i*2+1];",
-                "  }",
-            ],
-            Python: [
-                "class SegmentTree:",
-                "  def __init__(self, input_array):",
-                "    self.n = len(input_array)",
-                "    self.tree = [0] * (2 * self.n)",
-                "    for i in range(self.n): self.tree[self.n + i] = input_array[i]",
-                "    for i in range(self.n - 1, 0, -1): self.tree[i] = self.tree[i*2] + self.tree[i*2+1]",
-            ],
-            Java: [
-                 "class SegmentTree {",
-                 "  private int[] tree;",
-                 "  private int n;",
-                 "  public SegmentTree(int[] inputArray) { /* ... build logic ... */ }",
-            ],
-            "C++": [
-                 "#include <vector>",
-                 "class SegmentTree {",
-                 "public:",
-                 "  std::vector<int> tree;",
-                 "  int n;",
-                 "  SegmentTree(const std::vector<int>& inputArray) { /* ... build logic ... */ }",
-            ]
-        };
-        const structurePrefix = classStructureLines[selectedLanguage as keyof typeof classStructureLines]?.join('\n') || "";
-        const operationIndented = codeToDisplay.map(line => `    ${line}`).join('\n');
-        fullCode = `${structurePrefix}\n${operationIndented}\n}`; 
+        const classStart = classStructureSnippets.slice(0, classStructureSnippets.findIndex(line => line.includes("build(")) || classStructureSnippets.length).join('\n');
+        const classEnd = selectedLanguage === "Python" ? "" : "}";
+        const operationCodeIndented = codeToDisplay.map(line => `    ${line}`).join('\n');
+        codeStringToCopy = `${classStart}\n${operationCodeIndented}\n${classEnd}`;
     }
 
-    if (fullCode) {
-      navigator.clipboard.writeText(fullCode)
+    if (codeStringToCopy) {
+      navigator.clipboard.writeText(codeStringToCopy)
         .then(() => toast({ title: `${selectedLanguage} ${operationLabel} Code Copied!` }))
         .catch(() => toast({ title: "Copy Failed", variant: "destructive" }));
     }
@@ -276,3 +264,6 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     </Card>
   );
 }
+
+
+    

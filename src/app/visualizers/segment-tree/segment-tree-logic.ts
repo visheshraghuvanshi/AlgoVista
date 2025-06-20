@@ -1,44 +1,40 @@
 
-import type { AlgorithmStep } from './types'; // Local import
+import type { AlgorithmStep, SegmentTreeOperation } from './types'; // Local import
 
-// Line numbers adjusted for a combined view if a single panel shows different ops
-export const SEGMENT_TREE_LINE_MAP = {
-  // Build (lines 1-11 in a conceptual SegmentTree class structure)
-  constructorCall: 1, 
-  assignN: 2,
-  initTreeArray: 3,
-  callBuild: 4,       
-  buildFuncStart: 5,  
-  buildLeafLoop: 6,   
-  buildSetLeaf: 7,    
-  buildInternalLoop: 8, 
-  buildSetInternal: 9,
-  buildFuncEnd: 10,   
-  classEndBuild: 11,      
-
-  // Query (lines 1-12 in a conceptual query method)
-  queryFuncStart: 12,
-  queryInitResult: 13,
-  queryAdjustLR: 14,
-  queryLoop: 15,
-  queryIfLeftOdd: 16,
-  queryAddLeft: 17,
-  queryIfRightOdd: 18,
-  queryAddRight: 19,
-  queryReturnResult: 20,
-  queryFuncEnd: 21,
-
-  // Update (lines 1-7 in a conceptual update method)
-  updateFuncStart: 22,
-  updateGoToLeaf: 23,
-  updateSetLeaf: 24,
-  updateLoopToRoot: 25,
-  updateMoveToParent: 26,
-  updateSetParent: 27,
-  updateFuncEnd: 28,
+// Line numbers for an iterative array-based segment tree
+export const SEGMENT_TREE_LINE_MAP: Record<SegmentTreeOperation, Record<string, number>> = {
+  build: {
+    funcStart: 1,      // constructor(inputArray) or build(inputArray)
+    assignN: 2,        // this.n = inputArray.length;
+    initTreeArray: 3,  // this.tree = new Array(2 * this.n);
+    copyLeavesLoop: 4, // for (let i = 0; i < n; i++)
+    setLeafNode: 5,    //   this.tree[n + i] = inputArray[i];
+    buildInternalLoop: 6, // for (let i = n - 1; i > 0; --i)
+    setInternalNode: 7,//   this.tree[i] = this.tree[i * 2] + this.tree[i * 2 + 1]; (sum example)
+    funcEnd: 8,
+  },
+  query: { // Range sum query [L, R)
+    funcStart: 1,
+    initResult: 2,     // let result = 0; (or identity for other ops)
+    adjustLRToTree: 3, // l += n; r += n;
+    loopLR: 4,         // for (; l < r; l >>=1, r >>=1)
+    checkLeftOdd: 5,   // if (l % 2 === 1)
+    addLeftToResult: 6,//   result += tree[l++];
+    checkRightOdd: 7,  // if (r % 2 === 1)
+    addRightToResult: 8,//   result += tree[--r];
+    returnResult: 9,
+    funcEnd: 10,
+  },
+  update: { // Point update
+    funcStart: 1,
+    getTreePos: 2,     // let pos = index + n;
+    updateLeaf: 3,     // tree[pos] = value;
+    loopToRoot: 4,     // while (pos > 1)
+    moveToParent: 5,   // pos = Math.floor(pos / 2);
+    updateParentNode: 6,// tree[pos] = tree[pos * 2] + tree[pos * 2 + 1];
+    funcEnd: 7,
+  },
 };
-
-export type SegmentTreeOperation = 'build' | 'query' | 'update';
 
 function addStep(
   localSteps: AlgorithmStep[],
@@ -46,126 +42,134 @@ function addStep(
   currentTreeState: number[],
   message: string = "",
   active: number[] = [], 
-  auxData?: Record<string, string | number | null> 
+  auxData?: Partial<AlgorithmStep['auxiliaryData']> 
 ) {
   localSteps.push({
-    array: [...currentTreeState],
-    activeIndices: active,
+    array: [...currentTreeState], // Represents the segment tree array
+    activeIndices: active.filter(idx => idx >= 0 && idx < currentTreeState.length),
     swappingIndices: [],
     sortedIndices: [], 
     currentLine: line,
     message,
-    processingSubArrayRange: null, 
+    processingSubArrayRange: auxData?.processingSubArrayRange || null,
     pivotActualIndex: null,
-    auxiliaryData: auxData,
+    auxiliaryData: { // Ensure all expected fields are present, even if undefined
+        operation: auxData?.operation,
+        inputArray: auxData?.inputArray,
+        queryLeft: auxData?.queryLeft,
+        queryRight: auxData?.queryRight,
+        queryResult: auxData?.queryResult,
+        updateIndex: auxData?.updateIndex,
+        updateValue: auxData?.updateValue,
+        currentL: auxData?.currentL,
+        currentR: auxData?.currentR,
+        currentQueryResult: auxData?.currentQueryResult,
+        ...(auxData || {}), // Spread other specific aux data
+    },
   });
 }
 
 export const generateSegmentTreeSteps = (
     operation: SegmentTreeOperation,
     inputArray: number[], 
-    currentTreeState: number[], 
-    nVal: number, 
-    queryLeft?: number, queryRight?: number, 
+    currentTree: number[], 
+    originalN: number, 
+    queryL?: number, queryR?: number, 
     updateIdx?: number, updateVal?: number   
 ): AlgorithmStep[] => {
   const localSteps: AlgorithmStep[] = [];
-  const n = nVal; 
   let tree: number[];
+  const n = originalN; // Size of the original input array
 
   if (operation === 'build') {
     if (inputArray.length === 0) {
-      addStep(localSteps, null, [], "Input array is empty for build.");
+      addStep(localSteps, null, [], "Input array is empty for build operation.", [], {operation});
       return localSteps;
     }
-    tree = new Array(2 * n).fill(0);
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.constructorCall, tree, "SegmentTree constructor called.");
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.assignN, tree, `n (input array length) = ${n}.`);
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.initTreeArray, tree, `Segment tree array initialized (size ${2*n}).`);
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.callBuild, tree, "Building tree from input.");
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildFuncStart, tree, "Start build process.");
+    const N_build = inputArray.length; // N for build context
+    tree = new Array(2 * N_build).fill(0);
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.funcStart, tree, "Building Segment Tree (Sum).", [], {operation, inputArray});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.assignN, tree, `Original array size n = ${N_build}. Tree array size 2*n = ${2*N_build}.`, [], {operation, inputArray});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.initTreeArray, tree, `Tree array initialized.`, [], {operation, inputArray});
 
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildLeafLoop, tree, "Copying input array elements to leaf nodes of the segment tree.");
-    for (let i = 0; i < n; i++) {
-      tree[n + i] = inputArray[i];
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildSetLeaf, tree, `Set leaf tree[${n + i}] = ${inputArray[i]} (from input[${i}])`, [n+i]);
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.copyLeavesLoop, tree, "Copying input to leaf nodes.", [], {operation, inputArray});
+    for (let i = 0; i < N_build; i++) {
+      tree[N_build + i] = inputArray[i];
+      addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.setLeafNode, tree, `Leaf: tree[${N_build + i}] = inputArray[${i}] (${inputArray[i]})`, [N_build + i], {operation, inputArray});
     }
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildLeafLoop, tree, "Finished copying leaf nodes.");
+     addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.copyLeavesLoop, tree, "Finished copying leaves.", [], {operation, inputArray});
 
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildInternalLoop, tree, "Building internal nodes from bottom up.");
-    for (let i = n - 1; i > 0; --i) {
-      tree[i] = tree[2 * i] + tree[2 * i + 1];
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildSetInternal, tree, 
-              `Set internal node tree[${i}] = tree[${2*i}] (${tree[2*i]}) + tree[${2*i+1}] (${tree[2*i+1]}) = ${tree[i]}`, [i, 2*i, 2*i+1]);
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.buildInternalLoop, tree, "Building internal nodes (parents).", [], {operation, inputArray});
+    for (let i = N_build - 1; i > 0; --i) {
+      tree[i] = tree[i * 2] + tree[i * 2 + 1]; // Sum operation
+      addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.setInternalNode, tree, 
+        `Internal: tree[${i}] = tree[${i*2}] (${tree[i*2]}) + tree[${i*2+1}] (${tree[i*2+1]}) = ${tree[i]}`, 
+        [i, i*2, i*2+1], {operation, inputArray});
     }
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildInternalLoop, tree, "Finished building internal nodes.");
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.buildFuncEnd, tree, "Segment tree build complete.");
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.buildInternalLoop, tree, "Finished building internal nodes.", [], {operation, inputArray});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.build.funcEnd, tree, "Segment Tree build complete.", [], {operation, inputArray});
 
   } else if (operation === 'query') {
-    tree = [...currentTreeState]; 
-    if (queryLeft === undefined || queryRight === undefined || n === 0) {
-      addStep(localSteps, null, tree, "Invalid query parameters or tree not built.");
+    tree = [...currentTree]; 
+    if (queryL === undefined || queryR === undefined || n === 0) {
+      addStep(localSteps, null, tree, "Query error: Invalid parameters or tree not built.", [], {operation});
       return localSteps;
     }
-    let l = queryLeft;
-    let r = queryRight;
-    let result = 0;
-    const initialL = l, initialR = r; // For message
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryFuncStart, tree, `Querying sum for original range [${initialL}, ${initialR})`, [], {result: 0, L: l, R: r});
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryInitResult, tree, `Initialize result = 0.`, [], {result, L: l, R: r});
+    let l = queryL;
+    let r = queryR;
+    let result = 0; // Identity for sum
+    const initialL = l, initialR = r; 
+    
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.funcStart, tree, `Querying sum for original range [${initialL}, ${initialR}). Original array size n=${n}.`, [], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.initResult, tree, `Initialize query result = ${result}.`, [], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result});
     
     l += n; 
     r += n;
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAdjustLR, tree, `Adjust L=${l}, R=${r} for tree array. Querying nodes.`, [l,r-1], {result, L: l, R: r});
-
-    const activeQueryIndices: number[] = [];
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.adjustLRToTree, tree, `Adjust L=${l}, R=${r} for tree array. Querying tree nodes.`, [l,r-1], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result, processingSubArrayRange: [initialL, initialR-1]});
 
     for (; l < r; l = Math.floor(l/2), r = Math.floor(r/2)) {
-      activeQueryIndices.length = 0; // Clear for this iteration
-      if (l % 2 === 1) activeQueryIndices.push(l);
-      if (r % 2 === 1) activeQueryIndices.push(r-1);
-      if (l < r && Math.floor(l/2) !== l && Math.floor(r/2) !== r) { // Add parents if they will be checked
-          if (!activeQueryIndices.includes(Math.floor(l/2))) activeQueryIndices.push(Math.floor(l/2));
-          if (!activeQueryIndices.includes(Math.floor(r/2))) activeQueryIndices.push(Math.floor(r/2));
-      }
-
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryLoop, tree, `Loop: L=${l}, R=${r}. Result=${result}. Iterating.`, [...activeQueryIndices], {result, L: l, R: r});
+      addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.loopLR, tree, `Loop: L=${l}, R=${r}. Current query result=${result}.`, [l,r-1], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result, processingSubArrayRange: [initialL, initialR-1]});
       if (l % 2 === 1) { 
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryIfLeftOdd, tree, `L (${l}) is odd. Include tree[${l}] (${tree[l]}) in sum.`, [l, ...activeQueryIndices.filter(idx => idx !== l)], {result, L: l, R: r});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.checkLeftOdd, tree, `L (${l}) is odd. Include tree[${l}] (${tree[l]}) in sum.`, [l], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result, processingSubArrayRange: [initialL, initialR-1]});
         result += tree[l++];
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAddLeft, tree, `result = ${result}. Increment L to ${l}.`, [l-1], {result, L: l, R: r});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.addLeftToResult, tree, `Result = ${result}. Increment L to ${l}.`, [l-1], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result, processingSubArrayRange: [initialL, initialR-1]});
       }
       if (r % 2 === 1) { 
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryIfRightOdd, tree, `R (${r}) is odd. Decrement R to ${r-1}. Include tree[${r-1}] (${tree[r-1]}) in sum.`, [r-1, ...activeQueryIndices.filter(idx => idx !== r-1)], {result, L: l, R: r});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.checkRightOdd, tree, `R (${r}) is odd. Decrement R to ${r-1}. Include tree[${r-1}] (${tree[r-1]}) in sum.`, [r-1], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result, processingSubArrayRange: [initialL, initialR-1]});
         result += tree[--r]; 
-        addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryAddRight, tree, `result = ${result}. R is now ${r}.`, [r], {result, L: l, R: r});
+        addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.addRightToResult, tree, `Result = ${result}. R is now ${r}.`, [r], {operation, queryLeft:initialL, queryRight:initialR, currentL:l, currentR:r, currentQueryResult:result, processingSubArrayRange: [initialL, initialR-1]});
       }
     }
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryReturnResult, tree, `Query complete. Sum for range [${initialL}, ${initialR}) is ${result}.`, [], {result, L: initialL, R: initialR});
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.queryFuncEnd, tree, "Query function finished.");
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.returnResult, tree, `Query complete. Sum for range [${initialL}, ${initialR}) is ${result}.`, [], {operation, queryResult:result, processingSubArrayRange: [initialL, initialR-1]});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.query.funcEnd, tree, "Query function finished.");
 
   } else if (operation === 'update') {
-    tree = [...currentTreeState];
-    if (updateIdx === undefined || updateVal === undefined || n === 0) {
-      addStep(localSteps, null, tree, "Invalid update parameters or tree not built.");
+    tree = [...currentTree];
+    if (updateIdx === undefined || updateVal === undefined || n === 0 || updateIdx < 0 || updateIdx >= n) {
+      addStep(localSteps, null, tree, "Update error: Invalid parameters or tree not built.", [], {operation});
       return localSteps;
     }
-    let pos = updateIdx + n;
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.updateFuncStart, tree, `Updating original index ${updateIdx} (tree leaf pos ${pos}) to value ${updateVal}.`, [pos]);
+    let pos = updateIdx + n; // Position in segment tree array
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.funcStart, tree, `Updating original index ${updateIdx} (tree leaf pos ${pos}) to new value ${updateVal}.`, [pos], {operation, updateIndex: updateIdx, updateValue: updateVal, processingSubArrayRange: [updateIdx, updateIdx]});
     
     tree[pos] = updateVal;
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.updateSetLeaf, tree, `Set leaf tree[${pos}] = ${updateVal}.`, [pos]);
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.updateLeaf, tree, `Set leaf tree[${pos}] = ${updateVal}.`, [pos], {operation, updateIndex: updateIdx, updateValue: updateVal, processingSubArrayRange: [updateIdx, updateIdx]});
 
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.loopToRoot, tree, `Propagating update upwards from leaf ${pos}.`, [pos], {operation, updateIndex: updateIdx, updateValue: updateVal});
     while (pos > 1) {
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.updateLoopToRoot, tree, `Propagating update upwards. Current tree node pos: ${pos}`, [pos]);
       pos = Math.floor(pos / 2);
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.updateMoveToParent, tree, `Move to parent: tree node pos = ${pos}.`, [pos]);
-      tree[pos] = tree[pos * 2] + tree[pos * 2 + 1];
-      addStep(localSteps, SEGMENT_TREE_LINE_MAP.updateSetParent, tree, 
-              `Update parent tree[${pos}] = tree[${pos*2}] (${tree[pos*2]}) + tree[${pos*2+1}] (${tree[pos*2+1]}) = ${tree[pos]}.`, [pos, pos*2, pos*2+1]);
+      addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.moveToParent, tree, `Move to parent: tree node pos = ${pos}.`, [pos, pos*2, pos*2+1], {operation, updateIndex: updateIdx, updateValue: updateVal});
+      tree[pos] = tree[pos * 2] + tree[pos * 2 + 1]; // Sum operation
+      addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.updateParentNode, tree, 
+              `Update parent tree[${pos}] = tree[${pos*2}] (${tree[pos*2]}) + tree[${pos*2+1}] (${tree[pos*2+1]}) = ${tree[pos]}.`, 
+              [pos, pos*2, pos*2+1], {operation, updateIndex: updateIdx, updateValue: updateVal});
     }
-    addStep(localSteps, SEGMENT_TREE_LINE_MAP.updateFuncEnd, tree, "Update complete.");
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.loopToRoot, tree, `Finished propagating update to root.`, [1], {operation, updateIndex: updateIdx, updateValue: updateVal});
+    addStep(localSteps, SEGMENT_TREE_LINE_MAP.update.funcEnd, tree, "Update complete.");
   }
   
   return localSteps;
 }
+
+
+    
