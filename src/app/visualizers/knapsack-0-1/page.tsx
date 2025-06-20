@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Corrected import path
+import type { AlgorithmMetadata, DPAlgorithmStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, Package } from 'lucide-react';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from "@/components/ui/slider";
 import { KnapsackVisualizationPanel } from './KnapsackVisualizationPanel';
-import { KnapsackCodePanel, KNAPSACK_01_CODE_SNIPPETS } from './KnapsackCodePanel'; // Import snippets
+import { KnapsackCodePanel, KNAPSACK_01_CODE_SNIPPETS } from './KnapsackCodePanel'; 
 import { generateKnapsack01Steps } from './knapsack-0-1-logic';
 
 const DEFAULT_ANIMATION_SPEED = 500;
@@ -125,7 +125,7 @@ export default function KnapsackVisualizerPage() {
     setIsPlaying(false); setIsFinished(false); 
     setItemInput(DEFAULT_ITEMS_INPUT);
     setCapacityInput(DEFAULT_CAPACITY);
-    // handleGenerateSteps will be called by useEffect due to input changes
+    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
