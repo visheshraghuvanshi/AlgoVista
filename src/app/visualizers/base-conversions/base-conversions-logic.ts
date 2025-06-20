@@ -1,3 +1,4 @@
+
 // src/app/visualizers/base-conversions/base-conversions-logic.ts
 import type { BaseConversionStep } from './types'; // Local, more specific type
 
@@ -32,6 +33,7 @@ export const generateBaseConversionSteps = (
   toBase: number
 ): BaseConversionStep[] => {
   const localSteps: BaseConversionStep[] = [];
+  let finalOutputString: string = ""; // To hold the final converted string for the last step
 
   const addStep = (
     line: number | null,
@@ -53,10 +55,13 @@ export const generateBaseConversionSteps = (
         message: message,
       },
     });
+    if (final) {
+      finalOutputString = final;
+    }
   };
 
   let decimalValue = 0;
-  let numToConvert = numberStr;
+  let numToConvertForSecondPhase = numberStr; // Stores the number (as string) for the dec to base B phase
 
   if (fromBase !== 10) {
     const lm = BASE_CONVERSION_LINE_MAP_BASE_TO_DEC;
@@ -72,6 +77,8 @@ export const generateBaseConversionSteps = (
       
       if (digitValue === -1 || digitValue >= fromBase) {
         addStep(lm.checkInvalidDigit, `Invalid digit '${char}' for base ${fromBase}. Aborting.`, char);
+        // Add a final "error" step
+        addStep(null, "Conversion failed due to invalid input digit.", numberStr, undefined, undefined, undefined);
         return localSteps; 
       }
       addStep(lm.getDigitValue, `Digit '${char}' has value ${digitValue}.`, char, `Sum: ${tempDecimal}, Power: ${power}`);
@@ -83,41 +90,56 @@ export const generateBaseConversionSteps = (
       addStep(lm.incrementPower, `Increment power to ${power}.`, char, `Sum: ${tempDecimal}, Power: ${power}`);
     }
     decimalValue = tempDecimal;
-    numToConvert = decimalValue.toString(); 
+    numToConvertForSecondPhase = decimalValue.toString(); 
     addStep(lm.returnResult, `Decimal equivalent of "${numberStr}" (base ${fromBase}) is ${decimalValue}.`, decimalValue, `Final Sum: ${decimalValue}`);
   } else {
     decimalValue = parseInt(numberStr, 10);
     if (isNaN(decimalValue)) {
        addStep(null, `Invalid decimal number: "${numberStr}". Aborting.`, numberStr);
+       addStep(null, "Conversion failed due to invalid input.", numberStr, undefined, undefined, undefined);
        return localSteps;
     }
      addStep(null, `Input "${numberStr}" is already in Decimal (base 10). Value: ${decimalValue}.`, decimalValue);
+     numToConvertForSecondPhase = numberStr; // If fromBase is 10, this is what goes to next phase
   }
+
+  let finalResultForThisConversion = decimalValue.toString(); // Default if toBase is 10
 
   if (toBase !== 10) {
     const lm = BASE_CONVERSION_LINE_MAP_DEC_TO_BASE;
     addStep(lm.funcDeclare, `Convert Decimal ${decimalValue} to Base ${toBase}.`, decimalValue);
     if (decimalValue === 0) {
       addStep(lm.handleZero, `Decimal is 0. Result is '0' in base ${toBase}.`, 0, "0", "0");
-      return localSteps;
-    }
-    let tempNum = decimalValue;
-    let resultStr = "";
-    addStep(lm.initResultDigits, `Initialize result string = "". Current number = ${tempNum}.`, tempNum, resultStr);
+      finalResultForThisConversion = "0";
+    } else {
+      let tempNumForToPhase = decimalValue; // Use a new temp var for this phase
+      let resultStr = "";
+      addStep(lm.initResultDigits, `Initialize result string = "". Current number = ${tempNumForToPhase}.`, tempNumForToPhase, resultStr);
 
-    while (tempNum > 0) {
-      addStep(lm.loopWhileNumPositive, `Loop: ${tempNum} > 0.`, tempNum, resultStr);
-      const remainder = tempNum % toBase;
-      addStep(lm.getRemainder, `Remainder = ${tempNum} % ${toBase} = ${remainder}.`, tempNum, resultStr, undefined, `${tempNum} / ${toBase} = ${Math.floor(tempNum/toBase)} R ${remainder}`);
-      resultStr = DIGITS[remainder] + resultStr;
-      addStep(lm.prependDigit, `Prepend digit '${DIGITS[remainder]}' (from remainder). Result = "${resultStr}".`, tempNum, resultStr, undefined, `${tempNum} / ${toBase} = ${Math.floor(tempNum/toBase)} R ${remainder}`);
-      tempNum = Math.floor(tempNum / toBase);
-      addStep(lm.updateNum, `Update number = floor(${tempNum*toBase + remainder} / ${toBase}) = ${tempNum}.`, tempNum, resultStr);
+      while (tempNumForToPhase > 0) {
+        addStep(lm.loopWhileNumPositive, `Loop: ${tempNumForToPhase} > 0.`, tempNumForToPhase, resultStr);
+        const remainder = tempNumForToPhase % toBase;
+        addStep(lm.getRemainder, `Remainder = ${tempNumForToPhase} % ${toBase} = ${remainder}.`, tempNumForToPhase, resultStr, undefined, `${tempNumForToPhase} / ${toBase} = ${Math.floor(tempNumForToPhase/toBase)} R ${remainder}`);
+        resultStr = DIGITS[remainder] + resultStr;
+        addStep(lm.prependDigit, `Prepend digit '${DIGITS[remainder]}' (from remainder). Result = "${resultStr}".`, tempNumForToPhase, resultStr, undefined, `${tempNumForToPhase} / ${toBase} = ${Math.floor(tempNumForToPhase/toBase)} R ${remainder}`);
+        tempNumForToPhase = Math.floor(tempNumForToPhase / toBase);
+        addStep(lm.updateNum, `Update number = floor(${(tempNumForToPhase*toBase) + remainder} / ${toBase}) = ${tempNumForToPhase}.`, tempNumForToPhase, resultStr);
+      }
+      finalResultForThisConversion = resultStr;
+      addStep(lm.returnResult, `Final result in base ${toBase}: "${resultStr}".`, 0, resultStr, resultStr); // currentVal is 0 when loop ends
     }
-    addStep(lm.returnResult, `Final result in base ${toBase}: "${resultStr}".`, tempNum, resultStr, resultStr);
-  } else { 
-     addStep(null, `Target base is 10. Result is ${decimalValue}.`, decimalValue, decimalValue.toString(), decimalValue.toString());
+  } else { // toBase is 10
+     addStep(null, `Target base is 10. Result is decimal ${decimalValue}.`, decimalValue, decimalValue.toString(), decimalValue.toString());
+     finalResultForThisConversion = decimalValue.toString();
   }
+  
+  // Consistent final step
+  addStep(null, `Algorithm complete. Result: ${finalOutputString} (base ${toBase}).`,
+    (toBase === 10) ? decimalValue : 0, // Last 'currentValue' is 0 if decimalValue became 0
+    finalOutputString, // 'intermediateResult' can be the same as final here
+    finalOutputString, // 'finalResult'
+    undefined
+  );
   
   return localSteps;
 };
