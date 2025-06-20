@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -56,6 +55,7 @@ export function BinaryTreeVisualizationPanel({
                       y2={targetNode.y - NODE_RADIUS} 
                       stroke={edge.color || "hsl(var(--muted-foreground))"}
                       strokeWidth="1.5"
+                      style={{ transition: 'all 0.3s ease-in-out' }}
                     />
                   );
                 })}
@@ -71,7 +71,7 @@ export function BinaryTreeVisualizationPanel({
                     textColor = RBT_TEXT_COLORS.BLACK_TEXT;
                   } else if (node.nodeColor === 'NIL') {
                      fill = RBT_NODE_COLORS.NIL;
-                     textColor = "hsl(var(--primary-foreground))"; // Text on NIL might be less critical
+                     textColor = "hsl(var(--primary-foreground))"; 
                   }
 
                   if (node.id === currentProcessingNodeId && node.color !== RBT_NODE_COLORS.FOUND_HIGHLIGHT) {
@@ -82,9 +82,12 @@ export function BinaryTreeVisualizationPanel({
                      textColor = RBT_TEXT_COLORS.FOUND_HIGHLIGHT_TEXT;
                   }
 
-
                   return (
-                    <g key={node.id} transform={`translate(${node.x},${node.y})`}>
+                    <g 
+                      key={node.id} 
+                      transform={`translate(${node.x},${node.y})`}
+                      style={{ transition: 'transform 0.3s ease-in-out' }} // Added CSS transition for node position
+                    >
                       <circle
                         cx="0"
                         cy="0"
@@ -95,16 +98,31 @@ export function BinaryTreeVisualizationPanel({
                       />
                       <text
                         x="0"
-                        y="0"
+                        y="-4" // Position value slightly above center
                         textAnchor="middle"
                         dy=".3em"
-                        fontSize="10"
+                        fontSize="9px" // Smaller for value
                         fill={textColor}
                         fontWeight="bold"
                         className="select-none"
                       >
                         {node.value === null ? 'NIL' : node.value}
                       </text>
+                       {/* Display H and BF if available and not NIL */}
+                      {node.value !== null && (node.height !== undefined || node.balanceFactor !== undefined) && (
+                         <text
+                            x="0"
+                            y={NODE_RADIUS -7} // Position below value, inside node
+                            textAnchor="middle"
+                            fontSize="7px" // Smaller for H/BF
+                            fill={textColor}
+                            className="select-none opacity-90"
+                          >
+                            {node.height !== undefined && `H:${node.height}`}
+                            {(node.height !== undefined && node.balanceFactor !== undefined) && ', '}
+                            {node.balanceFactor !== undefined && `BF:${node.balanceFactor}`}
+                          </text>
+                      )}
                     </g>
                   );
                 })}
