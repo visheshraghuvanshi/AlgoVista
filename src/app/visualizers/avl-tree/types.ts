@@ -1,4 +1,5 @@
 // src/app/visualizers/avl-tree/types.ts
+
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
 
@@ -30,14 +31,15 @@ export interface AlgorithmDetailsProps {
 // --- AVL Tree Specific Types ---
 export interface BinaryTreeNodeVisual {
   id: string;
-  value: string | number | null; // Formatted as "Val (H:h, B:bf)"
+  value: string | number | null; // Formatted as "Val (H:h, BF:bf)" by logic
   x: number;
   y: number;
-  color?: string; // For highlighting states like active, path, rotated
+  color?: string; 
   textColor?: string;
+  height?: number; 
+  balanceFactor?: number; 
   leftId?: string | null;
   rightId?: string | null;
-  // nodeColor might be used if extending for RBT-like visuals, but less critical for AVL color-coding
 }
 
 export interface BinaryTreeEdgeVisual {
@@ -50,11 +52,17 @@ export interface BinaryTreeEdgeVisual {
 export interface TreeAlgorithmStep {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[]; // Often node values or IDs on the current DFS path
+  traversalPath: (string | number)[]; 
   currentLine: number | null;
   message?: string;
-  currentProcessingNodeId?: string | null; // ID of node being actively processed
-  auxiliaryData?: Record<string, any> | null; // For balance factors, rotation types etc.
+  currentProcessingNodeId?: string | null;
+  unbalancedNodeId?: string | null;
+  rotationType?: 'LL' | 'RR' | 'LR' | 'RL' | null;
+  nodesInvolvedInRotation?: string[]; 
+  auxiliaryData?: {
+    finalGraphState?: AVLTreeGraph; 
+    [key: string]: any;
+  } | null;
 }
 
 // Internal representation for AVL logic
@@ -62,10 +70,14 @@ export interface AVLNodeInternal {
   id: string;
   value: number;
   height: number;
-  // balanceFactor: number; // Calculated on the fly, not stored directly
   leftId: string | null;
   rightId: string | null;
   parentId: string | null; 
+}
+
+export interface AVLTreeGraph {
+  rootId: string | null;
+  nodesMap: Map<string, AVLNodeInternal>;
 }
 
 export type AVLOperationType = 'build' | 'insert' | 'delete' | 'search' | 'structure';
