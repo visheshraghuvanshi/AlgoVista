@@ -1,5 +1,5 @@
 
-import type { HuffmanStep, HuffmanFrequencyItem, HuffmanNodeForPQ, HuffmanCodeItem, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
+import type { HuffmanStep, HuffmanFrequencyItem, HuffmanNodeForPQ, HuffmanCodeItem, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types';
 
 export const HUFFMAN_CODING_LINE_MAP = {
   // Conceptual mapping based on common Huffman algorithm steps
@@ -121,12 +121,16 @@ function buildVisualTree(
         const shiftX = desiredCenterX - currentCenterX;
 
         let scaleFactor = 1;
-        if (treeWidth > SVG_WIDTH * 0.95) { 
+        if (treeWidth > SVG_WIDTH * 0.95 && treeWidth > 0) { 
             scaleFactor = (SVG_WIDTH * 0.95) / treeWidth;
         }
         visualNodes.forEach(node => {
-            node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
-            node.y = node.y * scaleFactor + (SVG_WIDTH * (1-scaleFactor) * 0.05);
+            if (node.x !== undefined) {
+                 node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
+            }
+            if(node.y !== undefined) {
+                node.y = node.y * scaleFactor + (SVG_WIDTH * (1-scaleFactor) * 0.05); 
+            }
         });
     }
     return { visualNodes, visualEdges };
@@ -147,65 +151,61 @@ export const generateHuffmanCodingSteps = (text: string): HuffmanStep[] => {
   const freqMap: Record<string, number> = {};
   for (const char of text) {
     freqMap[char] = (freqMap[char] || 0) + 1;
-    // Add step for each char count could be too verbose, just one after loop.
   }
-  const frequencies: HuffmanFrequencyItem[] = Object.entries(freqMap).map(([char, freq], idx) => ({ char, freq, id: `freq-${char}-${idx}`})).sort((a,b)=> a.freq - b.freq);
+  const frequencies: HuffmanFrequencyItem[] = Object.entries(freqMap).map(([char, freq], idx) => ({ char, freq, id: `freq-${char}-${idx}`})).sort((a,b)=> a.freq - b.freq || a.char.localeCompare(b.char));
   addStep(localSteps, lm.freqCalcEnd, 'frequency_calculation', `Frequencies: ${frequencies.map(f => `'${f.char}':${f.freq}`).join(', ')}`, [], [], frequencies);
 
-  // Priority Queue Initialization
   addStep(localSteps, lm.initPQ, 'pq_initialization', "Initialize Min-Priority Queue with leaf nodes.", [], [], frequencies);
   const pq: HuffmanNodeForPQ[] = frequencies.map(f => ({ id: generateLogicNodeId(f.char, f.freq), char: f.char, freq: f.freq, leftId: null, rightId: null }));
-  pq.sort((a, b) => a.freq - b.freq || (a.id.localeCompare(b.id))); // Sort by freq, then id for stability
+  pq.sort((a, b) => a.freq - b.freq || (a.id.localeCompare(b.id))); 
   
-  // Keep a map of all nodes created for tree building and visualization
   const allNodesMap = new Map<string, HuffmanNodeForPQ>(pq.map(node => [node.id, node]));
-  let currentTreeVis = buildVisualTree(allNodesMap, pq.length > 0 ? pq[0].id : null); // Initial tree might be just one node or empty
+  let currentTreeVis = buildVisualTree(allNodesMap, pq.length > 0 ? pq[0].id : null); 
   addStep(localSteps, lm.pqSort, 'pq_initialization', `Priority Queue: [${pq.map(p => `${p.char ? `'${p.char}'` : 'Σ'}:${p.freq}`).join(', ')}]`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, pq);
 
-  // Tree Construction
-  if (pq.length === 1) { // Handle single unique character case
+  if (pq.length === 1) { 
       const singleNode = pq[0];
       const finalCodes: HuffmanCodeItem[] = [{ char: singleNode.char!, code: "0" }];
       currentTreeVis = buildVisualTree(allNodesMap, singleNode.id);
       addStep(localSteps, lm.returnTreeRoot, 'tree_construction', `Only one unique character. Tree root is '${singleNode.char}'. Code is '0'.`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], finalCodes);
-      addStep(localSteps, null, 'finished', `Huffman Coding complete.`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], finalCodes);
+      const finalMsgSingle = `Huffman Coding complete. Generated 1 code: '${finalCodes[0].char}': ${finalCodes[0].code}`;
+      addStep(localSteps, null, 'finished', finalMsgSingle, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], finalCodes, null, [], null, "");
       return localSteps;
   }
 
 
   while (pq.length > 1) {
-    addStep(localSteps, lm.buildTreeLoopStart, 'tree_construction', `Loop: PQ size > 1. Current PQ: [${pq.map(p => `${p.char || 'Σ'}:${p.freq}`).join(', ')}]`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, pq);
+    currentTreeVis = buildVisualTree(allNodesMap, pq.length > 0 ? (pq.length > 1 ? pq[0].id : (pq.length ===1 ? pq[0].id : null)) : null); // Update tree visual before loop message
+    addStep(localSteps, lm.buildTreeLoopStart, 'tree_construction', `Loop: PQ size > 1. Current PQ: [${pq.map(p => `${p.char || 'Σ'}:${p.freq}`).join(', ')}]`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [...pq]);
     
     const left = pq.shift()!;
-    addStep(localSteps, lm.dequeueLeft, 'tree_construction', `Dequeue Left (min): ${left.char || 'Σ'}:${left.freq}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, pq, undefined, [left.id]);
+    addStep(localSteps, lm.dequeueLeft, 'tree_construction', `Dequeue Left (min): ${left.char || 'Σ'}:${left.freq}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [...pq], undefined, [left.id]);
     
     const right = pq.shift()!;
-    addStep(localSteps, lm.dequeueRight, 'tree_construction', `Dequeue Right (next min): ${right.char || 'Σ'}:${right.freq}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, pq, undefined, [left.id, right.id]);
+    addStep(localSteps, lm.dequeueRight, 'tree_construction', `Dequeue Right (next min): ${right.char || 'Σ'}:${right.freq}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [...pq], undefined, [left.id, right.id]);
 
     const internalNodeId = generateLogicNodeId(null, left.freq + right.freq);
     const internalNode: HuffmanNodeForPQ = { id: internalNodeId, char: null, freq: left.freq + right.freq, leftId: left.id, rightId: right.id };
-    allNodesMap.set(internalNodeId, internalNode); // Add new internal node to map
+    allNodesMap.set(internalNodeId, internalNode); 
 
-    addStep(localSteps, lm.createInternalNode, 'tree_construction', `Create internal node: freq=${internalNode.freq}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, pq, undefined, [left.id, right.id], internalNodeId);
+    addStep(localSteps, lm.createInternalNode, 'tree_construction', `Create internal node: freq=${internalNode.freq}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [...pq], undefined, [left.id, right.id], internalNodeId);
     
     pq.push(internalNode);
     pq.sort((a, b) => a.freq - b.freq || (a.id.localeCompare(b.id)));
-    addStep(localSteps, lm.enqueueInternalNode, 'tree_construction', `Enqueue internal node. PQ: [${pq.map(p => `${p.char || 'Σ'}:${p.freq}`).join(', ')}]`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, pq, undefined, undefined, internalNodeId);
-    currentTreeVis = buildVisualTree(allNodesMap, pq.length > 0 ? pq[0].id : null); // Rebuild tree for visualization
-    // For the next step, we want to show the tree with the new internal node as part of the PQ conceptually
+    addStep(localSteps, lm.enqueueInternalNode, 'tree_construction', `Enqueue internal node. PQ: [${pq.map(p => `${p.char || 'Σ'}:${p.freq}`).join(', ')}]`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [...pq], undefined, undefined, internalNodeId);
   }
   
   const rootId = pq.length > 0 ? pq[0].id : null;
   currentTreeVis = buildVisualTree(allNodesMap, rootId);
   addStep(localSteps, lm.returnTreeRoot, 'tree_construction', `Tree construction complete. Root freq: ${rootId ? allNodesMap.get(rootId)?.freq : 'N/A'}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, []);
 
-  // Code Generation
   const codes: HuffmanCodeItem[] = [];
   function generateCodesRecursive(nodeId: string | null, currentCode: string) {
     if (!nodeId) return;
     const node = allNodesMap.get(nodeId);
     if (!node) return;
 
+    currentTreeVis = buildVisualTree(allNodesMap, rootId, [],[],nodeId, currentCode); // Update tree visual for current path
     addStep(localSteps, lm.generateCodesFuncStart, 'code_generation', `generateCodes(node='${node.char || `Internal(${node.freq})`}', code='${currentCode}')`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], codes, nodeId, undefined, undefined, currentCode);
 
     if (node.char !== null) {
@@ -226,11 +226,15 @@ export const generateHuffmanCodingSteps = (text: string): HuffmanStep[] => {
   }
 
   if (rootId) {
+    currentTreeVis = buildVisualTree(allNodesMap, rootId); // Ensure tree is up-to-date before code gen
     addStep(localSteps, lm.generateCodesFuncStart -1, 'code_generation', "Starting code generation traversal.", currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], codes);
     generateCodesRecursive(rootId, "");
   }
   
-  addStep(localSteps, null, 'finished', `Huffman Coding complete. Final codes generated.`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], codes);
+  const finalCodesSummary = codes.length > 0 ? `Generated ${codes.length} codes. E.g., '${codes[0].char}': ${codes[0].code}${codes.length > 1 ? '...' : ''}` : "No codes generated (empty/single char input?).";
+  currentTreeVis = buildVisualTree(allNodesMap, rootId); // Final tree visual
+  addStep(localSteps, null, 'finished', `Huffman Coding complete. ${finalCodesSummary}`, currentTreeVis.visualNodes, currentTreeVis.visualEdges, frequencies, [], codes, null, [], null, "");
   return localSteps;
 };
+
 
