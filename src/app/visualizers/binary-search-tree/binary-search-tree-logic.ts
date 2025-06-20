@@ -1,7 +1,6 @@
 
-import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep } from '@/types';
-
-export type BSTOperationType = 'insert' | 'search' | 'delete' | 'build'; // 'build' is an internal op
+import type { BinaryTreeNodeVisual, BinaryTreeEdgeVisual, TreeAlgorithmStep, BSTNodeInternal, RBTreeGraph /* Using RBTreeGraph for its finalGraphState structure */ } from '@/types';
+import type { BSTOperationType } from './types'; // Local import for operation type
 
 // Line maps for each operation
 export const BST_OPERATION_LINE_MAPS: Record<BSTOperationType | 'structure', Record<string, number>> = {
@@ -28,7 +27,7 @@ const NODE_COLORS = {
   default: "hsl(var(--secondary))",
   visiting: "hsl(var(--primary))", // Node being compared or focused
   found: "hsl(var(--accent))",     // Node found (search/delete target)
-  inserted: "hsl(var(--accent))", // Newly inserted node
+  inserted: "hsl(var(--accent))", // Newly inserted node (can be same as found)
   path: "hsl(var(--primary)/0.7)", // Nodes on the path to target
   toBeDeleted: "hsl(var(--destructive))",
   successor: "hsl(var(--ring))",
@@ -39,14 +38,8 @@ const EDGE_COLORS = {
 };
 
 let bstNodeIdCounter = 0;
-const generateBSTNodeId = (value: number) => `bst-node-${value}-${bstNodeIdCounter++}`;
+const generateBSTNodeId = (value: number | string) => `bst-node-${String(value).replace(/[^a-zA-Z0-9-_]/g, '')}-${bstNodeIdCounter++}`;
 
-interface BSTNodeInternal {
-  id: string;
-  value: number;
-  leftId: string | null;
-  rightId: string | null;
-}
 
 export function parseBSTInput(inputStr: string): number[] {
   if (inputStr.trim() === '') return [];
@@ -66,48 +59,64 @@ function getLayout(
   const visualEdges: BinaryTreeEdgeVisual[] = [];
   if (!currentRootId) return { visualNodes, visualEdges };
 
-  const X_SPACING = 40; // Horizontal spacing between nodes at same level
-  const Y_SPACING = 60; // Vertical spacing between levels
+  const X_SPACING_BASE = 70; 
+  const Y_SPACING = 70; 
+  const SVG_WIDTH_CENTER = 300; 
 
-  function positionNode(nodeId: string | null, x: number, y: number, xRange: [number, number]) {
+  function positionNode(nodeId: string | null, x: number, y: number, xOffsetMultiplier: number, depth: number) {
     if (!nodeId || !nodesMap.has(nodeId)) return;
 
-    const node = nodesMap.get(nodeId)!;
+    const nodeInternal = nodesMap.get(nodeId)!;
     let color = specialColors[nodeId] || NODE_COLORS.default;
-    if (pathNodeIds.includes(nodeId) && !specialColors[nodeId]) color = NODE_COLORS.path;
-    if (activeNodeIds.includes(nodeId) && !specialColors[nodeId]) color = NODE_COLORS.visiting;
+    let textColor = specialColors[nodeId] ? (specialColors[nodeId] === NODE_COLORS.found || specialColors[nodeId] === NODE_COLORS.inserted ? "hsl(var(--accent-foreground))" : "hsl(var(--primary-foreground))") : "hsl(var(--secondary-foreground))";
+    
+    if (pathNodeIds.includes(nodeId) && !specialColors[nodeId]) { color = NODE_COLORS.path; textColor = "hsl(var(--primary-foreground))"; }
+    if (activeNodeIds.includes(nodeId) && !specialColors[nodeId]) { color = NODE_COLORS.visiting; textColor = "hsl(var(--primary-foreground))"; }
 
 
-    visualNodes.push({ id: nodeId, value: node.value, x, y, color, leftId: node.leftId, rightId: node.rightId });
+    visualNodes.push({ id: nodeId, value: nodeInternal.value, x, y, color, textColor, leftId: nodeInternal.leftId, rightId: nodeInternal.rightId });
+    
+    const childXOffset = X_SPACING_BASE * xOffsetMultiplier / Math.pow(1.7, depth); 
 
-    const childrenCount = (node.leftId ? 1 : 0) + (node.rightId ? 1 : 0);
-    const childXOffsetBase = (xRange[1] - xRange[0]) / (childrenCount > 1 ? 4 : 2); // Distribute space for children
-
-
-    if (node.leftId) {
-      const childX = x - childXOffsetBase;
-      const childY = y + Y_SPACING;
+    if (nodeInternal.leftId && nodesMap.has(nodeInternal.leftId)) {
       visualEdges.push({
-        id: `edge-${nodeId}-${node.leftId}`, sourceId: nodeId, targetId: node.leftId,
-        color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(node.leftId)) ? EDGE_COLORS.path : EDGE_COLORS.default
+        id: `edge-${nodeId}-${nodeInternal.leftId}`, sourceId: nodeId, targetId: nodeInternal.leftId,
+        color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(nodeInternal.leftId)) ? EDGE_COLORS.path : EDGE_COLORS.default
       });
-      positionNode(node.leftId, childX, childY, [xRange[0], x]);
+      positionNode(nodeInternal.leftId, x - childXOffset, y + Y_SPACING, xOffsetMultiplier, depth + 1);
     }
-    if (node.rightId) {
-      const childX = x + childXOffsetBase;
-      const childY = y + Y_SPACING;
+    if (nodeInternal.rightId && nodesMap.has(nodeInternal.rightId)) {
       visualEdges.push({
-        id: `edge-${nodeId}-${node.rightId}`, sourceId: nodeId, targetId: node.rightId,
-        color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(node.rightId)) ? EDGE_COLORS.path : EDGE_COLORS.default
+        id: `edge-${nodeId}-${nodeInternal.rightId}`, sourceId: nodeId, targetId: nodeInternal.rightId,
+        color: (pathNodeIds.includes(nodeId) && pathNodeIds.includes(nodeInternal.rightId)) ? EDGE_COLORS.path : EDGE_COLORS.default
       });
-      positionNode(node.rightId, childX, childY, [x, xRange[1]]);
+      positionNode(nodeInternal.rightId, x + childXOffset, y + Y_SPACING, xOffsetMultiplier, depth + 1);
     }
   }
+  positionNode(currentRootId, SVG_WIDTH_CENTER, 50, 0.8, 0); // Use a factor for xOffsetMultiplier
+   if (visualNodes.length > 0) {
+        const minX = Math.min(...visualNodes.map(n => n.x).filter(x => x !== undefined && !isNaN(x)));
+        const maxX = Math.max(...visualNodes.map(n => n.x).filter(x => x !== undefined && !isNaN(x)));
+        if(isFinite(minX) && isFinite(maxX)) {
+            const treeWidth = maxX - minX;
+            const currentCenterX = minX + treeWidth / 2;
+            const desiredCenterX = SVG_WIDTH_CENTER;
+            const shiftX = desiredCenterX - currentCenterX;
 
-  const svgWidth = 500; // Assume a fixed SVG width for root positioning
-  positionNode(currentRootId, svgWidth / 2, 50, [0, svgWidth]);
+            let scaleFactor = 1;
+            if (treeWidth > SVG_WIDTH_CENTER * 1.9 && treeWidth > 0) { 
+                scaleFactor = (SVG_WIDTH_CENTER * 1.9) / treeWidth;
+            }
+            visualNodes.forEach(node => {
+                if (node.x !== undefined) {
+                     node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
+                }
+            });
+        }
+    }
   return { visualNodes, visualEdges };
 }
+
 
 export const generateBSTSteps = (
   currentBSTRef: React.MutableRefObject<{ rootId: string | null, nodes: Map<string, BSTNodeInternal> }>,
@@ -116,190 +125,229 @@ export const generateBSTSteps = (
   initialValuesString?: string
 ): TreeAlgorithmStep[] => {
   const localSteps: TreeAlgorithmStep[] = [];
-  const lineMapStructure = BST_OPERATION_LINE_MAPS.structure;
-  let operationLineMap = BST_OPERATION_LINE_MAPS[operation];
+  const operationLineMap = BST_OPERATION_LINE_MAPS[operation] || BST_OPERATION_LINE_MAPS.structure; // Fallback
 
   const workingNodes = new Map<string, BSTNodeInternal>();
   currentBSTRef.current.nodes.forEach((node, id) => {
-    workingNodes.set(id, { ...node }); // Deep clone node properties
+    workingNodes.set(id, { ...node }); 
   });
   let rootId = currentBSTRef.current.rootId;
   
-  const currentPathNodeIds: string[] = [];
+  const currentPathNodeIds: string[] = []; // Track path for current DFS-like operation
+  let lastInsertedNodeId: string | null = null; // To highlight newly inserted node in final step
+  let wasDuplicateInInsert: boolean = false;
+  let foundNodeIdInSearch: string | null = null;
+  let nodeWasActuallyDeleted: boolean = false;
   
   function addStep(
     line: number | null,
     message: string,
     activeIds: string[] = [],
-    specialColors: Record<string, string> = {}
+    specialColors: Record<string, string> = {},
+    pathForStep: string[] = currentPathNodeIds, // Allow overriding path for specific steps
+    opStatus?: 'success' | 'failure' | 'info'
   ) {
-    const { visualNodes, visualEdges } = getLayout(rootId, workingNodes, activeIds, [...currentPathNodeIds], specialColors);
+    const { visualNodes, visualEdges } = getLayout(rootId, workingNodes, activeIds, pathForStep, specialColors);
     localSteps.push({
       nodes: visualNodes,
       edges: visualEdges,
-      traversalPath: [...currentPathNodeIds],
+      traversalPath: pathForStep.map(id => workingNodes.get(id)?.value?.toString() ?? '?'),
       currentLine: line,
       message,
-      currentProcessingNodeId: activeIds.length > 0 ? activeIds[0] : null,
+      currentProcessingNodeId: activeIds.length > 0 ? activeIds[0] : (pathForStep.length > 0 ? pathForStep[pathForStep.length - 1] : null),
+      status: opStatus,
+      auxiliaryData: {} // Will be set for the final step
     });
   }
 
   function insertRec(nodeId: string | null, val: number): string {
-    currentPathNodeIds.push(nodeId!);
-    addStep(operationLineMap.recFunc, `Insert(${val}) at node ${nodeId ? workingNodes.get(nodeId)?.value : 'null'}. Path: ${currentPathNodeIds.join('->')}`, nodeId ? [nodeId] : []);
+    currentPathNodeIds.push(nodeId!); // Assume nodeId is not null here for path construction
+    addStep(operationLineMap.recFunc, `InsertRec(${val}) at node ${nodeId ? workingNodes.get(nodeId)?.value : 'null'}. Path: ${currentPathNodeIds.map(id=>workingNodes.get(id)?.value).join('->')}`, nodeId ? [nodeId] : []);
     
     if (nodeId === null) {
       const newNodeId = generateBSTNodeId(val);
       workingNodes.set(newNodeId, { id: newNodeId, value: val, leftId: null, rightId: null });
-      addStep(operationLineMap.baseCaseNull, `Create new node ${val}.`, [], {[newNodeId]: NODE_COLORS.inserted});
+      lastInsertedNodeId = newNodeId; // Track the ID of the truly new node
+      wasDuplicateInInsert = false;
+      addStep(operationLineMap.baseCaseNull, `Create new node ${val}.`, [newNodeId], {[newNodeId]: NODE_COLORS.inserted});
       currentPathNodeIds.pop();
       return newNodeId;
     }
     const node = workingNodes.get(nodeId)!;
-    if (val < node.value) {
+    if (val < node.value!) {
       addStep(operationLineMap.goLeft, `Value ${val} < node ${node.value}. Go left.`, [nodeId]);
       node.leftId = insertRec(node.leftId, val);
       addStep(operationLineMap.assignLeft, `Link left child of ${node.value}.`, [nodeId]);
-    } else if (val > node.value) {
+    } else if (val > node.value!) {
       addStep(operationLineMap.goRight, `Value ${val} > node ${node.value}. Go right.`, [nodeId]);
       node.rightId = insertRec(node.rightId, val);
       addStep(operationLineMap.assignRight, `Link right child of ${node.value}.`, [nodeId]);
     } else {
-      addStep(0, `Value ${val} already exists. No insertion.`, [nodeId], {[nodeId]: NODE_COLORS.found});
+      wasDuplicateInInsert = true;
+      lastInsertedNodeId = nodeId; // It "found" the existing node
+      addStep(operationLineMap.returnNode, `Value ${val} already exists. No insertion.`, [nodeId], {[nodeId]: NODE_COLORS.found});
     }
     currentPathNodeIds.pop();
     addStep(operationLineMap.returnNode, `Return from insertRec call for node ${node.value}.`, [nodeId]);
     return nodeId;
   }
 
-  function searchRec(nodeId: string | null, val: number): string | null {
-    currentPathNodeIds.push(nodeId!);
-    addStep(operationLineMap.recFunc, `Search(${val}) at node ${nodeId ? workingNodes.get(nodeId)?.value : 'null'}. Path: ${currentPathNodeIds.join('->')}`, nodeId ? [nodeId] : []);
+  function searchRec(nodeId: string | null, val: number): {foundNodeId: string | null} {
+    if (nodeId) currentPathNodeIds.push(nodeId);
+    addStep(operationLineMap.recFunc, `SearchRec(${val}) at node ${nodeId ? workingNodes.get(nodeId)?.value : 'null'}. Path: ${currentPathNodeIds.map(id=>workingNodes.get(id)?.value).join('->')}`, nodeId ? [nodeId] : []);
 
     if (nodeId === null || workingNodes.get(nodeId)?.value === val) {
+      foundNodeIdInSearch = nodeId;
       const foundColor = nodeId ? { [nodeId]: NODE_COLORS.found } : {};
-      addStep(operationLineMap.baseCaseNullOrFound, nodeId ? `Value ${val} found.` : `Value ${val} not found (reached null).`, nodeId ? [nodeId] : [], foundColor);
-      currentPathNodeIds.pop();
-      return nodeId;
+      addStep(operationLineMap.baseCaseNullOrFound, nodeId ? `Value ${val} found.` : `Value ${val} not found (reached null).`, nodeId ? [nodeId] : [], foundColor, [...currentPathNodeIds]);
+      if (nodeId) currentPathNodeIds.pop();
+      return {foundNodeId};
     }
     const node = workingNodes.get(nodeId)!;
-    if (val < node.value) {
+    let result: {foundNodeId: string | null} = {foundNodeId: null};
+    if (val < node.value!) {
       addStep(operationLineMap.goLeft, `Value ${val} < node ${node.value}. Go left.`, [nodeId]);
-      const result = searchRec(node.leftId, val);
-      currentPathNodeIds.pop();
-      addStep(operationLineMap.returnLeftSearch, `Return from left search for node ${node.value}.`, [nodeId]);
-      return result;
+      result = searchRec(node.leftId, val);
     } else {
       addStep(operationLineMap.goRight, `Value ${val} > node ${node.value}. Go right.`, [nodeId]);
-      const result = searchRec(node.rightId, val);
-      currentPathNodeIds.pop();
-      addStep(operationLineMap.returnRightSearch, `Return from right search for node ${node.value}.`, [nodeId]);
-      return result;
+      result = searchRec(node.rightId, val);
     }
+    currentPathNodeIds.pop();
+    addStep(operationLineMap.returnNode, `Return from searchRec for node ${node.value}.`, [nodeId]);
+    return result;
   }
   
   function minValueNode(nodeId: string): BSTNodeInternal {
     let current = workingNodes.get(nodeId)!;
     addStep(operationLineMap.helperMinValue, `Finding min value in subtree of ${current.value}.`, [current.id], {[current.id]: NODE_COLORS.successor});
     while (current.leftId !== null) {
+      currentPathNodeIds.push(current.id); // Track path to successor
       current = workingNodes.get(current.leftId)!;
-      addStep(operationLineMap.loopMinLeft, `Current min candidate: ${current.value}.`, [current.id], {[current.id]: NODE_COLORS.successor});
+      addStep(operationLineMap.loopMinLeft, `Current min candidate: ${current.value}. Path: ${currentPathNodeIds.map(id=>workingNodes.get(id)?.value).join('->')}`, [current.id], {[current.id]: NODE_COLORS.successor});
     }
     addStep(operationLineMap.returnMin, `Min value in subtree is ${current.value}.`, [current.id], {[current.id]: NODE_COLORS.successor});
     return current;
   }
 
-  function deleteRec(nodeId: string | null, val: number): string | null {
-    currentPathNodeIds.push(nodeId!);
-    addStep(operationLineMap.recFunc, `Delete(${val}) at node ${nodeId ? workingNodes.get(nodeId)?.value : 'null'}. Path: ${currentPathNodeIds.join('->')}`, nodeId ? [nodeId] : []);
+  function deleteRec(nodeId: string | null, val: number): {newSubtreeRootId: string | null, deleted: boolean} {
+    if (nodeId) currentPathNodeIds.push(nodeId);
+    addStep(operationLineMap.recFunc, `DeleteRec(${val}) at node ${nodeId ? workingNodes.get(nodeId)?.value : 'null'}. Path: ${currentPathNodeIds.map(id=>workingNodes.get(id)?.value).join('->')}`, nodeId ? [nodeId] : []);
 
     if (nodeId === null) {
       addStep(operationLineMap.baseCaseNull, `Value ${val} not found (reached null).`, []);
-      currentPathNodeIds.pop();
-      return null;
+      if (nodeId) currentPathNodeIds.pop();
+      return {newSubtreeRootId: null, deleted: false};
     }
     const node = workingNodes.get(nodeId)!;
+    let deletedHere = false;
 
-    if (val < node.value) {
+    if (val < node.value!) {
       addStep(operationLineMap.goLeft, `Value ${val} < node ${node.value}. Go left.`, [nodeId]);
-      node.leftId = deleteRec(node.leftId, val);
+      const leftResult = deleteRec(node.leftId, val);
+      node.leftId = leftResult.newSubtreeRootId;
+      deletedHere = leftResult.deleted;
       addStep(operationLineMap.assignLeft, `Update left child of ${node.value}.`, [nodeId]);
-    } else if (val > node.value) {
+    } else if (val > node.value!) {
       addStep(operationLineMap.goRight, `Value ${val} > node ${node.value}. Go right.`, [nodeId]);
-      node.rightId = deleteRec(node.rightId, val);
+      const rightResult = deleteRec(node.rightId, val);
+      node.rightId = rightResult.newSubtreeRootId;
+      deletedHere = rightResult.deleted;
       addStep(operationLineMap.assignRight, `Update right child of ${node.value}.`, [nodeId]);
-    } else { // Node to be deleted found
+    } else { 
+      deletedHere = true;
+      nodeWasActuallyDeleted = true; // Set global flag
       addStep(operationLineMap.nodeFound, `Node to delete (${val}) found.`, [nodeId], {[nodeId]: NODE_COLORS.toBeDeleted});
       if (node.leftId === null) {
         const rightChildId = node.rightId;
         addStep(operationLineMap.case1LeftNull, `Node has no left child. Return right child ${rightChildId ? workingNodes.get(rightChildId)?.value : 'null'}.`, [nodeId], {[nodeId]: NODE_COLORS.toBeDeleted});
-        workingNodes.delete(nodeId); // Conceptually remove, visual update handles it
+        workingNodes.delete(nodeId); 
         currentPathNodeIds.pop();
-        addStep(operationLineMap.returnRightChild, `Deleted. Return ${rightChildId ? workingNodes.get(rightChildId)?.value : 'null'}.`, rightChildId ? [rightChildId] : []);
-        return rightChildId;
+        return {newSubtreeRootId: rightChildId, deleted: true};
       }
       if (node.rightId === null) {
         const leftChildId = node.leftId;
         addStep(operationLineMap.case1RightNull, `Node has no right child. Return left child ${leftChildId ? workingNodes.get(leftChildId)?.value : 'null'}.`, [nodeId], {[nodeId]: NODE_COLORS.toBeDeleted});
         workingNodes.delete(nodeId);
         currentPathNodeIds.pop();
-        addStep(operationLineMap.returnLeftChild, `Deleted. Return ${leftChildId ? workingNodes.get(leftChildId)?.value : 'null'}.`, leftChildId ? [leftChildId] : []);
-        return leftChildId;
+        return {newSubtreeRootId: leftChildId, deleted: true};
       }
       
       addStep(operationLineMap.case2TwoChildren, `Node has two children. Find inorder successor.`, [nodeId], {[nodeId]: NODE_COLORS.toBeDeleted});
-      const successor = minValueNode(node.rightId); // Find min in right subtree
-      addStep(operationLineMap.findMinValue, `Inorder successor is ${successor.value}.`, [successor.id], {[successor.id]: NODE_COLORS.successor});
+      // Clear current path before finding successor to show successor path clearly
+      const oldPath = [...currentPathNodeIds]; currentPathNodeIds.length = 0;
+      const successor = minValueNode(node.rightId!); 
+      currentPathNodeIds.push(...oldPath); // Restore path for context of deleteRec
+
+      addStep(operationLineMap.findMinValue, `Inorder successor is ${successor.value}.`, [successor.id], {[nodeId]: NODE_COLORS.toBeDeleted, [successor.id]: NODE_COLORS.successor});
       
-      node.value = successor.value; // Copy successor's value
-      workingNodes.set(nodeId, {...node}); // Update node in map with new value
+      node.value = successor.value; 
+      workingNodes.set(nodeId, {...node}); 
       addStep(operationLineMap.copyMinValue, `Copied successor value ${successor.value} to node ${node.id}.`, [nodeId], {[nodeId]: NODE_COLORS.toBeDeleted, [successor.id]:NODE_COLORS.successor});
 
       addStep(operationLineMap.deleteInorderSuccessor, `Delete original inorder successor (${successor.value}) from right subtree.`, [node.rightId!]);
-      node.rightId = deleteRec(node.rightId, successor.value); // Delete the successor
+      const deleteSuccessorResult = deleteRec(node.rightId, successor.value); // Delete the successor
+      node.rightId = deleteSuccessorResult.newSubtreeRootId;
     }
-    currentPathNodeIds.pop();
+    if (nodeId) currentPathNodeIds.pop();
     addStep(operationLineMap.returnNode, `Return from deleteRec call for node ${node.value}.`, [nodeId]);
-    return nodeId;
+    return {newSubtreeRootId: nodeId, deleted: deletedHere};
   }
 
   // ----- Operation Dispatch -----
   bstNodeIdCounter = Array.from(workingNodes.keys()).reduce((max, id) => Math.max(max, parseInt(id.split('-').pop() || '0')), 0) + 1;
-  
+  const opDisplay = operation.charAt(0).toUpperCase() + operation.slice(1);
+  let finalStatus: 'success' | 'failure' | 'info' = 'info';
+
   if (operation === 'build') {
     const valuesToInsert = parseBSTInput(initialValuesString || "");
     rootId = null; 
     workingNodes.clear();
-    bstNodeIdCounter = 0; // Reset for fresh build
-    operationLineMap = BST_OPERATION_LINE_MAPS.insert; // Use insert's line map for build steps
+    bstNodeIdCounter = 0; 
+    const buildOpMap = BST_OPERATION_LINE_MAPS.insert; 
     addStep(null, `Building tree from: ${valuesToInsert.join(', ')}`);
     if (valuesToInsert.length > 0) {
       valuesToInsert.forEach(v => {
-        currentPathNodeIds.length = 0;
-        addStep(operationLineMap.mainFunc, `Main call: insert(${v})`, []);
-        rootId = insertRec(rootId, v);
-        addStep(operationLineMap.callRec, `Root is now ${rootId ? workingNodes.get(rootId)?.value : 'null'} after inserting ${v}.`, []);
+        currentPathNodeIds.length = 0; // Reset path for each insert in build
+        addStep(buildOpMap.mainFunc, `Build: insert(${v})`, []);
+        rootId = insertRec(rootId, v); // insertRec adds its own steps and updates lastInsertedNodeId/wasDuplicate
+        addStep(buildOpMap.callRec, `Root is now ${rootId ? workingNodes.get(rootId)?.value : 'null'} after inserting ${v}.`, []);
       });
     }
-    addStep(null, "Build complete.");
+    finalStatus = 'success';
+    addStep(null, `Build complete. Root is ${rootId ? workingNodes.get(rootId)?.value : 'null'}.`, rootId ? [rootId] : [], {}, [], finalStatus);
   } else if (value !== undefined) {
     currentPathNodeIds.length = 0; 
-    addStep(operationLineMap.mainFunc, `Main call: ${operation}(${value})`, []);
+    addStep(operationLineMap.mainFunc, `Main call: ${opDisplay}(${value})`, []);
     if (operation === 'insert') {
       rootId = insertRec(rootId, value);
-      addStep(operationLineMap.callRec, `Root is now ${rootId ? workingNodes.get(rootId)?.value : 'null'} after ${operation} ${value}.`, []);
+      const msg = wasDuplicateInInsert ? `Value ${value} already exists. No new insertion.` : `Insert of ${value} complete.`;
+      finalStatus = wasDuplicateInInsert ? 'info' : 'success';
+      addStep(null, msg, lastInsertedNodeId ? [lastInsertedNodeId] : (rootId ? [rootId] : []), lastInsertedNodeId ? {[lastInsertedNodeId]: wasDuplicateInInsert ? NODE_COLORS.found : NODE_COLORS.inserted} : {}, [], finalStatus);
     } else if (operation === 'search') {
-      searchRec(rootId, value);
+      const searchResult = searchRec(rootId, value);
+      // The last step of searchRec is conclusive.
+      if (localSteps.length > 0) localSteps[localSteps.length -1].status = searchResult.foundNodeId ? 'success' : 'failure';
     } else if (operation === 'delete') {
-      rootId = deleteRec(rootId, value);
-      addStep(operationLineMap.callRec, `Root is now ${rootId ? workingNodes.get(rootId)?.value : 'null'} after ${operation} ${value}.`, []);
+      nodeWasActuallyDeleted = false; // Reset before delete operation
+      const deleteResult = deleteRec(rootId, value);
+      rootId = deleteResult.newSubtreeRootId;
+      finalStatus = nodeWasActuallyDeleted ? 'success' : 'failure';
+      const msg = nodeWasActuallyDeleted ? `Deletion of ${value} complete.` : `Value ${value} not found for deletion.`;
+      addStep(null, msg, rootId ? [rootId] : [], {}, [], finalStatus);
     }
-    addStep(null, `${operation} ${value} complete.`);
-  } else {
-     addStep(null, `Operation ${operation} initiated (no value).`);
+  } else if (operation === 'structure') {
+    finalStatus = 'info';
+    addStep(null, "Displaying current tree structure.", rootId ? [rootId] : [], {}, [], finalStatus);
   }
-
-  currentBSTRef.current = { rootId, nodes: workingNodes };
+  
+  if (localSteps.length > 0) {
+    localSteps[localSteps.length - 1].auxiliaryData = {
+      ...(localSteps[localSteps.length - 1].auxiliaryData || {}),
+      finalGraphState: { rootId, nodes: new Map(workingNodes) } as unknown as RBTreeGraph // Cast for compatibility
+    };
+  }
+  currentBSTRef.current = { rootId, nodes: new Map(workingNodes) };
   return localSteps;
 };
+
 
