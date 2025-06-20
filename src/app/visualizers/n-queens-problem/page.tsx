@@ -5,17 +5,17 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, NQueensStep } from './types'; // Local import
+import type { AlgorithmMetadata, NQueensStep } from './types'; // Using NQueensStep from local types
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, SquareAsterisk } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, SquareAsterisk } from 'lucide-react'; // Corrected icon
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { NQueensVisualizationPanel } from './NQueensVisualizationPanel';
-import { NQueensCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; // Import snippets
+import { NQueensCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; 
 import { generateNQueensSteps, N_QUEENS_LINE_MAP } from './n-queens-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 300; 
@@ -34,20 +34,13 @@ export default function NQueensProblemVisualizerPage() {
   const [currentStep, setCurrentStep] = useState<NQueensStep | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(isPlaying);
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0);
 
   useEffect(() => { setIsClient(true); }, []);
-
-  const parseMazeInput = useCallback((input: string): number[][] | null => {
-    // This function seems to be a leftover from RatInAMaze, N-Queens doesn't parse a maze input
-    // It just needs N. For now, I'll keep it and assume it's unused or will be removed.
-    // If it were used, it would need to be specific to N-Queens (e.g. parsing initial board if we allowed that).
-    return []; // Placeholder
-  }, []);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -57,11 +50,11 @@ export default function NQueensProblemVisualizerPage() {
         setDisplayedSolutionIndex(0); 
          setCurrentStep(prevStep => ({
             ...prevStep!,
-            board: currentS.foundSolutions![0]
+            board: currentS.foundSolutions![0] // Display the first solution on the final step
         }));
       }
     }
-  }, [steps]); // Depends on steps
+  }, [steps]); 
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -78,15 +71,15 @@ export default function NQueensProblemVisualizerPage() {
     const newSteps = generateNQueensSteps(boardSizeN);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    // Directly set the first step's state
+    
     if (newSteps.length > 0) {
         setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
         if (lastStep.foundSolutions && lastStep.foundSolutions.length > 0) {
-            toast({title: "N-Queens Solution(s)", description: `Found ${lastStep.foundSolutions.length} solution(s). Last animation step will show one.`});
-             setDisplayedSolutionIndex(0); // Reset solution index
-             // Ensure the board displayed for the last step IS a solution board
-            if (currentStepIndex === newSteps.length - 1) { // If it's the last step after generation
+            toast({title: "N-Queens Solution(s)", description: `Found ${lastStep.foundSolutions.length} solution(s). Last animation step will show one. Use controls to cycle if multiple.`});
+             setDisplayedSolutionIndex(0);
+            // Ensure the board displayed for the last step IS a solution board
+            if (newSteps.length -1 === currentStepIndex ) { 
                 setCurrentStep(prev => ({...prev!, board: lastStep.foundSolutions![0]}));
             }
         } else if (lastStep.message?.includes("No solutions")) {
@@ -100,7 +93,7 @@ export default function NQueensProblemVisualizerPage() {
     setDisplayedSolutionIndex(0);
 
 
-  }, [boardSizeN, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setDisplayedSolutionIndex]); // Added setCurrentStep, etc.
+  }, [boardSizeN, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setDisplayedSolutionIndex, currentStepIndex]);
   
   useEffect(() => { handleGenerateSteps(); }, [boardSizeN, handleGenerateSteps]);
 
@@ -173,7 +166,7 @@ export default function NQueensProblemVisualizerPage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; Setup</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp;amp; Setup</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                 <div className="space-y-1">
@@ -200,10 +193,10 @@ export default function NQueensProblemVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
-             {isFinished && currentStep?.solutionFound && (
-                <p className="text-center text-lg font-semibold text-green-500">Sudoku Solved!</p>
+             {isFinished && currentStep?.solutionFound && currentStep?.foundSolutions && currentStep.foundSolutions.length > 0 && (
+                <p className="text-center text-lg font-semibold text-green-500">Found {currentStep.foundSolutions.length} Solution(s)!</p>
             )}
-            {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
+            {isFinished && (!currentStep?.solutionFound || (currentStep?.foundSolutions && currentStep.foundSolutions.length === 0)) && currentStep?.message?.includes("No solution") && (
                 <p className="text-center text-lg font-semibold text-red-500">No Solution Exists.</p>
             )}
           </CardContent>

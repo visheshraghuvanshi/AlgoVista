@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { SudokuVisualizationPanel } from './SudokuVisualizationPanel';
-import { SudokuCodePanel, SUDOKU_SOLVER_CODE_SNIPPETS } from './SudokuCodePanel'; // Import snippets
+import { SudokuCodePanel, SUDOKU_SOLVER_CODE_SNIPPETS } from './SudokuCodePanel'; 
 import { generateSudokuSteps, SUDOKU_LINE_MAP } from './sudoku-solver-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 100; 
@@ -47,7 +47,6 @@ export default function SudokuSolverVisualizerPage() {
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0); // Not used typically for Sudoku one solution
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -77,9 +76,8 @@ export default function SudokuSolverVisualizerPage() {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
       setCurrentStep(currentS);
-      // No multiple solutions handling for Sudoku as it finds one or none
     }
-  }, [steps]);
+  }, [steps]); 
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -156,7 +154,7 @@ export default function SudokuSolverVisualizerPage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp; Puzzle Input</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp;amp; Puzzle Input</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> 
               <div className="space-y-1">

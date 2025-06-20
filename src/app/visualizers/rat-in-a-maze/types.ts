@@ -28,16 +28,20 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
-// Rat in a Maze specific step type
+// Rat in a Maze specific step type (replaces usage of SudokuStep)
 export interface RatInAMazeStep {
-  maze: number[][]; // 0 for wall, 1 for path, 2 for solution path
+  maze: number[][]; // Visual board: 0=wall, 1=path, 2=solution path taken
+  initialBoard: number[][] | null; // Original maze (0s and 1s)
   currentPosition?: { row: number; col: number; };
-  action?: 'try_move' | 'mark_path' | 'backtrack' | 'goal_reached' | 'stuck' | 'blocked';
+  action?: 'try_move' | 'mark_path' | 'backtrack_remove' | 'goal_reached' | 'stuck' | 'blocked' | 'checking_safe';
+  isSafe?: boolean; // Result of isSafe check for currentPosition
+  solutionFound?: boolean;
   message: string;
   currentLine: number | null;
-  // Common AlgorithmStep fields
-  activeIndices?: number[];
+  // Common AlgorithmStep fields (less relevant for maze but for consistency)
+  activeIndices?: number[]; // Can map to [row, col]
   swappingIndices?: number[];
   sortedIndices?: number[];
-  solutionFound?: boolean; // To indicate if final solution is found
+  auxiliaryData?: Record<string, any> | null;
 }
+

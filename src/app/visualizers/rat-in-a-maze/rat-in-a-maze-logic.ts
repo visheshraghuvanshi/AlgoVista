@@ -26,17 +26,18 @@ export const RAT_IN_MAZE_LINE_MAP = {
   returnFalseBacktrack: 22,
   returnFalseNotSafe: 23, // If initial isSafe(row,col) is false
   initialSolveCall: 24,
-  returnSolutionOrNull: 25,
+  returnSolutionOrNull: 25, // Now refers to the final conditional messages
 };
 
 const addStep = (
-  localSteps: RatInAMazeStep[],
-  line: number | null,
-  currentMaze: number[][],
+  steps: RatInAMazeStep[],
+  currentMaze: number[][], // Original maze definition
   solutionBoard: number[][], // The path being built
+  line: number | null,
   message: string,
-  ratPos?: { row: number; col: number },
-  action?: RatInAMazeStep['action']
+  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' | 'try_move' | 'blocked' | 'goal_reached' | 'stuck' },
+  isSafeResult?: boolean,
+  isSolutionFoundOverall?: boolean
 ) => {
   // Combine maze and solution for visualization: 0=wall, 1=path, 2=solution path
   const visualBoard = currentMaze.map((row, rIdx) => 
@@ -46,101 +47,106 @@ const addStep = (
     })
   );
 
-  localSteps.push({
+  steps.push({
     maze: visualBoard,
-    currentPosition: ratPos,
-    action,
+    initialBoard: currentMaze.map(row => [...row]), // Pass a copy of the original maze for the panel
+    currentPosition: currentQueen,
+    action: currentQueen?.action,
+    isSafe: isSafeResult,
     message,
     currentLine: line,
-    activeIndices: ratPos ? [ratPos.row, ratPos.col] : [], // For generic panel if used
+    solutionFound: isSolutionFoundOverall,
+    activeIndices: currentQueen ? [currentQueen.row, currentQueen.col] : [],
     swappingIndices: [],
     sortedIndices: [],
-    auxiliaryData: {
-        currentRatRow: ratPos?.row,
-        currentRatCol: ratPos?.col,
-        status: action
-    }
   });
 };
 
-export const generateRatInAMazeSteps = (maze: number[][]): RatInAMazeStep[] => {
+export const generateRatInAMazeSteps = (mazeInput: number[][]): RatInAMazeStep[] => {
   const localSteps: RatInAMazeStep[] = [];
-  const N = maze.length;
+  const N = mazeInput.length;
   if (N === 0) {
-    addStep(localSteps, null, maze, [], "Maze is empty.");
+    addStep(localSteps, mazeInput, [], null, "Maze is empty.");
     return localSteps;
   }
-  const M = maze[0].length;
+  const M = mazeInput[0].length;
   if (M === 0) {
-    addStep(localSteps, null, maze, [], "Maze row is empty.");
+    addStep(localSteps, mazeInput, [], null, "Maze row is empty.");
     return localSteps;
   }
 
   const solution: number[][] = Array(N).fill(0).map(() => Array(M).fill(0));
   const lm = RAT_IN_MAZE_LINE_MAP;
-
-  addStep(localSteps, lm.solveMazeFunc, maze, solution, `Starting Rat in a Maze. Size: ${N}x${M}.`);
-  addStep(localSteps, lm.initSolutionMatrix, maze, solution, "Initialize solution matrix with 0s.");
+  
+  // Pass the original mazeInput for initialBoard parameter in addStep
+  addStep(localSteps, mazeInput, solution, lm.solveMazeFunc, `Starting Rat in a Maze. Size: ${N}x${M}.`, undefined, undefined, false);
+  addStep(localSteps, mazeInput, solution, lm.initSolutionMatrix, "Initialize solution matrix with 0s.", undefined, undefined, false);
 
   function isSafe(row: number, col: number): boolean {
-    addStep(localSteps, lm.isSafeFuncStart, maze, solution, `isSafe(row=${row}, col=${col})?`, { row, col, action: 'checking_safe' });
+    addStep(localSteps, mazeInput, solution, lm.isSafeFuncStart, `isSafe(row=${row}, col=${col})?`, { row, col, action: 'checking_safe' });
+    
     let safe = row >= 0 && row < N && col >= 0 && col < M;
-    addStep(localSteps, lm.isSafeCheckBounds, maze, solution, safe ? `Bounds check OK` : `Out of bounds`, {row, col, action: 'checking_safe'});
-    safe = safe && maze[row][col] === 1;
-    addStep(localSteps, lm.isSafeCheckWall, maze, solution, safe ? `Cell is an open path` : `Cell is a wall`, {row, col, action: 'checking_safe'});
-    safe = safe && solution[row][col] === 0;
-    addStep(localSteps, lm.isSafeCheckVisited, maze, solution, safe ? `Cell is not on current path` : `Cell is on current path`, {row, col, action: 'checking_safe'});
-    addStep(localSteps, safe ? lm.isSafeReturnTrue : lm.isSafeReturnFalse, maze, solution, safe ? `Cell [${row},${col}] is safe.` : `Cell [${row},${col}] is NOT safe.`, { row, col, action: safe ? 'checking_safe' : 'blocked' }, safe);
+    addStep(localSteps, mazeInput, solution, lm.isSafeCheckBounds, safe ? `Bounds check OK` : `Out of bounds`, {row, col, action: 'checking_safe'});
+    safe = safe && mazeInput[row][col] === 1; // Check against original maze for walls
+    addStep(localSteps, mazeInput, solution, lm.isSafeCheckWall, safe ? `Cell is an open path` : `Cell is a wall`, {row, col, action: 'checking_safe'});
+    safe = safe && solution[row][col] === 0; // Check against solution board for current path
+    addStep(localSteps, mazeInput, solution, lm.isSafeCheckVisited, safe ? `Cell is not on current path` : `Cell is on current path`, {row, col, action: 'checking_safe'});
+    
+    const finalSafeMessage = safe ? `Cell [${row},${col}] is safe.` : `Cell [${row},${col}] is NOT safe.`;
+    const safeLine = safe ? lm.isSafeReturnTrue : lm.isSafeReturnFalse;
+    addStep(localSteps, mazeInput, solution, safeLine, finalSafeMessage, { row, col, action: safe ? 'checking_safe' : 'blocked' }, safe);
     return safe;
   }
 
   function solveMazeUtil(row: number, col: number): boolean {
-    addStep(localSteps, lm.solveUtilFuncStart, maze, solution, `solveMazeUtil(row=${row}, col=${col})`, { row, col, action: 'try_move' });
+    addStep(localSteps, mazeInput, solution, lm.solveUtilFuncStart, `solveMazeUtil(row=${row}, col=${col})`, { row, col, action: 'try_move' });
 
-    if (row === N - 1 && col === M - 1 && maze[row][col] === 1) {
-      addStep(localSteps, lm.baseCaseGoalReached, maze, solution, `Goal reached at [${row},${col}]!`, { row, col, action: 'goal_reached' });
+    if (row === N - 1 && col === M - 1 && mazeInput[row][col] === 1) {
+      addStep(localSteps, mazeInput, solution, lm.baseCaseGoalReached, `Goal reached at [${row},${col}]!`, { row, col, action: 'goal_reached' });
       solution[row][col] = 1;
-      addStep(localSteps, lm.markGoalInSolution, maze, solution, `Mark [${row},${col}] in solution. Path found.`, { row, col, action: 'mark_path' });
-      addStep(localSteps, lm.returnTrueGoal, maze, solution, `Returning True - GOAL REACHED!`, {row, col, action: 'goal_reached'});
+      addStep(localSteps, mazeInput, solution, lm.markGoalInSolution, `Mark [${row},${col}] in solution. Path found.`, { row, col, action: 'mark_path' }, undefined, true); // Solution found
+      // lm.returnTrueGoal is effectively the state after marking and confirming goal
       return true;
     }
 
-    addStep(localSteps, lm.checkIfSafeCurrent, maze, solution, `Checking if current cell [${row},${col}] is safe to move to.`, { row, col, action: 'checking_safe' });
+    addStep(localSteps, mazeInput, solution, lm.checkIfSafeCurrent, `Checking if current cell [${row},${col}] is safe.`, { row, col, action: 'checking_safe' });
     if (isSafe(row, col)) {
       solution[row][col] = 1;
-      addStep(localSteps, lm.markCurrentInSolution, maze, solution, `Mark [${row},${col}] as part of path.`, { row, col, action: 'mark_path' });
+      addStep(localSteps, mazeInput, solution, lm.markCurrentInSolution, `Mark [${row},${col}] as part of path.`, { row, col, action: 'mark_path' });
 
       // Try moving right
-      addStep(localSteps, lm.tryMoveRight, maze, solution, `Try moving RIGHT to [${row},${col + 1}].`, { row, col, action: 'try_move' });
+      addStep(localSteps, mazeInput, solution, lm.tryMoveRight, `Try moving RIGHT to [${row},${col + 1}].`, { row, col, action: 'try_move' });
       if (solveMazeUtil(row, col + 1)) {
-        addStep(localSteps, lm.recursiveCallRight, maze, solution, `Recursive call solveMazeUtil(${row}, ${col+1}) for RIGHT move.`, {row, col, action: 'try_move'});
-        addStep(localSteps, lm.returnTrueFromRight, maze, solution, `Path found via RIGHT move from [${row},${col}].`, { row, col });
+        addStep(localSteps, mazeInput, solution, lm.returnTrueFromRight, `Path found via RIGHT move from [${row},${col}].`, { row, col });
         return true;
       }
 
       // Try moving down
-      addStep(localSteps, lm.tryMoveDown, maze, solution, `RIGHT move from [${row},${col}] failed or path not found. Try moving DOWN to [${row + 1},${col}].`, { row, col, action: 'try_move' });
+      addStep(localSteps, mazeInput, solution, lm.tryMoveDown, `RIGHT move from [${row},${col}] failed. Try moving DOWN to [${row + 1},${col}].`, { row, col, action: 'try_move' });
       if (solveMazeUtil(row + 1, col)) {
-        addStep(localSteps, lm.recursiveCallDown, maze, solution, `Recursive call solveMazeUtil(${row+1}, ${col}) for DOWN move.`, {row, col, action: 'try_move'});
-        addStep(localSteps, lm.returnTrueFromDown, maze, solution, `Path found via DOWN move from [${row},${col}].`, { row, col });
+         addStep(localSteps, mazeInput, solution, lm.returnTrueFromDown, `Path found via DOWN move from [${row},${col}].`, { row, col });
         return true;
       }
+      
+      // If considering all 4 directions, add Up and Left here similarly.
 
-      solution[row][col] = 0;
-      addStep(localSteps, lm.backtrackUnmark, maze, solution, `No path from [${row},${col}]. Backtrack: unmark.`, { row, col, action: 'backtrack_remove' });
-      addStep(localSteps, lm.returnFalseBacktrack, maze, solution, `Return false from [${row},${col}].`, { row, col });
+      solution[row][col] = 0; // Backtrack
+      addStep(localSteps, mazeInput, solution, lm.backtrackUnmark, `No path from [${row},${col}]. Backtrack: unmark.`, { row, col, action: 'backtrack_remove' });
+      addStep(localSteps, mazeInput, solution, lm.returnFalseBacktrack, `Return false from [${row},${col}].`, { row, col });
       return false;
     }
-    addStep(localSteps, lm.returnFalseNotSafe, maze, solution, `Cell [${row},${col}] is not safe or already part of this path attempt. Return false.`, { row, col, action: 'blocked' });
-    return false;
+    // lm.returnFalseNotSafe is covered by the isSafe call itself adding a step
+    return false; 
   }
-
-  addStep(localSteps, lm.initialSolveCall, maze, solution, `Initial call to solveMazeUtil(0,0).`, {row:0, col:0, action:'try_move'});
-  if (solveMazeUtil(0, 0)) {
-    addStep(localSteps, maze, solution, "Solution Found!", undefined, 'goal_reached', undefined, true);
+  
+  addStep(localSteps, mazeInput, solution, lm.initialSolveCall, `Initial call to solveMazeUtil(0,0).`, {row:0, col:0, action:'try_move'});
+  const solutionExists = solveMazeUtil(0, 0);
+  
+  if (solutionExists) {
+    addStep(localSteps, mazeInput, solution, lm.returnSolutionOrNull, "Algorithm Complete: Solution Found!", undefined, undefined, undefined, true);
   } else {
-    addStep(localSteps, maze, solution, "No solution exists for this maze.", undefined, 'stuck', undefined, false);
+    addStep(localSteps, mazeInput, solution, lm.returnSolutionOrNull, "Algorithm Complete: No solution exists for this maze.", undefined, undefined, undefined, false);
   }
-  addStep(localSteps, lm.returnSolutionOrNull, maze, solution, "Algorithm complete.");
   return localSteps;
 };
+
