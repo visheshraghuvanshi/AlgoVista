@@ -199,12 +199,11 @@ interface SegmentTreeCodePanelProps {
 export function SegmentTreeCodePanel({ currentLine, selectedOperation }: SegmentTreeCodePanelProps) {
   const { toast } = useToast();
 
-  // Languages available for the CURRENT selectedOperation
   const languagesForTabs = useMemo(() => {
     const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
     const currentOpSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
     const keys = Object.keys(currentOpSnippets);
-    return keys.length > 0 ? keys : ["Info"]; // Fallback if no languages for op
+    return keys.length > 0 ? keys : ["Info"];
   }, [selectedOperation]);
   
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
@@ -217,23 +216,20 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     return "Info";
   });
 
-  // Effect to update selectedLanguage ONLY when selectedOperation prop changes
-  // and the current selectedLanguage is not valid for the new operation.
   useEffect(() => {
     const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
-    const currentOpSnippets = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
-    const availableLangsForCurrentOp = Object.keys(currentOpSnippets);
-    
-    if (!availableLangsForCurrentOp.includes(selectedLanguage)) {
-      let newLangToSet = "Info";
-      if (availableLangsForCurrentOp.length > 0) {
-        newLangToSet = availableLangsForCurrentOp.includes("JavaScript") 
-          ? "JavaScript" 
-          : availableLangsForCurrentOp[0];
-      }
-      if (selectedLanguage !== newLangToSet) {
-        setSelectedLanguage(newLangToSet);
-      }
+    const snippetsForOp = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
+    const availableLangs = Object.keys(snippetsForOp);
+
+    let newLangToSet = "Info";
+    if (availableLangs.length > 0) {
+        newLangToSet = availableLangs.includes("JavaScript") ? "JavaScript" : availableLangs[0];
+    }
+
+    if (!availableLangs.includes(selectedLanguage) || selectedLanguage === "Info") {
+        if (selectedLanguage !== newLangToSet) {
+            setSelectedLanguage(newLangToSet);
+        }
     }
   }, [selectedOperation, selectedLanguage]);
 
@@ -244,7 +240,6 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
   }, [selectedOperation, selectedLanguage]);
 
   const structureCode = useMemo(() => {
-    // For Segment Tree, the 'build' operation contains the class structure.
     return (SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build?.[selectedLanguage]) || [];
   }, [selectedLanguage]);
   
@@ -255,16 +250,15 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     if (selectedOperation === 'build') {
         codeStringToCopy = codeToDisplay.join('\n');
     } else {
-        // For query/update, prepend the class structure part from 'build' snippets
         const classStructureLines = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG.build[selectedLanguage] || [];
-        // Find where the _build method ends or where to insert methods
-        let insertPoint = classStructureLines.findIndex(line => line.trim() === "// ... query and update methods ...");
-        if (insertPoint === -1) insertPoint = classStructureLines.length -1; // Default to before last brace if comment not found
+        let insertPoint = classStructureLines.findIndex(line => line.trim().includes("// ... query and update methods ..."));
+        if (insertPoint === -1) insertPoint = classStructureLines.length -1; 
 
         const classStart = classStructureLines.slice(0, insertPoint).join('\n');
         const classEnd = classStructureLines.slice(insertPoint).join('\n');
         
-        const operationCodeIndented = codeToDisplay.map(line => `    ${line}`).join('\n');
+        const indent = (selectedLanguage === "Python") ? "    " : "  ";
+        const operationCodeIndented = codeToDisplay.map(line => `${indent}${line}`).join('\n');
         codeStringToCopy = `${classStart}\n${operationCodeIndented}\n${classEnd}`;
     }
 
@@ -277,6 +271,9 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     }
   };
 
+  const tabValue = languagesForTabs.includes(selectedLanguage) ? selectedLanguage : (languagesForTabs[0] || "Info");
+
+
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
@@ -284,7 +281,7 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
           <Code2 className="mr-2 h-5 w-5" /> Segment Tree: {operationLabel}
         </CardTitle>
         <div className="flex items-center gap-2">
-            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+            <Tabs value={tabValue} onValueChange={setSelectedLanguage} className="w-auto">
                 <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
                     {languagesForTabs.map(lang => (
                         <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
@@ -293,7 +290,7 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
                     ))}
                 </TabsList>
             </Tabs>
-            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={codeToDisplay.length === 0}>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} disabled={codeToDisplay.length === 0 || selectedLanguage === "Info"}>
                 <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
             </Button>
         </div>
@@ -321,7 +318,8 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
                 {line}
               </div>
             ))}
-            {codeToDisplay.length === 0 && <p className="text-muted-foreground">Select an operation to view relevant code.</p>}
+            {codeToDisplay.length === 0 && selectedLanguage !== "Info" && <p className="text-muted-foreground">Select an operation to view relevant code.</p>}
+            {selectedLanguage === "Info" && <p className="text-muted-foreground">No code snippets for 'Info' tab.</p>}
           </pre>
         </ScrollArea>
       </CardContent>
