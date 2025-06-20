@@ -10,7 +10,7 @@ export const algorithmMetadata: AlgorithmMetadata = {
   longDescription: `A Red-Black Tree (RBT) is a type of self-balancing Binary Search Tree (BST) where each node has an extra bit for storing color ("red" or "black"). By ensuring that specific properties related to these colors are maintained, RBTs guarantee that any path from the root to any NIL leaf (conceptual null children) is not more than twice as long as any other such path. This property ensures that the tree remains approximately balanced, leading to O(log N) time complexity for search, insert, and delete operations in the worst case, where N is the number of nodes.
 
 ### Core BST Properties (also apply to RBTs):
-1.  **Order Property**: For any node \\\`x\\\`, all values in its left subtree are less than \\\`x.value\\\`, and all values in its right subtree are greater than \\\`x.value\\\`.
+1.  **Order Property**: For any node \`x\`, all values in its left subtree are less than \`x.value\`, and all values in its right subtree are greater than \`x.value\`.
 2.  **No Duplicates**: Typically, RBTs do not allow duplicate values. Our visualizer ignores duplicate insertions.
 
 ### Red-Black Properties:

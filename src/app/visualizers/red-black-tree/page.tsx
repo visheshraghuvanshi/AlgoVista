@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -65,12 +64,12 @@ export default function RedBlackTreePage() {
   }, [steps]);
   
   const handleOperation = useCallback((
-      opTypeInput: 'build' | 'insert' | 'search' | 'delete' | 'structure', 
+      opTypeInput: RBTOperationType, 
       primaryValue?: string, 
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const opType = opTypeInput as 'build' | 'insert' | 'search' | 'delete'; 
+    const opType = opTypeInput;
 
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
@@ -95,11 +94,11 @@ export default function RedBlackTreePage() {
             setSteps([]);setCurrentNodes([]);setCurrentEdges([]);setCurrentPath([]);setCurrentLine(null);setCurrentProcessingNodeId(null);setCurrentMessage("Error: Invalid value.");setIsPlaying(false);setIsFinished(true);
             return;
         }
-         if (rbtRef.current.nodesMap.size >= 15 + 1 /*NIL node*/ && opType === 'insert') { // +1 for NIL
+         if (rbtRef.current.nodesMap.size >= 15 + 1 /*NIL node*/ && opType === 'insert') { 
              toast({ title: "Tree Too Large", description: "Max 15 nodes in tree for smoother insert visualization.", variant: "default" });
              return;
         }
-    } else if (opTypeInput === 'structure') {
+    } else if (opType === 'structure') {
         const currentVisuals = generateRBTreeSteps('structure', undefined, undefined, rbtRef.current);
         setSteps(currentVisuals);
         setCurrentStepIndex(0);
@@ -140,7 +139,7 @@ export default function RedBlackTreePage() {
         }
 
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
-        if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { 
+        if (lastStepMsg && opType !== 'build' && opType !== 'structure' && newSteps.length > 1) { 
             const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
             if (!lastStepMsg.toLowerCase().includes("fixup") && !lastStepMsg.toLowerCase().includes("rotate")) { 
                 toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 2000 });
@@ -195,7 +194,7 @@ export default function RedBlackTreePage() {
     const defaultInitialArray = '10,20,30,5,15,25,35,1,8';
     setInitialArrayInput(defaultInitialArray);
     setOperationValue('22');
-    setSelectedOperation('insert');
+    setSelectedOperation('insert'); // Default to insert after reset to allow user to modify
     setCurrentMessage("RBT Reset. Building new tree with default values.");
     handleOperation('build', defaultInitialArray);
   };
@@ -253,8 +252,8 @@ export default function RedBlackTreePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationValueRBT">Value for Operation</Label>
-                <Input id="operationValueRBT" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} />
-                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search' | 'delete', operationValue)} disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure'} className="w-full md:w-auto mt-1">
+                <Input id="operationValueRBT" value={operationValue} onChange={(e) => setOperationValue(e.target.value)} placeholder="Enter number" type="number" disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure' || selectedOperation === 'build'} />
+                 <Button onClick={() => handleOperation(selectedOperation as 'insert' | 'search' | 'delete', operationValue)} disabled={isPlaying || !isOperationWithValue || selectedOperation === 'structure' || selectedOperation === 'build'} className="w-full md:w-auto mt-1">
                     {selectedOperation === 'insert' ? <PlusCircle className="mr-2 h-4 w-4"/> : selectedOperation === 'search' ? <Search className="mr-2 h-4 w-4"/> : <Trash2 className="mr-2 h-4 w-4"/>}
                     Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
                 </Button>
@@ -281,7 +280,7 @@ export default function RedBlackTreePage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              NIL nodes are logical and not visually rendered for clarity. Delete operation visualization is conceptual and does not include fixup steps.
+              NIL nodes are logical and not visually rendered for clarity. Delete operation visualization is conceptual and may not show full fixup steps.
             </p>
           </CardContent>
         </Card>
