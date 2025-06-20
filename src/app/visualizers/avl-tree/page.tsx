@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   generateAVLSteps,
   createInitialAVLTreeGraph,
+  NIL_ID // Import NIL_ID if it's exported and used directly here (e.g., for initial state display)
 } from './avl-tree-logic'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,8 +28,8 @@ import { AlertTriangle } from 'lucide-react';
 const DEFAULT_ANIMATION_SPEED = 1000; 
 const MIN_SPEED = 150;
 const MAX_SPEED = 2500;
-const MAX_NODES_VISUALIZATION = 12; // For build
-const MAX_NODES_OVERALL = 15; // For insert
+const MAX_NODES_VISUALIZATION = 12; 
+const MAX_NODES_OVERALL = 15; 
 
 export default function AVLTreeVisualizerPage() {
   const { toast } = useToast();
@@ -66,9 +67,16 @@ export default function AVLTreeVisualizerPage() {
       setCurrentProcessingNodeId(currentS.currentProcessingNodeId ?? null);
       setCurrentMessage(currentS.message || "Step executed.");
       setUnbalancedNodeId(currentS.unbalancedNodeId ?? null);
-      if (currentS.rotationType && currentS.rotationType !== 'None') {
-        const involved = currentS.nodesInvolvedInRotation?.map(id => avlTreeRef.current.nodesMap.get(id)?.value).filter(Boolean).join(', ');
-        setRotationInfo(`Rotation: ${currentS.rotationType}${involved ? ` (around/involving ${involved})` : ''}`);
+
+      if (currentS.rotationType && currentS.rotationType !== 'None' && currentS.rotationType !== null) {
+        const involvedNodes = currentS.nodesInvolvedInRotation
+            ?.map(id => {
+                if (id === NIL_ID) return 'NIL';
+                return avlTreeRef.current.nodesMap.get(id)?.value;
+            })
+            .filter(Boolean)
+            .join(', ');
+        setRotationInfo(`Rotation: ${currentS.rotationType}${involvedNodes ? ` (around/involving ${involvedNodes})` : ''}`);
       } else {
         setRotationInfo(null);
       }
@@ -84,35 +92,36 @@ export default function AVLTreeVisualizerPage() {
     primaryValue?: string 
   ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    setRotationInfo(null); // Clear rotation info on new operation
     
     let valuesForBuild: string | undefined = undefined;
     let valueForOp: number | undefined = undefined;
-    let opType = opTypeInput as AVLOperationType; // Assume it's a valid AVLOpType for logic
+    let opType = opTypeInput as AVLOperationType; 
 
     if (opTypeInput === 'build') {
         valuesForBuild = primaryValue || initialValuesInput;
         const parsedBuildArray = valuesForBuild.split(',').map(s=>s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
          if (parsedBuildArray.length > MAX_NODES_VISUALIZATION) { 
-            toast({ title: "Input Too Large", description: `Max ${MAX_NODES_VISUALIZATION} nodes for Build AVL for smoother visualization.`, variant: "default" });
+            toast({ title: "Input Too Large", description: `Max ${MAX_NODES_VISUALIZATION} nodes for Build AVL.`, variant: "default" });
         }
-        avlTreeRef.current = createInitialAVLTreeGraph(); // Reset tree structure for build
+        avlTreeRef.current = createInitialAVLTreeGraph(); 
     } else if (opTypeInput === 'insert' || opTypeInput === 'delete' || opTypeInput === 'search') {
         opType = opTypeInput as AVLOperationType;
         const opValStr = primaryValue || operationValueInput;
         if (opValStr.trim() === "") {
-            toast({ title: "Input Missing", description: "Please enter a value for the operation.", variant: "destructive" });
-            setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Input missing for operation."); setIsPlaying(false); setIsFinished(true);
+            toast({ title: "Input Missing", description: "Please enter a value.", variant: "destructive" });
+            setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Input missing."); setIsPlaying(false); setIsFinished(true);
             return;
         }
         valueForOp = parseInt(opValStr, 10);
         if (isNaN(valueForOp) || valueForOp < -999 || valueForOp > 9999) { 
-            toast({ title: "Invalid Value", description: "Value must be a number between -999 and 9999.", variant: "destructive" });
-             setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Invalid value for operation."); setIsPlaying(false); setIsFinished(true);
+            toast({ title: "Invalid Value", description: "Value must be between -999 and 9999.", variant: "destructive" });
+             setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null); setCurrentMessage("Error: Invalid value."); setIsPlaying(false); setIsFinished(true);
             return;
         }
-        const currentNonNilNodeCount = Array.from(avlTreeRef.current.nodesMap.values()).filter(node => node.value !== null).length;
+        const currentNonNilNodeCount = Array.from(avlTreeRef.current.nodesMap.values()).filter(node => node.id !== avlTreeRef.current.nilNodeId).length;
          if (currentNonNilNodeCount >= MAX_NODES_OVERALL && opType === 'insert') { 
-             toast({ title: "Tree Too Large", description: `Max ${MAX_NODES_OVERALL} nodes in tree for smoother insert visualization.`, variant: "default" });
+             toast({ title: "Tree Too Large", description: `Max ${MAX_NODES_OVERALL} nodes for insert.`, variant: "default" });
              return;
         }
         if (currentNonNilNodeCount === 0 && (opType === 'delete' || opType === 'search')) {
@@ -120,7 +129,7 @@ export default function AVLTreeVisualizerPage() {
             return;
         }
     } else if (opTypeInput === 'structure') {
-        opType = 'structure'; // For logic function
+        opType = 'structure'; 
         const currentVisuals = generateAVLSteps(opType, undefined, undefined, avlTreeRef.current);
         setSteps(currentVisuals);
         setCurrentStepIndex(0);
@@ -155,7 +164,7 @@ export default function AVLTreeVisualizerPage() {
         }
     } else {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
-      setCurrentMessage("No steps generated. Check inputs or operation.");
+      setCurrentMessage("No steps generated. Check inputs.");
     }
   }, [initialValuesInput, operationValueInput, toast, updateStateFromStep]);
 
@@ -181,7 +190,7 @@ export default function AVLTreeVisualizerPage() {
 
   const handlePlay = () => {
     if (isFinished || steps.length === 0 || currentStepIndex >= steps.length - 1) {
-      toast({ title: "Cannot Play", description: isFinished ? "Operation finished. Reset or new op." : "No steps. Execute an operation first.", variant: "default" });
+      toast({ title: "Cannot Play", description: isFinished ? "Operation finished." : "No steps. Execute an operation.", variant: "default" });
       setIsPlaying(false); return;
     }
     setIsPlaying(true); setIsFinished(false);
@@ -196,12 +205,12 @@ export default function AVLTreeVisualizerPage() {
     if (nextStepIndex === steps.length - 1) setIsFinished(true);
   };
   const handleResetControls = () => { 
-    setIsPlaying(false); setIsFinished(true); // Mark as finished to prevent auto-play
+    setIsPlaying(false); setIsFinished(true); 
     const defaultInitialArray = '10,20,30,5,15,25,35,1,8';
     setInitialValuesInput(defaultInitialArray);
     setOperationValueInput('22');
     setSelectedOperation('build'); 
-    setCurrentMessage("AVL Tree Reset. Building new tree with default values.");
+    setCurrentMessage("AVL Tree Reset. Building new tree.");
     handleOperation('build', defaultInitialArray);
   };
   
@@ -258,7 +267,7 @@ export default function AVLTreeVisualizerPage() {
                   <SelectContent>
                     <SelectItem value="insert">Insert Value</SelectItem>
                     <SelectItem value="search">Search Value</SelectItem>
-                    <SelectItem value="delete">Delete Value</SelectItem>
+                    <SelectItem value="delete">Delete Value (Conceptual)</SelectItem>
                      <SelectItem value="structure">Show Structure Only</SelectItem>
                   </SelectContent>
                 </Select>
@@ -303,4 +312,3 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
-```
