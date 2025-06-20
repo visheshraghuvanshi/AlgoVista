@@ -12,25 +12,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Define and export code snippets directly within this file
 export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
   JavaScript: [
-    "function dutchNationalFlagSort(arr) {",             // 1
-    "  let low = 0, mid = 0, high = arr.length - 1;",    // 2
-    "  while (mid <= high) {",                           // 3
-    "    switch (arr[mid]) {",
-    "      case 0: // Element is 0",                     // 4
-    "        [arr[low], arr[mid]] = [arr[mid], arr[low]];", // 5
-    "        low++; mid++; break;",                       // 6
-    "      case 1: // Element is 1",                     // 8
-    "        mid++; break;",                             // 9
-    "      case 2: // Element is 2",                     // 11
-    "        [arr[mid], arr[high]] = [arr[high], arr[mid]];", // 12
-    "        high--; break;",                            // 13
-    "    }",                                             // (End switch) maps to 15 conceptually
-    "  }",                                               // 16
-    "  return arr;",                                      // 17
-    "}",                                                  // 18
+    "function dutchFlagSort(arr) {",                         // 1
+    "  let low = 0, mid = 0, high = arr.length - 1;",        // 2
+    "  while (mid <= high) {",                               // 3
+    "    if (arr[mid] === 0) { // Element is 0",             // 4
+    "      [arr[low], arr[mid]] = [arr[mid], arr[low]];",     // 5
+    "      low++; mid++;",                                   // 6
+    "    } else if (arr[mid] === 1) { // Element is 1",      // 8 (adjusted to match python/java structure more)
+    "      mid++;",                                           // 9
+    "    } else { // Element is 2",                          // 11
+    "      [arr[mid], arr[high]] = [arr[high], arr[mid]];",   // 12
+    "      high--;",                                         // 13
+    "    }",                                                 // 15 (end of if-else block)
+    "  }",                                                   // 16
+    "  return arr;",                                          // 17
+    "}",                                                      // 18
   ],
   Python: [
-    "def dutch_national_flag_sort(arr):",
+    "def dutch_flag_sort(arr):",
     "    low, mid, high = 0, 0, len(arr) - 1",
     "    while mid <= high:",
     "        if arr[mid] == 0:",
@@ -39,7 +38,7 @@ export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
     "            mid += 1",
     "        elif arr[mid] == 1:",
     "            mid += 1",
-    "        else: # arr[mid] == 2",
+    "        else:  # arr[mid] == 2",
     "            arr[mid], arr[high] = arr[high], arr[mid]",
     "            high -= 1",
     "    return arr",
@@ -50,15 +49,14 @@ export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
     "        int low = 0, mid = 0, high = arr.length - 1;",
     "        int temp;",
     "        while (mid <= high) {",
-    "            switch (arr[mid]) {",
-    "                case 0:",
-    "                    temp = arr[low]; arr[low] = arr[mid]; arr[mid] = temp;",
-    "                    low++; mid++; break;",
-    "                case 1:",
-    "                    mid++; break;",
-    "                case 2:",
-    "                    temp = arr[mid]; arr[mid] = arr[high]; arr[high] = temp;",
-    "                    high--; break;",
+    "            if (arr[mid] == 0) {",
+    "                temp = arr[low]; arr[low] = arr[mid]; arr[mid] = temp;",
+    "                low++; mid++;",
+    "            } else if (arr[mid] == 1) {",
+    "                mid++;",
+    "            } else { // arr[mid] == 2",
+    "                temp = arr[mid]; arr[mid] = arr[high]; arr[high] = temp;",
+    "                high--;",
     "            }",
     "        }",
     "    }",
@@ -67,19 +65,15 @@ export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
   "C++": [
     "#include <vector>",
     "#include <algorithm> // For std::swap",
-    "void dutchNationalFlagSort(std::vector<int>& arr) {",
+    "void dutchFlagSort(std::vector<int>& arr) {",
     "    int low = 0, mid = 0, high = arr.size() - 1;",
     "    while (mid <= high) {",
-    "        switch (arr[mid]) {",
-    "            case 0:",
-    "                std::swap(arr[low++], arr[mid++]);",
-    "                break;",
-    "            case 1:",
-    "                mid++;",
-    "                break;",
-    "            case 2:",
-    "                std::swap(arr[mid], arr[high--]);",
-    "                break;",
+    "        if (arr[mid] == 0) {",
+    "            std::swap(arr[low++], arr[mid++]);",
+    "        } else if (arr[mid] == 1) {",
+    "            mid++;",
+    "        } else { // arr[mid] == 2",
+    "            std::swap(arr[mid], arr[high--]);",
     "        }",
     "    }",
     "}",
@@ -88,13 +82,11 @@ export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
 
 
 interface DutchNationalFlagCodePanelProps {
-  // codeSnippets prop is removed as it's now internal
   currentLine: number | null;
 }
 
 export function DutchNationalFlagCodePanel({ currentLine }: DutchNationalFlagCodePanelProps) {
   const { toast } = useToast();
-  // Use the internally defined snippets
   const languages = useMemo(() => Object.keys(DUTCH_NATIONAL_FLAG_CODE_SNIPPETS), []);
   
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
@@ -122,7 +114,6 @@ export function DutchNationalFlagCodePanel({ currentLine }: DutchNationalFlagCod
   };
 
   const handleCopyCode = () => {
-    // Use internal snippets
     const codeToCopy = DUTCH_NATIONAL_FLAG_CODE_SNIPPETS[selectedLanguage as keyof typeof DUTCH_NATIONAL_FLAG_CODE_SNIPPETS]?.join('\n') || '';
     if (codeToCopy && selectedLanguage !== 'Info') {
       navigator.clipboard.writeText(codeToCopy)
@@ -208,3 +199,4 @@ export function DutchNationalFlagCodePanel({ currentLine }: DutchNationalFlagCod
     </Card>
   );
 }
+
