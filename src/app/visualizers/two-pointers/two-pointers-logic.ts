@@ -19,15 +19,15 @@ export const TWO_POINTERS_LINE_MAP = {
 
 export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: number): AlgorithmStep[] => {
   const localSteps: AlgorithmStep[] = [];
-  // Array is assumed to be sorted by the page component before calling this.
   const arr = [...sortedArr]; 
   const n = arr.length;
   const lm = TWO_POINTERS_LINE_MAP;
+  let pairFoundIndices: number[] = [];
 
   const addStep = (
     line: number,
-    active: number[], // [leftPointer, rightPointer]
-    found: number[] = [], // [leftIndex, rightIndex] if pair is found
+    active: number[], 
+    found: number[] = [], 
     message: string = "",
     currentArrState = [...arr],
     auxData?: Record<string, any>
@@ -36,10 +36,10 @@ export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: 
       array: currentArrState,
       activeIndices: active.filter(idx => idx >= 0 && idx < n),
       swappingIndices: [],
-      sortedIndices: found.filter(idx => idx >= 0 && idx < n), // Use sortedIndices to highlight found pair
+      sortedIndices: found.filter(idx => idx >= 0 && idx < n),
       currentLine: line,
       message,
-      processingSubArrayRange: active.length === 2 ? [active[0], active[1]] : null,
+      processingSubArrayRange: active.length === 2 ? [Math.min(active[0], active[1]), Math.max(active[0], active[1])] : (found.length === 2 ? [Math.min(found[0], found[1]), Math.max(found[0], found[1])] : null),
       pivotActualIndex: null,
       auxiliaryData: auxData
     });
@@ -57,7 +57,7 @@ export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: 
   let right = n - 1;
   addStep(lm.initPointers, [left, right], [], `Initialize left = ${left}, right = ${right}.`);
 
-  let iteration = 0; // Safety break for visualization
+  let iteration = 0; 
   while (left < right && iteration < n * 2) {
     iteration++;
     addStep(lm.whileLoopStart, [left, right], [], `left (${left}) < right (${right}). Window: [arr[${left}]=${arr[left]}, arr[${right}]=${arr[right]}].`);
@@ -67,8 +67,9 @@ export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: 
     
     addStep(lm.checkSumEqualsTarget, [left, right], [], `Is Current Sum (${currentSum}) === Target Sum (${targetSum})?`, { currentSum, targetSum });
     if (currentSum === targetSum) {
-      addStep(lm.returnPair, [left, right], [left, right], `Yes. Pair found: (${arr[left]}, ${arr[right]}) at indices [${left}, ${right}].`, { currentSum, targetSum, result: `[${arr[left]}, ${arr[right]}]` });
-      addStep(lm.functionEnd, [], [left, right], "Algorithm complete.");
+      pairFoundIndices = [left, right];
+      addStep(lm.returnPair, [left, right], pairFoundIndices, `Yes. Pair found: (${arr[left]}, ${arr[right]}) at indices [${left}, ${right}].`, { currentSum, targetSum, result: `[${arr[left]}, ${arr[right]}]` });
+      addStep(lm.functionEnd, [], pairFoundIndices, "Algorithm complete. Pair found.", {result: `[${arr[left]}, ${arr[right]}]`});
       return localSteps;
     }
 
@@ -84,7 +85,7 @@ export const generateTwoPointersPairSumSteps = (sortedArr: number[], targetSum: 
   }
   addStep(lm.whileLoopEnd, [left, right], [], `Loop finished. left = ${left}, right = ${right}. Pointers crossed or met.`);
   addStep(lm.returnNotFound, [], [], `No pair found with sum ${targetSum}.`);
-  addStep(lm.functionEnd, [], [], "Algorithm complete.");
+  addStep(lm.functionEnd, [], [], "Algorithm complete. No pair found.", {result: "Not Found"});
   return localSteps;
 };
 

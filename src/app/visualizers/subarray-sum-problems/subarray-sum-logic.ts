@@ -38,16 +38,16 @@ const addStep = (
   activeWindowOrIndices: number[],
   message: string,
   auxData?: Record<string, any>,
-  foundSubarray?: number[] | null // Array of indices for the found subarray
+  foundSubarrayIndices?: number[] | null // Array of indices for the found subarray
 ) => {
   localSteps.push({
     array: [...currentArr],
     activeIndices: activeWindowOrIndices.filter(idx => idx >=0 && idx < currentArr.length),
     swappingIndices: [],
-    sortedIndices: foundSubarray || [], 
+    sortedIndices: foundSubarrayIndices || [], 
     currentLine: line,
     message,
-    processingSubArrayRange: activeWindowOrIndices.length === 2 ? [activeWindowOrIndices[0], activeWindowOrIndices[1]] : null,
+    processingSubArrayRange: activeWindowOrIndices.length === 2 ? [activeWindowOrIndices[0], activeWindowOrIndices[1]] : (foundSubarrayIndices && foundSubarrayIndices.length > 0 ? [foundSubarrayIndices[0], foundSubarrayIndices[foundSubarrayIndices.length -1]] : null),
     pivotActualIndex: null,
     auxiliaryData: auxData,
   });
@@ -57,6 +57,7 @@ export function generateFindSubarraySumPositiveSteps(arr: number[], targetSum: n
   const localSteps: AlgorithmStep[] = [];
   const lm = SUBARRAY_SUM_LINE_MAPS.positiveOnly;
   const n = arr.length;
+  let foundIndicesFinal: number[] | null = null;
 
   addStep(localSteps, lm.funcDeclare, arr, [], `Find subarray with sum ${targetSum} (positive nums). Array: [${arr.join(', ')}]`);
 
@@ -78,16 +79,16 @@ export function generateFindSubarraySumPositiveSteps(arr: number[], targetSum: n
     }
     
     addStep(localSteps, lm.checkSumEqualsTarget, arr, [start, end], `Is currentSum (${currentSum}) === targetSum (${targetSum})?`, { currentSum, start, end, targetSum });
-    if (currentSum === targetSum && start <=end) { // Ensure non-empty for sum 0 case and valid range
+    if (currentSum === targetSum && start <=end) { 
         const found = arr.slice(start, end + 1);
-        const foundIndices = Array.from({length: end - start + 1}, (_, k) => start + k);
-        addStep(localSteps, lm.returnSubarray, arr, foundIndices, `Yes! Subarray [${found.join(',')}] (indices ${start}-${end}) found with sum ${targetSum}.`, { currentSum, start, end, targetSum, result: `[${found.join(',')}] from index ${start} to ${end}` }, foundIndices);
-        addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: `[${found.join(',')}]`});
+        foundIndicesFinal = Array.from({length: end - start + 1}, (_, k) => start + k);
+        addStep(localSteps, lm.returnSubarray, arr, foundIndicesFinal, `Yes! Subarray [${found.join(',')}] (indices ${start}-${end}) found with sum ${targetSum}.`, { currentSum, start, end, targetSum, result: `[${found.join(',')}] from index ${start} to ${end}` }, foundIndicesFinal);
+        addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: `[${found.join(',')}]`}, foundIndicesFinal);
         return localSteps;
     }
   }
-  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, start, targetSum, result: "Not Found" });
-  addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.");
+  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, start, targetSum, result: "Not Found" }, null);
+  addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: "Not Found"}, null);
   return localSteps;
 }
 
@@ -95,11 +96,12 @@ export function generateFindSubarraySumAnySteps(arr: number[], targetSum: number
   const localSteps: AlgorithmStep[] = [];
   const lm = SUBARRAY_SUM_LINE_MAPS.anyNumbers;
   const n = arr.length;
+  let foundIndicesFinal: number[] | null = null;
 
   addStep(localSteps, lm.funcDeclare, arr, [], `Find subarray with sum ${targetSum} (any numbers). Array: [${arr.join(', ')}]`);
 
   let currentSum = 0;
-  const prefixSums = new Map<number, number>(); // Map: sum -> index
+  const prefixSums = new Map<number, number>(); 
   addStep(localSteps, lm.initVars, arr, [], `Initialize: currentSum = 0, prefixSums map = {}.`, { currentSum, prefixSums: {}, targetSum });
   
   prefixSums.set(0, -1); 
@@ -116,9 +118,9 @@ export function generateFindSubarraySumAnySteps(arr: number[], targetSum: number
       const startIndex = prefixSums.get(complement)! + 1;
       const endIndex = i;
       const found = arr.slice(startIndex, endIndex + 1);
-      const foundIndices = Array.from({length: endIndex - startIndex + 1}, (_, k) => startIndex + k);
-      addStep(localSteps, lm.returnSubarray, arr, foundIndices, `Yes! Complement found. Subarray [${found.join(',')}] (indices ${startIndex}-${endIndex}) has sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, result: `[${found.join(',')}] from index ${startIndex} to ${endIndex}` }, foundIndices);
-      addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: `[${found.join(',')}]`});
+      foundIndicesFinal = Array.from({length: endIndex - startIndex + 1}, (_, k) => startIndex + k);
+      addStep(localSteps, lm.returnSubarray, arr, foundIndicesFinal, `Yes! Complement found. Subarray [${found.join(',')}] (indices ${startIndex}-${endIndex}) has sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, result: `[${found.join(',')}] from index ${startIndex} to ${endIndex}` }, foundIndicesFinal);
+      addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: `[${found.join(',')}]`}, foundIndicesFinal);
       return localSteps;
     }
     
@@ -126,8 +128,8 @@ export function generateFindSubarraySumAnySteps(arr: number[], targetSum: number
     addStep(localSteps, lm.storePrefixSumInMap, arr, [i], `Store currentSum (${currentSum}) with index ${i} in prefixSums map.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), currentIndex: i, targetSum });
   }
 
-  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), targetSum, result: "Not Found" });
-  addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.");
+  addStep(localSteps, lm.returnNull, arr, [], `No subarray found with sum ${targetSum}.`, { currentSum, prefixSums: Object.fromEntries(prefixSums), targetSum, result: "Not Found" }, null);
+  addStep(localSteps, lm.funcEnd, arr, [], "Algorithm complete.", {result: "Not Found"}, null);
   return localSteps;
 }
 
