@@ -46,6 +46,7 @@ import { algorithmMetadata as trieMeta } from './trie/metadata';
 import { algorithmMetadata as huffmanCodingMeta } from './huffman-coding/metadata';
 import { algorithmMetadata as lowestCommonAncestorMeta } from './lowest-common-ancestor/metadata';
 import { algorithmMetadata as treePathProblemsMeta } from './tree-path-problems/metadata';
+import { algorithmMetadata as morrisTraversalMeta } from './morris-traversal/metadata';
 
 // Graphs
 import { algorithmMetadata as dfsMeta } from './dfs/metadata';
@@ -87,6 +88,8 @@ import { algorithmMetadata as dequeOperationsMeta } from './deque-operations/met
 import { algorithmMetadata as priorityQueueMeta } from './priority-queue/metadata';
 import { algorithmMetadata as disjointSetUnionMeta } from './disjoint-set-union/metadata';
 import { algorithmMetadata as hashTableMeta } from './hash-table/metadata';
+import { algorithmMetadata as binaryIndexedTreeMeta } from './binary-indexed-tree/metadata';
+import { algorithmMetadata as topKElementsMeta } from './top-k-elements/metadata';
 
 
 export const allAlgorithmMetadata: AlgorithmMetadata[] = [
@@ -135,6 +138,7 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
   huffmanCodingMeta,
   lowestCommonAncestorMeta,
   treePathProblemsMeta,
+  morrisTraversalMeta,
 
   // Graphs
   dfsMeta,
@@ -176,6 +180,8 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
   priorityQueueMeta,
   disjointSetUnionMeta,
   hashTableMeta,
+  binaryIndexedTreeMeta,
+  topKElementsMeta,
 
 ].sort((a, b) => {
     // Prioritize 'Fundamentals'
@@ -188,4 +194,4 @@ export const allAlgorithmMetadata: AlgorithmMetadata[] = [
     return a.title.localeCompare(b.title);
 });
 
-
+    
