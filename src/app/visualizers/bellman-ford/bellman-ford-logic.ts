@@ -141,7 +141,7 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
     }));
     const stepEdges = visualEdges.map(e => ({
       ...e,
-      color: e.id === activeEdgeId ? (isNegCycleEdge ? EDGE_COLORS.negativeCycle : EDGE_COLORS.relaxed) : e.color, // Keep MST color if set
+      color: e.id === activeEdgeId ? (isNegCycleEdge ? EDGE_COLORS.negativeCycle : EDGE_COLORS.relaxed) : e.color,
     }));
 
     const distForDisplay: { [key: string]: string | number } = {};
@@ -192,7 +192,6 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
     addStep(BELLMAN_FORD_LINE_MAP.negCycleCheckLoop, `Check edge ${edge.u}->${edge.v} for neg cycle.`, edge.id, undefined, true);
     if (distances[edge.u] !== Infinity && distances[edge.u] + edge.weight < distances[edge.v]) {
         const highlights: {[nodeId: string]: string} = {};
-        // Trace back to show part of the cycle, simplified highlight
         let curr = edge.v; let pathCount = 0;
         while(curr && pathCount < numVertices && !highlights[curr]){ 
             highlights[curr] = NODE_COLORS.pathHighlight; 
@@ -208,7 +207,9 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
       return localSteps;
     }
   }
-  addStep(BELLMAN_FORD_LINE_MAP.endNegCycleCheckLoop, "No negative cycles detected.");
-  addStep(BELLMAN_FORD_LINE_MAP.returnResults, "Algorithm complete. Final distances and predecessors found.");
+  addStep(BELLMAN_FORD_LINE_MAP.endNegCycleCheckLoop, "No negative cycles detected. Shortest paths are valid.");
+  addStep(BELLMAN_FORD_LINE_MAP.returnResults, "Algorithm complete. Final distances and predecessors found (no negative cycles).");
   return localSteps;
 };
+
+```
