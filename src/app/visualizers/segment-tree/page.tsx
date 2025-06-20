@@ -53,7 +53,7 @@ export default function SegmentTreeVisualizerPage() {
   const [currentProcessingRange, setCurrentProcessingRange] = useState<[number,number] | null>(null);
 
 
-  const [isPlaying, setIsPlaying] = useState(isPlaying);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -159,7 +159,7 @@ export default function SegmentTreeVisualizerPage() {
     if (newSteps.length > 0) {
         updateStateFromStep(0);
     } else { 
-        setDisplayedData(operationToRun === 'build' && parsedInitialArray ? []; : segmentTreeArrayRef.current); 
+        setDisplayedData(operationToRun === 'build' && parsedInitialArray ? [] : segmentTreeArrayRef.current); 
         setActiveIndices([]); 
         setCurrentLine(null); 
         setAuxiliaryDisplay(null); 
@@ -208,8 +208,6 @@ export default function SegmentTreeVisualizerPage() {
     segmentTreeArrayRef.current = []; originalArraySizeRef.current = 0;
     setSteps([]); setDisplayedData([]); setActiveIndices([]); setCurrentLine(null); setAuxiliaryDisplay(null); setIsFinished(true);
     setMessage(algorithmMetadata.description);
-    // Trigger initial build by changing inputValue or selectedOperation if useEffect is set up for it
-    // For now, a manual re-trigger might be needed or let the useEffect for inputValue handle it.
     handleExecuteOperation('build');
   };
 
@@ -324,5 +322,3 @@ export default function SegmentTreeVisualizerPage() {
   );
 }
 
-
-    
