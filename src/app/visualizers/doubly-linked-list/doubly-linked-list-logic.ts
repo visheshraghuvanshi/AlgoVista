@@ -41,7 +41,6 @@ export function parseDLLInput(input: string): { value: string | number, id: stri
 }
 
 function createVisualDLLNodes(
-  parsedNodes: { value: string | number, id: string }[],
   actualListMap: Map<string, { value: string | number, nextId: string | null, prevId: string | null }>,
   currentHeadId: string | null,
   currentTailId: string | null,
@@ -60,9 +59,10 @@ function createVisualDLLNodes(
     let color = NODE_COLORS.default;
     if (currentId === activeNodeId) color = NODE_COLORS.active;
     if (currentId === newNodeId) color = NODE_COLORS.new;
-    if (currentId === currentHeadId && currentId === currentTailId) color = NODE_COLORS.head; // Single node is both
+    if (currentId === currentHeadId && currentId === currentTailId) color = NODE_COLORS.head;
     else if (currentId === currentHeadId) color = NODE_COLORS.head;
     else if (currentId === currentTailId) color = NODE_COLORS.tail;
+
 
     visualNodes.push({
       id: currentId,
@@ -108,7 +108,7 @@ export const generateDoublyLinkedListSteps = (
 
   const addStep = (line: number, message: string, activeNodeId?: string | null, newNodeId?: string | null, auxPointers?: Record<string, string | null>, opStatus?: 'success' | 'failure' | 'info') => {
     localSteps.push({
-      nodes: createVisualDLLNodes(initialParsed, actualListNodes, headId, tailId, activeNodeId, newNodeId),
+      nodes: createVisualDLLNodes(actualListNodes, headId, tailId, activeNodeId, newNodeId),
       headId, tailId, currentLine: line, message, auxiliaryPointers: auxPointers, operation, status: opStatus,
     });
   };
@@ -121,7 +121,7 @@ export const generateDoublyLinkedListSteps = (
 
   switch (operation) {
     case 'init':
-      addStep(lineMap.end, `Doubly List initialized: ${initialListString || '(empty)'}`);
+      addStep(lineMap.end, `Doubly List initialized: ${initialListString || '(empty)'}. Head: ${headId ? actualListNodes.get(headId)?.value : 'null'}, Tail: ${tailId ? actualListNodes.get(tailId)?.value : 'null'}.`, undefined, undefined, {head: headId, tail: tailId}, 'info');
       break;
     case 'insertHead':
       if (value === undefined) { addStep(lineMap.end, "Error: Value missing.", undefined, undefined, undefined, 'failure'); break; }
@@ -130,12 +130,11 @@ export const generateDoublyLinkedListSteps = (
       actualListNodes.set(newHeadNodeId, { value, nextId: headId, prevId: null });
       if (headId) {
         actualListNodes.get(headId)!.prevId = newHeadNodeId;
-      } else {
-        tailId = newHeadNodeId; // List was empty
+      } else { // List was empty
+        tailId = newHeadNodeId; 
       }
       headId = newHeadNodeId;
-      addStep(lineMap.linkNewNode, `Linking node. Head: ${value}, Tail: ${tailId ? actualListNodes.get(tailId)?.value : 'null'}`, headId, newHeadNodeId);
-      addStep(lineMap.end, `Inserted ${value} at head.`, undefined,undefined,undefined,'success');
+      addStep(lineMap.linkNewNode, `Linking node. Head is now ${value}. ${tailId ? `Tail: ${actualListNodes.get(tailId)?.value}` : ''}`, headId, newHeadNodeId, {head: headId, tail: tailId}, 'success');
       break;
     case 'insertTail':
       if (value === undefined) { addStep(lineMap.end, "Error: Value missing.", undefined, undefined, undefined, 'failure'); break; }
@@ -144,12 +143,11 @@ export const generateDoublyLinkedListSteps = (
       actualListNodes.set(newTailNodeId, {value, nextId: null, prevId: tailId });
       if(tailId) {
         actualListNodes.get(tailId)!.nextId = newTailNodeId;
-      } else {
-        headId = newTailNodeId; // List was empty
+      } else { // List was empty
+        headId = newTailNodeId;
       }
       tailId = newTailNodeId;
-      addStep(lineMap.linkNewNode, `Linking node. Head: ${headId ? actualListNodes.get(headId)?.value : 'null'}, Tail: ${value}`, tailId, newTailNodeId);
-      addStep(lineMap.end, `Inserted ${value} at tail.`, undefined,undefined,undefined,'success');
+      addStep(lineMap.linkNewNode, `Linking node. ${headId ? `Head: ${actualListNodes.get(headId)?.value}` : ''}. Tail is now ${value}`, tailId, newTailNodeId, {head: headId, tail: tailId}, 'success');
       break;
     case 'insertAtPosition':
       if (value === undefined || position === undefined) { addStep(lineMap.end, "Error: Value or position missing.", undefined, undefined, undefined, 'failure'); break; }
@@ -159,39 +157,34 @@ export const generateDoublyLinkedListSteps = (
       addStep(lineMap.newNode, `New node ${value} for position ${position}.`, undefined, newNodeAtPosId);
       actualListNodes.set(newNodeAtPosId, {value, nextId: null, prevId: null});
 
-      if (position === 0) { // Insert at head
-        addStep(lineMap.posZeroCheck, `Position 0. Inserting at head.`, undefined, newNodeAtPosId);
+      if (position === 0) { 
         actualListNodes.get(newNodeAtPosId)!.nextId = headId;
         if (headId) actualListNodes.get(headId)!.prevId = newNodeAtPosId;
-        else tailId = newNodeAtPosId; // List was empty
+        else tailId = newNodeAtPosId; 
         headId = newNodeAtPosId;
-        addStep(lineMap.end, `Inserted ${value} at head (position 0).`, headId, newNodeAtPosId, undefined, 'success');
+        addStep(lineMap.end, `Inserted ${value} at head (position 0).`, headId, newNodeAtPosId, {head:headId, tail:tailId}, 'success');
       } else {
         let current = headId;
         let count = 0;
-        addStep(lineMap.initTraverse, `Traversing to position ${position}.`, current);
-        while (current && count < position) {
-          addStep(lineMap.traverseLoop, `At index ${count}, node ${actualListNodes.get(current)?.value}. Target pos: ${position}.`, current);
-          current = actualListNodes.get(current)!.nextId;
-          count++;
-        }
-        // current is now the node at target position, or null if pos is out of bounds (append)
+        while (current && count < position) { current = actualListNodes.get(current)!.nextId; count++; }
+        
         if (current) { // Insert before current
           const prevNodeId = actualListNodes.get(current)!.prevId;
-          addStep(lineMap.linkMiddle, `Inserting ${value} before ${actualListNodes.get(current)?.value}.`, current, newNodeAtPosId);
           actualListNodes.get(newNodeAtPosId)!.nextId = current;
           actualListNodes.get(newNodeAtPosId)!.prevId = prevNodeId;
           actualListNodes.get(current)!.prevId = newNodeAtPosId;
           if (prevNodeId) actualListNodes.get(prevNodeId)!.nextId = newNodeAtPosId;
-          else headId = newNodeAtPosId; // current was head
-           addStep(lineMap.end, `Inserted ${value} at position ${position}.`, current, newNodeAtPosId, undefined, 'success');
-        } else { // Position is at the end or list was shorter
-          addStep(lineMap.updateTailAtEnd, `Position ${position} is at or after end. Inserting at tail.`, tailId, newNodeAtPosId);
+          else headId = newNodeAtPosId; 
+           addStep(lineMap.end, `Inserted ${value} at position ${position}.`, current, newNodeAtPosId, {head:headId, tail:tailId}, 'success');
+        } else if (count === position) { // Insert at tail
           if (tailId) actualListNodes.get(tailId)!.nextId = newNodeAtPosId;
-          else headId = newNodeAtPosId; // List was empty
+          else headId = newNodeAtPosId; 
           actualListNodes.get(newNodeAtPosId)!.prevId = tailId;
           tailId = newNodeAtPosId;
-          addStep(lineMap.end, `Inserted ${value} at tail (position ${count}).`, tailId, newNodeAtPosId, undefined, 'success');
+          addStep(lineMap.end, `Inserted ${value} at tail (position ${count}).`, tailId, newNodeAtPosId, {head:headId, tail:tailId}, 'success');
+        } else {
+            addStep(lineMap.posNotFound, `Position ${position} out of bounds. Cannot insert.`, undefined, undefined, {head:headId, tail:tailId}, 'failure');
+            actualListNodes.delete(newNodeAtPosId);
         }
       }
       break;
@@ -200,72 +193,48 @@ export const generateDoublyLinkedListSteps = (
       if (!headId) { addStep(lineMap.emptyCheck, "List empty.", undefined,undefined,undefined,'failure'); break; }
       if (position < 0 ) { addStep(lineMap.end, "Error: Position negative.", undefined,undefined,undefined,'failure'); break; }
 
-      if (position === 0) { // Delete head
-        const deletedId = headId;
-        addStep(lineMap.posZeroCheck, `Position 0. Deleting head ${actualListNodes.get(headId)?.value}.`, headId);
-        headId = actualListNodes.get(headId)!.nextId;
-        if (headId) actualListNodes.get(headId)!.prevId = null;
-        else tailId = null; // List became empty
-        actualListNodes.delete(deletedId);
-        addStep(lineMap.end, `Deleted head.`, headId, undefined,undefined,'success');
+      let nodeToDeleteId: string | null = headId;
+      for(let i=0; i < position && nodeToDeleteId; i++) {
+        nodeToDeleteId = actualListNodes.get(nodeToDeleteId)?.nextId || null;
+      }
+
+      if (nodeToDeleteId) {
+        const nodeToDelete = actualListNodes.get(nodeToDeleteId)!;
+        addStep(lineMap.deleteNode, `Node to delete: ${nodeToDelete.value} at position ${position}.`, nodeToDeleteId);
+        const prevId = nodeToDelete.prevId;
+        const nextId = nodeToDelete.nextId;
+        if (prevId) actualListNodes.get(prevId)!.nextId = nextId;
+        else headId = nextId; 
+        if (nextId) actualListNodes.get(nextId)!.prevId = prevId;
+        else tailId = prevId; 
+        actualListNodes.delete(nodeToDeleteId);
+        addStep(lineMap.end, `Deleted node at position ${position}. Head: ${headId?actualListNodes.get(headId)?.value:'null'}, Tail: ${tailId?actualListNodes.get(tailId)?.value:'null'}.`, headId || tailId, undefined, {head:headId, tail:tailId}, 'success');
       } else {
-        let current = headId;
-        let count = 0;
-        addStep(lineMap.initTraverse, `Traversing to position ${position}.`, current);
-        while (current && count < position) {
-           addStep(lineMap.traverseLoop, `At index ${count}, node ${actualListNodes.get(current)?.value}. Target pos: ${position}.`, current);
-           current = actualListNodes.get(current)!.nextId;
-           count++;
-        }
-        if (current) { // Node at position found
-          const deletedId = current;
-          const prevNodeId = actualListNodes.get(current)!.prevId;
-          const nextNodeId = actualListNodes.get(current)!.nextId;
-          addStep(lineMap.deleteNode, `Deleting node ${actualListNodes.get(current)?.value} at position ${position}.`, current);
-          if (prevNodeId) actualListNodes.get(prevNodeId)!.nextId = nextNodeId;
-          if (nextNodeId) actualListNodes.get(nextNodeId)!.prevId = prevNodeId;
-          if (current === tailId) tailId = prevNodeId; // Update tail if last node deleted
-          actualListNodes.delete(deletedId);
-          addStep(lineMap.end, `Deleted node at position ${position}.`, undefined,undefined,undefined,'success');
-        } else {
-           addStep(lineMap.posNotFound, `Position ${position} out of bounds. Nothing deleted. List length ${count}.`, undefined,undefined,undefined,'failure');
-        }
+         addStep(lineMap.posNotFound, `Position ${position} out of bounds. Nothing deleted.`, undefined,undefined,{head:headId, tail:tailId}, 'failure');
       }
       break;
 
     case 'deleteByValue':
-      if (value === undefined) { addStep(lineMap.end, "Error: Value missing.", undefined,undefined,undefined,'failure'); break; }
-      if (!headId) { addStep(lineMap.emptyCheck, "List empty.",undefined,undefined,undefined,'failure'); break; }
+      if (value === undefined) { addStep(lineMap.end, "Error: Value missing.",undefined,undefined,{head:headId, tail:tailId},'failure'); break; }
+      if (!headId) { addStep(lineMap.emptyCheck, "List empty.",undefined,undefined,{head:headId, tail:tailId},'failure'); break; }
       
       let currentDelVal = headId;
-      addStep(lineMap.start, `Deleting value ${value}. Starting search.`, currentDelVal);
-      while(currentDelVal && actualListNodes.get(currentDelVal)?.value != value) { // Use loose comparison
-          addStep(lineMap.loop, `Current ${actualListNodes.get(currentDelVal)?.value} != ${value}. Move next.`, currentDelVal);
+      while(currentDelVal && actualListNodes.get(currentDelVal)?.value != value) {
           currentDelVal = actualListNodes.get(currentDelVal)!.nextId;
       }
-      if (currentDelVal) { // Found
-          addStep(lineMap.checkMatch, `Value ${value} found.`, currentDelVal);
+      if (currentDelVal) {
           const nodeToDelete = actualListNodes.get(currentDelVal)!;
+          addStep(lineMap.checkMatch, `Value ${value} found. Deleting node ${nodeToDelete.value}.`, currentDelVal);
           const prevId = nodeToDelete.prevId;
           const nextId = nodeToDelete.nextId;
-          if (prevId) {
-              actualListNodes.get(prevId)!.nextId = nextId;
-              addStep(lineMap.updatePrevNext, `prev.next = current.next`, prevId);
-          } else { // Deleting head
-              headId = nextId;
-              addStep(lineMap.updateHead, `New head: ${nextId ? actualListNodes.get(nextId)?.value : 'null'}`, nextId);
-          }
-          if (nextId) {
-              actualListNodes.get(nextId)!.prevId = prevId;
-              addStep(lineMap.updateNextPrev, `next.prev = current.prev`, nextId);
-          } else { // Deleting tail
-              tailId = prevId;
-              addStep(lineMap.updateTail, `New tail: ${prevId ? actualListNodes.get(prevId)?.value : 'null'}`, prevId);
-          }
+          if (prevId) actualListNodes.get(prevId)!.nextId = nextId;
+          else headId = nextId;
+          if (nextId) actualListNodes.get(nextId)!.prevId = prevId;
+          else tailId = prevId;
           actualListNodes.delete(currentDelVal);
-          addStep(lineMap.endFound, `Deleted ${value}.`, undefined,undefined,undefined,'success');
+          addStep(lineMap.endFound, `Deleted ${value}. Head: ${headId?actualListNodes.get(headId)?.value:'null'}, Tail: ${tailId?actualListNodes.get(tailId)?.value:'null'}.`, headId||tailId, undefined, {head:headId, tail:tailId}, 'success');
       } else {
-          addStep(lineMap.endNotFound, `Value ${value} not found.`, undefined,undefined,undefined,'failure');
+          addStep(lineMap.endNotFound, `Value ${value} not found.`, undefined,undefined,{head:headId, tail:tailId}, 'failure');
       }
       break;
     default:

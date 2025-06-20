@@ -143,7 +143,7 @@ export const generateSinglyLinkedListSteps = (
 
   switch (operation) {
     case 'init':
-      addStep(lineMap.end, `List initialized: ${initialListString || '(empty)'}`);
+      addStep(lineMap.end, `List initialized: ${initialListString || '(empty)'}.`);
       break;
 
     case 'insertHead':
@@ -154,7 +154,7 @@ export const generateSinglyLinkedListSteps = (
       headId = newHeadNodeId;
       addStep(lineMap.linkNewNode, `Linking new node. New head: ${value}`, headId, newHeadNodeId, 'new');
       addStep(lineMap.updateHead, `Head updated.`, headId, newHeadNodeId, 'new');
-      addStep(lineMap.end, `Inserted ${value} at head.`, undefined, undefined, undefined, undefined, 'success');
+      addStep(lineMap.end, `Inserted ${value} at head. Head is now ${value}.`, headId, newHeadNodeId, 'new', { head: headId }, 'success');
       break;
     
     case 'insertTail':
@@ -178,7 +178,7 @@ export const generateSinglyLinkedListSteps = (
         actualListNodes.set(newTailNodeId, { value, nextId: null });
         addStep(lineMap.assignNext, `Attaching new node ${value} to tail.`, currentId, newTailNodeId, 'new');
       }
-      addStep(lineMap.end, `Inserted ${value} at tail.`, undefined, undefined, undefined, undefined, 'success');
+      addStep(lineMap.end, `Inserted ${value} at tail.`, undefined, newTailNodeId, 'new', { head: headId }, 'success');
       break;
     
     case 'insertAtPosition':
@@ -192,7 +192,7 @@ export const generateSinglyLinkedListSteps = (
         addStep(lineMap.posZeroCheck, `Position 0. Inserting at head.`, undefined, newNodeAtPosId, 'new');
         actualListNodes.set(newNodeAtPosId, { value, nextId: headId });
         headId = newNodeAtPosId;
-        addStep(lineMap.end, `Inserted ${value} at head (position 0).`, headId, newNodeAtPosId, 'new', undefined, 'success');
+        addStep(lineMap.end, `Inserted ${value} at head (position 0). Head is ${value}.`, headId, newNodeAtPosId, 'new', { head: headId }, 'success');
       } else {
         let current = headId;
         let prev = null;
@@ -208,38 +208,40 @@ export const generateSinglyLinkedListSteps = (
         if (count === position && prev) { 
           actualListNodes.set(newNodeAtPosId, { value, nextId: current });
           actualListNodes.get(prev)!.nextId = newNodeAtPosId;
-          addStep(lineMap.posFoundInsert, `Inserted ${value} at position ${position}.`, prev, newNodeAtPosId, 'new', undefined, 'success');
-        } else if (count === position && !prev && position === 0){ // Should be caught by pos === 0 earlier
+          addStep(lineMap.posFoundInsert, `Inserted ${value} at position ${position}.`, prev, newNodeAtPosId, 'new', { head: headId }, 'success');
+        } else if (count === position && !prev && position === 0){ 
              actualListNodes.set(newNodeAtPosId, { value, nextId: headId });
              headId = newNodeAtPosId;
-             addStep(lineMap.posFoundInsert, `Inserted ${value} at head (pos ${position}).`, undefined, newNodeAtPosId, 'new', undefined, 'success');
-        } else { // Position out of bounds (e.g., insert at end if pos === list.length)
-          if (prev) {
-             addStep(lineMap.posNotFound, `Position ${position} is at or after end (list length ${count}). Appending to tail.`, prev, newNodeAtPosId, 'new', undefined, 'info');
+             addStep(lineMap.posFoundInsert, `Inserted ${value} at head (pos ${position}).`, undefined, newNodeAtPosId, 'new', { head: headId }, 'success');
+        } else { 
+          if (prev && count === actualListNodes.size) { // Insert at the very end
+             addStep(lineMap.posNotFound, `Position ${position} is at the end (list length ${count}). Appending.`, prev, newNodeAtPosId, 'new', undefined, 'info');
              actualListNodes.get(prev)!.nextId = newNodeAtPosId;
              actualListNodes.set(newNodeAtPosId, { value, nextId: null });
-          } else { // List was empty, position was > 0 (or 0 if caught above)
-             addStep(lineMap.posNotFound, `List empty or position ${position} invalid for empty list. Inserting as head.`, undefined, newNodeAtPosId, 'new', undefined, 'info');
-             actualListNodes.set(newNodeAtPosId, { value, nextId: null });
-             headId = newNodeAtPosId;
+             addStep(lineMap.end, `Inserted ${value} at tail (position ${count}).`, undefined, newNodeAtPosId, 'new', { head: headId }, 'success');
+          } else if (!prev && position > 0) { // List empty, trying to insert not at head
+            addStep(lineMap.posNotFound, `List empty and position ${position} > 0. Cannot insert.`, undefined, undefined, undefined, undefined, 'failure');
+          } else { // Position out of bounds
+            addStep(lineMap.posNotFound, `Position ${position} is out of bounds (list length ${count}). Cannot insert.`, undefined, undefined, undefined, undefined, 'failure');
+            actualListNodes.delete(newNodeAtPosId); // Remove the created node if not used
           }
-          addStep(lineMap.end, `Inserted ${value} (effective pos ${count}).`, undefined, undefined, undefined, undefined, 'success');
         }
       }
       break;
 
     case 'deleteAtPosition':
-        if (position === undefined) { addStep(lineMap.end, "Error: Position missing.", undefined, undefined, undefined, undefined, 'failure'); break; }
-        if (position < 0) { addStep(lineMap.end, "Error: Position cannot be negative.", undefined, undefined, undefined, undefined, 'failure'); break; }
-        if (!headId) { addStep(lineMap.emptyCheck, "List empty. Cannot delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
+        if (position === undefined) { addStep(lineMap.end, "Error: Position missing.", undefined,undefined,undefined,undefined,'failure'); break; }
+        if (position < 0) { addStep(lineMap.end, "Error: Position negative.", undefined,undefined,undefined,undefined,'failure'); break; }
+        if (!headId) { addStep(lineMap.emptyCheck, "List empty. Cannot delete.", undefined,undefined,undefined,undefined,'failure'); break; }
 
         let deletedNodeId: string | null = null;
         if (position === 0) {
             addStep(lineMap.posZeroCheck, "Position 0. Deleting head.", headId);
             deletedNodeId = headId;
+            const deletedNodeValue = actualListNodes.get(headId)?.value;
             headId = actualListNodes.get(headId)!.nextId;
             if(deletedNodeId) actualListNodes.delete(deletedNodeId);
-            addStep(lineMap.end, `Deleted head. New head: ${headId ? actualListNodes.get(headId)?.value : 'null'}.`, headId, deletedNodeId, 'deleted', undefined, 'success');
+            addStep(lineMap.end, `Deleted head (value ${deletedNodeValue}). New head: ${headId ? actualListNodes.get(headId)?.value : 'null'}.`, headId, deletedNodeId, 'deleted', { head: headId }, 'success');
         } else {
             let current = headId;
             let prev = null;
@@ -250,30 +252,31 @@ export const generateSinglyLinkedListSteps = (
                 prev = current;
                 current = actualListNodes.get(current)!.nextId;
                 count++;
-                 addStep(lineMap.movePointers, `Moved to index ${count}.`, current, undefined, undefined, {prev, current});
+                addStep(lineMap.movePointers, `Moved to index ${count}.`, current, undefined, undefined, {prev, current});
             }
             if (current && count === position && prev) { 
                 deletedNodeId = current;
-                addStep(lineMap.posFoundDelete, `Node to delete at pos ${position} is ${actualListNodes.get(current)?.value}.`, current, deletedNodeId, 'deleted');
+                const deletedValue = actualListNodes.get(current)?.value;
+                addStep(lineMap.posFoundDelete, `Node to delete at pos ${position} is ${deletedValue}.`, current, deletedNodeId, 'deleted');
                 actualListNodes.get(prev)!.nextId = actualListNodes.get(current)!.nextId;
                 if(deletedNodeId) actualListNodes.delete(deletedNodeId);
-                addStep(lineMap.end, `Deleted node at position ${position}.`, prev, deletedNodeId, 'deleted', undefined, 'success');
+                addStep(lineMap.end, `Deleted node (value ${deletedValue}) at position ${position}.`, prev, deletedNodeId, 'deleted', { head: headId }, 'success');
             } else {
-                addStep(lineMap.posNotFound, `Position ${position} is out of bounds. Nothing deleted. List length ${count}.`, undefined, undefined, undefined, undefined, 'failure');
+                addStep(lineMap.posNotFound, `Position ${position} is out of bounds. Nothing deleted. List length ${count}.`, undefined,undefined,undefined,undefined,'failure');
             }
         }
         break;
 
     case 'deleteByValue':
       if (value === undefined) { addStep(lineMap.end, "Error: No value for delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
-      if (!headId) { addStep(lineMap.emptyCheck, "List empty. Cannot delete.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      if (!headId) { addStep(lineMap.emptyCheck, "List empty. Cannot delete.",undefined,undefined,undefined,undefined,'failure'); break; }
       
       if (actualListNodes.get(headId)?.value == value) { 
         const deletedId = headId;
         addStep(lineMap.headMatch, `Value ${value} found at head.`, headId, deletedId, 'deleted');
         headId = actualListNodes.get(headId)!.nextId;
         actualListNodes.delete(deletedId);
-        addStep(lineMap.updateHeadDelete, `Deleted head. New head: ${headId ? actualListNodes.get(headId)?.value : 'null'}.`, headId, undefined, undefined, undefined, 'success');
+        addStep(lineMap.updateHeadDelete, `Deleted head. New head: ${headId ? actualListNodes.get(headId)?.value : 'null'}.`, headId, undefined, undefined, { head: headId }, 'success');
         break;
       }
       
@@ -292,47 +295,49 @@ export const generateSinglyLinkedListSteps = (
         addStep(lineMap.checkMatchInLoop, `Node with value ${value} found.`, currentDel, deletedId, 'deleted');
         actualListNodes.get(prevDel)!.nextId = actualListNodes.get(currentDel)!.nextId;
         actualListNodes.delete(deletedId);
-        addStep(lineMap.updateNext, `Linking previous node to next.`, prevDel, undefined, undefined, {prev: prevDel, next: actualListNodes.get(prevDel!)?.nextId}, 'success');
+        addStep(lineMap.updateNext, `Linking previous node to next. List state after deletion.`, prevDel, undefined, undefined, { head: headId }, 'success');
         foundDel = true;
       } else {
-        addStep(lineMap.returnNull, `Value ${value} not found.`, undefined, undefined, undefined, undefined, 'failure');
+        addStep(lineMap.returnNull, `Value ${value} not found. Nothing deleted.`, undefined, undefined, undefined, { head: headId }, 'failure');
       }
-      addStep(lineMap.end, `Delete operation for ${value} complete.`);
+      addStep(lineMap.end, `Delete operation for ${value} complete.`, undefined, undefined, undefined, { head: headId }, foundDel ? 'success' : 'failure');
       break;
 
     case 'search':
       if (value === undefined) { addStep(lineMap.end, "Error: No value for search.", undefined, undefined, undefined, undefined, 'failure'); break; }
-      if (!headId) { addStep(lineMap.end, "List empty. Cannot search.", undefined, undefined, undefined, undefined, 'failure'); break; }
+      if (!headId) { addStep(lineMap.end, "List empty. Cannot search.", undefined, undefined, undefined, { head: headId }, 'failure'); break; }
       
       let searchCurrent = headId;
       let searchIndex = 0;
-      addStep(lineMap.initCurrentIndex, `Searching for ${value}. Start at head.`, searchCurrent);
+      addStep(lineMap.initCurrentIndex, `Searching for ${value}. Start at head.`, searchCurrent, undefined, undefined, { current: searchCurrent, index: searchIndex });
       while(searchCurrent) {
-        addStep(lineMap.loop, `Current node: ${actualListNodes.get(searchCurrent)?.value} at index ${searchIndex}.`, searchCurrent);
+        addStep(lineMap.loop, `Current node: ${actualListNodes.get(searchCurrent)?.value} at index ${searchIndex}.`, searchCurrent, undefined, undefined, { current: searchCurrent, index: searchIndex });
         if(actualListNodes.get(searchCurrent)?.value == value) { 
-          addStep(lineMap.returnFound, `Value ${value} found at index ${searchIndex}.`, searchCurrent, searchCurrent, 'searched', undefined, 'success');
-          addStep(lineMap.end, "Search complete.");
+          addStep(lineMap.returnFound, `Value ${value} found at index ${searchIndex}.`, searchCurrent, searchCurrent, 'searched', { current: searchCurrent, index: searchIndex, result_value: actualListNodes.get(searchCurrent)?.value, result_index: searchIndex }, 'success');
+          addStep(lineMap.end, "Search complete. Value found.", undefined, searchCurrent, 'searched', { head: headId, found_node: searchCurrent });
           return localSteps;
         }
         addStep(lineMap.moveCurrentSearch, `Not ${value}. Moving to next.`, searchCurrent);
         searchCurrent = actualListNodes.get(searchCurrent)!.nextId;
         searchIndex++;
       }
-      addStep(lineMap.returnNullSearch, `Value ${value} not found.`, undefined, undefined, undefined, undefined, 'failure');
-      addStep(lineMap.end, "Search complete.");
+      addStep(lineMap.returnNullSearch, `Value ${value} not found.`, undefined, undefined, undefined, { head: headId, result: 'Not Found' }, 'failure');
+      addStep(lineMap.end, "Search complete. Value not found.", undefined, undefined, undefined, { head: headId });
       break;
 
     case 'traverse':
-       if (!headId) { addStep(lineMap.end, "List empty. Nothing to traverse.", undefined, undefined, undefined, undefined, 'info'); break; }
+       if (!headId) { addStep(lineMap.end, "List empty. Nothing to traverse.", undefined, undefined, undefined, { head: headId }, 'info'); break; }
        let travCurrent = headId;
-       addStep(lineMap.initCurrentResult, "Starting traversal.", travCurrent);
+       const path: (string|number)[] = [];
+       addStep(lineMap.initCurrentResult, "Starting traversal.", travCurrent, undefined, undefined, { current: travCurrent, path: [] });
        while(travCurrent) {
            const nodeData = actualListNodes.get(travCurrent)!;
-           addStep(lineMap.processNode, `Visiting node ${nodeData.value}.`, travCurrent);
+           path.push(nodeData.value);
+           addStep(lineMap.processNode, `Visiting node ${nodeData.value}. Path: [${path.join('->')}]`, travCurrent, undefined, undefined, { current: travCurrent, path: [...path] });
            travCurrent = nodeData.nextId;
-           if(travCurrent) addStep(lineMap.moveNext, "Moving to next node.", travCurrent);
+           if(travCurrent) addStep(lineMap.moveNext, "Moving to next node.", travCurrent, undefined, undefined, { current: travCurrent, path: [...path] });
        }
-       addStep(lineMap.returnResult, "Traversal complete."); 
+       addStep(lineMap.returnResult, "Traversal complete. Path: [" + path.join(' -> ') + "]", undefined, undefined, undefined, { head: headId, final_path: path }, 'success'); 
        break;
 
     default:
@@ -341,40 +346,3 @@ export const generateSinglyLinkedListSteps = (
   return localSteps;
 };
 
-```
-  </change>
-  <change>
-    <file>/src/app/visualizers/singly-linked-list/AlgorithmDetailsCard.tsx</file>
-    <content><![CDATA[
-"use client";
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AlgorithmDetailsProps } from './types'; // Local import
-
-export function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
-  return (
-    <Card className="mt-8 shadow-lg rounded-xl">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl text-primary dark:text-accent">
-          About {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-muted-foreground whitespace-pre-line">{description}</p>
-        <div>
-          <h3 className="font-semibold text-lg mb-1">Time Complexity:</h3>
-          <ul className="list-disc list-inside text-muted-foreground space-y-1">
-            <li>Best Case: {timeComplexities.best}</li>
-            <li>Average Case: {timeComplexities.average}</li>
-            <li>Worst Case: {timeComplexities.worst}</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg mb-1">Space Complexity:</h3>
-          <p className="text-muted-foreground">{spaceComplexity}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
