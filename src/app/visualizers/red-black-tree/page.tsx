@@ -66,7 +66,7 @@ export default function RedBlackTreePage() {
   
   const handleOperation = useCallback((
       opTypeInput: 'build' | 'insert' | 'search' | 'delete' | 'structure', 
-      primaryValue?: string, // For build: initialArrayInput, for insert/search/delete: operationValue
+      primaryValue?: string, 
     ) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
@@ -78,7 +78,7 @@ export default function RedBlackTreePage() {
     if (opType === 'build') {
         valuesForBuild = primaryValue || initialArrayInput;
         const parsedBuildArray = valuesForBuild.split(',').map(s=>s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
-         if (parsedBuildArray.length > 12) { // Reduced for RBT complexity
+         if (parsedBuildArray.length > 12) { 
             toast({ title: "Input Too Large", description: "Max 12 nodes for Build RBT for smoother visualization.", variant: "default" });
         }
         rbtRef.current = createInitialRBTreeGraph(); 
@@ -134,7 +134,6 @@ export default function RedBlackTreePage() {
         setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
         setCurrentMessage(firstStep.message || "Step executed.");
         
-        // Persist the final state of the graph structure to rbtRef after operations
         const finalGraphStateFromSteps = newSteps[newSteps.length - 1]?.auxiliaryData?.finalGraphState as RBTreeGraph | undefined;
         if (finalGraphStateFromSteps) {
             rbtRef.current = finalGraphStateFromSteps;
@@ -143,7 +142,7 @@ export default function RedBlackTreePage() {
         const lastStepMsg = newSteps[newSteps.length - 1]?.message;
         if (lastStepMsg && opType !== 'build' && newSteps.length > 1) { 
             const opDisplay = opType.charAt(0).toUpperCase() + opType.slice(1);
-            if (!lastStepMsg.toLowerCase().includes("fixup") && !lastStepMsg.toLowerCase().includes("rotate")) { // Avoid toast for intermediate fixup/rotate steps
+            if (!lastStepMsg.toLowerCase().includes("fixup") && !lastStepMsg.toLowerCase().includes("rotate")) { 
                 toast({ title: `${opDisplay} Info`, description: lastStepMsg, duration: 2000 });
             }
         } else if (opType === 'build' && newSteps.length > 1 && lastStepMsg) {
@@ -153,7 +152,7 @@ export default function RedBlackTreePage() {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  }, [initialArrayInput, operationValue, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, updateStateFromStep]);
+  }, [initialArrayInput, operationValue, toast, updateStateFromStep]);
 
   useEffect(() => {
     handleOperation('build', initialArrayInput);
@@ -292,5 +291,3 @@ export default function RedBlackTreePage() {
     </div>
   );
 }
-
-```

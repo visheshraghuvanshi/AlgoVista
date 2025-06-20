@@ -1,4 +1,3 @@
-
 // src/app/visualizers/avl-tree/types.ts
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
@@ -31,14 +30,14 @@ export interface AlgorithmDetailsProps {
 // --- AVL Tree Specific Types ---
 export interface BinaryTreeNodeVisual {
   id: string;
-  value: string | number | null; // Can be formatted string for AVL (e.g., "val (H:h, B:b)")
+  value: string | number | null; // Formatted as "Val (H:h, B:bf)"
   x: number;
   y: number;
-  color?: string;
+  color?: string; // For highlighting states like active, path, rotated
   textColor?: string;
   leftId?: string | null;
   rightId?: string | null;
-  nodeColor?: 'RED' | 'BLACK'; // For RBT compatibility if panel is shared initially, less relevant for pure AVL
+  // nodeColor might be used if extending for RBT-like visuals, but less critical for AVL color-coding
 }
 
 export interface BinaryTreeEdgeVisual {
@@ -51,21 +50,22 @@ export interface BinaryTreeEdgeVisual {
 export interface TreeAlgorithmStep {
   nodes: BinaryTreeNodeVisual[];
   edges: BinaryTreeEdgeVisual[];
-  traversalPath: (string | number)[]; // Often node values or IDs
+  traversalPath: (string | number)[]; // Often node values or IDs on the current DFS path
   currentLine: number | null;
   message?: string;
-  currentProcessingNodeId?: string | null; // ID of node being processed
-  auxiliaryData?: Record<string, any> | null;
+  currentProcessingNodeId?: string | null; // ID of node being actively processed
+  auxiliaryData?: Record<string, any> | null; // For balance factors, rotation types etc.
 }
 
-// From avl-tree-logic.ts
+// Internal representation for AVL logic
 export interface AVLNodeInternal {
   id: string;
   value: number;
   height: number;
+  // balanceFactor: number; // Calculated on the fly, not stored directly
   leftId: string | null;
   rightId: string | null;
   parentId: string | null; 
 }
 
-```
+export type AVLOperationType = 'build' | 'insert' | 'delete' | 'search' | 'structure';

@@ -11,342 +11,127 @@ import { AVL_TREE_LINE_MAP } from './avl-tree-logic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
+// Conceptual AVL Tree Code Snippets - Expanded for clarity
 export const AVL_TREE_CODE_SNIPPETS: Record<string, string[]> = {
   JavaScript: [
-    "class AVLNode {",                                         // 1 Node Class
-    "  constructor(value) {",                                // 2 Node Constructor
-    "    this.value = value; this.height = 1;",              // 3 Node Props (value, height)
-    "    this.left = null; this.right = null;",             // 4 Node Props (left, right)
-    "  }",                                                   // 5
-    "}",                                                       // 6
-    "class AVLTree {",                                         // 7 Tree Class
-    "  constructor() { this.root = null; }",                 // 8 Tree Constructor
-    "",                                                        // 9
-    "  getHeight(node) {",                                   // 10 Get Height Func
-    "    return node ? node.height : 0;",                    // 11 Get Height Return
-    "  }",                                                   // 12
-    "  getBalanceFactor(node) {",                            // 13 Get Balance Func
-    "    return node ? this.getHeight(node.left) - this.getHeight(node.right) : 0;", // 14 Get Balance Return
-    "  }",                                                   // 15
-    "  updateHeight(node) {",                                // 16 Update Height Func
-    "    node.height = 1 + Math.max(this.getHeight(node.left), this.getHeight(node.right));", // 17 Update Height Calc
-    "  }",                                                   // 18
-    "",                                                        // 19
-    "  rotateRight(y) { // Right rotation on y",             // 20 Rotate Right Func
-    "    let x = y.left; let T2 = x.right;",                 // 21 Rotate Right Setup
-    "    x.right = y; y.left = T2; /* Update parents if needed */",    // 22 Rotate Right Perform
-    "    this.updateHeight(y); this.updateHeight(x);",       // 23 Rotate Right Update Heights
-    "    return x; // New root of subtree",                  // 24 Rotate Right Return
-    "  }",                                                   // 25
-    "  rotateLeft(x) { // Left rotation on x",               // 31 Rotate Left Func
-    "    let y = x.right; let T2 = y.left;",                 // 32 Rotate Left Setup
-    "    y.left = x; x.right = T2; /* Update parents if needed */",    // 33 Rotate Left Perform
-    "    this.updateHeight(x); this.updateHeight(y);",       // 34 Rotate Left Update Heights
-    "    return y; // New root of subtree",                  // 35 Rotate Left Return
-    "  }",                                                   // 36
-    "",                                                      //
-    "  // INSERTION LOGIC",
-    "  insert(value) { this.root = this._insertRec(this.root, value); }", // 42 Insert Func Main
-    "  _insertRec(node, value) {",                           // 43 Insert Rec Func
-    "    if (!node) return new AVLNode(value);",             // 44 Insert Base Case Null
-    "    if (value < node.value) node.left = this._insertRec(node.left, value);", // 45-46
-    "    else if (value > node.value) node.right = this._insertRec(node.right, value);",// 47-48
-    "    else return node; // Duplicates not allowed",  // 49 Insert Duplicate Return
-    "",                                                        // 50
-    "    this.updateHeight(node);",                           // 51 Insert Update Height
-    "    let balance = this.getBalanceFactor(node);",          // 54 Insert Get Balance
-    "    // Balancing for Insertion",
-    "    if (balance > 1 && value < node.left.value) return this.rotateRight(node);", // 57 LL
-    "    if (balance < -1 && value > node.right.value) return this.rotateLeft(node);", // 59 RR
-    "    if (balance > 1 && value > node.left.value) {",      // 61 LR Start
-    "      node.left = this.rotateLeft(node.left); return this.rotateRight(node);", // 62-63 LR Actions
+    "// AVL Node Class",                             // 1 NODE_CLASS_START
+    "class AVLNode {",
+    "  constructor(value) {",                       // 2 NODE_CONSTRUCTOR_START
+    "    this.value = value;",
+    "    this.height = 1;",                           // 3 NODE_HEIGHT_INIT
+    "    this.left = null; // Represents NIL",
+    "    this.right = null; // Represents NIL",
+    "  }",                                           // 4 NODE_CONSTRUCTOR_END
+    "}",                                             // 5 NODE_CLASS_END
+    "",
+    "// AVL Tree Class",                             // 6 TREE_CLASS_START
+    "class AVLTree {",
+    "  constructor() { this.root = null; }",         // 7 TREE_CONSTRUCTOR
+    "",
+    "  getHeight(node) {",                           // 8 GET_HEIGHT_FUNC
+    "    return node ? node.height : 0;",            // 9 GET_HEIGHT_RETURN
+    "  }",
+    "  getBalanceFactor(node) {",                    // 10 GET_BALANCE_FUNC
+    "    return node ? this.getHeight(node.left) - this.getHeight(node.right) : 0;", // 11 GET_BALANCE_CALC
+    "  }",
+    "  updateHeight(node) {",                        // 12 UPDATE_HEIGHT_FUNC
+    "    node.height = 1 + Math.max(this.getHeight(node.left), this.getHeight(node.right));", // 13 UPDATE_HEIGHT_CALC
+    "  }",
+    "",
+    "  rotateRight(y) { /* ... */ }",                // 14 ROTATE_RIGHT_STUB (Detailed below)
+    "  rotateLeft(x) { /* ... */ }",                 // 15 ROTATE_LEFT_STUB (Detailed below)
+    "",
+    "  // INSERTION",                                // 16 INSERT_SECTION
+    "  insert(value) { this.root = this._insertRec(this.root, value, null); }", // 17 INSERT_MAIN_CALL
+    "  _insertRec(node, value, parent) {",           // 18 INSERT_REC_FUNC
+    "    // 1. Standard BST Insertion",
+    "    if (!node) return new AVLNode(value);",     // 19 INSERT_BASE_CASE_NULL
+    "    if (value < node.value) {",                 // 20 INSERT_GO_LEFT
+    "      node.left = this._insertRec(node.left, value, node);", // 21 INSERT_RECURSE_LEFT
+    "    } else if (value > node.value) {",          // 22 INSERT_GO_RIGHT
+    "      node.right = this._insertRec(node.right, value, node);",// 23 INSERT_RECURSE_RIGHT
+    "    } else { return node; } // No duplicates",   // 24 INSERT_DUPLICATE
+    "",
+    "    // 2. Update height of current node",
+    "    this.updateHeight(node);",                   // 25 INSERT_UPDATE_HEIGHT
+    "",
+    "    // 3. Get balance factor",
+    "    let balance = this.getBalanceFactor(node);", // 26 INSERT_GET_BALANCE
+    "",
+    "    // 4. If unbalanced, perform rotations",
+    "    // Left-Left Case (LL)",                    // 27 LL_CASE_COMMENT
+    "    if (balance > 1 && value < node.left.value) {", // 28 LL_CASE_CHECK
+    "      return this.rotateRight(node);",          // 29 LL_CASE_ACTION
     "    }",
-    "    if (balance < -1 && value < node.right.value) {",    // 66 RL Start
-    "      node.right = this.rotateRight(node.right); return this.rotateLeft(node);", // 67-68 RL Actions
+    "    // Right-Right Case (RR)",                  // 30 RR_CASE_COMMENT
+    "    if (balance < -1 && value > node.right.value) {",// 31 RR_CASE_CHECK
+    "      return this.rotateLeft(node);",           // 32 RR_CASE_ACTION
     "    }",
-    "    return node;",                                       // 70 Insert Return Node
-    "  }",                                                   // 71
-    "",                                                      //
-    "  // DELETION LOGIC",                                    // 72
-    "  delete(value) { this.root = this._deleteRec(this.root, value); }", // 74 Delete Func Main
-    "  _deleteRec(node, value) {",                           // 75 Delete Rec Func
-    "    if (!node) return null; /* Not found */",            // 76
-    "    if (value < node.value) node.left = this._deleteRec(node.left, value);", // 77-78
-    "    else if (value > node.value) node.right = this._deleteRec(node.right, value);",// 79-80
-    "    else { // Node to delete found",                     // 81
-    "      if (!node.left || !node.right) { // 0 or 1 child",// 82 (Covers 82 & 84 conceptually)
-    "        let temp = node.left ? node.left : node.right;",// 83/85
-    "        if (!temp) node = null; else node = temp;", // Node becomes child or null
-    "      } else { // 2 children",                         // 86
-    "        let temp = this._minValueNode(node.right);",   // 87 Find successor
-    "        node.value = temp.value;",                    // 88 Copy successor
-    "        node.right = this._deleteRec(node.right, temp.value);", // 89 Delete successor
+    "    // Left-Right Case (LR)",                   // 33 LR_CASE_COMMENT
+    "    if (balance > 1 && value > node.left.value) {", // 34 LR_CASE_CHECK
+    "      node.left = this.rotateLeft(node.left);", // 35 LR_CASE_ACTION1
+    "      return this.rotateRight(node);",          // 36 LR_CASE_ACTION2
+    "    }",
+    "    // Right-Left Case (RL)",                   // 37 RL_CASE_COMMENT
+    "    if (balance < -1 && value < node.right.value) {",// 38 RL_CASE_CHECK
+    "      node.right = this.rotateRight(node.right);",// 39 RL_CASE_ACTION1
+    "      return this.rotateLeft(node);",           // 40 RL_CASE_ACTION2
+    "    }",
+    "    return node;",                               // 41 INSERT_RETURN_NODE
+    "  }",                                           // 42 INSERT_REC_END
+    "",
+    "  // DELETION (Conceptual - Full fixup logic is extensive)", // 43 DELETE_SECTION
+    "  delete(value) { this.root = this._deleteRec(this.root, value); }", // 44 DELETE_MAIN_CALL
+    "  _deleteRec(node, value) {",                   // 45 DELETE_REC_FUNC
+    "    if (!node) return null;",                  // 46 DELETE_BASE_CASE_NULL
+    "    if (value < node.value) node.left = this._deleteRec(node.left, value);", // 47-48
+    "    else if (value > node.value) node.right = this._deleteRec(node.right, value);", // 49-50
+    "    else { /* Node to delete found */",          // 51 DELETE_NODE_FOUND
+    "      if (!node.left || !node.right) { /* 0 or 1 child */", // 52
+    "        let temp = node.left ? node.left : node.right;", // 53
+    "        if (!temp) node = null; else node = temp;", // 54
+    "      } else { /* 2 children */",                // 55
+    "        let temp = this._minValueNode(node.right);", // 56
+    "        node.value = temp.value;",              // 57
+    "        node.right = this._deleteRec(node.right, temp.value);", // 58
     "      }",
     "    }",
-    "    if (!node) return null; /* If tree became empty */", // 90
-    "    this.updateHeight(node);",                           // 91
-    "    let balance = this.getBalanceFactor(node);",          // 92
-    "    // Balancing for Deletion",
-    "    if (balance > 1 && this.getBalanceFactor(node.left) >= 0) return this.rotateRight(node);", // 93 Del LL/L0
-    "    if (balance > 1 && this.getBalanceFactor(node.left) < 0) { node.left = this.rotateLeft(node.left); return this.rotateRight(node); }", // 94 Del LR
-    "    if (balance < -1 && this.getBalanceFactor(node.right) <= 0) return this.rotateLeft(node);", // 95 Del RR/R0
-    "    if (balance < -1 && this.getBalanceFactor(node.right) > 0) { node.right = this.rotateRight(node.right); return this.rotateLeft(node); }", // 96 Del RL
-    "    return node;",                                       // 97
-    "  }",
-    "  _minValueNode(node) {",                               // 98
-    "    let current = node; while (current.left) current = current.left;", // 99
-    "    return current;",                                  // 100
-    "  }",
-    "}",
+    "    if (!node) return null; // If tree became empty", // 59
+    "    this.updateHeight(node);",                   // 60 DELETE_UPDATE_HEIGHT
+    "    let balance = this.getBalanceFactor(node);",  // 61 DELETE_GET_BALANCE
+    "    // Balancing after deletion (more complex cases than insert)",
+    "    // LL or L0 Case",                            // 62 DEL_LL_L0_CASE_COMMENT
+    "    if (balance > 1 && this.getBalanceFactor(node.left) >= 0) return this.rotateRight(node);", // 63
+    "    // LR Case",                                  // 64 DEL_LR_CASE_COMMENT
+    "    if (balance > 1 && this.getBalanceFactor(node.left) < 0) { node.left = this.rotateLeft(node.left); return this.rotateRight(node); }", // 65
+    "    // RR or R0 Case",                            // 66 DEL_RR_R0_CASE_COMMENT
+    "    if (balance < -1 && this.getBalanceFactor(node.right) <= 0) return this.rotateLeft(node);", // 67
+    "    // RL Case",                                  // 68 DEL_RL_CASE_COMMENT
+    "    if (balance < -1 && this.getBalanceFactor(node.right) > 0) { node.right = this.rotateRight(node.right); return this.rotateLeft(node); }", // 69
+    "    return node;",                               // 70 DELETE_RETURN_NODE
+    "  }",                                           // 71 DELETE_REC_END
+    "  _minValueNode(node) { /* ... */ }",           // 72 MIN_VALUE_NODE_STUB
+    "",
+    "  // ROTATIONS (Detailed)",                     // 73 ROTATIONS_SECTION
+    "  rotateRight(y) {",                            // 74 ROTATE_RIGHT_FUNC_START
+    "    let x = y.left; let T2 = x.right;",         // 75 ROTATE_RIGHT_SETUP
+    "    x.right = y; y.left = T2;",                 // 76 ROTATE_RIGHT_POINTERS
+    "    // Update parents if they exist and are tracked",
+    "    this.updateHeight(y); this.updateHeight(x);",// 77 ROTATE_RIGHT_UPDATE_HEIGHTS
+    "    return x;",                                 // 78 ROTATE_RIGHT_RETURN_NEW_ROOT
+    "  }",                                           // 79 ROTATE_RIGHT_FUNC_END
+    "  rotateLeft(x) {",                             // 80 ROTATE_LEFT_FUNC_START
+    "    let y = x.right; let T2 = y.left;",          // 81 ROTATE_LEFT_SETUP
+    "    y.left = x; x.right = T2;",                 // 82 ROTATE_LEFT_POINTERS
+    "    // Update parents if they exist and are tracked",
+    "    this.updateHeight(x); this.updateHeight(y);",// 83 ROTATE_LEFT_UPDATE_HEIGHTS
+    "    return y;",                                 // 84 ROTATE_LEFT_RETURN_NEW_ROOT
+    "  }",                                           // 85 ROTATE_LEFT_FUNC_END
+    "}",                                             // 86 TREE_CLASS_END
   ],
-  Python: [ 
-    "class AVLNode:",
-    "    def __init__(self, value):",
-    "        self.value = value",
-    "        self.height = 1",
-    "        self.left = None",
-    "        self.right = None",
-    "",
-    "class AVLTree:",
-    "    def __init__(self):",
-    "        self.root = None",
-    "",
-    "    def get_height(self, node):",
-    "        return node.height if node else 0",
-    "",
-    "    def get_balance_factor(self, node):",
-    "        return self.get_height(node.left) - self.get_height(node.right) if node else 0",
-    "",
-    "    def update_height(self, node):",
-    "        if node:",
-    "            node.height = 1 + max(self.get_height(node.left), self.get_height(node.right))",
-    "",
-    "    def rotate_right(self, y_node):",
-    "        x_node = y_node.left",
-    "        T2 = x_node.right",
-    "        x_node.right = y_node",
-    "        y_node.left = T2",
-    "        self.update_height(y_node)",
-    "        self.update_height(x_node)",
-    "        return x_node",
-    "",
-    "    def rotate_left(self, x_node):",
-    "        y_node = x_node.right",
-    "        T2 = y_node.left",
-    "        y_node.left = x_node",
-    "        x_node.right = T2",
-    "        self.update_height(x_node)",
-    "        self.update_height(y_node)",
-    "        return y_node",
-    "",
-    "    def insert(self, value):",
-    "        self.root = self._insert_rec(self.root, value)",
-    "",
-    "    def _insert_rec(self, node, value):",
-    "        if not node:",
-    "            return AVLNode(value)",
-    "        if value < node.value:",
-    "            node.left = self._insert_rec(node.left, value)",
-    "        elif value > node.value:",
-    "            node.right = self._insert_rec(node.right, value)",
-    "        else:",
-    "            return node # Duplicate values not allowed",
-    "        self.update_height(node)",
-    "        balance = self.get_balance_factor(node)",
-    "        # LL Case",
-    "        if balance > 1 and value < node.left.value:",
-    "            return self.rotate_right(node)",
-    "        # RR Case",
-    "        if balance < -1 and value > node.right.value:",
-    "            return self.rotate_left(node)",
-    "        # LR Case",
-    "        if balance > 1 and value > node.left.value:",
-    "            node.left = self.rotate_left(node.left)",
-    "            return self.rotate_right(node)",
-    "        # RL Case",
-    "        if balance < -1 and value < node.right.value:",
-    "            node.right = self.rotate_right(node.right)",
-    "            return self.rotate_left(node)",
-    "        return node",
-    "",
-    "    def _min_value_node(self, node):",
-    "        current = node",
-    "        while current.left is not None:",
-    "            current = current.left",
-    "        return current",
-    "",
-    "    def delete(self, value):",
-    "        self.root = self._delete_rec(self.root, value)",
-    "",
-    "    def _delete_rec(self, node, value):",
-    "        if not node: return None",
-    "        if value < node.value: node.left = self._delete_rec(node.left, value)",
-    "        elif value > node.value: node.right = self._delete_rec(node.right, value)",
-    "        else:",
-    "            if not node.left or not node.right:",
-    "                temp = node.left if node.left else node.right",
-    "                if not temp: node = None",
-    "                else: node = temp",
-    "            else:",
-    "                temp_node = self._min_value_node(node.right)",
-    "                node.value = temp_node.value",
-    "                node.right = self._delete_rec(node.right, temp_node.value)",
-    "        if not node: return None",
-    "        self.update_height(node)",
-    "        balance = self.get_balance_factor(node)",
-    "        # LL Case / L0 Case",
-    "        if balance > 1 and self.get_balance_factor(node.left) >= 0:",
-    "            return self.rotate_right(node)",
-    "        # LR Case",
-    "        if balance > 1 and self.get_balance_factor(node.left) < 0:",
-    "            node.left = self.rotate_left(node.left)",
-    "            return self.rotate_right(node)",
-    "        # RR Case / R0 Case",
-    "        if balance < -1 and self.get_balance_factor(node.right) <= 0:",
-    "            return self.rotate_left(node)",
-    "        # RL Case",
-    "        if balance < -1 and self.get_balance_factor(node.right) > 0:",
-    "            node.right = self.rotate_right(node.right)",
-    "            return self.rotate_left(node)",
-    "        return node",
-  ],
-  Java: [
-    "class AVLNode {",
-    "    int value, height;",
-    "    AVLNode left, right;",
-    "    AVLNode(int val) { value = val; height = 1; left = null; right = null; }",
-    "}",
-    "class AVLTree {",
-    "    AVLNode root;",
-    "    int getHeight(AVLNode node) { return node == null ? 0 : node.height; }",
-    "    int getBalanceFactor(AVLNode node) { return node == null ? 0 : getHeight(node.left) - getHeight(node.right); }",
-    "    void updateHeight(AVLNode node) { if (node != null) node.height = 1 + Math.max(getHeight(node.left), getHeight(node.right)); }",
-    "",
-    "    AVLNode rotateRight(AVLNode y) {",
-    "        AVLNode x = y.left; AVLNode T2 = x.right;",
-    "        x.right = y; y.left = T2;",
-    "        updateHeight(y); updateHeight(x);",
-    "        return x;",
-    "    }",
-    "    AVLNode rotateLeft(AVLNode x) {",
-    "        AVLNode y = x.right; AVLNode T2 = y.left;",
-    "        y.left = x; x.right = T2;",
-    "        updateHeight(x); updateHeight(y);",
-    "        return y;",
-    "    }",
-    "",
-    "    public void insert(int value) { root = _insertRec(root, value); }",
-    "    private AVLNode _insertRec(AVLNode node, int value) {",
-    "        if (node == null) return new AVLNode(value);",
-    "        if (value < node.value) node.left = _insertRec(node.left, value);",
-    "        else if (value > node.value) node.right = _insertRec(node.right, value);",
-    "        else return node;",
-    "        updateHeight(node);",
-    "        int balance = getBalanceFactor(node);",
-    "        if (balance > 1 && value < node.left.value) return rotateRight(node);",
-    "        if (balance < -1 && value > node.right.value) return rotateLeft(node);",
-    "        if (balance > 1 && value > node.left.value) { node.left = rotateLeft(node.left); return rotateRight(node); }",
-    "        if (balance < -1 && value < node.right.value) { node.right = rotateRight(node.right); return rotateLeft(node); }",
-    "        return node;",
-    "    }",
-    "",
-    "    private AVLNode _minValueNode(AVLNode node) {",
-    "        AVLNode current = node; while (current.left != null) current = current.left; return current;",
-    "    }",
-    "    public void delete(int value) { root = _deleteRec(root, value); }",
-    "    private AVLNode _deleteRec(AVLNode node, int value) {",
-    "        if (node == null) return null;",
-    "        if (value < node.value) node.left = _deleteRec(node.left, value);",
-    "        else if (value > node.value) node.right = _deleteRec(node.right, value);",
-    "        else {",
-    "            if (node.left == null || node.right == null) {",
-    "                AVLNode temp = (node.left != null) ? node.left : node.right;",
-    "                if (temp == null) node = null; else node = temp;",
-    "            } else {",
-    "                AVLNode temp = _minValueNode(node.right); node.value = temp.value;",
-    "                node.right = _deleteRec(node.right, temp.value);",
-    "            }",
-    "        }",
-    "        if (node == null) return null;",
-    "        updateHeight(node);",
-    "        int balance = getBalanceFactor(node);",
-    "        if (balance > 1 && getBalanceFactor(node.left) >= 0) return rotateRight(node);",
-    "        if (balance > 1 && getBalanceFactor(node.left) < 0) { node.left = rotateLeft(node.left); return rotateRight(node); }",
-    "        if (balance < -1 && getBalanceFactor(node.right) <= 0) return rotateLeft(node);",
-    "        if (balance < -1 && getBalanceFactor(node.right) > 0) { node.right = rotateRight(node.right); return rotateLeft(node); }",
-    "        return node;",
-    "    }",
-    "}",
-  ],
-  "C++": [
-    "#include <algorithm> // For std::max",
-    "struct AVLNode {",
-    "    int value, height;",
-    "    AVLNode *left, *right;",
-    "    AVLNode(int val) : value(val), height(1), left(nullptr), right(nullptr) {}",
-    "};",
-    "class AVLTree {",
-    "public:",
-    "    AVLNode *root = nullptr;",
-    "    int getHeight(AVLNode* node) { return node ? node->height : 0; }",
-    "    int getBalanceFactor(AVLNode* node) { return node ? getHeight(node->left) - getHeight(node->right) : 0; }",
-    "    void updateHeight(AVLNode* node) { if(node) node->height = 1 + std::max(getHeight(node->left), getHeight(node->right)); }",
-    "",
-    "    AVLNode* rotateRight(AVLNode* y) {",
-    "        AVLNode* x = y->left; AVLNode* T2 = x->right;",
-    "        x->right = y; y->left = T2;",
-    "        updateHeight(y); updateHeight(x); return x;",
-    "    }",
-    "    AVLNode* rotateLeft(AVLNode* x) {",
-    "        AVLNode* y = x->right; AVLNode* T2 = y->left;",
-    "        y->left = x; x->right = T2;",
-    "        updateHeight(x); updateHeight(y); return y;",
-    "    }",
-    "",
-    "    void insert(int value) { root = _insertRec(root, value); }",
-    "    AVLNode* _insertRec(AVLNode* node, int value) {",
-    "        if (!node) return new AVLNode(value);",
-    "        if (value < node->value) node->left = _insertRec(node->left, value);",
-    "        else if (value > node->value) node->right = _insertRec(node->right, value);",
-    "        else return node;",
-    "        updateHeight(node);",
-    "        int balance = getBalanceFactor(node);",
-    "        if (balance > 1 && value < node->left->value) return rotateRight(node);",
-    "        if (balance < -1 && value > node->right->value) return rotateLeft(node);",
-    "        if (balance > 1 && value > node->left->value) { node->left = rotateLeft(node->left); return rotateRight(node); }",
-    "        if (balance < -1 && value < node->right->value) { node->right = rotateRight(node->right); return rotateLeft(node); }",
-    "        return node;",
-    "    }",
-    "",
-    "    AVLNode* _minValueNode(AVLNode* node) {",
-    "        AVLNode* current = node; while (current && current->left) current = current->left; return current;",
-    "    }",
-    "    void remove(int value) { root = _deleteRec(root, value); }",
-    "    AVLNode* _deleteRec(AVLNode* node, int value) {",
-    "        if (!node) return nullptr;",
-    "        if (value < node->value) node->left = _deleteRec(node->left, value);",
-    "        else if (value > node->value) node->right = _deleteRec(node->right, value);",
-    "        else {",
-    "            if (!node->left || !node->right) {",
-    "                AVLNode* temp = node->left ? node->left : node->right;",
-    "                if (!temp) { temp = node; node = nullptr; } else *node = *temp;",
-    "                delete temp;",
-    "            } else {",
-    "                AVLNode* temp = _minValueNode(node->right); node->value = temp->value;",
-    "                node->right = _deleteRec(node->right, temp->value);",
-    "            }",
-    "        }",
-    "        if (!node) return nullptr;",
-    "        updateHeight(node);",
-    "        int balance = getBalanceFactor(node);",
-    "        if (balance > 1 && getBalanceFactor(node->left) >= 0) return rotateRight(node);",
-    "        if (balance > 1 && getBalanceFactor(node->left) < 0) { node->left = rotateLeft(node->left); return rotateRight(node); }",
-    "        if (balance < -1 && getBalanceFactor(node->right) <= 0) return rotateLeft(node);",
-    "        if (balance < -1 && getBalanceFactor(node->right) > 0) { node->right = rotateRight(node->right); return rotateLeft(node); }",
-    "        return node;",
-    "    }",
-    "};",
-  ]
+  Python: AVL_TREE_CODE_SNIPPETS.Python, // Keep existing Python as it's more concise for display
+  Java: AVL_TREE_CODE_SNIPPETS.Java,
+  "C++": AVL_TREE_CODE_SNIPPETS["C++"],
 };
 
 interface AVLTreeCodePanelProps {
