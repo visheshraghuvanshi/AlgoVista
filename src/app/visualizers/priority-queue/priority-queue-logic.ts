@@ -66,17 +66,20 @@ const addStep = (
   operation: PriorityQueueStep['operation'],
   message: string,
   activeHeapIndices?: number[],
-  processedItem?: PriorityQueueItem | null
+  processedItemForStep?: PriorityQueueItem | null, // Changed name for clarity
+  lastOpSummaryForStep?: string // Specific summary for this step
 ) => {
   steps.push({
     heapArray: heap.map(item => ({ ...item })), // Deep copy items
     operation,
-    processedItem,
+    processedItem: processedItemForStep, // Use the new param name
     message,
     currentLine: line,
     activeHeapIndices: activeHeapIndices || [],
-    // Unused AlgorithmStep fields
-    activeIndices: [], swappingIndices: [], sortedIndices: [],
+    activeIndices: [], 
+    swappingIndices: [], 
+    sortedIndices: [],
+    lastOperation: lastOpSummaryForStep || operation, // Use specific summary if available
   });
 };
 
@@ -88,17 +91,18 @@ function heapifyUp(heap: PriorityQueueItem[], index: number, localSteps: Priorit
   let parentIndex = Math.floor((currentIndex - 1) / 2);
   addStep(localSteps, lm.heapifyUpGetParent, heap, opType, `Parent of ${currentIndex} is ${parentIndex}.`, [currentIndex, parentIndex]);
 
-  while (currentIndex > 0 && heap[currentIndex].priority < heap[parentIndex].priority) {
+  while (currentIndex > 0 && parentIndex >= 0 && heap[currentIndex].priority < heap[parentIndex].priority) {
     addStep(localSteps, lm.heapifyUpLoop, heap, opType, `Loop: index ${currentIndex} > 0 AND prio(${heap[currentIndex].priority}) < prio(${heap[parentIndex].priority}). Swap needed.`, [currentIndex, parentIndex]);
     [heap[currentIndex], heap[parentIndex]] = [heap[parentIndex], heap[currentIndex]]; // Swap
     addStep(localSteps, lm.heapifyUpSwap, heap, opType, `Swapped items at index ${currentIndex} and ${parentIndex}.`, [currentIndex, parentIndex]);
     currentIndex = parentIndex;
     addStep(localSteps, lm.heapifyUpUpdateIndex, heap, opType, `Current index moved to ${currentIndex}.`, [currentIndex]);
     parentIndex = Math.floor((currentIndex - 1) / 2);
-    addStep(localSteps, lm.heapifyUpUpdateParent, heap, opType, `New parent index is ${parentIndex}.`, [currentIndex, parentIndex]);
+    if (currentIndex > 0) { // Only update parentIndex if currentIndex is not root
+      addStep(localSteps, lm.heapifyUpUpdateParent, heap, opType, `New parent index is ${parentIndex}.`, [currentIndex, parentIndex]);
+    }
   }
   addStep(localSteps, lm.heapifyUpLoopEnd, heap, opType, `HeapifyUp loop condition false or index is 0.`, [currentIndex]);
-  // addStep(localSteps, lm.heapifyUpEnd, heap, opType, `HeapifyUp complete for original index ${index}.`);
 }
 
 // Helper: Min-Heapify Down
@@ -139,7 +143,6 @@ function heapifyDown(heap: PriorityQueueItem[], index: number, localSteps: Prior
       break; // Heap property satisfied
     }
   }
-  // addStep(localSteps, lm.heapifyDownEnd, heap, opType, `HeapifyDown complete for original index ${index}.`);
 }
 
 
@@ -150,76 +153,88 @@ export const generatePriorityQueueSteps = (
   itemPriority?: number
 ): PriorityQueueStep[] => {
   const localSteps: PriorityQueueStep[] = [];
-  let heap = currentHeap.map(item => ({ ...item })); // Deep copy
+  let heap = currentHeap.map(item => ({ ...item })); 
   const lm = PRIORITY_QUEUE_LINE_MAP;
   let message = "";
-  let processedItem: PriorityQueueItem | null = null;
+  let finalProcessedItem: PriorityQueueItem | null = null;
+  let finalOpSummary = operation;
 
   addStep(localSteps, null, heap, operation, `Initial state for PQ ${operation}.`);
 
   switch (operation) {
     case 'enqueue':
       if (itemValue === undefined || itemPriority === undefined) {
-        addStep(localSteps, null, heap, operation, "Error: Value or priority undefined for enqueue.");
+        addStep(localSteps, null, heap, operation, "Error: Value or priority undefined for enqueue.", [], null, "Enqueue Error");
         return localSteps;
       }
       const newItem: PriorityQueueItem = { value: itemValue, priority: itemPriority };
-      processedItem = newItem;
+      finalProcessedItem = newItem;
       message = `Enqueuing item "${itemValue}" with priority ${itemPriority}...`;
-      addStep(localSteps, lm.enqueueStart, heap, operation, message, [], newItem);
+      finalOpSummary = `Enqueued "${itemValue}" (Prio: ${itemPriority})`;
+      addStep(localSteps, lm.enqueueStart, heap, operation, message, [], newItem, finalOpSummary);
       
       heap.push(newItem);
-      addStep(localSteps, lm.enqueuePushToArray, heap, operation, `Added item to end of heap array. Heap size: ${heap.length}.`, [heap.length - 1], newItem);
+      addStep(localSteps, lm.enqueuePushToArray, heap, operation, `Added item to end of heap array. Heap size: ${heap.length}.`, [heap.length - 1], newItem, finalOpSummary);
       
-      addStep(localSteps, lm.enqueueCallHeapifyUp, heap, operation, `Calling HeapifyUp for last element (index ${heap.length - 1}).`, [heap.length - 1]);
+      addStep(localSteps, lm.enqueueCallHeapifyUp, heap, operation, `Calling HeapifyUp for last element (index ${heap.length - 1}).`, [heap.length - 1], newItem, finalOpSummary);
       heapifyUp(heap, heap.length - 1, localSteps, operation);
       
-      // addStep(localSteps, lm.enqueueEnd, heap, operation, `Enqueue of "${itemValue}" (prio ${itemPriority}) complete.`);
+      message = `Enqueue of "${itemValue}" (prio ${itemPriority}) complete.`;
       break;
 
     case 'dequeue':
       message = "Dequeuing (extracting min priority item)...";
-      addStep(localSteps, lm.dequeueStart, heap, operation, message);
+      finalOpSummary = "Dequeue";
+      addStep(localSteps, lm.dequeueStart, heap, operation, message, [], null, finalOpSummary);
       
-      addStep(localSteps, lm.dequeueCheckEmpty, heap, operation, `Is PQ empty? (size: ${heap.length})`);
+      addStep(localSteps, lm.dequeueCheckEmpty, heap, operation, `Is PQ empty? (size: ${heap.length})`, [], null, finalOpSummary);
       if (heap.length === 0) {
-        addStep(localSteps, lm.dequeueStart, heap, operation, "PQ is empty. Cannot dequeue."); // Use dequeueStart for 'no operation' message
-        processedItem = null;
+        message = "PQ is empty. Cannot dequeue.";
+        finalOpSummary = "Dequeue Failed (Empty)";
+        finalProcessedItem = null;
+        addStep(localSteps, lm.dequeueStart, heap, operation, message, [], finalProcessedItem, finalOpSummary);
         break;
       }
       
-      processedItem = heap[0];
-      addStep(localSteps, lm.dequeueStoreMin, heap, operation, `Min priority item is "${processedItem.value}" (prio ${processedItem.priority}).`, [0], processedItem);
+      finalProcessedItem = heap[0];
+      addStep(localSteps, lm.dequeueStoreMin, heap, operation, `Min priority item is "${finalProcessedItem.value}" (prio ${finalProcessedItem.priority}).`, [0], finalProcessedItem, `Dequeue: Min is ${finalProcessedItem.value}(${finalProcessedItem.priority})`);
 
       if (heap.length === 1) {
         heap.pop();
-        addStep(localSteps, lm.dequeuePopSingle, heap, operation, `PQ had one element. Popped. PQ is now empty.`, [], processedItem);
+        message = `PQ had one element. Popped "${finalProcessedItem.value}". PQ is now empty.`;
+        finalOpSummary = `Dequeued "${finalProcessedItem.value}"`;
+        addStep(localSteps, lm.dequeuePopSingle, heap, operation, message, [], finalProcessedItem, finalOpSummary);
       } else {
-        heap[0] = heap.pop()!; // Move last element to root
-        addStep(localSteps, lm.dequeueMoveLastToRoot, heap, operation, `Moved last element to root. Root is now "${heap[0]?.value}" (prio ${heap[0]?.priority}).`, [0], processedItem);
+        const lastElement = heap.pop()!;
+        heap[0] = lastElement;
+        message = `Moved last element ("${lastElement.value}", prio ${lastElement.priority}) to root. Root is now "${heap[0]?.value}" (prio ${heap[0]?.priority}).`;
+        finalOpSummary = `Dequeued "${finalProcessedItem.value}"`;
+        addStep(localSteps, lm.dequeueMoveLastToRoot, heap, operation, message, [0], finalProcessedItem, `Internal: ${lastElement.value} to root`);
         
-        addStep(localSteps, lm.dequeueCallHeapifyDown, heap, operation, `Calling HeapifyDown for root (index 0).`, [0]);
+        addStep(localSteps, lm.dequeueCallHeapifyDown, heap, operation, `Calling HeapifyDown for root (index 0).`, [0], finalProcessedItem, `Internal: HeapifyDown root`);
         heapifyDown(heap, 0, localSteps, operation);
+        message = `Dequeued item "${finalProcessedItem.value}".`;
       }
-      addStep(localSteps, lm.dequeueReturnMin, heap, operation, `Dequeued item "${processedItem.value}".`);
-      // addStep(localSteps, lm.dequeueEnd, heap, operation, "Dequeue complete.");
       break;
 
     case 'peek':
       message = "Peeking front (min priority item)...";
-      addStep(localSteps, lm.peekStart, heap, operation, message, heap.length > 0 ? [0] : []);
-      addStep(localSteps, lm.peekCheckEmpty, heap, operation, `Is PQ empty? (size: ${heap.length})`, heap.length > 0 ? [0] : []);
+      finalOpSummary = "Peek";
+      addStep(localSteps, lm.peekStart, heap, operation, message, heap.length > 0 ? [0] : [], null, finalOpSummary);
+      addStep(localSteps, lm.peekCheckEmpty, heap, operation, `Is PQ empty? (size: ${heap.length})`, heap.length > 0 ? [0] : [], null, finalOpSummary);
       if (heap.length === 0) {
-        addStep(localSteps, lm.peekStart, heap, operation, "PQ is empty. Nothing to peek."); // Use peekStart for 'no operation' message
-        processedItem = null;
+        message = "PQ is empty. Nothing to peek.";
+        finalOpSummary = "Peek Failed (Empty)";
+        finalProcessedItem = null;
       } else {
-        processedItem = heap[0];
-        addStep(localSteps, lm.peekReturnTop, heap, operation, `Front item is "${processedItem.value}" (prio ${processedItem.priority}).`, [0], processedItem);
+        finalProcessedItem = heap[0];
+        message = `Front item is "${finalProcessedItem.value}" (prio ${finalProcessedItem.priority}).`;
+        finalOpSummary = `Peeked "${finalProcessedItem.value}" (Prio: ${finalProcessedItem.priority})`;
+        addStep(localSteps, lm.peekReturnTop, heap, operation, message, [0], finalProcessedItem, finalOpSummary);
       }
-      // addStep(localSteps, lm.peekEnd, heap, operation, "Peek complete.", heap.length > 0 ? [0] : []);
       break;
   }
-  addStep(localSteps, null, heap, operation, `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation finished.`);
+  addStep(localSteps, null, heap, operation, `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation finished. ${finalOpSummary}.`, [], finalProcessedItem, finalOpSummary);
   return localSteps;
 };
 
