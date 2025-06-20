@@ -117,5 +117,3 @@ export function BinaryTreeVisualizationPanel({
     </Card>
   );
 }
-
-```

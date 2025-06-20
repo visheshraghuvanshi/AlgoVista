@@ -502,5 +502,3 @@ export const resetAVLTreeState = () => {
     avlNodeIdCounter = 0;
     currentPathRec.length = 0;
 };
-
-```

@@ -37,7 +37,7 @@ export default function AVLTreeVisualizerPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [currentNodes, setCurrentNodes] = useState<BinaryTreeNodeVisual[]>([]);
-  const [currentEdges, setCurrentEdges] = useState<BinaryTreeEdgeVisual[]>([]);
+  const [currentEdges, setCurrentEdges] = useState<TreeAlgorithmStep['edges']>([]);
   const [currentPath, setCurrentPath] = useState<(string | number)[]>([]); 
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [currentProcessingNodeId, setCurrentProcessingNodeId] = useState<string|null>(null);
@@ -55,13 +55,13 @@ export default function AVLTreeVisualizerPage() {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
       setCurrentNodes(currentS.nodes);
-      setCurrentEdges(currentS.edges);
+      setCurrentEdges(currentS.edges || []); // Ensure edges is always an array
       setCurrentPath(currentS.traversalPath || []); 
       setCurrentLine(currentS.currentLine);
       setCurrentProcessingNodeId(currentS.currentProcessingNodeId ?? null);
       setCurrentMessage(currentS.message || "Step executed.");
     }
-  }, [steps]); // Depends on steps, which is stable between re-renders of this callback.
+  }, [steps]);
   
   const processOperation = useCallback((operation: 'build' | 'insert' | 'delete') => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -110,7 +110,7 @@ export default function AVLTreeVisualizerPage() {
     if (newSteps.length > 0) {
         const firstStep = newSteps[0];
         setCurrentNodes(firstStep.nodes);
-        setCurrentEdges(firstStep.edges);
+        setCurrentEdges(firstStep.edges || []);
         setCurrentPath(firstStep.traversalPath || []);
         setCurrentLine(firstStep.currentLine);
         setCurrentProcessingNodeId(firstStep.currentProcessingNodeId ?? null);
@@ -127,7 +127,7 @@ export default function AVLTreeVisualizerPage() {
       setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
       setCurrentMessage("No steps generated. Check inputs or operation.");
     }
-  }, [initialValuesInput, operationValueInput, toast, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+  }, [initialValuesInput, operationValueInput, toast, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setCurrentNodes, setCurrentEdges, setCurrentPath, setCurrentLine, setCurrentProcessingNodeId, setCurrentMessage]);
 
   const handleBuildTree = () => processOperation('build');
   const handleInsertValue = () => processOperation('insert');
@@ -136,7 +136,7 @@ export default function AVLTreeVisualizerPage() {
   useEffect(() => {
     handleBuildTree(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Initial build on mount
+  }, []); 
 
 
   useEffect(() => {
@@ -179,9 +179,7 @@ export default function AVLTreeVisualizerPage() {
     setSteps([]);
     setCurrentNodes([]); setCurrentEdges([]); setCurrentPath([]); setCurrentLine(null); setCurrentProcessingNodeId(null);
     setCurrentMessage("AVL Tree reset. Build a new tree or perform operations.");
-    // Defer build until next cycle if setInitialValuesInput triggers it, or call explicitly if not.
-    // For this setup, explicitly calling it ensures it runs after state updates.
-    processOperation('build'); // Rebuild with default values
+    processOperation('build'); 
   };
   
   const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -258,5 +256,3 @@ export default function AVLTreeVisualizerPage() {
     </div>
   );
 }
-
-```
