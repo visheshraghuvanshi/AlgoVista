@@ -1,3 +1,4 @@
+
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, RBTNodeInternal, RBTreeGraph } from './types'; // Local import
 import { RBT_NODE_COLORS, RBT_TEXT_COLORS } from './rbt-node-colors';
 
@@ -128,7 +129,8 @@ function addStep(
     currentLine: line,
     message,
     currentProcessingNodeId: activeNodeIds.length > 0 ? activeNodeIds[0] : null,
-    auxiliaryData: { finalGraphState: getFinalRBTreeGraph(graph) }
+    // auxiliaryData will be set explicitly for the final step of an operation
+    auxiliaryData: {} 
   });
 }
 
@@ -241,7 +243,6 @@ function insertFixup(graph: RBTreeGraph, zId: string, localSteps: TreeAlgorithmS
           addStep(localSteps, graph, RBT_LINE_MAP.fixupCase2MoveZToParent, `Set z to parent ${graph.nodesMap.get(currentZId)?.value}.`);
           rotateLeft(graph, currentZId, localSteps);
         }
-        // After case 2, z is now the original parent, and code falls through to case 3
         const zForCase3 = graph.nodesMap.get(currentZId)!; 
         const parentForCase3 = graph.nodesMap.get(zForCase3.parentId!)!;
         const grandparentForCase3 = graph.nodesMap.get(parentForCase3.parentId!)!;
@@ -290,6 +291,7 @@ function insertFixup(graph: RBTreeGraph, zId: string, localSteps: TreeAlgorithmS
 }
 
 function insert(graph: RBTreeGraph, value: number, localSteps: TreeAlgorithmStep[]) {
+  let duplicateFound = false;
   addStep(localSteps, graph, RBT_LINE_MAP.insertFuncStart, `Inserting value: ${value}`, []);
   const newNodeId = generateNodeId(value);
   
@@ -312,19 +314,25 @@ function insert(graph: RBTreeGraph, value: number, localSteps: TreeAlgorithmStep
       addStep(localSteps, graph, RBT_LINE_MAP.bstInsertGoRight, `Value ${value} > ${xNode.value}. Go right.`, [xId!, yId !== graph.nilNodeId ? yId! : ''], {}, [...pathNodeIds]);
       xId = xNode.rightId;
     } else {
-      addStep(localSteps, graph, 0, `Value ${value} already exists. RBTs typically don't allow duplicates. Insert operation aborted.`, [xId!], {[xId!]:RBT_NODE_COLORS.FOUND_HIGHLIGHT}, [...pathNodeIds]);
+      duplicateFound = true;
+      addStep(localSteps, graph, RBT_LINE_MAP.bstInsertLoop, `Value ${value} already exists. RBTs typically don't allow duplicates. Insert operation aborted.`, [xId!], {[xId!]:RBT_NODE_COLORS.FOUND_HIGHLIGHT}, [...pathNodeIds]);
       graph.nodesMap.delete(newNodeId); 
-      return; 
+      break; 
     }
   }
   
+  if (duplicateFound) {
+     localSteps[localSteps.length-1].auxiliaryData!.finalGraphState = getFinalRBTreeGraph(graph);
+     return;
+  }
+
   const newNode = graph.nodesMap.get(newNodeId)!;
   newNode.parentId = yId;
   addStep(localSteps, graph, RBT_LINE_MAP.bstInsertSetParent, `Set parent of new node ${value} to ${yId !== graph.nilNodeId ? graph.nodesMap.get(yId!)?.value : 'NIL'}.`, [newNodeId, yId !== graph.nilNodeId ? yId! : '']);
 
   if (yId === graph.nilNodeId) { 
     graph.rootId = newNodeId;
-    addStep(localSteps, graph, 0, `Tree was empty. New node ${value} is root.`, [newNodeId], {}, [...pathNodeIds, newNodeId]); 
+    addStep(localSteps, graph, RBT_LINE_MAP.bstInsertSetParent, `Tree was empty. New node ${value} is root.`, [newNodeId], {}, [...pathNodeIds, newNodeId]); 
   } else {
     const yNode = graph.nodesMap.get(yId!)!;
     if (value < yNode.value!) {
@@ -333,18 +341,20 @@ function insert(graph: RBTreeGraph, value: number, localSteps: TreeAlgorithmStep
       yNode.rightId = newNodeId;
     }
     graph.nodesMap.set(yId!, yNode);
-    addStep(localSteps, graph, 0, `Link new node ${value} as child of ${yNode.value}.`, [newNodeId, yId!], {}, [...pathNodeIds, newNodeId]);
+    addStep(localSteps, graph, RBT_LINE_MAP.bstInsertSetParent, `Link new node ${value} as child of ${yNode.value}.`, [newNodeId, yId!], {}, [...pathNodeIds, newNodeId]);
   }
   graph.nodesMap.set(newNodeId, newNode); 
   
   insertFixup(graph, newNodeId, localSteps);
-  addStep(localSteps, graph, RBT_LINE_MAP.insertFuncEnd, `Insertion of ${value} complete.`);
+  addStep(localSteps, graph, RBT_LINE_MAP.insertFuncEnd, `Insertion of ${value} complete. Root is ${graph.nodesMap.get(graph.rootId!)?.value}.`);
+  localSteps[localSteps.length-1].auxiliaryData!.finalGraphState = getFinalRBTreeGraph(graph);
 }
 
 function search(graph: RBTreeGraph, searchValue: number, localSteps: TreeAlgorithmStep[]): RBTNodeInternal | null {
   addStep(localSteps, graph, RBT_LINE_MAP.searchFuncStart, `Searching for value: ${searchValue}`, []);
   let currentId: string | null = graph.rootId;
   const pathNodeIds: string[] = [];
+  let foundNode: RBTNodeInternal | null = null;
 
   while (currentId && currentId !== graph.nilNodeId) {
     const currentNode = graph.nodesMap.get(currentId)!;
@@ -352,9 +362,9 @@ function search(graph: RBTreeGraph, searchValue: number, localSteps: TreeAlgorit
     addStep(localSteps, graph, RBT_LINE_MAP.searchNodeCompare, `Comparing search value ${searchValue} with node ${currentNode.value}`, [currentId], {}, [...pathNodeIds]);
 
     if (searchValue === currentNode.value) {
+      foundNode = currentNode;
       addStep(localSteps, graph, RBT_LINE_MAP.searchValueFound, `Value ${searchValue} found at node ${currentNode.value}`, [currentId], {[currentId]: RBT_NODE_COLORS.FOUND_HIGHLIGHT}, [...pathNodeIds]);
-      addStep(localSteps, graph, RBT_LINE_MAP.searchFuncEnd, `Search complete.`);
-      return currentNode;
+      break;
     }
     if (searchValue < currentNode.value!) {
       addStep(localSteps, graph, RBT_LINE_MAP.searchGoLeft, `Search value ${searchValue} < node ${currentNode.value}. Going left.`, [currentId], {}, [...pathNodeIds]);
@@ -364,9 +374,12 @@ function search(graph: RBTreeGraph, searchValue: number, localSteps: TreeAlgorit
       currentId = currentNode.rightId;
     }
   }
-  addStep(localSteps, graph, RBT_LINE_MAP.searchValueNotFound, `Value ${searchValue} not found. Reached NIL or empty tree.`, [], {}, pathNodeIds);
-  addStep(localSteps, graph, RBT_LINE_MAP.searchFuncEnd, `Search complete.`);
-  return null;
+  if (!foundNode) {
+    addStep(localSteps, graph, RBT_LINE_MAP.searchValueNotFound, `Value ${searchValue} not found. Reached NIL or empty tree.`, [], {}, pathNodeIds);
+  }
+  addStep(localSteps, graph, RBT_LINE_MAP.searchFuncEnd, `Search for ${searchValue} complete. ${foundNode ? 'Found.' : 'Not found.'}`);
+  localSteps[localSteps.length-1].auxiliaryData!.finalGraphState = getFinalRBTreeGraph(graph);
+  return foundNode;
 }
 
 function deleteNodeConceptual(graph: RBTreeGraph, value: number, localSteps: TreeAlgorithmStep[]) {
@@ -387,65 +400,78 @@ function deleteNodeConceptual(graph: RBTreeGraph, value: number, localSteps: Tre
     if (!zId || zId === graph.nilNodeId) {
         addStep(localSteps, graph, RBT_LINE_MAP.deleteFindNodeZ, `Value ${value} not found in tree. Cannot delete.`);
         addStep(localSteps, graph, RBT_LINE_MAP.deleteFuncEnd, `Delete operation for ${value} ended (not found).`);
+        localSteps[localSteps.length-1].auxiliaryData!.finalGraphState = getFinalRBTreeGraph(graph);
         return;
     }
     const zNode = graph.nodesMap.get(zId)!;
     addStep(localSteps, graph, RBT_LINE_MAP.deleteFindNodeZ, `Node to delete, z = ${zNode.value}, found.`, [zId]);
     
-    let yId = zId; 
-    let yOriginalColor = graph.nodesMap.get(yId)!.color;
-    let xId: string | null; 
-
-    if (zNode.leftId === graph.nilNodeId) {
-        xId = zNode.rightId;
-        addStep(localSteps, graph, RBT_LINE_MAP.deleteIdentifyYAndX, `Node ${zNode.value} has no left child (or it's NIL). Successor child x is right child (${xId !== graph.nilNodeId ? graph.nodesMap.get(xId)?.value : 'NIL'}).`, [zId, xId !== graph.nilNodeId ? xId : graph.nilNodeId]);
-        transplant(graph, zId, xId, localSteps);
-    } else if (zNode.rightId === graph.nilNodeId) {
-        xId = zNode.leftId;
-        addStep(localSteps, graph, RBT_LINE_MAP.deleteIdentifyYAndX, `Node ${zNode.value} has no right child (or it's NIL). Successor child x is left child (${xId !== graph.nilNodeId ? graph.nodesMap.get(xId)?.value : 'NIL'}).`, [zId, xId !== graph.nilNodeId ? xId : graph.nilNodeId]);
-        transplant(graph, zId, xId, localSteps);
-    } else { 
-        yId = treeMinimum(graph, zNode.rightId!); 
-        const yNodeSuccessor = graph.nodesMap.get(yId)!;
-        yOriginalColor = yNodeSuccessor.color;
-        xId = yNodeSuccessor.rightId; 
-        addStep(localSteps, graph, RBT_LINE_MAP.deleteIdentifyYAndX, `Node ${zNode.value} has two children. Successor y=${yNodeSuccessor.value}. Successor's child x=${xId !== graph.nilNodeId ? graph.nodesMap.get(xId)?.value : 'NIL'}.`, [zId, yId, xId !== graph.nilNodeId ? xId : graph.nilNodeId]);
-        if (yNodeSuccessor.parentId === zId) {
-            if(xId && graph.nodesMap.has(xId)) graph.nodesMap.get(xId)!.parentId = yId; 
-        } else {
-            transplant(graph, yId, xId, localSteps);
-            graph.nodesMap.get(yId)!.rightId = zNode.rightId;
-            if(graph.nodesMap.has(zNode.rightId!)) graph.nodesMap.get(zNode.rightId!)!.parentId = yId;
-        }
-        transplant(graph, zId, yId, localSteps);
-        graph.nodesMap.get(yId)!.leftId = zNode.leftId;
-        if(graph.nodesMap.has(zNode.leftId!)) graph.nodesMap.get(zNode.leftId!)!.parentId = yId;
-        setColor(yId, zNode.color, graph.nodesMap, graph.nilNodeId);
-    }
-    graph.nodesMap.delete(zId); // Logically remove from map after transplants.
-
-    addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Node for value ${value} (or its successor) removed/transplanted. RBT properties might be violated.`, xId && xId !== graph.nilNodeId ? [xId] : []);
+    // --- Simplified Deletion Visualization ---
+    // In a real RBT, this part is complex. We'll simulate a BST-like removal
+    // and then a conceptual fixup.
     
-    if (yOriginalColor === BLACK) {
-      addStep(localSteps, graph, RBT_LINE_MAP.deleteCheckYColorCallFixup, `Original color of removed/moved node y was BLACK. DeleteFixup(${xId !== graph.nilNodeId ? graph.nodesMap.get(xId!)?.value : 'NIL'}) is needed. (Visualization of fixup is conceptual).`, xId && xId !== graph.nilNodeId ? [xId] : []);
-      // Placeholder for conceptual delete fixup
-      // For a real implementation, deleteFixup(graph, xId, localSteps) would be called here.
-      // Since it's complex, we simulate a simplified rebalance (e.g. root color check)
-      if (graph.rootId && graph.rootId !== graph.nilNodeId && isRed(graph.rootId, graph.nodesMap, graph.nilNodeId)) {
-         setColor(graph.rootId, BLACK, graph.nodesMap, graph.nilNodeId);
-         addStep(localSteps, graph, RBT_LINE_MAP.deleteFixupSetXBlack, `Conceptual Fixup: Root ${graph.nodesMap.get(graph.rootId!)!.value} recolored BLACK.`);
-      } else {
-         addStep(localSteps, graph, RBT_LINE_MAP.deleteFixupSetXBlack, `Conceptual Fixup: Further RBT properties restored (not shown in detail).`);
-      }
-    } else {
-      addStep(localSteps, graph, RBT_LINE_MAP.deleteCheckYColorCallFixup, `Original color of removed/moved node y was RED. No fixup needed for RBT properties related to black height.`);
+    // Case 1: z has no left child (or left is NIL)
+    if (zNode.leftId === graph.nilNodeId) {
+        addStep(localSteps, graph, RBT_LINE_MAP.deleteIdentifyYAndX, `Node ${zNode.value} has no left child. Right child (${zNode.rightId !== graph.nilNodeId ? graph.nodesMap.get(zNode.rightId!)!.value : 'NIL'}) will replace it.`, [zId, zNode.rightId!]);
+        transplant(graph, zId, zNode.rightId, localSteps);
+        if (zNode.color === BLACK && zNode.rightId !== graph.nilNodeId) { // Simplified conceptual fixup if black node removed and non-NIL child replaces
+             addStep(localSteps, graph, RBT_LINE_MAP.deleteCheckYColorCallFixup, `Removed BLACK node ${zNode.value}, replaced by ${graph.nodesMap.get(zNode.rightId!)!.value}. Conceptual fixup needed.`, [zNode.rightId!]);
+        }
+    } 
+    // Case 2: z has no right child (or right is NIL)
+    else if (zNode.rightId === graph.nilNodeId) {
+        addStep(localSteps, graph, RBT_LINE_MAP.deleteIdentifyYAndX, `Node ${zNode.value} has no right child. Left child (${zNode.leftId !== graph.nilNodeId ? graph.nodesMap.get(zNode.leftId!)!.value : 'NIL'}) will replace it.`, [zId, zNode.leftId!]);
+        transplant(graph, zId, zNode.leftId, localSteps);
+        if (zNode.color === BLACK && zNode.leftId !== graph.nilNodeId) {
+             addStep(localSteps, graph, RBT_LINE_MAP.deleteCheckYColorCallFixup, `Removed BLACK node ${zNode.value}, replaced by ${graph.nodesMap.get(zNode.leftId!)!.value}. Conceptual fixup needed.`, [zNode.leftId!]);
+        }
+    } 
+    // Case 3: z has two children
+    else {
+        let yId = treeMinimum(graph, zNode.rightId!); // Find successor
+        const yNode = graph.nodesMap.get(yId)!;
+        addStep(localSteps, graph, RBT_LINE_MAP.deleteIdentifyYAndX, `Node ${zNode.value} has two children. Successor y=${yNode.value}.`, [zId, yId]);
+        
+        let yOriginalColor = yNode.color;
+        let xId = yNode.rightId; // Successor y has at most one child (right child)
+
+        if (yNode.parentId === zId) { // Successor is z's right child
+            if (xId !== graph.nilNodeId) graph.nodesMap.get(xId)!.parentId = yId; // x's parent is now y (which will move to z's spot)
+            addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Successor ${yNode.value} is direct child of ${zNode.value}. Prepare to move y.`, [yId, xId !== graph.nilNodeId ? xId : graph.nilNodeId]);
+        } else { // Successor is deeper in right subtree
+            transplant(graph, yId, xId, localSteps); // y is replaced by its right child x
+            graph.nodesMap.get(yId)!.rightId = zNode.rightId;
+            graph.nodesMap.get(zNode.rightId!)!.parentId = yId;
+             addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Successor ${yNode.value} is not direct child. Link y's original right child to y's parent. Link z's right child to y.`, [yId, xId !== graph.nilNodeId ? xId : graph.nilNodeId, zNode.rightId!]);
+        }
+        transplant(graph, zId, yId, localSteps); // z is replaced by y
+        graph.nodesMap.get(yId)!.leftId = zNode.leftId;
+        graph.nodesMap.get(zNode.leftId!)!.parentId = yId;
+        setColor(yId, zNode.color, graph.nodesMap, graph.nilNodeId);
+        addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Moved successor ${yNode.value} to ${zNode.value}'s position. Color of ${yNode.value} set to ${zNode.color === RED ? 'RED' : 'BLACK'}.`, [yId]);
+
+        if (yOriginalColor === BLACK && xId !== graph.nilNodeId) { // If successor was black and its child x is not NIL
+             addStep(localSteps, graph, RBT_LINE_MAP.deleteCheckYColorCallFixup, `Original color of successor ${yNode.value} was BLACK. Conceptual fixup needed at x=${graph.nodesMap.get(xId!)!.value}.`, [xId!]);
+        }
     }
+    graph.nodesMap.delete(zId);
+
+    // Simplified Fixup for visualization after any structural change
+    if (graph.rootId !== graph.nilNodeId && graph.nodesMap.get(graph.rootId!)!.color === RED) {
+        setColor(graph.rootId!, BLACK, graph.nodesMap, graph.nilNodeId);
+        addStep(localSteps, graph, RBT_LINE_MAP.deleteFixupSetXBlack, `Conceptual Fixup: Root ${graph.nodesMap.get(graph.rootId!)!.value} recolored BLACK.`);
+    } else if (graph.rootId !== graph.nilNodeId) { // Ensure root is always black if it exists
+         setColor(graph.rootId!, BLACK, graph.nodesMap, graph.nilNodeId);
+    }
+
     addStep(localSteps, graph, RBT_LINE_MAP.deleteFuncEnd, `Delete operation for ${value} (conceptually) complete.`);
+    localSteps[localSteps.length-1].auxiliaryData!.finalGraphState = getFinalRBTreeGraph(graph);
 }
+
 
 function transplant(graph: RBTreeGraph, uId: string, vId: string | null, localSteps: TreeAlgorithmStep[]) {
     const uNode = graph.nodesMap.get(uId)!;
-    addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Transplanting: Replace subtree rooted at ${uNode.value} with subtree at ${vId !== graph.nilNodeId ? graph.nodesMap.get(vId!)?.value : 'NIL'}.`);
+    addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Transplanting: Replace subtree rooted at ${uNode.value} with subtree at ${vId !== graph.nilNodeId && vId !== null ? graph.nodesMap.get(vId!)?.value : 'NIL'}.`);
     if (uNode.parentId === graph.nilNodeId) {
         graph.rootId = vId;
     } else if (uId === graph.nodesMap.get(uNode.parentId!)!.leftId) {
@@ -453,7 +479,7 @@ function transplant(graph: RBTreeGraph, uId: string, vId: string | null, localSt
     } else {
         graph.nodesMap.get(uNode.parentId!)!.rightId = vId;
     }
-    if (vId !== graph.nilNodeId && graph.nodesMap.has(vId)) { // Ensure vId exists and isn't NIL
+    if (vId !== graph.nilNodeId && vId !== null && graph.nodesMap.has(vId)) { 
         graph.nodesMap.get(vId!)!.parentId = uNode.parentId;
     }
     addStep(localSteps, graph, RBT_LINE_MAP.deleteTransplant, `Transplant complete.`);
@@ -488,7 +514,6 @@ export const generateRBTreeSteps = (
       nodesMap: newNodesMap, 
       nilNodeId: currentGraphRef.nilNodeId || NIL_ID 
     };
-    // Re-establish nodeIdCounter if continuing from existing graph to avoid collisions
     nodeIdCounter = Array.from(graph.nodesMap.keys()).reduce((max, id) => {
         if (id === NIL_ID) return max;
         const numPart = id.split('-').pop();
@@ -508,7 +533,7 @@ export const generateRBTreeSteps = (
     values.forEach(val => {
       insert(graph, val, localSteps);
     });
-    addStep(localSteps, graph, null, "Build complete.");
+    addStep(localSteps, graph, null, `Build complete. Root is ${graph.rootId !== graph.nilNodeId ? graph.nodesMap.get(graph.rootId!)?.value : 'NIL'}.`);
   } else if (operation === 'insert') {
     if (valueToProcess === undefined) {
       addStep(localSteps, graph, null, "Error: No value provided for insert.");
@@ -529,19 +554,12 @@ export const generateRBTreeSteps = (
     }
   } else if (operation === 'structure') {
      addStep(localSteps, graph, null, "Displaying current tree structure.");
+     addStep(localSteps, graph, null, "Current tree structure displayed."); // Conclusive step
   }
   
-  if (localSteps.length > 0 && operation !== 'structure') {
-      const lastOpMessage = localSteps[localSteps.length-1].message;
-      if(!lastOpMessage?.toLowerCase().includes("final tree state") && !lastOpMessage?.toLowerCase().includes("complete") && !lastOpMessage?.toLowerCase().includes("ended")) {
-           addStep(localSteps, graph, null, `Final tree state after: ${lastOpMessage || operation}.`);
-      }
-  } else if (operation === 'build' && (!initialValuesString || initialValuesString.trim() === '')) {
-      addStep(localSteps, graph, null, "Tree is empty after build attempt with no values.");
-  } else if (operation === 'structure' && localSteps.length === 1){
-      addStep(localSteps, graph, null, "Current tree structure displayed.");
+  if (localSteps.length > 0) {
+      localSteps[localSteps.length - 1].auxiliaryData!.finalGraphState = getFinalRBTreeGraph(graph);
   }
-
 
   if (currentGraphRef) {
     currentGraphRef.rootId = graph.rootId;
@@ -587,20 +605,21 @@ export function mapRBTNodesToVisual(
      if (specialHighlightColors[nodeId] === RBT_NODE_COLORS.FOUND_HIGHLIGHT){
         displayTextColor = RBT_TEXT_COLORS.FOUND_HIGHLIGHT_TEXT;
      }
+     if (node.value === null && nodeId === nilNodeId) { // Handle explicit NIL for display
+        displayColor = RBT_NODE_COLORS.NIL;
+        displayTextColor = RBT_TEXT_COLORS.NIL_TEXT;
+     }
+
 
     visualNodes.push({
       id: node.id,
       value: node.value,
       x, y,
-      nodeColor: node.color === RED ? 'RED' : 'BLACK', 
+      nodeColor: node.color === RED ? 'RED' : (node.value === null ? 'NIL' : 'BLACK'), 
       color: displayColor, 
       textColor: displayTextColor,
       leftId: node.leftId !== nilNodeId ? node.leftId : null,
       rightId: node.rightId !== nilNodeId ? node.rightId : null,
-      // Height and Balance Factor are not standard RBT properties shown on nodes,
-      // but if your specific RBT logic calculates them for visualization, they can be added.
-      // height: node.height, // Assuming node has height property from logic
-      // balanceFactor: node.balanceFactor, // Assuming node has BF property
     });
     
     const childXOffset = X_SPACING_BASE * xOffsetMultiplier / Math.pow(1.7, depth); 
@@ -644,7 +663,7 @@ function buildEdges(visualNodes: BinaryTreeNodeVisual[], nilNodeId: string): Tre
 
 export const createInitialRBTreeGraph = (): RBTreeGraph => {
   nodeIdCounter = 0; 
-  const nilId = generateNodeId(null); // Use a unique ID for the shared NIL sentinel
+  const nilId = NIL_ID; // Use the exported constant
   const nilNode = createNode(nilId, null, BLACK, nilId, nilId, nilId);
   const nodesMap = new Map<string, RBTNodeInternal>();
   nodesMap.set(nilId, nilNode);
