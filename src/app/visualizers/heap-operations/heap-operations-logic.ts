@@ -1,3 +1,4 @@
+
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from '@/types';
 
 export type HeapOperationType = 'buildMinHeap' | 'insertMinHeap' | 'extractMin' | 'classDefinition';
@@ -7,7 +8,6 @@ export const HEAP_OPERATION_LINE_MAPS: Record<HeapOperationType, Record<string, 
   classDefinition: { /* general class lines */ },
   buildMinHeap: {
     func: 1, copyArray: 2, firstNonLeaf: 3, loop: 4, callHeapifyDown: 5, endLoop: 6,
-    // Plus heapifyDown lines if shown inline, or refer to extractMin's map
   },
   insertMinHeap: {
     func: 1, push: 2, callHeapifyUp: 3,
@@ -84,11 +84,8 @@ function mapHeapToTreeNodes(
       positionNode(rightChildIndex, childX, y + Y_SPACING, nextLevelWidth);
     }
   }
-  // Initial call to position nodes, starting with the root (index 0)
-  // The initial levelWidth can be the SVG_WIDTH or some factor of it.
   positionNode(0, SVG_WIDTH / 2, 50, SVG_WIDTH * 0.8); 
   
-  // Normalize x coordinates to ensure tree is centered and fits if too wide
     if (visualNodes.length > 0) {
         const minX = Math.min(...visualNodes.map(n => n.x));
         const maxX = Math.max(...visualNodes.map(n => n.x));
@@ -98,13 +95,13 @@ function mapHeapToTreeNodes(
         const shiftX = desiredCenterX - currentCenterX;
 
         let scaleFactor = 1;
-        if (treeWidth > SVG_WIDTH * 0.95) { // If tree is wider than viewport
+        if (treeWidth > SVG_WIDTH * 0.95) { 
             scaleFactor = (SVG_WIDTH * 0.95) / treeWidth;
         }
 
         visualNodes.forEach(node => {
             node.x = desiredCenterX + (node.x - currentCenterX) * scaleFactor;
-            node.y = node.y * scaleFactor + (SVG_WIDTH * (1-scaleFactor) * 0.1); // also scale Y and adjust start
+            node.y = node.y * scaleFactor + (SVG_WIDTH * (1-scaleFactor) * 0.1); 
         });
     }
 
@@ -113,14 +110,15 @@ function mapHeapToTreeNodes(
 
 
 export const generateHeapSteps = (
-  heapDataRef: React.MutableRefObject<number[]>, // Use ref to modify underlying array
+  heapDataRef: React.MutableRefObject<number[]>, 
   operation: HeapOperationType,
   value?: number,
-  initialArrayString?: string // Only for buildHeap
+  initialArrayString?: string 
 ): TreeAlgorithmStep[] => {
   const localSteps: TreeAlgorithmStep[] = [];
-  let currentHeapArray = heapDataRef.current; // Get current heap array
+  let currentHeapArray = heapDataRef.current; 
   let lineMap = HEAP_OPERATION_LINE_MAPS[operation];
+  let extractedMinValue: number | null = null;
 
   const addStep = (
     line: number | null,
@@ -129,19 +127,20 @@ export const generateHeapSteps = (
     swappingIndices: number[] = [],
     pathIndices: number[] = [],
     currentProcessingIdOverride?: string | null,
+    auxData?: Record<string, any> // For carrying extracted value if needed
   ) => {
     const { nodes, edges } = mapHeapToTreeNodes([...currentHeapArray], activeIndex, swappingIndices, pathIndices);
     localSteps.push({
       nodes,
       edges,
-      traversalPath: pathIndices.map(idx => currentHeapArray[idx]), // Can represent heapify path values
+      traversalPath: pathIndices.map(idx => currentHeapArray[idx]), 
       currentLine: line,
       message,
       currentProcessingNodeId: currentProcessingIdOverride !== undefined ? currentProcessingIdOverride : (activeIndex !== undefined ? `heapnode-${activeIndex}` : null),
+      auxiliaryData: auxData,
     });
   };
   
-  // ---- MinHeapifyUp ----
   function heapifyUp(index: number) {
     lineMap = HEAP_OPERATION_LINE_MAPS.insertMinHeap;
     addStep(lineMap.heapifyUpFunc, `HeapifyUp starting at index ${index} (value: ${currentHeapArray[index]})`, index, [], [index]);
@@ -149,7 +148,7 @@ export const generateHeapSteps = (
     addStep(lineMap.getParent, `Parent index of ${index} is ${parentIndex}`, index, [], [index, parentIndex]);
 
     let path = [index];
-    while (index > 0 && currentHeapArray[index] < currentHeapArray[parentIndex]) {
+    while (index > 0 && parentIndex >= 0 && currentHeapArray[index] < currentHeapArray[parentIndex]) {
       path.push(parentIndex);
       addStep(lineMap.whileLoop, `While ${index} > 0 && arr[${index}] (${currentHeapArray[index]}) < arr[${parentIndex}] (${currentHeapArray[parentIndex]})`, index, [], [...path]);
       
@@ -160,13 +159,14 @@ export const generateHeapSteps = (
       index = parentIndex;
       addStep(lineMap.updateIndex, `Update index to ${index}`, index, [], [...path]);
       parentIndex = Math.floor((index - 1) / 2);
-      addStep(lineMap.updateParent, `Update parentIndex to ${parentIndex}`, index, [], [...path]);
+      if (index > 0) {
+        addStep(lineMap.updateParent, `Update parentIndex to ${parentIndex}`, index, [], [...path]);
+      }
     }
     addStep(lineMap.endWhile, `HeapifyUp loop condition false or index is 0. Path: ${path.map(i=>currentHeapArray[i]).join('->')}`, index,[],[...path]);
     addStep(lineMap.endHeapifyUp, `HeapifyUp for index ${index} finished.`, index,[],[...path]);
   }
 
-  // ---- MinHeapifyDown ----
   function heapifyDown(index: number) {
     lineMap = HEAP_OPERATION_LINE_MAPS.extractMin;
     addStep(lineMap.heapifyDownFunc, `HeapifyDown starting at index ${index} (value: ${currentHeapArray[index]})`, index, [], [index]);
@@ -175,7 +175,7 @@ export const generateHeapSteps = (
 
     while (true) {
         addStep(lineMap.initSmallest, `Set smallest = current index ${index}`, index, [], [...path]);
-        smallest = index; // Re-assign smallest to current index for this iteration
+        smallest = index; 
         const left = 2 * index + 1;
         const right = 2 * index + 2;
         addStep(lineMap.getLeft, `Left child index of ${index} is ${left}`, index, [], [...path, left]);
@@ -189,7 +189,7 @@ export const generateHeapSteps = (
             }
         }
         if (right < currentHeapArray.length) {
-            addStep(lineMap.checkRight, `Is right (${right}) in heap and arr[${right}] (${currentHeapArray[right]}) < arr[smallest] (${currentHeapArray[smallest]})?`, right, [], [...path, right, smallest]); // smallest might have changed
+            addStep(lineMap.checkRight, `Is right (${right}) in heap and arr[${right}] (${currentHeapArray[right]}) < arr[smallest] (${currentHeapArray[smallest]})?`, right, [], [...path, right, smallest]); 
             if (currentHeapArray[right] < currentHeapArray[smallest]) {
                 smallest = right;
                 addStep(lineMap.updateSmallestRight, `Yes. Update smallest to ${smallest} (right child).`, smallest, [], [...path, smallest]);
@@ -202,24 +202,22 @@ export const generateHeapSteps = (
             addStep(lineMap.swap, `Yes. Swap arr[${index}] (${currentHeapArray[index]}) with arr[${smallest}] (${currentHeapArray[smallest]})`, smallest, [index, smallest], [...path]);
             [currentHeapArray[index], currentHeapArray[smallest]] = [currentHeapArray[smallest], currentHeapArray[index]];
             addStep(lineMap.swap, `Swapped. Array: [${currentHeapArray.join(',')}]`, smallest, [index, smallest], [...path]);
-            index = smallest; // Continue heapifying down from the new position of the swapped element
+            index = smallest; 
             addStep(lineMap.recurseHeapifyDown, `Continue heapifyDown from new index ${index}.`, index, [], [...path]);
         } else {
             addStep(lineMap.endIf, `No. Smallest is current index. Heap property holds for this subtree.`, index, [], [...path]);
-            break; // Heap property is satisfied for this subtree
+            break; 
         }
     }
     addStep(lineMap.endHeapifyDown, `HeapifyDown for original index finished. Path: ${path.map(i=>currentHeapArray[i]).join('->')}`, undefined, [], [...path]);
   }
 
-
-  // ---- Operation Dispatch ----
   switch (operation) {
     case 'buildMinHeap':
       lineMap = HEAP_OPERATION_LINE_MAPS.buildMinHeap;
       if (initialArrayString) {
-        currentHeapArray = initialArrayString.split(',').map(s=>s.trim()).filter(s=>s!=='').map(Number).filter(n => !isNaN(n));
-        heapDataRef.current = [...currentHeapArray]; // Update ref
+        currentHeapArray = initialArrayString.split(',').map(s=>s.trim()).filter(s=>s!== '').map(Number).filter(n => !isNaN(n));
+        heapDataRef.current = [...currentHeapArray]; 
       }
       addStep(lineMap.func, `Building Min-Heap from: [${currentHeapArray.join(',')}]`);
       if (currentHeapArray.length > 0) {
@@ -227,7 +225,7 @@ export const generateHeapSteps = (
         addStep(lineMap.firstNonLeaf, `First non-leaf index: ${firstNonLeafIndex}`);
         for (let i = firstNonLeafIndex; i >= 0; i--) {
           addStep(lineMap.loop, `Calling heapifyDown for index ${i}`, i);
-          heapifyDown(i); // Modifies currentHeapArray (via heapDataRef.current)
+          heapifyDown(i); 
         }
         addStep(lineMap.endLoop, `Build Min-Heap complete. Heap: [${currentHeapArray.join(',')}]`);
       } else {
@@ -255,27 +253,35 @@ export const generateHeapSteps = (
       addStep(lineMap.func, `Extract Min from Min-Heap.`);
       if (currentHeapArray.length === 0) {
         addStep(lineMap.checkEmpty, "Heap is empty. Cannot extract.");
+        extractedMinValue = null;
         break;
       }
-      const min = currentHeapArray[0];
+      extractedMinValue = currentHeapArray[0];
       if (currentHeapArray.length === 1) {
         currentHeapArray.pop();
         heapDataRef.current = [...currentHeapArray];
-        addStep(lineMap.checkSingle, `Heap has one element. Popped ${min}. Heap: [${currentHeapArray.join(',')}]`);
+        addStep(lineMap.checkSingle, `Heap has one element. Popped ${extractedMinValue}. Heap is now empty.`, undefined, [], [], undefined, { extractedValue: extractedMinValue });
         break;
       }
-      addStep(lineMap.storeMin, `Min element is ${min} (at root).`, 0);
+      addStep(lineMap.storeMin, `Min element is ${extractedMinValue} (at root).`, 0);
       currentHeapArray[0] = currentHeapArray.pop()!;
       heapDataRef.current = [...currentHeapArray];
       addStep(lineMap.moveLastToRoot, `Moved last element (${currentHeapArray[0]}) to root. Array: [${currentHeapArray.join(',')}]`, 0);
       addStep(lineMap.callHeapifyDown, `Calling HeapifyDown for root (index 0).`, 0);
       heapifyDown(0);
-      addStep(lineMap.returnMin, `Extracted ${min}. Heap: [${currentHeapArray.join(',')}]`);
+      addStep(lineMap.returnMin, `Extracted ${extractedMinValue}. Heap: [${currentHeapArray.join(',')}]`, undefined, [], [], null, { extractedValue: extractedMinValue });
       break;
     
     case 'classDefinition':
         addStep(null, "Displaying Heap class structure. Select an operation.");
         break;
   }
+  // Final conclusive step
+  const finalMessage = operation === 'extractMin'
+    ? `Operation ${operation} complete. Extracted value: ${extractedMinValue === null ? 'N/A (empty heap)' : extractedMinValue}. Final Heap: [${currentHeapArray.join(', ')}]`
+    : `Operation ${operation} complete. Final Heap: [${currentHeapArray.join(', ')}]`;
+  addStep(null, finalMessage, undefined, [], [], null, operation === 'extractMin' ? { extractedValue: extractedMinValue } : {});
+
   return localSteps;
 };
+
