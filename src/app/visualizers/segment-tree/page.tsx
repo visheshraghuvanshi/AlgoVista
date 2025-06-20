@@ -313,5 +313,3 @@ export default function SegmentTreeVisualizerPage() {
     </div>
   );
 }
-
-```
