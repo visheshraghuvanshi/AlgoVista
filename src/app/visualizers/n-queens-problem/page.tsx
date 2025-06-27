@@ -60,7 +60,7 @@ export default function NQueensProblemVisualizerPage() {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     if (boardSizeN < 1 || boardSizeN > MAX_N_VALUE) {
-      toast({ title: "Invalid Board Size", description: `N must be between 1 and ${MAX_N_VALUE} for visualization. N=${boardSizeN} can be very slow.`, variant: "destructive" });
+      toast({ title: "Invalid Board Size", description: `N must be between 1 and ${MAX_N_VALUE}. N=${boardSizeN} can be very slow.`, variant: "destructive" });
       setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
@@ -92,9 +92,9 @@ export default function NQueensProblemVisualizerPage() {
     setDisplayedSolutionIndex(0);
 
 
-  }, [boardSizeN, toast, currentStepIndex]);
+  }, [boardSizeN, toast, currentStepIndex]); // removed updateVisualStateFromStep from deps
   
-  useEffect(() => { handleGenerateSteps(); }, [boardSizeN, handleGenerateSteps]);
+  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -114,7 +114,7 @@ export default function NQueensProblemVisualizerPage() {
     setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
-  const handleReset = () => { setIsPlaying(false); setIsFinished(false); setBoardSizeN(DEFAULT_N_VALUE); };
+  const handleReset = () => { setIsPlaying(false); setIsFinished(true); setBoardSizeN(DEFAULT_N_VALUE); };
   
   const showNextSolution = () => {
     if (currentStep && currentStep.foundSolutions && currentStep.foundSolutions.length > 0) {
@@ -206,3 +206,4 @@ export default function NQueensProblemVisualizerPage() {
     </div>
   );
 }
+

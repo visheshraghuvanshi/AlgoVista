@@ -30,17 +30,12 @@ export interface AlgorithmDetailsProps {
 
 // N-Queens specific step type
 export interface NQueensStep {
-  board: number[][]; // Represents the N x N board, e.g., 1 for Queen, 0 for empty
-  currentQueen?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' | 'try_move' | 'blocked' | 'goal_reached' | 'stuck' };
+  board: number[][]; // Represents the N x N board, 1 for Queen, 0 for empty
+  currentCell?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' | 'try_move' };
   foundSolutions?: number[][][]; // Array of found board states
   isSafe?: boolean;
   message: string;
   currentLine: number | null;
-  // Minimal common fields from global AlgorithmStep, if needed by shared components
-  array?: number[]; // Not directly used
-  activeIndices?: number[]; // Can represent currentQueen's [row, col]
-  swappingIndices?: number[]; // Not used
-  sortedIndices?: number[]; // Not used
-  solutionFound?: boolean; // To indicate if final solution is found
-  initialBoard?: number[][] | null; // To distinguish original cells in Sudoku like problems
+  solutionFound?: boolean; // True if at least one solution has been found so far
 }
+
