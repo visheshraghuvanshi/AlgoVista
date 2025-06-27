@@ -28,7 +28,7 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
-// Rat in a Maze specific step type (replaces usage of SudokuStep)
+// Rat in a Maze specific step type
 export interface RatInAMazeStep {
   maze: number[][]; // Visual board: 0=wall, 1=path, 2=solution path taken
   initialBoard: number[][] | null; // Original maze (0s and 1s)
@@ -44,4 +44,3 @@ export interface RatInAMazeStep {
   sortedIndices?: number[];
   auxiliaryData?: Record<string, any> | null;
 }
-

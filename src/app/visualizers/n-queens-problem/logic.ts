@@ -128,7 +128,7 @@ export const generateNQueensSteps = (N: number): NQueensStep[] => {
     return foundSolutionThisPath;
   }
   
-  addStep(localSteps, board, lm.initialSolveCall, `Initial call to solveNQueensUtil(col=0).`);
+  addStep(localSteps, board, lm.initialSolveCall, `Initial call to solveNQueensUtil(col=0).`, {row:0, col:0, action:'try_move'});
   solveNQueensUtil(0); 
 
   if (solutions.length > 0) {
@@ -139,3 +139,49 @@ export const generateNQueensSteps = (N: number): NQueensStep[] => {
   return localSteps;
 };
 
+```
+- src/app/visualizers/n-queens-problem/types.ts</file>
+    <content><![CDATA[
+// src/app/visualizers/n-queens-problem/types.ts
+export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
+export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
+
+export interface AlgorithmTimeComplexities {
+  best: string;
+  average: string;
+  worst: string;
+}
+
+export interface AlgorithmMetadata {
+  slug: string;
+  title: string;
+  category: AlgorithmCategory;
+  difficulty: AlgorithmDifficulty;
+  description: string;
+  longDescription?: string;
+  timeComplexities?: AlgorithmTimeComplexities;
+  spaceComplexity?: string;
+  tags?: string[];
+}
+
+export interface AlgorithmDetailsProps {
+  title: string;
+  description: string;
+  timeComplexities: AlgorithmTimeComplexities;
+  spaceComplexity: string;
+}
+
+// N-Queens specific step type
+export interface NQueensStep {
+  board: number[][]; // Represents the N x N board, e.g., 1 for Queen, 0 for empty
+  currentCell?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' | 'try_move' | 'blocked' | 'goal_reached' | 'stuck' };
+  foundSolutions?: number[][][]; // Array of found board states
+  isSafe?: boolean;
+  message: string;
+  currentLine: number | null;
+  solutionFound?: boolean;
+  // Common AlgorithmStep fields (less relevant for maze but for consistency)
+  activeIndices?: number[]; // Can map to [row, col]
+  swappingIndices?: number[];
+  sortedIndices?: number[];
+}

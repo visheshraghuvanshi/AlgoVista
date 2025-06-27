@@ -5,17 +5,17 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, SudokuStep as RatInAMazeStep } from './types'; // Using SudokuStep as RatInAMazeStep from local types
+import type { AlgorithmMetadata, RatInAMazeStep } from './types'; // Corrected import
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, Mouse } from 'lucide-react'; // Corrected icon
+import { Play, Pause, SkipForward, RotateCcw, Mouse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel'; // Corrected import path
-import { RatInAMazeCodePanel } from './RatInAMazeCodePanel'; // Corrected import path
+import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel';
+import { RatInAMazeCodePanel } from './RatInAMazeCodePanel';
 import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 200; 
@@ -45,7 +45,6 @@ export default function RatInAMazeVisualizerPage() {
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0);
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -111,7 +110,7 @@ export default function RatInAMazeVisualizerPage() {
     if (newSteps.length > 0) {
         setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
-        if (lastStep.currentCell?.action === 'goal_reached') {
+        if (lastStep.currentPosition?.action === 'goal_reached') {
             toast({title: "Path Found!", description: "The rat reached the destination."});
         } else if (lastStep.message?.includes("No solution exists")) {
             toast({title: "No Solution", description: "The rat could not find a path.", variant: "default"});
@@ -161,7 +160,7 @@ export default function RatInAMazeVisualizerPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3">
+          <div className="lg:w-3/5 xl:w-2/3 flex flex-col items-center">
             <RatInAMazeVisualizationPanel step={currentStep ? {...currentStep, initialBoard: initialBoardState} : null} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
