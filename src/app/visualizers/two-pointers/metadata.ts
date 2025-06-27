@@ -59,12 +59,12 @@ The visualizer for "Two Pointers" often demonstrates the "Find Pair with Target 
 -   Removing duplicates from a sorted array.
 -   Container With Most Water problem.
 -   Squaring a sorted array and keeping it sorted.
--   Three Sum problem (often by fixing one element and using two pointers on the rest).`,
+-   Three Sum problem (often by fixing one element and using two pointers on the rest).
+`,
   timeComplexities: {
-    best: "Varies (e.g., O(N) for pair sum in sorted array, O(1) if target is immediately found)",
-    average: "Varies (e.g., O(N))",
-    worst: "Varies (e.g., O(N))",
+    best: "O(N) for a sorted array. O(N log N) if sorting is required first.",
+    average: "O(N) for a sorted array. O(N log N) if sorting is required first.",
+    worst: "O(N) for a sorted array. O(N log N) if sorting is required first.",
   },
-  spaceComplexity: "Typically O(1) (in-place modification or constant extra space).",
+  spaceComplexity: "O(1) if sorting is in-place, otherwise O(N) or O(log N) depending on sort.",
 };
-

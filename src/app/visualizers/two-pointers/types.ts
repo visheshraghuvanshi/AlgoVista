@@ -70,4 +70,3 @@ export interface VisualizationPanelProps {
   processingSubArrayRange?: [number, number] | null;
   pivotActualIndex?: number | null;
 }
-

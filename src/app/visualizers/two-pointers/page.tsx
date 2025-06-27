@@ -105,6 +105,7 @@ export default function TwoPointersVisualizerPage() {
   
   const [displayedData, setDisplayedData] = useState<number[]>([]);
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
+  const [swappingIndices, setSwappingIndices] = useState<number[]>([]); 
   const [sortedIndices, setSortedIndices] = useState<number[]>([]); // Used to highlight found pair
   const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
@@ -149,6 +150,7 @@ export default function TwoPointersVisualizerPage() {
       const currentS = steps[stepIndex];
       setDisplayedData(currentS.array);
       setActiveIndices(currentS.activeIndices);
+      setSwappingIndices(currentS.swappingIndices);
       setSortedIndices(currentS.sortedIndices); 
       setCurrentLine(currentS.currentLine);
       setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
@@ -167,7 +169,6 @@ export default function TwoPointersVisualizerPage() {
         const sortedArrString = arr.join(',');
         if(inputValue !== sortedArrString) {
             setInputValue(sortedArrString); 
-            // Value will be reprocessed by useEffect for inputValue
             return;
         }
       }
@@ -182,6 +183,7 @@ export default function TwoPointersVisualizerPage() {
         const firstStep = newSteps[0];
         setDisplayedData(firstStep.array);
         setActiveIndices(firstStep.activeIndices);
+        setSwappingIndices(firstStep.swappingIndices);
         setSortedIndices(firstStep.sortedIndices);
         setCurrentLine(firstStep.currentLine);
         setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
@@ -192,7 +194,7 @@ export default function TwoPointersVisualizerPage() {
     } else {
       setSteps([]); setDisplayedData(arr || []); setIsFinished(true);
     }
-  }, [inputValue, targetSumValue, parseInputArray, parseTargetSum, setInputValue, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
+  }, [inputValue, targetSumValue, parseInputArray, parseTargetSum, toast, setInputValue, setDisplayedData, setActiveIndices, setSwappingIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
   
   useEffect(() => { 
     generateSteps(false); 
@@ -281,7 +283,7 @@ export default function TwoPointersVisualizerPage() {
             {auxiliaryData && (
                 <Card className="mt-4">
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2">
+                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
                         {Object.entries(auxiliaryData).map(([key, value]) => (
                             <p key={key}><strong>{key.replace(/([A-Z])/g, ' $1').trim()}:</strong> {value?.toString()}</p>
                         ))}
@@ -312,7 +314,7 @@ export default function TwoPointersVisualizerPage() {
             maxSpeed={MAX_SPEED}
             targetInputLabel="Target Sum"
           />
-        <AlgorithmDetailsCard {...localAlgoDetails} />
+        {localAlgoDetails && <AlgorithmDetailsCard {...localAlgoDetails} />}
       </main>
       <Footer />
     </div>

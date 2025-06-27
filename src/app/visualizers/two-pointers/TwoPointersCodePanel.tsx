@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// No type import from local types.ts needed here as props are simple
 
 interface TwoPointersCodePanelProps {
   codeSnippets: { [language: string]: string[] };
@@ -126,4 +125,3 @@ export function TwoPointersCodePanel({ codeSnippets, currentLine }: TwoPointersC
     </Card>
   );
 }
-
