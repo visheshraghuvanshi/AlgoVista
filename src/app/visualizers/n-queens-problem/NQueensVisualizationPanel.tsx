@@ -4,7 +4,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { NQueensStep } from './types'; // Local import
-import { Target, X } from 'lucide-react'; 
+import { Crown, X } from 'lucide-react'; 
 
 interface NQueensVisualizationPanelProps {
   step: NQueensStep | null;
@@ -20,7 +20,7 @@ export function NQueensVisualizationPanel({ step }: NQueensVisualizationPanelPro
     );
   }
 
-  const { board, currentCell, message } = step;
+  const { board, currentCell, message, isSafe } = step;
   const N = board.length > 0 ? board.length : 4; // Fallback for board size
 
   const panelWidth = 400; 
@@ -58,24 +58,32 @@ export function NQueensVisualizationPanel({ step }: NQueensVisualizationPanelPro
       </CardHeader>
       <CardContent className="flex-grow flex items-center justify-center bg-muted/10 dark:bg-muted/5 p-2 md:p-4 rounded-b-lg">
         {N > 0 ? (
-          <div className="grid gap-0.5 bg-border border-2 border-foreground/50" style={{ gridTemplateColumns: `repeat(${N}, minmax(0, 1fr))` }}>
+          <div className="grid gap-px bg-border border-2 border-foreground/50" style={{ gridTemplateColumns: `repeat(${N}, minmax(0, 1fr))` }}>
             {board.map((rowArr, rIdx) =>
-              rowArr.map((cell, cIdx) => (
-                <div
-                  key={`${rIdx}-${cIdx}`}
-                  className={`flex items-center justify-center ${getCellBgColor(rIdx, cIdx)}`}
-                  style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
-                  title={`Cell [${rIdx},${cIdx}]`}
-                >
-                  {cell === 1 && (
-                     <Target className="w-3/4 h-3/4 text-primary dark:text-accent" />
-                  )}
-                  {/* Visualization for conflicts or checks can be added here */}
-                  {currentCell && currentCell.row === rIdx && currentCell.col === cIdx && currentCell.action === 'checking_safe' && !step.isSafe && (
+              rowArr.map((cell, cIdx) => {
+                const isThickRightBorder = (cIdx + 1) % 3 === 0 && cIdx < N - 1;
+                const isThickBottomBorder = (rIdx + 1) % 3 === 0 && rIdx < N - 1;
+                
+                let cellClasses = `flex items-center justify-center ${getCellBgColor(rIdx, cIdx)}`;
+                if (isThickRightBorder) cellClasses += " border-r-2 border-foreground/50";
+                if (isThickBottomBorder) cellClasses += " border-b-2 border-foreground/50";
+
+                return (
+                  <div
+                    key={`${rIdx}-${cIdx}`}
+                    className={cellClasses}
+                    style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
+                    title={`Cell [${rIdx},${cIdx}] - Value: ${cell === 1 ? 'Queen' : 'Empty' }`}
+                  >
+                    {cell === 1 && (
+                     <Crown className="w-3/4 h-3/4 text-primary dark:text-accent" />
+                    )}
+                    {currentCell && currentCell.row === rIdx && currentCell.col === cIdx && currentCell.action === 'checking_safe' && !step.isSafe && (
                       <X className="w-1/2 h-1/2 text-destructive opacity-80" />
-                  )}
-                </div>
-              ))
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         ) : (
