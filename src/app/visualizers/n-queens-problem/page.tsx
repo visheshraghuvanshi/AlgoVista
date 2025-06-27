@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, NQueensStep } from './types'; // Using NQueensStep from local types
+import type { AlgorithmMetadata, SudokuStep as RatInAMazeStep } from './types'; // Using SudokuStep as RatInAMazeStep from local types
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, SquareAsterisk } from 'lucide-react'; // Corrected icon
@@ -18,7 +18,7 @@ import { NQueensVisualizationPanel } from './NQueensVisualizationPanel';
 import { NQueensCodePanel, N_QUEENS_CODE_SNIPPETS } from './NQueensCodePanel'; 
 import { generateNQueensSteps, N_QUEENS_LINE_MAP } from './n-queens-logic'; 
 
-const DEFAULT_ANIMATION_SPEED = 300; 
+const DEFAULT_ANIMATION_SPEED = 200; 
 const MIN_SPEED = 20;
 const MAX_SPEED = 1000;
 const DEFAULT_N_VALUE = 4;
@@ -30,17 +30,47 @@ export default function NQueensProblemVisualizerPage() {
 
   const [boardSizeN, setBoardSizeN] = useState(DEFAULT_N_VALUE);
   
-  const [steps, setSteps] = useState<NQueensStep[]>([]);
-  const [currentStep, setCurrentStep] = useState<NQueensStep | null>(null);
+  const [steps, setSteps] = useState<RatInAMazeStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<RatInAMazeStep | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
-  const [isPlaying, setIsPlaying] = useState(isPlaying);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [displayedSolutionIndex, setDisplayedSolutionIndex] = useState(0);
 
   useEffect(() => { setIsClient(true); }, []);
+
+  const parseSudokuInput = useCallback((input: string): number[][] | null => {
+    try {
+      const rows = input.trim().split('\n').map(rowStr => 
+        rowStr.split(',').map(cellStr => {
+          const val = parseInt(cellStr.trim(), 10);
+          if (isNaN(val) || (val !== 0 && val !== 1)) {
+            throw new Error("Invalid cell value. Must be 0 or 1.");
+          }
+          return val;
+        })
+      );
+      if (rows.length !== 9 || rows.some(row => row.length !== 9)) {
+        toast({ title: "Invalid Board", description: "Sudoku board must be 9x9.", variant: "destructive"});
+        return null;
+      }
+      if (rows[0][0] === 0) {
+        toast({ title: "Invalid Start", description: "Source (0,0) must be an open path (1).", variant: "destructive"});
+        return null;
+      }
+      if (rows[rows.length-1][rows[0].length-1] === 0) {
+        toast({ title: "Invalid Destination", description: `Destination (${rows.length-1},${rows[0].length-1}) must be an open path (1).`, variant: "destructive"});
+        return null;
+      }
+      return rows;
+    } catch (e: any) {
+      toast({ title: "Invalid Board Format", description: e.message || "Use 0s and 1s, comma-separated, rows on new lines.", variant: "destructive"});
+      return null;
+    }
+  }, [toast]);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -82,7 +112,7 @@ export default function NQueensProblemVisualizerPage() {
             if (newSteps.length -1 === currentStepIndex ) { 
                 setCurrentStep(prev => ({...prev!, board: lastStep.foundSolutions![0]}));
             }
-        } else if (lastStep.message?.includes("No solutions")) {
+        } else if (lastStep.message?.includes("No solution")) {
             toast({title: "No Solution", description: "No solutions found for N=" + boardSizeN, variant: "default"});
         }
     } else {
@@ -115,11 +145,8 @@ export default function NQueensProblemVisualizerPage() {
     setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
-  const handleReset = () => {
-    setIsPlaying(false); setIsFinished(false); 
-    setBoardSizeN(DEFAULT_N_VALUE); 
-  };
-
+  const handleReset = () => { setIsPlaying(false); setIsFinished(false); setBoardSizeN(DEFAULT_N_VALUE); };
+  
   const showNextSolution = () => {
     if (currentStep && currentStep.foundSolutions && currentStep.foundSolutions.length > 0) {
         const nextSolIdx = (displayedSolutionIndex + 1) % currentStep.foundSolutions.length;
@@ -151,7 +178,7 @@ export default function NQueensProblemVisualizerPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3 flex flex-col items-center">
-            <NQueensVisualizationPanel step={currentStep} boardSize={boardSizeN} />
+            <NQueensVisualizationPanel step={currentStep ? {...currentStep, initialBoard: initialBoardState} : null} />
             {isFinished && currentStep?.foundSolutions && currentStep.foundSolutions.length > 0 && (
                 <div className="flex items-center gap-2 mt-2">
                     <Button onClick={showPrevSolution} variant="outline" size="sm" disabled={currentStep.foundSolutions.length <= 1}>Prev Solution</Button>
@@ -181,7 +208,10 @@ export default function NQueensProblemVisualizerPage() {
                 </div>
                  <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Start / Reset Simulation</Button>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-4 border-t">
+            <div className="flex items-center justify-start pt-4 border-t">
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset to Default Puzzle</Button>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">
                 {!isPlaying ? <Button onClick={handlePlay} disabled={isFinished || steps.length <=1} size="lg"><Play className="mr-2"/>Play</Button> 
                              : <Button onClick={handlePause} size="lg"><Pause className="mr-2"/>Pause</Button>}
@@ -196,7 +226,7 @@ export default function NQueensProblemVisualizerPage() {
              {isFinished && currentStep?.solutionFound && currentStep?.foundSolutions && currentStep.foundSolutions.length > 0 && (
                 <p className="text-center text-lg font-semibold text-green-500">Found {currentStep.foundSolutions.length} Solution(s)!</p>
             )}
-            {isFinished && (!currentStep?.solutionFound || (currentStep?.foundSolutions && currentStep.foundSolutions.length === 0)) && currentStep?.message?.includes("No solution") && (
+            {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
                 <p className="text-center text-lg font-semibold text-red-500">No Solution Exists.</p>
             )}
           </CardContent>
@@ -207,4 +237,3 @@ export default function NQueensProblemVisualizerPage() {
     </div>
   );
 }
-

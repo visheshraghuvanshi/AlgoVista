@@ -83,7 +83,7 @@ export default function RatInAMazeVisualizerPage() {
       }
       return rows;
     } catch (e: any) {
-      toast({ title: "Invalid Maze Format", description: e.message || "Use 0s and 1s, comma-separated, rows on new lines.", variant: "destructive"});
+      toast({ title: "Invalid Board Format", description: e.message || "Use 0s and 1s, comma-separated, rows on new lines.", variant: "destructive"});
       return null;
     }
   }, [toast]);
@@ -219,4 +219,3 @@ export default function RatInAMazeVisualizerPage() {
     </div>
   );
 }
-
