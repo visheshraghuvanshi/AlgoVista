@@ -24,7 +24,7 @@ export function VisualizationPanel({
   const BAR_MAX_HEIGHT = BAR_MAX_HEIGHT_BASE * 2; 
 
   useEffect(() => {
-    if (data.length > 0) {
+    if (Array.isArray(data) && data.length > 0) {
       const absoluteData = data.map(val => Math.abs(val));
       const currentMaxVal = Math.max(...absoluteData, 1); 
       setMaxVal(currentMaxVal);
@@ -64,7 +64,7 @@ export function VisualizationPanel({
         <CardTitle className="font-headline text-xl text-primary dark:text-accent">Visualization</CardTitle>
       </CardHeader>
       <CardContent className="flex items-end justify-center h-full pb-10 space-x-1 overflow-x-auto bg-muted/10 dark:bg-muted/5 p-4 rounded-b-lg">
-        {data.length === 0 ? (
+        {!Array.isArray(data) || data.length === 0 ? (
           <p className="text-muted-foreground self-center">Enter data to visualize.</p>
         ) : (
           data.map((value, index) => (
