@@ -195,14 +195,14 @@ export default function TwoPointersVisualizerPage() {
   }, [inputValue, targetSumValue, parseInputArray, parseTargetSum, setInputValue, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
   
   useEffect(() => { 
-    handleGenerateSteps(false); 
-  }, [targetSumValue, handleGenerateSteps]);
+    generateSteps(false); 
+  }, [targetSumValue, generateSteps]);
 
   useEffect(() => { 
     if (inputValue !== lastProcessedInputValueRef.current) {
-      handleGenerateSteps(true);
+      generateSteps(true);
     }
-  }, [inputValue, handleGenerateSteps]);
+  }, [inputValue, generateSteps]);
 
 
   useEffect(() => {
@@ -211,25 +211,57 @@ export default function TwoPointersVisualizerPage() {
         const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
-  const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
-  const handlePause = () => setIsPlaying(false);
-  const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
-    if (nextIdx === steps.length - 1) setIsFinished(true);
+  const handleInputChange = (value: string) => setInputValue(value);
+  const handleTargetChange = (value: string) => setTargetSumValue(value);
+
+  const handlePlay = () => {
+    if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
+      toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play again." : "No data or steps. Check input.", variant: "default" });
+      setIsPlaying(false); return;
+    }
+    setIsPlaying(true); setIsFinished(false);
   };
-  const handleReset = () => { 
-    setIsPlaying(false); 
-    setIsFinished(false); 
-    handleGenerateSteps(true); 
+
+  const handlePause = () => {
+    setIsPlaying(false);
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+  };
+
+  const handleStep = () => {
+    if (isFinished || currentStepIndex >= steps.length - 1) {
+      toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps.", variant: "default" });
+      return;
+    }
+    setIsPlaying(false);
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    const nextStepIndex = currentStepIndex + 1;
+    if (nextStepIndex < steps.length) {
+      setCurrentStepIndex(nextStepIndex);
+      updateStateFromStep(nextStepIndex);
+      if (nextStepIndex === steps.length - 1) setIsFinished(true);
+    }
+  };
+
+  const handleReset = () => {
+    setIsPlaying(false); setIsFinished(false);
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    generateSteps(true);
   };
   
-  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+  const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
+
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { 
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -280,10 +312,9 @@ export default function TwoPointersVisualizerPage() {
             maxSpeed={MAX_SPEED}
             targetInputLabel="Target Sum"
           />
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-
