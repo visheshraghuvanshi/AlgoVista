@@ -4,9 +4,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types';
 import { algorithmMetadata } from './metadata';
+import { MCMVisualizationPanel } from './MCMVisualizationPanel';
+import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; 
+import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic'; 
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, SquareFunction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,15 +18,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from "@/components/ui/slider";
-import { MCMVisualizationPanel } from './MCMVisualizationPanel';
-import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; 
-import { generateMCMSteps, MCM_LINE_MAP } from './mcm-logic'; 
 
-const DEFAULT_ANIMATION_SPEED = 600;
+const DEFAULT_ANIMATION_SPEED = 500;
 const MIN_SPEED = 50;
 const MAX_SPEED = 1500;
-const DEFAULT_DIMENSIONS_INPUT = "10,30,5,60"; 
-const MAX_MATRICES = 10; 
+const DEFAULT_DIMENSIONS_INPUT = "10,30,5,60";
+const MAX_MATRICES = 10;
 
 export default function MCMVisualizerPage() {
   const { toast } = useToast();
@@ -85,26 +85,26 @@ export default function MCMVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [dimensionsInput, parseDimensionsInput, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+  }, [dimensionsInput, parseDimensionsInput, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
   
   useEffect(() => { handleGenerateSteps(); }, [dimensionsInput, handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
@@ -169,4 +169,5 @@ export default function MCMVisualizerPage() {
     </div>
   );
 }
+
     

@@ -211,5 +211,3 @@ export const generateBellmanFordSteps = (parsedData: ParsedWeightedGraphWithEdge
   addStep(BELLMAN_FORD_LINE_MAP.returnResults, "Algorithm complete. Final distances and predecessors found (no negative cycles).");
   return localSteps;
 };
-
-```
