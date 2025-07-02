@@ -1,4 +1,3 @@
-
 // src/app/visualizers/dijkstra/AlgorithmDetailsCard.tsx
 "use client";
 

@@ -30,7 +30,7 @@ export function BinaryTreeVisualizationPanel({
   const maxDepthY = nodes.reduce((max, node) => Math.max(max, node.y), 0);
   const svgHeight = Math.max(SVG_HEIGHT_BASE, maxDepthY + NODE_RADIUS * 2 + 40); 
 
-  const viewBox = `0 0 ${svgWidth} ${svgHeight}`;
+  const viewBox = `0 0 ${SVG_WIDTH} ${svgHeight}`;
 
   const isNodeInTraversalPath = (nodeId: string | null) => {
     if (!nodeId) return false;

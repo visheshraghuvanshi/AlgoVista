@@ -1,4 +1,3 @@
-
 // src/app/visualizers/merge-sorted-linked-lists/AlgorithmDetailsCard.tsx
 "use client";
 
