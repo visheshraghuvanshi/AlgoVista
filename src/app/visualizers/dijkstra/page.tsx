@@ -181,12 +181,12 @@ export default function DijkstraVisualizerPage() {
     
     const parsedData = parseWeightedGraphInput(graphInputValue);
     if (!parsedData) {
-      toast({ title: "Invalid Graph Input", description: "Graph format incorrect. Use 'node:n1(w1),n2(w2);...'", variant: "destructive" });
+      toast({ title: "Invalid Graph Input", description: "Format incorrect. Use 'node:n1(w1),n2(w2);...'", variant: "destructive" });
       setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
       setCurrentMessage("Invalid graph input.");
       return;
     }
-     if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
+    if(parsedData.nodes.length === 0 && graphInputValue.trim() !== ""){
         toast({ title: "Invalid Graph Input", description: "Graph malformed or empty despite input.", variant: "destructive" });
         setSteps([]); setCurrentNodes([]); setCurrentEdges([]); setCurrentAuxiliaryData([]); setCurrentLine(null); setIsPlaying(false); setIsFinished(false);
         setCurrentMessage("Graph malformed or empty.");
@@ -201,23 +201,11 @@ export default function DijkstraVisualizerPage() {
        setCurrentMessage("Missing start node.");
       return;
     }
-    let hasNegativeWeight = false;
-    parsedData.adj.forEach(edges => {
-        edges.forEach(edge => {
-            if(edge.weight < 0) hasNegativeWeight = true;
-        });
-    });
-    if(hasNegativeWeight){
-        toast({ title: "Negative Weights Detected", description: "Dijkstra's algorithm requires non-negative edge weights. Results may be incorrect.", variant: "destructive", duration: 7000 });
-    }
-
 
     const newSteps = generateDijkstraSteps(parsedData, startNodeValue);
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-
+    
     if (newSteps.length > 0) {
       const firstStep = newSteps[0];
       setCurrentNodes(firstStep.nodes);
@@ -232,14 +220,16 @@ export default function DijkstraVisualizerPage() {
       setCurrentNodes(parsedData.nodes.map(n=>({...n, x:0, y:0, color:'grey', distance: Infinity})));
       const edgesFromAdj: GraphEdge[] = [];
       parsedData.adj.forEach((neighbors, sourceId) => {
-        neighbors.forEach(({target, weight}) => edgesFromAdj.push({id: `${sourceId}-${target}`, source:sourceId, target, weight, color: 'grey', isDirected: true}));
+        neighbors.forEach(({target, weight}) => edgesFromAdj.push({id: `${sourceId}-${target}`, source:sourceId, target, weight, color: "grey", isDirected: true}));
       });
       setCurrentEdges(edgesFromAdj);
       setCurrentAuxiliaryData([]);
       setCurrentLine(null);
-      setCurrentMessage("No steps generated.");
     }
-  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setCurrentMessage, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+    setIsPlaying(false);
+    setIsFinished(newSteps.length <= 1);
+
+  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
 
 
   useEffect(() => {

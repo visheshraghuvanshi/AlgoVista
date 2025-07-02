@@ -4,18 +4,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmDetailsProps, TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual } from './types';
-import { algorithmMetadata } from './metadata';
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
+import { MorrisTraversalCodePanel, MORRIS_TRAVERSAL_CODE_SNIPPETS } from './MorrisTraversalCodePanel';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AlgorithmDetailsProps } from './types'; // Local import
+import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, GitBranch } from 'lucide-react';
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Re-use existing or create specific
-import { MorrisTraversalCodePanel, MORRIS_TRAVERSAL_CODE_SNIPPETS } from './MorrisTraversalCodePanel';
 import { generateMorrisInorderSteps, MORRIS_INORDER_LINE_MAP } from './morris-traversal-logic';
 import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic'; // Re-use parser
 
@@ -94,12 +94,19 @@ export default function MorrisTraversalPage() {
     setTreeInputValue(DEFAULT_MORRIS_TREE_INPUT);
   };
   
-  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
+  if (!algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;}
   
   const displayNodes = currentStep?.nodes && currentStep.nodes.length > 0 ? currentStep.nodes : initialDisplayTree.nodes;
   const displayEdges = currentStep?.edges && currentStep.edges.length > 0 ? currentStep.edges : initialDisplayTree.edges;
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -118,6 +125,7 @@ export default function MorrisTraversalPage() {
                 edges={displayEdges} 
                 traversalPath={currentStep?.traversalPath || []} 
                 currentProcessingNodeId={currentStep?.currentProcessingNodeId}
+                step={currentStep}
               />
             </div>
             <div className="lg:w-2/5 xl:w-1/3">
@@ -159,5 +167,3 @@ export default function MorrisTraversalPage() {
     </div>
   );
 }
-
-    

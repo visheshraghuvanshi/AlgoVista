@@ -219,5 +219,3 @@ export function MergeSortedLinkedListsCodePanel({ currentLine, mergeType }: Merg
     </Card>
   );
 }
-
-  
