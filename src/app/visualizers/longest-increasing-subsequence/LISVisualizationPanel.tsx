@@ -36,8 +36,8 @@ export function LISVisualizationPanel({ step }: LISVisualizationPanelProps) {
         }
         if (index === currentI) return 'bg-blue-300 dark:bg-blue-700'; // Current dp[i] being calculated
     } else if (type === 'input') {
-        if (index === currentI) return 'bg-purple-300 dark:bg-purple-700'; // Current element nums[i]
-        if (index === currentJ) return 'bg-orange-300 dark:bg-orange-700'; // Element nums[j] being compared
+        if (index === currentI) return 'bg-purple-300 dark:bg-purple-700 text-purple-900'; // Current element nums[i]
+        if (index === currentJ) return 'bg-orange-300 dark:bg-orange-700 text-orange-900'; // Element nums[j] being compared
     }
     return 'bg-card text-card-foreground';
   };
@@ -86,4 +86,3 @@ export function LISVisualizationPanel({ step }: LISVisualizationPanelProps) {
     </Card>
   );
 }
-    

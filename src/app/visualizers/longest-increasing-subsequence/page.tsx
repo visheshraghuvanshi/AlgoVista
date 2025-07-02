@@ -16,12 +16,13 @@ import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { LISVisualizationPanel } from './LISVisualizationPanel'; // Local import
 import { LISCodePanel, LIS_CODE_SNIPPETS_N2 } from './LISCodePanel'; // Local import
-import { generateLIS_N2_Steps, LIS_LINE_MAP_N2 } from './lis-logic'; 
+import { generateLIS_N2_Steps } from './lis-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 600;
 const MIN_SPEED = 50;
 const MAX_SPEED = 1500;
 const DEFAULT_LIS_INPUT = "10,9,2,5,3,7,101,18";
+const MAX_INPUT_SIZE = 12;
 
 export default function LISVisualizerPage() {
   const { toast } = useToast();
@@ -47,10 +48,10 @@ export default function LISVisualizerPage() {
       toast({ title: "Invalid Input", description: "Please enter comma-separated numbers.", variant: "destructive" });
       return null;
     }
-    if (parsed.length > 20) {
-        toast({title: "Input Too Long", description: "Max 20 numbers for optimal visualization.", variant: "default"});
+    if (parsed.length > MAX_INPUT_SIZE) {
+        toast({title: "Input Too Large", description: `Max ${MAX_INPUT_SIZE} numbers for optimal visualization.`, variant: "default"});
     }
-    return parsed;
+    return parsed.slice(0, MAX_INPUT_SIZE);
   }, [toast]);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
@@ -77,7 +78,7 @@ export default function LISVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [inputValue, parseInput, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+  }, [inputValue, parseInput, toast]);
   
   useEffect(() => { handleGenerateSteps(); }, [inputValue, handleGenerateSteps]);
 
@@ -102,7 +103,6 @@ export default function LISVisualizerPage() {
   const handleReset = () => { 
     setIsPlaying(false); setIsFinished(false); 
     setInputValue(DEFAULT_LIS_INPUT);
-    // handleGenerateSteps will be called by useEffect on input change
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -133,7 +133,7 @@ export default function LISVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-1 md:col-span-2">
-                <Label htmlFor="arrayInputLIS">Input Array (comma-separated numbers, max 20)</Label>
+                <Label htmlFor="arrayInputLIS">Input Array (comma-separated, max {MAX_INPUT_SIZE})</Label>
                 <Input id="arrayInputLIS" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying}/>
               </div>
             </div>
@@ -161,4 +161,3 @@ export default function LISVisualizerPage() {
     </div>
   );
 }
-    

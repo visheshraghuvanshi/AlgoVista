@@ -31,4 +31,3 @@ export function AlgorithmDetailsCard({ title, description, timeComplexities, spa
     </Card>
   );
 }
-    

@@ -30,7 +30,7 @@ export const LIS_CODE_SNIPPETS_N2: Record<string, string[]> = {
     "def length_of_lis_n2(nums):",
     "    if not nums: return 0",
     "    dp = [1] * len(nums)",
-    "    max_length = 1",
+    "    max_length = 1 if nums else 0",
     "    for i in range(len(nums)):",
     "        for j in range(i):",
     "            if nums[i] > nums[j] and dp[i] < dp[j] + 1:",
@@ -134,4 +134,3 @@ export function LISCodePanel({ currentLine }: LISCodePanelProps) {
     </Card>
   );
 }
-    

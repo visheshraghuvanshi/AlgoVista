@@ -44,10 +44,10 @@ export interface DPAlgorithmStep {
   resultValue?: number | string | null; 
   auxiliaryData?: Record<string, any> | null; // For inputArray, current maxLength
   // Generic fields not always used by DP visualizers but kept for potential AlgorithmStep union
-  array?: number[]; // The input array for LIS
-  activeIndices?: number[]; // Indices in input array being actively compared
-  swappingIndices?: number[]; // Not used
-  sortedIndices?: number[]; // Not directly used for LIS length problem
+  array?: number[];
+  activeIndices?: number[];
+  swappingIndices?: number[];
+  sortedIndices?: number[];
   processingSubArrayRange?: [number, number] | null;
   pivotActualIndex?: number | null;
 }
