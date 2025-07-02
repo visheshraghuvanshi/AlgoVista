@@ -12,60 +12,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const N_QUEENS_CODE_SNIPPETS = {
   JavaScript: [
     "function solveNQueens(n) {",                            // 1
-    "  const solutions = [];",
+    "  const solutions = [], cols = new Set(), diag1 = new Set(), diag2 = new Set();", // 2
     "  const board = Array(n).fill(0).map(() => Array(n).fill(0));",
-    "",
-    "  function isSafe(row, col) {",                         // 5
-    "    for (let i = 0; i < row; i++) if (board[i][col]) return false;", // 6
-    "    for (let i = row, j = col; i >= 0 && j >= 0; i--, j--) if (board[i][j]) return false;", // 7
-    "    for (let i = row, j = col; i >= 0 && j < n; i--, j++) if (board[i][j]) return false;", // 8
-    "    return true;",                                      // 9
-    "  }",
-    "",
-    "  function solve(row) {",                                // 18
-    "    if (row === n) {",                                 // 19
-    "      solutions.push(board.map(r => [...r]));",       // 20
-    "      return; // Continue finding all solutions",
-    "    }",
-    "    for (let col = 0; col < n; col++) {",              // 21
-    "      if (isSafe(row, col)) {",                        // 22
-    "        board[row][col] = 1;",                         // 23
-    "        solve(row + 1);",                               // 24
-    "        board[row][col] = 0; // Backtrack",            // 26
+    "  function solve(row) {",                                     // 4
+    "    if (row === n) { solutions.push(board.map(r => [...r])); return; }", // 5 & 6
+    "    for (let col = 0; col < n; col++) {",                     // 8
+    "      if (!cols.has(col) && !diag1.has(row+col) && !diag2.has(row-col)) {", // 9
+    "        board[row][col] = 1;",                              // 10
+    "        cols.add(col); diag1.add(row+col); diag2.add(row-col);",
+    "        solve(row + 1);",                                   // 11
+    "        board[row][col] = 0; // Backtrack",                  // 12
+    "        cols.delete(col); diag1.delete(row+col); diag2.delete(row-col);",
     "      }",
     "    }",
     "  }",
-    "",
-    "  solve(0);",                                          // 31
-    "  return solutions;",                                   // 32
+    "  solve(0);",                                              // 14 (conceptual)
+    "  return solutions;",
     "}",
   ],
   Python: [
     "def solve_n_queens(n):",
     "    solutions = []",
-    "    board = [[0] * n for _ in range(n)]",
-    "",
-    "    def is_safe(row, col):",
-    "        # Check column upwards",
-    "        for i in range(row):",
-    "            if board[i][col] == 1: return False",
-    "        # Check upper-left diagonal",
-    "        for i, j in zip(range(row, -1, -1), range(col, -1, -1)):",
-    "            if board[i][j] == 1: return False",
-    "        # Check upper-right diagonal",
-    "        for i, j in zip(range(row, -1, -1), range(col, n)):",
-    "            if board[i][j] == 1: return False",
-    "        return True",
+    "    board = [['.'] * n for _ in range(n)]",
+    "    cols = set()",
+    "    diag1 = set()  # (r + c)",
+    "    diag2 = set()  # (r - c)",
     "",
     "    def solve(row):",
     "        if row == n:",
-    "            solutions.append([list(r) for r in board])",
+    "            solutions.append([''.join(r) for r in board])",
     "            return",
     "        for col in range(n):",
-    "            if is_safe(row, col):",
-    "                board[row][col] = 1",
-    "                solve(row + 1)",
-    "                board[row][col] = 0 # Backtrack",
+    "            if col in cols or (row + col) in diag1 or (row - col) in diag2:",
+    "                continue",
+    "",
+    "            board[row][col] = 'Q'",
+    "            cols.add(col)",
+    "            diag1.add(row + col)",
+    "            diag2.add(row - col)",
+    "",
+    "            solve(row + 1)",
+    "",
+    "            # Backtrack",
+    "            board[row][col] = '.'",
+    "            cols.remove(col)",
+    "            diag1.remove(row + col)",
+    "            diag2.remove(row - col)",
     "",
     "    solve(0)",
     "    return solutions",
@@ -76,6 +68,10 @@ export const N_QUEENS_CODE_SNIPPETS = {
     "    List<List<String>> solutions = new ArrayList<>();",
     "    int n;",
     "    char[][] board;",
+    "    Set<Integer> cols = new HashSet<>();",
+    "    Set<Integer> diag1 = new HashSet<>();",
+    "    Set<Integer> diag2 = new HashSet<>();",
+    "",
     "    public List<List<String>> solveNQueens(int n) {",
     "        this.n = n;",
     "        board = new char[n][n];",
@@ -83,7 +79,7 @@ export const N_QUEENS_CODE_SNIPPETS = {
     "        solve(0);",
     "        return solutions;",
     "    }",
-    "    private boolean isSafe(int row, int col) { /* ... check upwards ... */ return true; }",
+    "",
     "    private void solve(int row) {",
     "        if (row == n) {",
     "            List<String> currentSolution = new ArrayList<>();",
@@ -92,11 +88,14 @@ export const N_QUEENS_CODE_SNIPPETS = {
     "            return;",
     "        }",
     "        for (int col = 0; col < n; col++) {",
-    "            if (isSafe(row, col)) {",
-    "                board[row][col] = 'Q';",
-    "                solve(row + 1);",
-    "                board[row][col] = '.'; // Backtrack",
+    "            if (cols.contains(col) || diag1.contains(row + col) || diag2.contains(row - col)) {",
+    "                continue;",
     "            }",
+    "            board[row][col] = 'Q';",
+    "            cols.add(col); diag1.add(row + col); diag2.add(row - col);",
+    "            solve(row + 1);",
+    "            board[row][col] = '.'; // Backtrack",
+    "            cols.remove(col); diag1.remove(row + col); diag2.remove(row - col);",
     "        }",
     "    }",
     "}",
@@ -109,22 +108,27 @@ export const N_QUEENS_CODE_SNIPPETS = {
     "    std::vector<std::vector<std::string>> solveNQueens(int n) {",
     "        std::vector<std::vector<std::string>> solutions;",
     "        std::vector<std::string> board(n, std::string(n, '.'));",
-    "        solve(0, board, solutions);",
+    "        std::vector<bool> cols(n, false), diag1(2*n-1, false), diag2(2*n-1, false);",
+    "        solve(0, board, solutions, cols, diag1, diag2, n);",
     "        return solutions;",
     "    }",
     "private:",
-    "    bool isSafe(int row, int col, const std::vector<std::string>& board, int n) { /* ... */ return true; }",
-    "    void solve(int row, std::vector<std::string>& board, std::vector<std::vector<std::string>>& solutions) {",
-    "        if (row == board.size()) {",
+    "    void solve(int row, std::vector<std::string>& board, std::vector<std::vector<std::string>>& solutions,", 
+    "               std::vector<bool>& cols, std::vector<bool>& diag1, std::vector<bool>& diag2, int n) {",
+    "        if (row == n) {",
     "            solutions.push_back(board);",
     "            return;",
     "        }",
-    "        for (int col = 0; col < board.size(); ++col) {",
-    "            if (isSafe(row, col, board, board.size())) {",
-    "                board[row][col] = 'Q';",
-    "                solve(row + 1, board, solutions);",
-    "                board[row][col] = '.'; // Backtrack",
-    "            }",
+    "        for (int col = 0; col < n; ++col) {",
+    "            if (cols[col] || diag1[row + col] || diag2[row - col + n - 1]) continue;",
+    "",
+    "            board[row][col] = 'Q';",
+    "            cols[col] = diag1[row + col] = diag2[row - col + n - 1] = true;",
+    "",
+    "            solve(row + 1, board, solutions, cols, diag1, diag2, n);",
+    "",
+    "            board[row][col] = '.'; // Backtrack",
+    "            cols[col] = diag1[row + col] = diag2[row - col + n - 1] = false;",
     "        }",
     "    }",
     "};",
@@ -156,7 +160,7 @@ export function NQueensCodePanel({ currentLine }: NQueensCodePanelProps) {
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-          <Code2 className="mr-2 h-5 w-5" /> Code (Backtracking)
+          <Code2 className="mr-2 h-5 w-5" /> Code (Optimized Backtracking)
         </CardTitle>
         <div className="flex items-center gap-2">
             <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
@@ -189,3 +193,5 @@ export function NQueensCodePanel({ currentLine }: NQueensCodePanelProps) {
     </Card>
   );
 }
+
+    

@@ -28,14 +28,26 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
-// N-Queens specific step type
+// N-Queens specific step type, tailored for the optimized backtracking approach
 export interface NQueensStep {
-  board: number[][]; // Represents the N x N board, 1 for Queen, 0 for empty
-  currentCell?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' | 'try_move' };
-  foundSolutions?: number[][][]; // Array of found board states
+  board: number[][]; // Represents the N x N board, e.g., 1 for Queen, 0 for empty
+  currentCell?: { 
+    row: number; 
+    col: number; 
+    action: 'try_place' | 'place_safe' | 'place_unsafe' | 'backtrack_remove' | 'solution_found' | 'stuck';
+  };
   isSafe?: boolean;
+  solutionFound?: boolean; // True if a full solution is found in this step
+  foundSolutionsCount: number;
   message: string;
   currentLine: number | null;
-  solutionFound?: boolean; // True if at least one solution has been found so far
+  // Auxiliary data to show the state of the optimized check arrays
+  auxiliaryData?: {
+    cols: boolean[];
+    diag1: boolean[];
+    diag2: boolean[];
+  } | null;
 }
 
+
+    

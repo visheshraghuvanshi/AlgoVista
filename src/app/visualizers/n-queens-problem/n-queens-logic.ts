@@ -1,51 +1,50 @@
 
-import type { NQueensStep } from './types'; // Local import
+import type { NQueensStep } from './types';
 
+// O(1) safety check version
 export const N_QUEENS_LINE_MAP = {
-  solveNQueensFunc: 1,
-  // isSafe function
-  isSafeFuncStart: 5,
-  checkRowConflict: 6,
-  checkUpperDiagonalConflict: 7,
-  checkLowerDiagonalConflict: 8,
-  isSafeReturnTrue: 9,
-
-  // solve (recursive helper) function
-  solveUtilFuncStart: 18,
-  baseCaseColEqualsN: 19,
-  addSolutionAndReturnTrue: 20,
-  loopTryRowsInCol: 21,
-  callIsSafe: 22,
-  placeQueenOnBoard: 23,
-  recursiveCallSolveUtil: 24,
-  backtrackRemoveQueen: 26,
-  endIfIsSafe: 27,
-  endLoopTryRows: 28,
-  returnFalseFromSolveUtil: 29,
+  mainFuncStart: 1,
+  initHelperArrays: 2, // cols, diag1, diag2
+  callSolveUtil: 3,
   
-  initialSolveCall: 31,
-  returnFinalSolutions: 32,
-};
+  solveUtilFuncStart: 4,
+  baseCaseRowEqualsN: 5,
+  addSolution: 6,
+  returnFromBase: 7,
 
+  loopCols: 8,
+  checkIsSafe: 9,
+  placeQueenAndMark: 10,
+  recursiveCall: 11,
+  backtrackRemoveAndUnmark: 12,
+  returnFalseFromLoop: 13,
+};
 
 const addStep = (
   steps: NQueensStep[],
-  boardState: number[][],
-  line: number | null,
+  board: number[][],
+  cols: boolean[],
+  diag1: boolean[],
+  diag2: boolean[],
+  line: number,
   message: string,
-  currentCell?: { row: number; col: number; action: 'place' | 'remove' | 'checking_safe' | 'backtracking_from' | 'try_move' },
+  currentCell?: NQueensStep['currentCell'],
   isSafeResult?: boolean,
-  allSolutions?: number[][][],
-  isSolutionFoundOverall?: boolean
+  solutionsFound?: number[][][]
 ) => {
   steps.push({
-    board: boardState.map(row => [...row]), 
+    board: board.map(row => [...row]),
+    currentLine: line,
+    message,
     currentCell,
     isSafe: isSafeResult,
-    message,
-    currentLine: line,
-    solutionFound: isSolutionFoundOverall,
-    foundSolutions: allSolutions ? allSolutions.map(sol => sol.map(r => [...r])) : undefined,
+    foundSolutionsCount: solutionsFound ? solutionsFound.length : 0,
+    solutionFound: !!solutionsFound && solutionsFound.length > 0,
+    auxiliaryData: {
+      cols: [...cols],
+      diag1: [...diag1],
+      diag2: [...diag2],
+    }
   });
 };
 
@@ -55,78 +54,61 @@ export const generateNQueensSteps = (N: number): NQueensStep[] => {
   const solutions: number[][][] = [];
   const lm = N_QUEENS_LINE_MAP;
 
-  addStep(localSteps, board, lm.solveNQueensFunc, `Starting N-Queens for N=${N}. Board initialized.`);
+  // For optimized O(1) checking
+  const cols = new Array(N).fill(false);
+  const diag1 = new Array(2 * N - 1).fill(false); // r + c
+  const diag2 = new Array(2 * N - 1).fill(false); // r - c + (N-1)
 
-  function isSafe(row: number, col: number): boolean {
-    addStep(localSteps, board, lm.isSafeFuncStart, `isSafe(row=${row}, col=${col})?`, { row, col, action: 'checking_safe' });
-    
-    // Check column upwards
-    addStep(localSteps, board, lm.checkRowConflict, `Checking column ${col} upwards.`, { row, col, action: 'checking_safe' });
-    for (let i = 0; i < row; i++) {
-      if (board[i][col] === 1) {
-        addStep(localSteps, board, lm.checkRowConflict, `Conflict in column at [${i},${col}]. Not safe.`, { row, col, action: 'checking_safe' }, false);
-        return false;
-      }
-    }
-    
-    // Check upper-left diagonal
-    addStep(localSteps, board, lm.checkUpperDiagonalConflict, `Checking upper-left diagonal from [${row},${col}].`, { row, col, action: 'checking_safe' });
-    for (let i = row, j = col; i >= 0 && j >= 0; i--, j--) {
-      if (board[i][j] === 1) {
-        addStep(localSteps, board, lm.checkUpperDiagonalConflict, `Conflict on upper-left diagonal at [${i},${j}]. Not safe.`, { row, col, action: 'checking_safe' }, false);
-        return false;
-      }
-    }
-    
-    // Check upper-right diagonal
-    addStep(localSteps, board, lm.checkLowerDiagonalConflict, `Checking upper-right diagonal from [${row},${col}].`, { row, col, action: 'checking_safe' });
-    for (let i = row, j = col; i >= 0 && j < N; i--, j++) {
-      if (board[i][j] === 1) {
-        addStep(localSteps, board, lm.checkLowerDiagonalConflict, `Conflict on upper-right diagonal at [${i},${j}]. Not safe.`, { row, col, action: 'checking_safe' }, false);
-        return false;
-      }
-    }
-    addStep(localSteps, board, lm.isSafeReturnTrue, `Position [${row},${col}] is safe.`, { row, col, action: 'checking_safe' }, true);
-    return true;
-  }
+  addStep(localSteps, board, cols, diag1, diag2, lm.mainFuncStart, `Starting N-Queens for N=${N}.`);
+  addStep(localSteps, board, cols, diag1, diag2, lm.initHelperArrays, 'Initializing helper arrays for O(1) safety checks.');
 
-  // Places queens row by row
-  function solveNQueensUtil(row: number) {
-    addStep(localSteps, board, lm.solveUtilFuncStart, `solveUtil(row=${row}). Attempting to place queen in row ${row}.`);
-    if (row >= N) {
-      addStep(localSteps, board, lm.baseCaseColEqualsN, `Base Case: All ${N} rows filled. Solution found!`);
+  function solve(row: number) {
+    addStep(localSteps, board, cols, diag1, diag2, lm.solveUtilFuncStart, `solve(row=${row}). Trying to place a queen.`, { row, col: -1, action: 'try_place' });
+    
+    if (row === N) {
+      addStep(localSteps, board, cols, diag1, diag2, lm.baseCaseRowEqualsN, 'Base Case: Reached row N. Solution found!', undefined, true);
       solutions.push(board.map(r => [...r]));
-      addStep(localSteps, board, lm.addSolutionAndReturnTrue, `Solution added. Total solutions: ${solutions.length}. Backtracking to find more.`, undefined, undefined, solutions, true);
-      return; 
+      addStep(localSteps, board, cols, diag1, diag2, lm.addSolution, `Solution ${solutions.length} added.`, undefined, true, solutions);
+      addStep(localSteps, board, cols, diag1, diag2, lm.returnFromBase, 'Returning from base case to find more solutions.', undefined, true, solutions);
+      return;
     }
 
-    for (let col = 0; col < N; col++) { 
-      addStep(localSteps, board, lm.loopTryRowsInCol, `Trying column ${col} for row ${row}.`, {row:row, col, action:'try_move'});
-      const safeCheckResult = isSafe(row, col);
-      addStep(localSteps, board, lm.callIsSafe, `Is [${row},${col}] safe? ${safeCheckResult}.`, {row, col, action: 'checking_safe'}, safeCheckResult);
-      if (safeCheckResult) {
-        board[row][col] = 1;
-        addStep(localSteps, board, lm.placeQueenOnBoard, `Placed queen at [${row},${col}].`, { row:row, col, action: 'place' }, true);
+    for (let col = 0; col < N; col++) {
+      addStep(localSteps, board, cols, diag1, diag2, lm.loopCols, `Trying cell [${row},${col}]...`, { row, col, action: 'try_place' });
+      
+      const isCellSafe = !(cols[col] || diag1[row + col] || diag2[row - col + N - 1]);
+      addStep(localSteps, board, cols, diag1, diag2, lm.checkIsSafe, `Is [${row},${col}] safe? -> ${isCellSafe}`, { row, col, action: 'check_safe' }, isCellSafe);
 
-        addStep(localSteps, board, lm.recursiveCallSolveUtil, `Recursive call: solveUtil(row=${row + 1}).`);
-        solveNQueensUtil(row + 1);
+      if (isCellSafe) {
+        board[row][col] = 1;
+        cols[col] = true;
+        diag1[row + col] = true;
+        diag2[row - col + N - 1] = true;
+        addStep(localSteps, board, cols, diag1, diag2, lm.placeQueenAndMark, `Placed queen at [${row},${col}]. Updated helper arrays.`, { row, col, action: 'place_safe' }, true);
         
-        // Backtrack
-        addStep(localSteps, board, lm.backtrackRemoveQueen, `Backtracking from [${row},${col}]. Removing queen to explore other options.`, { row,col, action: 'remove' });
-        board[row][col] = 0; 
-        addStep(localSteps, board, lm.backtrackRemoveQueen, `Queen removed from [${row},${col}].`, { row,col, action: 'remove' });
+        addStep(localSteps, board, cols, diag1, diag2, lm.recursiveCall, `Recurse: solve(row=${row + 1})`, { row, col, action: 'place_safe' });
+        solve(row + 1);
+
+        board[row][col] = 0;
+        cols[col] = false;
+        diag1[row + col] = false;
+        diag2[row - col + N - 1] = false;
+        addStep(localSteps, board, cols, diag1, diag2, lm.backtrackRemoveAndUnmark, `Backtrack: Removed queen from [${row},${col}]. Reset helper arrays.`, { row, col, action: 'backtrack_remove' });
       }
     }
-     addStep(localSteps, board, lm.returnFalseFromSolveUtil, `Finished all columns for row ${row}. Returning from this call.`);
+    addStep(localSteps, board, cols, diag1, diag2, lm.returnFalseFromLoop, `Finished all columns for row ${row}. Returning.`, { row, col: N-1, action: 'stuck' });
   }
-  
-  addStep(localSteps, board, lm.initialSolveCall, `Initial call to solveNQueensUtil(row=0).`);
-  solveNQueensUtil(0); 
+
+  addStep(localSteps, board, cols, diag1, diag2, lm.callSolveUtil, 'Initial call to solve(0).');
+  solve(0);
 
   if (solutions.length > 0) {
-    addStep(localSteps, solutions[0], lm.returnFinalSolutions, `N-Queens complete. Found ${solutions.length} solution(s). Displaying first solution.`, undefined, undefined, solutions, true);
+    addStep(localSteps, solutions[0], cols, diag1, diag2, lm.returnFinalSolutions, `Found ${solutions.length} solution(s). Showing first solution.`, undefined, true, solutions);
   } else {
-    addStep(localSteps, board, lm.returnFinalSolutions, "N-Queens complete. No solutions found.", undefined, undefined, solutions, false);
+    addStep(localSteps, board, cols, diag1, diag2, lm.returnFinalSolutions, `No solution found for N=${N}.`, undefined, false, solutions);
   }
+
   return localSteps;
 };
+
+    

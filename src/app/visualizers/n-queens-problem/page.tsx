@@ -8,7 +8,7 @@ import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDet
 import type { AlgorithmMetadata, NQueensStep } from './types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, SquareAsterisk } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
@@ -46,11 +46,12 @@ export default function NQueensProblemVisualizerPage() {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
       setCurrentStep(currentS);
+      // Logic to switch to solution board view at the end
       if (stepIndex === steps.length - 1 && currentS.foundSolutions && currentS.foundSolutions!.length > 0) {
         setDisplayedSolutionIndex(0); 
          setCurrentStep(prevStep => ({
             ...prevStep!,
-            board: currentS.foundSolutions![0] // Display the first solution on the final step
+            board: currentS.foundSolutions![0] 
         }));
       }
     }
@@ -76,11 +77,8 @@ export default function NQueensProblemVisualizerPage() {
         setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
         if (lastStep.foundSolutions && lastStep.foundSolutions.length > 0) {
-            toast({title: "N-Queens Solution(s)", description: `Found ${lastStep.foundSolutions.length} solution(s). Last animation step will show one. Use controls to cycle if multiple.`});
-             setDisplayedSolutionIndex(0);
-            if (newSteps.length -1 === currentStepIndex ) { 
-                setCurrentStep(prev => ({...prev!, board: lastStep.foundSolutions![0]}));
-            }
+            toast({title: "N-Queens Solution(s)", description: `Found ${lastStep.foundSolutions.length} solution(s). Last step shows first solution.`});
+            setDisplayedSolutionIndex(0);
         } else if (lastStep.message?.includes("No solution")) {
             toast({title: "No Solution", description: "No solutions found for N=" + boardSizeN, variant: "default"});
         }
@@ -91,10 +89,9 @@ export default function NQueensProblemVisualizerPage() {
     setIsFinished(newSteps.length <= 1);
     setDisplayedSolutionIndex(0);
 
-
-  }, [boardSizeN, toast, currentStepIndex]); // removed updateVisualStateFromStep from deps
+  }, [boardSizeN, toast]);
   
-  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+  useEffect(() => { handleGenerateSteps(); }, [boardSizeN, handleGenerateSteps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -140,7 +137,7 @@ export default function NQueensProblemVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <SquareAsterisk className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <Crown className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
            <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
@@ -148,11 +145,11 @@ export default function NQueensProblemVisualizerPage() {
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3 flex flex-col items-center">
             <NQueensVisualizationPanel step={currentStep} />
-            {isFinished && currentStep?.foundSolutions && currentStep.foundSolutions.length > 0 && (
+            {isFinished && currentStep?.foundSolutions && currentStep.foundSolutions.length > 1 && (
                 <div className="flex items-center gap-2 mt-2">
-                    <Button onClick={showPrevSolution} variant="outline" size="sm" disabled={currentStep.foundSolutions.length <= 1}>Prev Solution</Button>
+                    <Button onClick={showPrevSolution} variant="outline" size="sm">Prev Solution</Button>
                     <span>Solution {displayedSolutionIndex + 1} of {currentStep.foundSolutions.length}</span>
-                    <Button onClick={showNextSolution} variant="outline" size="sm" disabled={currentStep.foundSolutions.length <= 1}>Next Solution</Button>
+                    <Button onClick={showNextSolution} variant="outline" size="sm">Next Solution</Button>
                 </div>
             )}
           </div>
@@ -175,8 +172,9 @@ export default function NQueensProblemVisualizerPage() {
                         min="1" max={MAX_N_VALUE.toString()} 
                         disabled={isPlaying} />
                 </div>
-                 <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Start / Reset Simulation</Button>
+                 <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Solve / Reset Steps</Button>
             </div>
+            
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset to Default Puzzle</Button>
             </div>
@@ -207,3 +205,4 @@ export default function NQueensProblemVisualizerPage() {
   );
 }
 
+    
