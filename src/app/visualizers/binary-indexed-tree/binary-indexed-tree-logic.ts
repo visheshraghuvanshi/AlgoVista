@@ -49,7 +49,7 @@ const addStep = (
     activeIndices: currIdx !== undefined && !isBitIndex(currIdx, opType) ? [currIdx] : [],
     swappingIndices: [],
     sortedIndices: [],
-    auxiliaryData,
+    auxiliaryData: auxData,
   });
 };
 
