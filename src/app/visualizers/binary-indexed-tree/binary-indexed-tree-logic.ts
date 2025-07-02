@@ -54,7 +54,7 @@ const addStep = (
 ) => {
   localSteps.push({
     array: [...currentTreeState],
-    activeIndices: active,
+    activeIndices: activeIdx,
     swappingIndices: [],
     sortedIndices: [],
     currentLine: line,
@@ -149,3 +149,4 @@ export const generateBITSteps = (
 export const createInitialBIT = (size: number): number[] => {
   return new Array(size + 1).fill(0);
 };
+
