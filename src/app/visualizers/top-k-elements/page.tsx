@@ -96,7 +96,7 @@ export default function TopKElementsPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [inputValue, kValue, parseInput, parseK, toast, updateVisualStateFromStep]);
+  }, [inputValue, kValue, parseInput, parseK, toast]);
   
   useEffect(() => { handleFindTopK(); }, [handleFindTopK]);
 
