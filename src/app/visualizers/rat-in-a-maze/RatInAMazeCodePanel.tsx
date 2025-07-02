@@ -10,115 +10,135 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; // Local import
 
-
 export const RAT_IN_MAZE_CODE_SNIPPETS = {
   JavaScript: [
-    "function solveMaze(maze) {",                         // 1
-    "  const N = maze.length; const M = maze[0].length;",
-    "  const sol = Array(N).fill(0).map(() => Array(M).fill(0));", // 2
-    "  function isSafe(r, c) {",                           // 3
-    "    return r >= 0 && r < N && c >= 0 && c < M && maze[r][c] === 1 && sol[r][c] === 0;", // 4,5,6
-    "  }", // isSafeReturnTrue/False are outcomes, not specific lines here
-    "  function solveUtil(r, c) {",                        // 9
-    "    if (r === N - 1 && c === M - 1 && maze[r][c] === 1) {", // 10
-    "      sol[r][c] = 1; return true;",                   // 11,12
-    "    }",
-    "    if (isSafe(r, c)) {",                              // 13
-    "      sol[r][c] = 1;",                               // 14
-    "      // Try Right first, then Down (or other order)",
-    "      if (solveUtil(r, c + 1)) return true; // Right", // 15,16,17 (Recursive call & return)
-    "      if (solveUtil(r + 1, c)) return true; // Down",  // 18,19,20
-    "      // Add other directions (Up, Left) if allowed here",
-    "      sol[r][c] = 0; // Backtrack",                    // 21
-    "      return false;",                                  // 22
-    "    }",
-    "    return false;",                                    // 23
+    "function findPaths(maze) {",
+    "  const solutions = [], visited = maze.map(r => r.map(() => false));",
+    "  if (maze[0][0] === 1) {",
+    "    solve(0, 0, \"\");",
     "  }",
-    "  if (solveUtil(0, 0)) return sol;",                  // 24
-    "  return null; // No solution",                       // 25
+    "  function solve(r, c, path) {",
+    "    if (r === N - 1 && c === M - 1) {",
+    "      solutions.push(path);",
+    "      return;",
+    "    }",
+    "    visited[r][c] = true;",
+    "    // D, L, R, U",
+    "    const dr = [1, 0, 0, -1]; const dc = [0, -1, 1, 0];",
+    "    const dir = ['D', 'L', 'R', 'U'];",
+    "    for (let i = 0; i < 4; i++) {",
+    "      const nextR = r + dr[i]; const nextC = c + dc[i];",
+    "      if (isSafe(nextR, nextC)) {",
+    "        solve(nextR, nextC, path + dir[i]);",
+    "      }",
+    "    }",
+    "    visited[r][c] = false; // Backtrack",
+    "  }",
+    "  function isSafe(r, c) {",
+    "    return r >= 0 && r < N && c >= 0 && c < M &&",
+    "           maze[r][c] === 1 && !visited[r][c];",
+    "  }",
+    "  return solutions;",
     "}",
   ],
   Python: [
-    "def solve_maze(maze):",
-    "    N = len(maze)",
-    "    M = len(maze[0])",
-    "    sol = [[0 for _ in range(M)] for _ in range(N)]",
-    "    def is_safe(r, c):",
-    "        return 0 <= r < N and 0 <= c < M and maze[r][c] == 1 and sol[r][c] == 0",
-    "    def solve_util(r, c):",
-    "        if r == N - 1 and c == M - 1 and maze[r][c] == 1:",
-    "            sol[r][c] = 1",
-    "            return True",
-    "        if is_safe(r, c):",
-    "            sol[r][c] = 1",
-    "            if solve_util(r, c + 1): return True # Right",
-    "            if solve_util(r + 1, c): return True # Down",
-    "            # Add other directions if allowed",
-    "            sol[r][c] = 0 # Backtrack",
-    "            return False",
-    "        return False",
-    "    if solve_util(0, 0):",
-    "        return sol",
-    "    return None",
+    "def find_paths(maze):",
+    "    N, M = len(maze), len(maze[0])",
+    "    solutions = []",
+    "    visited = [[False for _ in range(M)] for _ in range(N)]",
+    "",
+    "    def solve(r, c, path):",
+    "        if r == N - 1 and c == M - 1:",
+    "            solutions.append(path)",
+    "            return",
+    "",
+    "        visited[r][c] = True",
+    "        # D, L, R, U",
+    "        for dr, dc, move in [(1,0,'D'), (0,-1,'L'), (0,1,'R'), (-1,0,'U')]:",
+    "            next_r, next_c = r + dr, c + dc",
+    "            if 0 <= next_r < N and 0 <= next_c < M and \\",
+    "               maze[next_r][next_c] == 1 and not visited[next_r][next_c]:",
+    "                solve(next_r, next_c, path + move)",
+    "        visited[r][c] = False # Backtrack",
+    "",
+    "    if maze[0][0] == 1:",
+    "        solve(0, 0, \"\")",
+    "    return solutions",
   ],
   Java: [
-    "import java.util.Arrays;",
+    "import java.util.*;",
     "class RatInAMaze {",
-    "    int N, M;",
-    "    boolean isSafe(int r, int c, int maze[][], int sol[][]) {",
-    "        return (r >= 0 && r < N && c >= 0 && c < M && maze[r][c] == 1 && sol[r][c] == 0);",
-    "    }",
-    "    boolean solveMazeUtil(int r, int c, int maze[][], int sol[][]) {",
-    "        if (r == N - 1 && c == M - 1 && maze[r][c] == 1) {",
-    "            sol[r][c] = 1;",
-    "            return true;",
-    "        }",
-    "        if (isSafe(r, c, maze, sol)) {",
-    "            sol[r][c] = 1;",
-    "            if (solveMazeUtil(r, c + 1, maze, sol)) return true; // Right",
-    "            if (solveMazeUtil(r + 1, c, maze, sol)) return true; // Down",
-    "            sol[r][c] = 0; // Backtrack",
-    "            return false;",
-    "        }",
-    "        return false;",
-    "    }",
-    "    int[][] solve(int maze[][]) {",
+    "    private List<String> solutions;",
+    "    private boolean[][] visited;",
+    "    private int N, M;",
+    "",
+    "    public List<String> findPaths(int[][] maze) {",
     "        N = maze.length; M = maze[0].length;",
-    "        int sol[][] = new int[N][M];",
-    "        for(int[] row : sol) Arrays.fill(row, 0);",
-    "        if (solveMazeUtil(0, 0, maze, sol)) return sol;",
-    "        return null;",
+    "        solutions = new ArrayList<>();",
+    "        visited = new boolean[N][M];",
+    "        if (maze[0][0] == 1) {",
+    "            solve(0, 0, \"\");",
+    "        }",
+    "        return solutions;",
+    "    }",
+    "    private boolean isSafe(int r, int c) {",
+    "        return (r >= 0 && r < N && c >= 0 && c < M && maze[r][c] == 1 && !visited[r][c]);",
+    "    }",
+    "    private void solve(int r, int c, String path) {",
+    "        if (r == N - 1 && c == M - 1) {",
+    "            solutions.add(path);",
+    "            return;",
+    "        }",
+    "        visited[r][c] = true;",
+    "        // D, L, R, U",
+    "        int[] dr = {1, 0, 0, -1}; int[] dc = {0, -1, 1, 0};",
+    "        char[] dir = {'D', 'L', 'R', 'U'};",
+    "        for (int i = 0; i < 4; i++) {",
+    "            int nextR = r + dr[i]; int nextC = c + dc[i];",
+    "            if (isSafe(nextR, nextC)) {",
+    "                solve(nextR, nextC, path + dir[i]);",
+    "            }",
+    "        }",
+    "        visited[r][c] = false; // Backtrack",
     "    }",
     "}",
   ],
   "C++": [
     "#include <vector>",
-    "bool isSafe(int r, int c, int N, int M, const std::vector<std::vector<int>>& maze, std::vector<std::vector<int>>& sol) {",
-    "    return (r >= 0 && r < N && c >= 0 && c < M && maze[r][c] == 1 && sol[r][c] == 0);",
-    "}",
-    "bool solveMazeUtil(int r, int c, int N, int M, const std::vector<std::vector<int>>& maze, std::vector<std::vector<int>>& sol) {",
-    "    if (r == N - 1 && c == M - 1 && maze[r][c] == 1) {",
-    "        sol[r][c] = 1; return true;",
+    "#include <string>",
+    "void solve(int r, int c, int N, int M, const auto& maze, auto& visited, std::string& path, auto& solutions) {",
+    "    if (r == N - 1 && c == M - 1) {",
+    "        solutions.push_back(path);",
+    "        return;",
     "    }",
-    "    if (isSafe(r, c, N, M, maze, sol)) {",
-    "        sol[r][c] = 1;",
-    "        if (solveMazeUtil(r, c + 1, N, M, maze, sol)) return true; // Right",
-    "        if (solveMazeUtil(r + 1, c, N, M, maze, sol)) return true; // Down",
-    "        sol[r][c] = 0; // Backtrack",
-    "        return false;",
+    "    visited[r][c] = true;",
+    "    // D, L, R, U",
+    "    int dr[] = {1, 0, 0, -1}; int dc[] = {0, -1, 1, 0};",
+    "    char dir[] = {'D', 'L', 'R', 'U'};",
+    "    for (int i = 0; i < 4; ++i) {",
+    "        int nextR = r + dr[i]; int nextC = c + dc[i];",
+    "        if (nextR >= 0 && nextR < N && nextC >= 0 && nextC < M &&",
+    "            maze[nextR][nextC] == 1 && !visited[nextR][nextC]) {",
+    "            path.push_back(dir[i]);",
+    "            solve(nextR, nextC, N, M, maze, visited, path, solutions);",
+    "            path.pop_back(); // Backtrack",
+    "        }",
     "    }",
-    "    return false;",
+    "    visited[r][c] = false; // Backtrack",
     "}",
-    "std::vector<std::vector<int>> solveMaze(const std::vector<std::vector<int>>& maze) {",
-    "    int N = maze.size();",
-    "    if (N == 0) return {};",
-    "    int M = maze[0].size();",
-    "    std::vector<std::vector<int>> sol(N, std::vector<int>(M, 0));",
-    "    if (solveMazeUtil(0, 0, N, M, maze, sol)) return sol;",
-    "    return {}; // Return empty if no solution",
+    "std::vector<std::string> findPaths(const std::vector<std::vector<int>>& maze) {",
+    "    int N = maze.size(); int M = maze[0].size();",
+    "    std::vector<std::string> solutions;",
+    "    std::vector<std::vector<bool>> visited(N, std::vector<bool>(M, false));",
+    "    std::string currentPath = \"\";",
+    "    if (maze[0][0] == 1) {",
+    "        solve(0, 0, N, M, maze, visited, currentPath, solutions);",
+    "    }",
+    "    return solutions;",
     "}",
   ],
 };
+
 
 interface RatInAMazeCodePanelProps {
   currentLine: number | null;
@@ -145,44 +165,35 @@ export function RatInAMazeCodePanel({ currentLine }: RatInAMazeCodePanelProps) {
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> Code: Rat in a Maze
+            <Code2 className="mr-2 h-5 w-5" /> Code: Rat in a Maze (All Paths)
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
-          <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
-        </Button>
+        <div className="flex items-center gap-2">
+            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
+                    {languages.map(lang => (
+                        <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
+                            {lang}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
+                <ClipboardCopy className="h-4 w-4 mr-1" /> Copy
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-        <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
-          <TabsList className="mx-4 mb-1 self-start shrink-0">
-            {languages.map((lang) => (
-              <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
-                {lang}
-              </TabsTrigger>
+        <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
+            {currentCodeLines.map((line, index) => (
+              <div key={`ratmaze-${selectedLanguage}-line-${index}`}
+                className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                {line}
+              </div>
             ))}
-          </TabsList>
-          {languages.map((lang) => (
-            <TabsContent key={lang} value={lang} className="m-0 flex-grow overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-                <pre className="font-code text-sm p-4">
-                  {RAT_IN_MAZE_CODE_SNIPPETS[lang as keyof typeof RAT_IN_MAZE_CODE_SNIPPETS]?.map((line, index) => (
-                    <div
-                      key={`ratmaze-${lang}-line-${index}`}
-                      className={`px-2 py-0.5 rounded whitespace-pre-wrap ${
-                        index + 1 === currentLine && lang === selectedLanguage ? "bg-accent text-accent-foreground" : "text-foreground"
-                      }`}
-                      aria-current={index + 1 === currentLine && lang === selectedLanguage ? "step" : undefined}
-                    >
-                      <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                        {index + 1}
-                      </span>
-                      {line}
-                    </div>
-                  ))}
-                </pre>
-              </ScrollArea>
-            </TabsContent>
-          ))}
-        </Tabs>
+          </pre>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

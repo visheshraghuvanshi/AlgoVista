@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { RatInAMazeVisualizationPanel } from './RatInAMazeVisualizationPanel';
 import { RatInAMazeCodePanel } from './RatInAMazeCodePanel';
-import { generateRatInAMazeSteps, RAT_IN_MAZE_LINE_MAP } from './rat-in-a-maze-logic'; 
+import { generateRatInAMazeSteps } from './rat-in-a-maze-logic'; 
 
 const DEFAULT_ANIMATION_SPEED = 200; 
 const MIN_SPEED = 20;
@@ -35,7 +35,6 @@ export default function RatInAMazeVisualizerPage() {
   const [isClient, setIsClient] = useState(false);
 
   const [mazeInput, setMazeInput] = useState(DEFAULT_MAZE_INPUT);
-  const [initialBoardState, setInitialBoardState] = useState<number[][] | null>(null);
   
   const [steps, setSteps] = useState<RatInAMazeStep[]>([]);
   const [currentStep, setCurrentStep] = useState<RatInAMazeStep | null>(null);
@@ -45,6 +44,9 @@ export default function RatInAMazeVisualizerPage() {
   const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [solutionToDisplay, setSolutionToDisplay] = useState<{board: number[][], path: string} | null>(null);
+  const [solutionDisplayIndex, setSolutionDisplayIndex] = useState(0);
+
 
   useEffect(() => { setIsClient(true); }, []);
 
@@ -101,18 +103,19 @@ export default function RatInAMazeVisualizerPage() {
     if (!boardArray) {
       setSteps([]); setCurrentStep(null); setIsFinished(true); return;
     }
-    setInitialBoardState(boardArray.map(row => [...row])); 
 
     const newSteps = generateRatInAMazeSteps(boardArray);
     setSteps(newSteps);
     setCurrentStepIndex(0);
+    setSolutionToDisplay(null);
+    setSolutionDisplayIndex(0);
     
     if (newSteps.length > 0) {
         setCurrentStep(newSteps[0]);
         const lastStep = newSteps[newSteps.length - 1];
-        if (lastStep.currentPosition?.action === 'goal_reached') {
-            toast({title: "Path Found!", description: "The rat reached the destination."});
-        } else if (lastStep.message?.includes("No solution exists")) {
+        if (lastStep.foundSolutions && lastStep.foundSolutions.length > 0) {
+            toast({title: "Path(s) Found!", description: `Found ${lastStep.foundSolutions.length} solution(s).`});
+        } else if (lastStep.message?.includes("No solution")) {
             toast({title: "No Solution", description: "The rat could not find a path.", variant: "default"});
         }
     } else {
@@ -121,7 +124,7 @@ export default function RatInAMazeVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [mazeInput, parseMazeInput, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setInitialBoardState]);
+  }, [mazeInput, parseMazeInput, toast]);
   
   useEffect(() => { handleGenerateSteps(); }, [mazeInput, handleGenerateSteps]);
 
@@ -131,10 +134,23 @@ export default function RatInAMazeVisualizerPage() {
         const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
+      const finalStep = steps[steps.length - 1];
+      if (finalStep && finalStep.foundSolutions && finalStep.foundSolutions.length > 0) {
+        const board = parseMazeInput(mazeInput)!;
+        let r=0, c=0;
+        const solutionBoard = board.map(row=>[...row]);
+        solutionBoard[0][0] = 2; // Mark start
+        for(const move of finalStep.foundSolutions[0]){
+            if(move==='D') r++; if(move==='U') r--; if(move==='R') c++; if(move==='L') c--;
+            if(r>=0 && c>=0 && r<board.length && c < board[0].length) solutionBoard[r][c] = 2;
+        }
+        setSolutionToDisplay({board: solutionBoard, path: finalStep.foundSolutions[0]});
+      }
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep, mazeInput, parseMazeInput]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
@@ -145,6 +161,21 @@ export default function RatInAMazeVisualizerPage() {
   };
   const handleReset = () => { setIsPlaying(false); setIsFinished(false); setMazeInput(DEFAULT_MAZE_INPUT); };
   
+  const displaySolution = (index: number) => {
+    if (!currentStep?.foundSolutions || currentStep.foundSolutions.length === 0) return;
+    const board = parseMazeInput(mazeInput)!;
+    const path = currentStep.foundSolutions[index];
+    let r=0, c=0;
+    const solutionBoard = board.map(row=>[...row]);
+    solutionBoard[0][0] = 2;
+    for(const move of path){
+        if(move==='D') r++; if(move==='U') r--; if(move==='R') c++; if(move==='L') c--;
+        if(r>=0 && c>=0 && r<board.length && c < board[0].length) solutionBoard[r][c] = 2;
+    }
+    setSolutionToDisplay({board: solutionBoard, path});
+    setSolutionDisplayIndex(index);
+  }
+
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
@@ -161,7 +192,14 @@ export default function RatInAMazeVisualizerPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3 flex flex-col items-center">
-            <RatInAMazeVisualizationPanel step={currentStep ? {...currentStep, initialBoard: initialBoardState} : null} />
+            <RatInAMazeVisualizationPanel step={solutionToDisplay ? {...currentStep!, maze: solutionToDisplay.board, message: `Showing Solution ${solutionDisplayIndex+1}: ${solutionToDisplay.path}` } : currentStep} />
+            {isFinished && currentStep?.foundSolutions && currentStep.foundSolutions.length > 1 && (
+                <div className="flex items-center gap-2 mt-2">
+                    <Button onClick={() => displaySolution((solutionDisplayIndex - 1 + currentStep.foundSolutions!.length) % currentStep.foundSolutions!.length)} variant="outline" size="sm">Prev Solution</Button>
+                    <span>Solution {solutionDisplayIndex + 1} of {currentStep.foundSolutions.length}</span>
+                    <Button onClick={() => displaySolution((solutionDisplayIndex + 1) % currentStep.foundSolutions!.length)} variant="outline" size="sm">Next Solution</Button>
+                </div>
+            )}
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <RatInAMazeCodePanel currentLine={currentStep?.currentLine ?? null} />
@@ -204,10 +242,10 @@ export default function RatInAMazeVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
-             {isFinished && currentStep?.solutionFound && (
-                <p className="text-center text-lg font-semibold text-green-500">Solution Path Found!</p>
+             {isFinished && currentStep?.foundSolutions && currentStep.foundSolutions.length > 0 && (
+                <p className="text-center text-lg font-semibold text-green-500">Found {currentStep.foundSolutions.length} Solution(s)!</p>
             )}
-            {isFinished && !currentStep?.solutionFound && currentStep?.message?.includes("No solution") && (
+            {isFinished && (!currentStep?.foundSolutions || currentStep.foundSolutions.length === 0) && currentStep?.message?.includes("No solution") && (
                 <p className="text-center text-lg font-semibold text-red-500">No Solution Path Found.</p>
             )}
           </CardContent>

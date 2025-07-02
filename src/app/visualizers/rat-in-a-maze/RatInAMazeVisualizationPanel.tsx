@@ -5,10 +5,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { RatInAMazeStep } from './types'; // Local import
 import { Target, Mouse } from 'lucide-react'; 
+import { cn } from '@/lib/utils';
 
 interface RatInAMazeVisualizationPanelProps {
   step: RatInAMazeStep | null;
-  // boardSize is implicitly part of step.maze, no need to pass separately from page
 }
 
 export function RatInAMazeVisualizationPanel({ step }: RatInAMazeVisualizationPanelProps) {
@@ -29,16 +29,26 @@ export function RatInAMazeVisualizationPanel({ step }: RatInAMazeVisualizationPa
   const maxDimension = Math.max(N, M, 1); 
   const cellSize = Math.max(16, Math.floor((panelWidth - (maxDimension + 1) * 1 - 2 * 2) / maxDimension));
 
-  const getCellBgColor = (cellValue: number, r: number, c: number) => {
+  const getCellClasses = (cellValue: number, r: number, c: number) => {
+    // Base chessboard colors for a more classic look
+    const baseColor = (r + c) % 2 === 0 
+      ? 'bg-stone-100 dark:bg-stone-700/60' 
+      : 'bg-stone-300 dark:bg-stone-800/80';
+    
+    let highlightRing = '';
+    
+    // Highlight based on the algorithm's action using a ring outline
     if (currentPosition && currentPosition.row === r && currentPosition.col === c) {
-      if (action === 'try_move' || action === 'mark_path') return "bg-yellow-400/40 dark:bg-yellow-600/40";
-      if (action === 'backtrack_remove') return "bg-orange-400/40 dark:bg-orange-600/40";
-      if (action === 'stuck' || action === 'blocked') return "bg-red-400/40 dark:bg-red-600/40";
-      if (action === 'goal_reached') return "bg-green-500/70 dark:bg-green-600/70";
+        highlightRing = 'ring-2 ring-offset-1 ring-offset-background ring-blue-500'; // Default for trying
+        if (action === 'backtrack') highlightRing = 'ring-2 ring-offset-1 ring-offset-background ring-orange-500';
+        if (action === 'goal_reached') highlightRing = 'ring-2 ring-offset-1 ring-offset-background ring-green-500';
+        if (action === 'stuck') highlightRing = 'ring-2 ring-offset-1 ring-offset-background ring-red-500';
     }
-    if (cellValue === 0) return "bg-slate-700 dark:bg-slate-800"; // Wall
-    if (cellValue === 2) return "bg-green-500/70 dark:bg-green-600/70"; // Path
-    return "bg-card"; // Open path (1)
+
+    if (cellValue === 0) return cn('flex items-center justify-center bg-slate-700 dark:bg-slate-900', highlightRing); // Wall
+    if (cellValue === 2) return cn('flex items-center justify-center bg-green-500/50 dark:bg-green-600/50', highlightRing); // Path
+    
+    return cn('flex items-center justify-center transition-all duration-200', baseColor, highlightRing);
   };
 
   return (
@@ -52,19 +62,20 @@ export function RatInAMazeVisualizationPanel({ step }: RatInAMazeVisualizationPa
           <div className="grid gap-px bg-border border-2 border-foreground/50" style={{ gridTemplateColumns: `repeat(${M}, minmax(0, 1fr))` }}>
             {maze.map((row, rIdx) =>
               row.map((cell, cIdx) => {
-                const isThickRightBorder = (cIdx + 1) % M === 0 && cIdx < M - 1;
-                const isThickBottomBorder = (rIdx + 1) % N === 0 && rIdx < N - 1;
+                const isThickRightBorder = (cIdx + 1) % 3 === 0 && cIdx < M - 1;
+                const isThickBottomBorder = (rIdx + 1) % 3 === 0 && rIdx < N - 1;
                 
-                let cellClasses = `flex items-center justify-center ${getCellBgColor(cell, rIdx, cIdx)}`;
-                if (isThickRightBorder) cellClasses += " border-r-2 border-foreground/50";
-                if (isThickBottomBorder) cellClasses += " border-b-2 border-foreground/50";
+                let cellClasses = getCellClasses(cell, rIdx, cIdx);
+                // Subgrid borders (like sudoku)
+                // if (isThickRightBorder) cellClasses += " border-r-2 border-foreground/50";
+                // if (isThickBottomBorder) cellClasses += " border-b-2 border-foreground/50";
 
                 return (
                   <div
                     key={`${rIdx}-${cIdx}`}
                     className={cellClasses}
                     style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
-                    title={`Cell [${rIdx},${cIdx}] - Value: ${cell === 0 ? 'Wall' : (cell === 1 ? 'Path' : 'Solution') }`}
+                    title={`Cell [${rIdx},${cIdx}]`}
                   >
                     {rIdx === N - 1 && cIdx === M - 1 && maze[rIdx][cIdx] !== 0 && (
                       <Target className="w-3/4 h-3/4 text-red-500" />
