@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types'; // Ensure AlgorithmStep is part of types if general
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -98,13 +98,6 @@ export default function SieveVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(true);
     setLimitNInput(DEFAULT_LIMIT_N.toString());
-    // handleGeneratePrimes will be called due to limitNInput change if it's a dependency of its useEffect
-    // For direct call:
-    // const n = parseInt(DEFAULT_LIMIT_N.toString(), 10);
-    // const newSteps = generateSieveSteps(n);
-    // setSteps(newSteps);
-    // setCurrentStepIndex(0);
-    // setCurrentStep(newSteps[0] || null);
   };
   
   const algoDetails: AlgorithmDetailsProps = {

@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep } from '@/types'; // DPAlgorithmStep is suitable
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, DPAlgorithmStep } from './types';
 import { algorithmMetadata } from './metadata';
 import { FloydWarshallVisualizationPanel } from './FloydWarshallVisualizationPanel';
 import { FloydWarshallCodePanel } from './FloydWarshallCodePanel';
@@ -224,7 +224,6 @@ export default function FloydWarshallVisualizerPage() {
     setIsPlaying(false); setIsFinished(false); 
     setNumVerticesInput(DEFAULT_NUM_VERTICES);
     setEdgeListInput(DEFAULT_EDGE_LIST);
-    // handleGenerateSteps will be called by useEffect on input changes
   };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -293,3 +292,4 @@ export default function FloydWarshallVisualizerPage() {
     </div>
   );
 }
+

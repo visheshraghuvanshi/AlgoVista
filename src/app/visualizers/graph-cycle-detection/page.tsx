@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -10,13 +11,12 @@ import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
 import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { GraphCycleDetectionCodePanel } from './GraphCycleDetectionCodePanel';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, RefreshCwCcw } from 'lucide-react'; // RefreshCwCcw for cycle
+import { AlertTriangle, RefreshCw } from 'lucide-react'; 
 import { generateGraphCycleDetectionSteps } from './graph-cycle-detection-logic';
 import { parseGraphInput as baseParseGraphInput } from '@/app/visualizers/dfs/dfs-logic'; 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Moved from CodePanel and expanded
 const CYCLE_DETECTION_CODE_SNIPPETS = {
   JavaScript: {
     undirected: [
@@ -391,7 +391,7 @@ export default function GraphCycleDetectionVisualizerPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center">
-          <RefreshCwCcw className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+          <RefreshCw className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>

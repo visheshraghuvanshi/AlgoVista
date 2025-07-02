@@ -1,11 +1,13 @@
 
+
+// src/app/visualizers/modular-exponentiation/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from '@/components/algo-vista/AlgorithmDetailsCard';
-import type { AlgorithmMetadata } from '@/types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata } from './types';
 import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Sigma } from 'lucide-react';
@@ -61,7 +63,7 @@ export default function ModularExponentiationVisualizerPage() {
     const modulus = parseInt(modulusInput, 10);
 
     if (isNaN(base) || isNaN(exponent) || isNaN(modulus)) {
-      toast({ title: "Invalid Input", description: "Base, exponent, and modulus must be integers.", variant: "destructive" });
+      toast({ title: "Invalid Input", description: "Base, exponent, and modulus must be valid integers.", variant: "destructive" });
       return;
     }
     if (modulus <= 0) {
@@ -119,9 +121,6 @@ export default function ModularExponentiationVisualizerPage() {
     setBaseInput(DEFAULT_BASE);
     setExponentInput(DEFAULT_EXPONENT);
     setModulusInput(DEFAULT_MODULUS);
-    // handleCalculate will be called by useEffect due to input changes if they are dependencies
-    // Or call it directly if only resetting the simulation for current inputs:
-    // handleCalculate(); 
   };
   
   const algoDetails: AlgorithmDetailsProps = {
