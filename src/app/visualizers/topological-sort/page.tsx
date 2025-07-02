@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
 import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; // Local import
-import { GraphControlsPanel from './GraphControlsPanel'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
 import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
 import { TopologicalSortCodePanel } from './TopologicalSortCodePanel';
 import { useToast } from "@/hooks/use-toast";
@@ -358,4 +359,3 @@ export default function TopologicalSortVisualizerPage() {
     </div>
   );
 }
-
