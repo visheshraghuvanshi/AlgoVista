@@ -18,7 +18,7 @@ export const COIN_CHANGE_CODE_SNIPPETS: Record<CoinChangeProblemType, Record<str
       "  dp[0] = 0;",
       "  for (let i = 1; i <= amount; i++) {",
       "    for (const coin of coins) {",
-      "      if (coin <= i) {",
+      "      if (coin <= i && dp[i - coin] !== Infinity) {",
       "        dp[i] = Math.min(dp[i], dp[i - coin] + 1);",
       "      }",
       "    }",
@@ -42,7 +42,7 @@ export const COIN_CHANGE_CODE_SNIPPETS: Record<CoinChangeProblemType, Record<str
       "class CoinChange {",
       "    public int minCoins(int[] coins, int amount) {",
       "        int[] dp = new int[amount + 1];",
-      "        Arrays.fill(dp, amount + 1); // amount + 1 can represent Infinity",
+      "        Arrays.fill(dp, amount + 1); // Use amount + 1 as Infinity",
       "        dp[0] = 0;",
       "        for (int i = 1; i <= amount; i++) {",
       "            for (int coin : coins) {",
@@ -60,7 +60,7 @@ export const COIN_CHANGE_CODE_SNIPPETS: Record<CoinChangeProblemType, Record<str
       "#include <algorithm> // For std::min",
       "#include <limits>    // For std::numeric_limits",
       "int minCoins(const std::vector<int>& coins, int amount) {",
-      "    std::vector<int> dp(amount + 1, amount + 1); // amount + 1 as Infinity",
+      "    std::vector<int> dp(amount + 1, amount + 1); // Use amount + 1 as Infinity",
       "    dp[0] = 0;",
       "    for (int i = 1; i <= amount; ++i) {",
       "        for (int coin : coins) {",
@@ -112,7 +112,7 @@ export const COIN_CHANGE_CODE_SNIPPETS: Record<CoinChangeProblemType, Record<str
     "C++": [
       "#include <vector>",
       "int countWays(const std::vector<int>& coins, int amount) {",
-      "    std::vector<int> dp(amount + 1, 0);",
+      "    std::vector<unsigned int> dp(amount + 1, 0); // Use unsigned for large counts",
       "    dp[0] = 1;",
       "    for (int coin : coins) {",
       "        for (int i = coin; i <= amount; ++i) {",
@@ -161,36 +161,37 @@ export function CoinChangeCodePanel({ currentLine, selectedProblem }: CoinChange
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
             <Code2 className="mr-2 h-5 w-5" /> Coin Change: {problemLabel}
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
-          <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
-        </Button>
+        <div className="flex items-center gap-2">
+            <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="w-auto">
+                <TabsList className="grid w-full grid-cols-4 h-8 text-xs p-0.5">
+                    {languages.map(lang => (
+                        <TabsTrigger key={lang} value={lang} className="text-xs px-1.5 py-0.5 h-auto">
+                            {lang}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+            <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
+              <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0 pt-2 flex flex-col">
-        <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage} className="flex flex-col flex-grow overflow-hidden">
-          <TabsList className="mx-4 mb-1 self-start shrink-0">
-            {languages.map((lang) => (
-              <TabsTrigger key={lang} value={lang} className="text-xs px-2 py-1 h-auto">
-                {lang}
-              </TabsTrigger>
+        <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
+          <pre className="font-code text-sm p-4 whitespace-pre-wrap">
+            {COIN_CHANGE_CODE_SNIPPETS[selectedProblem][selectedLanguage]?.map((line, index) => (
+              <div
+                key={`cc-${selectedProblem}-${selectedLanguage}-line-${index}`}
+                className={`px-2 py-0.5 rounded ${ index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground" }`}
+              >
+                <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
+                {line}
+              </div>
             ))}
-          </TabsList>
-          <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-            <pre className="font-code text-sm p-4 whitespace-pre-wrap">
-              {COIN_CHANGE_CODE_SNIPPETS[selectedProblem][selectedLanguage]?.map((line, index) => (
-                <div
-                  key={`cc-${selectedProblem}-${selectedLanguage}-line-${index}`}
-                  className={`px-2 py-0.5 rounded ${ index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground" }`}
-                >
-                  <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
-                  {line}
-                </div>
-              ))}
-            </pre>
-          </ScrollArea>
-        </Tabs>
+          </pre>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
 }
-
     
