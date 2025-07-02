@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VisualizationPanel } from './VisualizationPanel'; 
-import { DutchNationalFlagCodePanel } from './DutchNationalFlagCodePanel'; 
+import { DutchNationalFlagCodePanel, DUTCH_NATIONAL_FLAG_CODE_SNIPPETS } from './DutchNationalFlagCodePanel'; 
 import { SortingControlsPanel } from './SortingControlsPanel'; 
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
 import type { AlgorithmStep, AlgorithmMetadata, AlgorithmDetailsProps } from './types'; 
@@ -275,4 +275,3 @@ export default function DutchNationalFlagVisualizerPage() {
     </div>
   );
 }
-

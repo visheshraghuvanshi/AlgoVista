@@ -18,7 +18,7 @@ export const DUTCH_NATIONAL_FLAG_CODE_SNIPPETS = {
     "    if (arr[mid] === 0) { // Element is 0",             // 4
     "      [arr[low], arr[mid]] = [arr[mid], arr[low]];",     // 5
     "      low++; mid++;",                                   // 6
-    "    } else if (arr[mid] === 1) { // Element is 1",      // 8 (adjusted to match python/java structure more)
+    "    } else if (arr[mid] === 1) { // Element is 1",      // 8
     "      mid++;",                                           // 9
     "    } else { // Element is 2",                          // 11
     "      [arr[mid], arr[high]] = [arr[high], arr[mid]];",   // 12
@@ -199,4 +199,3 @@ export function DutchNationalFlagCodePanel({ currentLine }: DutchNationalFlagCod
     </Card>
   );
 }
-

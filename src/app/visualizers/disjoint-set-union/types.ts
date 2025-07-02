@@ -1,3 +1,4 @@
+
 // src/app/visualizers/disjoint-set-union/types.ts
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
@@ -45,3 +46,4 @@ export interface DSUStep {
   swappingIndices?: number[];
   sortedIndices?: number[];
 }
+

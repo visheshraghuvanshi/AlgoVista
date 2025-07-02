@@ -4,31 +4,30 @@ import type { DSUStep } from './types'; // Local import
 export const DSU_LINE_MAP = {
   // Constructor
   constructorStart: 1,
-  initParentLoop: 2, // Conceptual for parent[i] = i
-  initRankLoop: 3,   // Conceptual for rank[i] = 0
+  initParentLoop: 3, // Conceptual for parent[i] = i
+  initRankLoop: 4,   // Conceptual for rank[i] = 0
 
   // Find
-  findFuncStart: 4,
-  findBaseCase: 5,   // if (parent[i] === i)
-  findReturnParent: 6, // Conceptual, as it's part of the base case line
-  findRecursiveCall: 7,
-  findPathCompression: 8,
-  findReturnResult: 9, // Final result of the find operation
+  findFuncStart: 8,
+  findBaseCase: 9,   // if (parent[i] === i)
+  findRecursiveCall: 10,
+  findPathCompression: 11,
+  findReturnResult: 12,
 
   // Union
-  unionFuncStart: 10,
-  unionFindRootI: 11,
-  unionFindRootJ: 12,
-  unionCheckSameSet: 13,
-  unionRankCompare1: 14, // if (rank[rootI] < rank[rootJ])
-  unionSetParent1: 15,   // parent[rootI] = rootJ
-  unionRankCompare2: 16, // else if (rank[rootI] > rank[rootJ])
-  unionSetParent2: 17,   // parent[rootJ] = rootI
-  unionRankEqual: 18,    // else (ranks are equal)
-  unionSetParent3: 19,   // parent[rootJ] = rootI
-  unionIncrementRank: 20, // rank[rootI]++
-  unionReturnTrue: 21,
-  unionReturnFalse: 22,  // Already in same set
+  unionFuncStart: 14,
+  unionFindRootI: 15,
+  unionFindRootJ: 16,
+  unionCheckSameSet: 17,
+  unionRankCompare1: 18, // if (rank[rootI] < rank[rootJ])
+  unionSetParent1: 19,   // parent[rootI] = rootJ
+  unionRankCompare2: 20, // else if (rank[rootI] > rank[rootJ])
+  unionSetParent2: 21,   // parent[rootJ] = rootI
+  unionRankEqual: 22,    // else (ranks are equal)
+  unionSetParent3: 23,   // parent[rootJ] = rootI
+  unionIncrementRank: 24, // rank[rootI]++
+  unionReturnTrue: 25,
+  unionReturnFalse: 26,  // Already in same set
 };
 
 
@@ -88,18 +87,18 @@ export const generateDSUSteps = (
       addStep(localSteps, lm.findFuncStart, parent, rank, 'find', [i], `Find(${i}): Start.`, undefined, undefined, undefined, [i]);
     }
     
-    path.push(i); // Add current node to path being traversed
-    if (!isOuterCall) { // For recursive calls, show the current path context
-        addStep(localSteps, lm.findFuncStart, parent, rank, 'find', [i], `Find(${i}): Recursing. Path: ${path.join('->')}. Checking parent[${i}].`, undefined, undefined, undefined, [i]);
+    path.push(i);
+    if (!isOuterCall) { 
+        addStep(localSteps, lm.findFuncStart, parent, rank, 'find', [i], `Find(${i}): Recursing. Path: ${path.map(p => p.toString()).join('->')}. Checking parent[${i}].`, undefined, undefined, undefined, [i]);
     }
 
     if (parent[i] === i) {
-      addStep(localSteps, lm.findBaseCase, parent, rank, 'find', [i], `Find(${i}): Base case. parent[${i}] (${parent[i]}) === ${i}. Root found: ${i}.`, i);
+      addStep(localSteps, lm.findBaseCase, parent, rank, 'find', [i], `Find(${i}): Base case. parent[${i}] (${parent[i]}) === ${i}. Root found: ${i}.`, i, undefined, [...path]);
       return i;
     }
 
     addStep(localSteps, lm.findRecursiveCall, parent, rank, 'find', [i], `Find(${i}): parent[${i}] (${parent[i]}) !== ${i}. Recursive call on parent: Find(${parent[i]}).`, undefined, undefined, undefined, [i, parent[i]]);
-    const root = findWithPathCompression(parent[i], [...path], false); // Pass copy of path for isolated recursive calls
+    const root = findWithPathCompression(parent[i], [...path], false); 
 
     if (parent[i] !== root) {
       const oldParent = parent[i];
@@ -126,11 +125,11 @@ export const generateDSUSteps = (
     addStep(localSteps, lm.unionCheckSameSet, parent, rank, 'union', [element1, element2], `Are roots different? (${root1} !== ${root2})`, root1, root2);
     if (root1 !== root2) {
       if (rank[root1] < rank[root2]) {
-        addStep(localSteps, lm.unionRankCompare1, parent, rank, 'union', [root1, root2], `Rank[${root1}] (${rank[root1]}) < Rank[${root2}] (${rank[root2]}). Set parent[${root1}] = ${root2}.`, root1, root2);
+        addStep(localSteps, lm.unionRankCompare1, parent, rank, 'union', [root1, root2], `Rank[${root1}] (${rank[root1]}) < Rank[root2}] (${rank[root2]}). Set parent[${root1}] = ${root2}.`, root1, root2);
         parent[root1] = root2;
         addStep(localSteps, lm.unionSetParent1, parent, rank, 'union', [root1, root2], `Parent of ${root1} is now ${root2}. Union successful.`, root1, root2);
       } else if (rank[root1] > rank[root2]) {
-        addStep(localSteps, lm.unionRankCompare2, parent, rank, 'union', [root1, root2], `Rank[${root1}] (${rank[root1]}) > Rank[${root2}] (${rank[root2]}). Set parent[${root2}] = ${root1}.`, root1, root2);
+        addStep(localSteps, lm.unionRankCompare2, parent, rank, 'union', [root1, root2], `Rank[${root1}] (${rank[root1]}) > Rank[root2}] (${rank[root2]}). Set parent[${root2}] = ${root1}.`, root1, root2);
         parent[root2] = root1;
         addStep(localSteps, lm.unionSetParent2, parent, rank, 'union', [root1, root2], `Parent of ${root2} is now ${root1}. Union successful.`, root1, root2);
       } else {
@@ -148,4 +147,3 @@ export const generateDSUSteps = (
 
   return localSteps;
 };
-
