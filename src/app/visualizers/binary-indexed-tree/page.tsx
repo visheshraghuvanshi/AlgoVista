@@ -163,7 +163,7 @@ export default function BinaryIndexedTreePage() {
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <BITVisualizationPanel data={currentStep?.array || []} activeIndices={currentStep?.activeIndices} originalInputArray={originalArray} originalArraySize={originalArraySizeRef.current} auxiliaryData={currentStep?.auxiliaryData} />
+            <BITVisualizationPanel data={currentStep?.array || []} activeIndices={currentStep?.activeIndices} originalInputArray={originalArray} originalArraySize={bitRef.current.originalArraySize} auxiliaryData={currentStep?.auxiliaryData} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <BITCodePanel currentLine={currentStep?.currentLine ?? null} selectedOperation={selectedOperation} />
