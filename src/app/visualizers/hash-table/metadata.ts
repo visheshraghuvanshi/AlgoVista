@@ -1,3 +1,5 @@
+
+// src/app/visualizers/hash-table/metadata.ts
 import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
@@ -10,83 +12,39 @@ export const algorithmMetadata: AlgorithmMetadata = {
 
 ### Core Components:
 1.  **Hash Function**:
-    *   A function that takes a key (which can be of various types like string, number, etc.) and computes an integer index, often called a "hash code" or simply "hash".
-    *   This index determines the "bucket" or "slot" in an underlying array where the corresponding value (or a reference to it) should be stored.
-    *   **Properties of a good hash function**:
-        *   **Deterministic**: For the same key, it must always produce the same hash.
-        *   **Uniform Distribution**: It should distribute keys as evenly as possible across the available buckets to minimize collisions.
-        *   **Efficient to Compute**: Calculating the hash should be fast.
-    *   A common simple hash function for strings involves summing ASCII values or using polynomial rolling hashes, then taking modulo table size.
+    *   A function that takes a key and computes an integer index, often called a "hash code".
+    *   This index determines the "bucket" in an underlying array where the corresponding value should be stored.
+    *   **Properties of a good hash function**: Deterministic, uniform distribution, and efficient to compute.
 
 2.  **Array (Buckets/Slots)**:
-    *   An array that serves as the primary storage. The size of this array is often called the "table size" or "capacity".
-    *   Each element of this array is a "bucket" or "slot".
+    *   An array that serves as the primary storage. The size of this array is the table size.
 
 3.  **Collision Resolution Strategy**:
-    *   A **collision** occurs when two different keys hash to the same index (bucket). Since the number of possible keys is often much larger than the table size, collisions are inevitable.
-    *   Strategies to handle collisions include:
-        *   **Chaining (Separate Chaining)**: Each bucket stores a pointer to another data structure (commonly a linked list, but could be a balanced tree for better worst-case performance) that holds all key-value pairs hashing to that index.
-            *   *Insert*: Compute hash, go to bucket, add new pair to the list in that bucket. If key already exists, update value.
-            *   *Search*: Compute hash, go to bucket, traverse the list to find the key.
-            *   *Delete*: Compute hash, go to bucket, find and remove the key from the list.
-            *   *AlgoVista visualizes this approach.*
-        *   **Open Addressing**: All key-value pairs are stored directly in the bucket array itself. When a collision occurs (the target bucket is already occupied by a different key), a "probing" sequence is used to find the next available slot.
-            *   *Linear Probing*: Check the next slot (\`index + 1\`, \`index + 2\`, ... modulo table size). Can lead to "primary clustering."
-            *   *Quadratic Probing*: Check slots using a quadratic offset (\`index + 1^2\`, \`index + 2^2\`, ...). Helps reduce primary clustering but can cause "secondary clustering."
-            *   *Double Hashing*: Use a second hash function to determine the step size for probing.
+    *   A **collision** occurs when two different keys hash to the same index.
+    *   **Separate Chaining (Visualized Here)**: Each bucket stores a pointer to a data structure (commonly a linked list or, as in this visualizer, a simple array) that holds all key-value pairs hashing to that index.
+        *   *Insert*: Compute hash, go to bucket, add the new pair to the list in that bucket. If key exists, update its value.
+        *   *Search*: Compute hash, go to bucket, traverse the list to find the key.
+        *   *Delete*: Compute hash, go to bucket, find and remove the key from the list.
+    *   **Open Addressing**: Another strategy where all pairs are stored in the bucket array itself, probing for the next available slot on collision.
 
-### Key Operations:
--   **Insert (or Put, Set)**:
-    *   Calculate hash index for the key.
-    *   Go to the bucket at that index.
-    *   Using the collision resolution strategy (e.g., search linked list in chaining):
-        *   If key already exists, update its value.
-        *   Otherwise, add the new key-value pair.
-    *   Time Complexity: Average O(1 + L) where L is load factor, Worst O(N) if all keys collide.
-
--   **Search (or Get)**:
-    *   Calculate hash index for the key.
-    *   Go to the bucket.
-    *   Search for the key within that bucket (e.g., traverse list).
-    *   If found, return value; otherwise, indicate key not found.
-    *   Time Complexity: Average O(1 + L), Worst O(N).
-
--   **Delete (or Remove)**:
-    *   Calculate hash index for the key.
-    *   Go to the bucket.
-    *   Search for the key and remove it.
-    *   Deletion can be complex with open addressing (often requires marking slots as "deleted" instead of just "empty" to not break probe sequences).
-    *   Time Complexity: Average O(1 + L), Worst O(N).
+### Key Operations (with Chaining):
+-   **Insert(key, value)**: Hash the key to find the bucket index. Search the list in the bucket. If the key exists, update the value. Otherwise, add the new key-value pair to the list.
+-   **Search(key)**: Hash the key to find the bucket index. Search the list in that bucket for the key and return its associated value if found.
+-   **Delete(key)**: Hash the key to find the bucket index. Search the list for the key and remove the key-value pair if found.
 
 ### Load Factor & Rehashing:
--   **Load Factor (α)**: The ratio of the number of stored entries (N) to the number of buckets (M), i.e., \`α = N / M\`.
--   A high load factor increases the probability of collisions and can degrade performance (e.g., linked lists in chaining become longer).
--   When the load factor exceeds a certain threshold (e.g., 0.7 or 0.75 for chaining), **rehashing** is typically performed:
-    1.  A new, larger array (e.g., double the size) is created.
-    2.  All existing key-value pairs are re-hashed (using the new table size in the hash function) and inserted into the new table.
-    3.  Rehashing is an O(N+M) operation but is amortized over many insertions, so average insertion time remains efficient.
+-   **Load Factor (α)**: The ratio of stored entries (N) to buckets (M). A high load factor increases collisions and degrades performance.
+-   **Rehashing**: When the load factor exceeds a threshold (e.g., 0.75), a new, larger table is created, and all existing entries are re-hashed into the new table. This is an expensive operation but amortizes over many insertions. (Rehashing is not implemented in this visualizer).
 
-### Advantages:
--   **Extremely Fast Average-Case Performance**: O(1) on average for insert, search, and delete, assuming a good hash function and effective collision resolution.
--   Flexible keys: Can store various data types as keys (if a suitable hash function exists).
+### Time and Space Complexity:
+-   **Time Complexity**: Average Case for Insert, Search, Delete is O(1 + α), which is effectively O(1) if the load factor is kept small. Worst Case is O(N) if all keys hash to the same bucket.
+-   **Space Complexity**: O(N + M), where N is the number of entries and M is the number of buckets.
 
-### Disadvantages:
--   **Worst-Case Performance**: O(N) if many collisions occur (e.g., poor hash function or all keys hashing to the same bucket).
--   **No Ordered Traversal**: Elements are not stored in any particular order, so iterating through keys in sorted order is inefficient (requires collecting all keys and sorting them separately). Tree-based maps (like BSTs) are better for ordered operations.
--   Choosing a good hash function and table size can be critical and sometimes complex.
-
-### Common Use Cases:
--   Implementing dictionaries, maps, and sets in programming languages (e.g., Python \`dict\`, Java \`HashMap\`, C++ \`std::unordered_map\`).
--   Database indexing (hash indexes).
--   Caching mechanisms.
--   Symbol tables in compilers.
--   Counting frequencies of items.
-
-The AlgoVista Hash Table visualizer demonstrates the chaining method for collision resolution and operations like insert, search, and delete.`,
+The AlgoVista Hash Table visualizer demonstrates the **separate chaining** method for collision resolution.`,
   timeComplexities: {
     best: "Insert/Search/Delete: O(1) (no collisions, ideal hash).",
-    average: "Insert/Search/Delete: O(1) or O(1+L) where L is load factor (with good hashing and collision resolution).",
+    average: "Insert/Search/Delete: O(1+α) where α is the load factor.",
     worst: "Insert/Search/Delete: O(N) (all keys collide into one bucket).",
   },
-  spaceComplexity: "O(N+M) where N is number of entries and M is number of buckets. For chaining, O(N) for entries + O(M) for bucket array.",
+  spaceComplexity: "O(N+M) where N is number of entries and M is number of buckets.",
 };

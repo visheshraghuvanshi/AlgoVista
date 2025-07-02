@@ -8,7 +8,7 @@ import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
 import type { AlgorithmMetadata, HashTableStep, HashTableEntry, HashValue, AlgorithmDetailsProps } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; // Local import
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, KeyRound, TabletSmartphone, PlusCircle, SearchIcon, Trash2 } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, KeyRound, PlusCircle, SearchIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
@@ -129,7 +129,7 @@ export default function HashTableVisualizerPage() {
             activeIndices: [], swappingIndices: [], sortedIndices: []
         });
     }
-  },[keyInput, valueInput, selectedOperation, tableSize, toast, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setCurrentStep, insertedWords, setInsertedWords]);
+  },[keyInput, valueInput, selectedOperation, tableSize, toast, setSteps, setCurrentStep, setCurrentStepIndex, setIsPlaying, setIsFinished, insertedWords, setInsertedWords]);
 
   useEffect(() => {
     if (selectedOperation === 'init') {
@@ -163,7 +163,7 @@ export default function HashTableVisualizerPage() {
     setSelectedOperation('insert');
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+  const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
 
@@ -179,7 +179,7 @@ export default function HashTableVisualizerPage() {
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <HashTableVisualizationPanel step={currentStep} />
+            <HashTableVisualizationPanel step={currentStep ? {...currentStep, auxiliaryData: {...currentStep.auxiliaryData, insertedWords: insertedWords}} : null} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <HashTableCodePanel currentLine={currentStep?.currentLine ?? null} selectedOperation={selectedOperation} />
@@ -237,18 +237,11 @@ export default function HashTableVisualizerPage() {
                 <p className="text-xs text-muted-foreground text-center">{animationSpeed} ms delay</p>
               </div>
             </div>
-            <div className="mt-2 p-2 border rounded-md bg-background">
-                <p className="text-xs font-semibold text-muted-foreground">Keys in Table:</p>
-                <div className="flex flex-wrap gap-1 text-xs">
-                    {insertedWords.length > 0 ? insertedWords.map((w, i) => <Badge key={i} variant="secondary">{w}</Badge>) : "(empty)"}
-                </div>
-            </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...localAlgoDetails} />
+        <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
   );
 }
-

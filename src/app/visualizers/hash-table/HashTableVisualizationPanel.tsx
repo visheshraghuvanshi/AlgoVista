@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import type { HashTableStep, HashTableEntry } from '@/types';
+import type { HashTableStep, HashTableEntry } from './types';
 
 interface HashTableVisualizationPanelProps {
   step: HashTableStep | null;
@@ -40,17 +40,17 @@ export function HashTableVisualizationPanel({ step }: HashTableVisualizationPane
           {buckets.map((bucket, index) => (
             <div
               key={`bucket-${index}`}
-              className={`p-2 border rounded-md min-h-[60px] ${index === activeBucketIndex ? 'bg-primary/20 border-primary shadow-md' : 'bg-card border-border'}`}
+              className={`p-2 border rounded-md min-h-[60px] transition-colors duration-200 ${index === activeBucketIndex ? 'bg-primary/20 border-primary shadow-md' : 'bg-card border-border'}`}
             >
               <Badge variant="secondary" className="mb-1">Bucket {index}</Badge>
-              <ScrollArea className="h-20"> {/* Fixed height for scrollable buckets */}
+              <ScrollArea className="h-20">
                 {bucket.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic">(empty)</p>
+                  <p className="text-xs text-muted-foreground italic p-1">(empty)</p>
                 ) : (
                   bucket.map((entry, entryIndex) => (
                     <div
                       key={`entry-${index}-${entryIndex}`}
-                      className={`text-xs p-1 my-0.5 border-b border-dashed 
+                      className={`text-xs p-1 my-0.5 border-b border-dashed transition-colors duration-200 
                                   ${activeEntry && activeEntry[0] === entry[0] && activeEntry[1] === entry[1] ? 'bg-accent text-accent-foreground rounded' : ''}`}
                     >
                       <span className="font-semibold">K:</span> {String(entry[0])}, <span className="font-semibold">V:</span> {String(entry[1])}

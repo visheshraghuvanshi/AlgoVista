@@ -1,44 +1,47 @@
 
-import type { HashTableStep, HashTableEntry, HashValue } from '@/types';
+import type { HashTableStep, HashTableEntry, HashValue, HashTableOperationType } from './types'; // Local import
 
+export const TRIE_LINE_MAP = {}; // This is a placeholder, as the file name is a bit of a misnomer. Correct mapping is needed.
+// Let's define a new mapping for the hash table logic
 export const HASH_TABLE_LINE_MAP = {
   // General
   classDef: 1,
   constructor: 2,
-  hashFuncStart: 3,
-  hashLoop: 4,
-  hashReturn: 5,
+  hashFuncStart: 6,
+  hashLoop: 8,
+  hashReturn: 11,
 
   // Insert
-  insertFuncStart: 6,
-  insertGetIndex: 7,
-  insertGetBucket: 8,
-  insertLoopBucketCheckExists: 9,
-  insertUpdateExisting: 10,
-  insertPushNew: 11,
-  insertEnd: 12,
+  insertFuncStart: 13,
+  insertGetIndex: 14,
+  insertGetBucket: 15,
+  insertLoopBucketCheckExists: 16,
+  insertUpdateExisting: 17,
+  insertPushNew: 21,
+  insertEnd: 22,
 
   // Search
-  searchFuncStart: 13,
-  searchGetIndex: 14,
-  searchGetBucket: 15,
-  searchLoopBucket: 16,
-  searchCompareKey: 17,
-  searchReturnFound: 18,
-  searchReturnUndefined: 19,
-  searchEnd: 20,
+  searchFuncStart: 24,
+  searchGetIndex: 25,
+  searchGetBucket: 26,
+  searchLoopBucket: 27,
+  searchCompareKey: 28,
+  searchReturnFound: 29,
+  searchReturnUndefined: 32,
+  searchEnd: 33,
 
   // Delete
-  deleteFuncStart: 21,
-  deleteGetIndex: 22,
-  deleteGetBucket: 23,
-  deleteLoopBucket: 24,
-  deleteCompareKey: 25,
-  deleteSplice: 26,
-  deleteReturnTrue: 27,
-  deleteReturnFalse: 28,
-  deleteEnd: 29,
+  deleteFuncStart: 35,
+  deleteGetIndex: 36,
+  deleteGetBucket: 37,
+  deleteLoopBucket: 38,
+  deleteCompareKey: 39,
+  deleteSplice: 40,
+  deleteReturnTrue: 41,
+  deleteReturnFalse: 44,
+  deleteEnd: 45,
 };
+
 
 function simpleHash(key: HashValue, tableSize: number): number {
   let hashValue = 0;
@@ -54,7 +57,7 @@ const addStep = (
   line: number | null,
   buckets: HashTableEntry[][],
   tableSize: number,
-  operation: HashTableStep['operation'],
+  operation: HashTableOperationType,
   message: string,
   currentKey?: HashValue,
   currentValue?: HashValue,
@@ -75,7 +78,6 @@ const addStep = (
     currentLine: line,
     activeBucketIndex,
     activeEntry,
-    // Unused AlgorithmStep fields
     activeIndices: activeBucketIndex !== null && activeBucketIndex !== undefined ? [activeBucketIndex] : [],
     swappingIndices: [],
     sortedIndices: [],
@@ -139,7 +141,7 @@ export const generateHashTableSteps = (
       if (foundVal === null) {
         addStep(localSteps, lm.searchReturnUndefined, newBuckets, tableSize, operation, `Key "${key}" not found in bucket ${index}.`, key, undefined, index, index, null, null);
       }
-      addStep(localSteps, lm.searchEnd, newBuckets, tableSize, operation, `Search for key "${key}" complete.`, key, undefined, index, index, null, foundVal);
+      addStep(localSteps, lm.searchEnd, newBuckets, tableSize, operation, `Search for key "${key}" complete. Result: ${foundVal !== null ? 'Found' : 'Not Found'}.`, key, undefined, index, index, null, foundVal);
       break;
 
     case 'delete':
@@ -168,4 +170,3 @@ export const generateHashTableSteps = (
 export const createInitialHashTable = (size: number): HashTableEntry[][] => {
   return Array(size).fill(null).map(() => []);
 };
-

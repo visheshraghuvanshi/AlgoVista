@@ -1,3 +1,4 @@
+
 // src/app/visualizers/hash-table/types.ts
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
 export type AlgorithmDifficulty = 'Easy' | 'Medium' | 'Hard';
@@ -27,14 +28,16 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
-// Hash Table specific types
+// --- Hash Table Specific Types ---
 export type HashValue = string | number;
 export type HashTableEntry = [HashValue, HashValue]; // [key, value]
+
+export type HashTableOperationType = 'insert' | 'search' | 'delete' | 'init';
 
 export interface HashTableStep {
   buckets: HashTableEntry[][]; // Array of buckets, each bucket is an array of entries (for chaining)
   tableSize: number;
-  operation: 'insert' | 'search' | 'delete' | 'init';
+  operation: HashTableOperationType;
   currentKey?: HashValue;
   currentValue?: HashValue; // For insert
   hashIndex?: number; // Index where currentKey hashes to
@@ -48,5 +51,5 @@ export interface HashTableStep {
   activeIndices: number[]; // Can map to activeBucketIndex if needed by generic panel
   swappingIndices: number[];
   sortedIndices: number[];
-  array?: (string|number)[]; // Not typically used by HashTable panel
 }
+
