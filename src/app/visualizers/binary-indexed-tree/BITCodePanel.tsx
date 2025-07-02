@@ -8,102 +8,117 @@ import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { BITOperationType } from './types';
+import type { SegmentTreeOperation } from './types';
+import { BIT_LINE_MAP } from './binary-indexed-tree-logic';
 
-// BIT Code Snippets (Conceptual, 1-based indexing for BIT operations)
-export const BIT_CODE_SNIPPETS: Record<string, Record<BITOperationType | 'structure', string[]>> = {
-  JavaScript: {
-    structure: [
-      "class FenwickTree {",
-      "  constructor(sizeOrArray) {",
-      "    if (Array.isArray(sizeOrArray)) {",
-      "      this.size = sizeOrArray.length;",
-      "      this.tree = new Array(this.size + 1).fill(0);",
-      "      // Call build method",
-      "    } else {",
-      "      this.size = sizeOrArray;",
-      "      this.tree = new Array(this.size + 1).fill(0);",
-      "    }",
-      "  }",
-      "  // ... operations below ...",
-      "}",
-    ],
-    build: [
-      "  // Build BIT from an array (iterative updates)",
-      "  _buildFromArray(arr) {",
-      "    for (let i = 0; i < arr.length; i++) {",
-      "      this.update(i + 1, arr[i]); // BIT is 1-indexed",
-      "    }",
-      "  }",
-    ],
-    update: [
-      "  update(index, delta) { // index is 1-based",
-      "    while (index <= this.size) {",
-      "      this.tree[index] += delta;",
-      "      index += index & (-index); // Add LSB",
-      "    }",
-      "  }",
-    ],
-    query: [
-      "  query(index) { // Prefix sum up to index (1-based)",
-      "    let sum = 0;",
-      "    while (index > 0) {",
-      "      sum += this.tree[index];",
-      "      index -= index & (-index); // Subtract LSB",
-      "    }",
-      "    return sum;",
-      "  }",
-    ],
-    queryRange: [
-      "  queryRange(left, right) { // Sum for [left, right] (1-based)",
-      "    if (left > right) return 0;",
-      "    return this.query(right) - this.query(left - 1);",
-      "  }",
-    ],
-  },
-  Python: {
-    structure: [
-        "class FenwickTree:",
-        "    def __init__(self, size_or_array):",
-        "        if isinstance(size_or_array, list):",
-        "            self.size = len(size_or_array)",
-        "            self.tree = [0] * (self.size + 1)",
-        "            self._build_from_array(size_or_array)",
-        "        else:",
-        "            self.size = size_or_array",
-        "            self.tree = [0] * (self.size + 1)",
-    ],
-    build: [
-        "    def _build_from_array(self, arr):",
-        "        for i, val in enumerate(arr):",
-        "            self.update(i + 1, val)",
-    ],
-    update: [
-        "    def update(self, index, delta): # index is 1-based",
-        "        while index <= self.size:",
-        "            self.tree[index] += delta",
-        "            index += index & (-index)",
-    ],
-    query: [
-        "    def query(self, index): # Prefix sum up to index (1-based)",
-        "        s = 0",
-        "        while index > 0:",
-        "            s += self.tree[index]",
-        "            index -= index & (-index)",
-        "        return s",
-    ],
-    queryRange: [
-        "    def query_range(self, left, right): # Sum for [left, right] (1-based)",
-        "        if left > right: return 0",
-        "        return self.query(right) - self.query(left - 1)",
-    ],
-  },
-  // Java and C++ would be more verbose with class structure and 1-based indexing adjustments
+const BIT_CODE_SNIPPETS: Record<string, string[]> = {
+  JavaScript: [
+    "// BIT with 1-based indexing for internal logic",
+    "class BinaryIndexedTree {",
+    "  constructor(size) {",
+    "    this.bit = new Array(size + 1).fill(0);",
+    "  }",
+    "",
+    "  // 0-based index for user, delta is the change",
+    "  update(index, delta) {",
+    "    index++; // Convert to 1-based",
+    "    while (index < this.bit.length) {",
+    "      this.bit[index] += delta;",
+    "      index += index & -index; // Move to parent",
+    "    }",
+    "  }",
+    "",
+    "  // 0-based index for user, gets sum up to index",
+    "  query(index) {",
+    "    index++; // Convert to 1-based",
+    "    let sum = 0;",
+    "    while (index > 0) {",
+    "      sum += this.bit[index];",
+    "      index -= index & -index; // Move to ancestor",
+    "    }",
+    "    return sum;",
+    "  }",
+    "}",
+  ],
+  Python: [
+    "# BIT with 1-based indexing for internal logic",
+    "class BinaryIndexedTree:",
+    "    def __init__(self, size):",
+    "        self.bit = [0] * (size + 1)",
+    "",
+    "    def update(self, index, delta):",
+    "        index += 1",
+    "        while index < len(self.bit):",
+    "            self.bit[index] += delta",
+    "            index += index & -index",
+    "",
+    "    def query(self, index):",
+    "        index += 1",
+    "        sum = 0",
+    "        while index > 0:",
+    "            sum += self.bit[index]",
+    "            index -= index & -index",
+    "        return sum",
+  ],
+  Java: [
+    "class BinaryIndexedTree {",
+    "    int[] bit;",
+    "    public BinaryIndexedTree(int size) {",
+    "        bit = new int[size + 1];",
+    "    }",
+    "",
+    "    public void update(int index, int delta) {",
+    "        index++;",
+    "        while (index < bit.length) {",
+    "            bit[index] += delta;",
+    "            index += index & -index;",
+    "        }",
+    "    }",
+    "",
+    "    public int query(int index) {",
+    "        index++;",
+    "        int sum = 0;",
+    "        while (index > 0) {",
+    "            sum += bit[index];",
+    "            index -= index & -index;",
+    "        }",
+    "        return sum;",
+    "    }",
+    "}",
+  ],
+  "C++": [
+    "#include <vector>",
+    "class BinaryIndexedTree {",
+    "private:",
+    "    std::vector<int> bit;",
+    "public:",
+    "    BinaryIndexedTree(int size) : bit(size + 1, 0) {}",
+    "",
+    "    void update(int index, int delta) {",
+    "        index++;",
+    "        while (index < bit.size()) {",
+    "            bit[index] += delta;",
+    "            index += index & -index;",
+    "        }",
+    "    }",
+    "",
+    "    int query(int index) {",
+    "        index++;",
+    "        int sum = 0;",
+    "        while (index > 0) {",
+    "            sum += bit[index];",
+    "            index -= index & -index;",
+    "        }",
+    "        return sum;",
+    "    }",
+    "};",
+  ],
 };
+
 
 interface BITCodePanelProps {
   currentLine: number | null;
-  selectedOperation: BITOperationType;
+  selectedOperation: SegmentTreeOperation;
 }
 
 export function BITCodePanel({ currentLine, selectedOperation }: BITCodePanelProps) {
@@ -112,18 +127,7 @@ export function BITCodePanel({ currentLine, selectedOperation }: BITCodePanelPro
   const initialLanguage = languages.includes("JavaScript") ? "JavaScript" : languages[0];
   const [selectedLanguage, setSelectedLanguage] = useState<string>(initialLanguage);
 
-  const structureCode = BIT_CODE_SNIPPETS[selectedLanguage]?.structure || [];
-  const operationCode = BIT_CODE_SNIPPETS[selectedLanguage]?.[selectedOperation] || [];
-  
-  const codeToDisplay = useMemo(() => {
-    return [
-      ...structureCode,
-      ...(operationCode.length > 0 ? ["", `  // --- ${selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)} Method ---`] : []),
-      ...operationCode,
-      ...(structureCode.length > 0 && operationCode.length > 0 ? ["}"] : []) // Close class if methods shown
-    ];
-  }, [structureCode, operationCode, selectedOperation]);
-
+  const codeToDisplay = BIT_CODE_SNIPPETS[selectedLanguage] || [];
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');
@@ -140,7 +144,7 @@ export function BITCodePanel({ currentLine, selectedOperation }: BITCodePanelPro
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
         <CardTitle className="font-headline text-xl text-primary dark:text-accent flex items-center">
-            <Code2 className="mr-2 h-5 w-5" /> BIT Code: {operationTitle}
+            <Code2 className="mr-2 h-5 w-5" /> BIT Code
         </CardTitle>
         <Button variant="ghost" size="sm" onClick={handleCopyCode} aria-label="Copy code">
           <ClipboardCopy className="h-4 w-4 mr-2" /> Copy
@@ -173,5 +177,3 @@ export function BITCodePanel({ currentLine, selectedOperation }: BITCodePanelPro
     </Card>
   );
 }
-
-    

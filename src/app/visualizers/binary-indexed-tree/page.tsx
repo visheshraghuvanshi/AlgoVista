@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, AlgorithmDetailsProps, BITAlgorithmStep } from './types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, AlgorithmStep } from './types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, SkipForward, RotateCcw, BinaryIcon, PlusCircle, MinusCircle, Sigma } from 'lucide-react'; // BinaryIcon or similar
+import { Play, Pause, SkipForward, RotateCcw, BinaryIcon, PlusCircle, Sigma, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
@@ -16,13 +16,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { BITVisualizationPanel } from './BITVisualizationPanel';
-import { BITCodePanel, BIT_CODE_SNIPPETS } from './BITCodePanel';
+import { BITCodePanel } from './BITCodePanel';
 import { generateBITSteps, createInitialBIT, BIT_LINE_MAP } from './binary-indexed-tree-logic';
-import type { BITOperationType } from './types';
+import type { SegmentTreeOperation } from './types';
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
-const MAX_SPEED = 1500;
+const MAX_SPEED = 1800;
 const DEFAULT_BIT_INPUT_ARRAY = "1,3,5,7,9,11";
 const MAX_BIT_ARRAY_SIZE = 16;
 
@@ -31,13 +31,16 @@ export default function BinaryIndexedTreePage() {
   const [isClient, setIsClient] = useState(false);
 
   const [inputValue, setInputValue] = useState(DEFAULT_BIT_INPUT_ARRAY);
-  const [selectedOperation, setSelectedOperation] = useState<BITOperationType>('build');
-  const [operationIndexInput, setOperationIndexInput] = useState("2"); // For update/query
-  const [operationValueInput, setOperationValueInput] = useState("5"); // For update delta
-  const [queryRangeEndInput, setQueryRangeEndInput] = useState("4"); // For range query
+  const [selectedOperation, setSelectedOperation] = useState<SegmentTreeOperation>('build');
+  
+  const [updateIndexInput, setUpdateIndexInput] = useState("2");
+  const [updateValueInput, setUpdateValueInput] = useState("4");
+  
+  const [queryLInput, setQueryLInput] = useState("1");
+  const [queryRInput, setQueryRInput] = useState("4");
 
-  const [steps, setSteps] = useState<BITAlgorithmStep[]>([]);
-  const [currentStep, setCurrentStep] = useState<BITAlgorithmStep | null>(null);
+  const [steps, setSteps] = useState<AlgorithmStep[]>([]);
+  const [currentStep, setCurrentStep] = useState<AlgorithmStep | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -45,9 +48,10 @@ export default function BinaryIndexedTreePage() {
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const bitRef = useRef<{ bitArray: number[], originalArraySize: number }>(createInitialBIT(0));
+  const bitRef = useRef<{ bitArray: number[], originalArraySize: number }>({ bitArray: [], originalArraySize: 0});
+  const [originalArray, setOriginalArray] = useState<number[]>([]);
 
-  useEffect(() => { setIsClient(true); }, []);
+  useEffect(() => { setIsClient(true); handleExecuteOperation('build'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const parseInputArray = useCallback((value: string): number[] | null => {
     if (value.trim() === '') return [];
@@ -62,104 +66,91 @@ export default function BinaryIndexedTreePage() {
     }
     return parsed;
   }, [toast]);
-
-  const updateStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
-  }, [steps]);
   
-  const handleExecuteOperation = useCallback(() => {
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
+  }, [steps, setCurrentStep]);
+
+  const handleExecuteOperation = useCallback((opToExecute?: SegmentTreeOperation) => {
+    const operation = opToExecute || selectedOperation;
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
-    const arr = parseInputArray(inputValue);
-    if (!arr && selectedOperation === 'build') {
+    let parsedInput = parseInputArray(inputValue);
+    if (!parsedInput) {
       setSteps([]); setCurrentStep(null); setIsFinished(true); return;
     }
-    
-    let newSteps: BITAlgorithmStep[] = [];
-    let opIndex = parseInt(operationIndexInput, 10);
-    let opValue = parseInt(operationValueInput, 10);
-    let qRangeEnd = parseInt(queryRangeEndInput, 10);
 
-    switch(selectedOperation) {
-      case 'build':
-        if (!arr) return;
-        bitRef.current = createInitialBIT(arr.length);
-        newSteps = generateBITSteps(bitRef.current, 'build', arr);
-        if (newSteps.length > 0) bitRef.current = { bitArray: [...newSteps[newSteps.length - 1].bitArray], originalArraySize: arr.length };
-        break;
-      case 'update':
-        if (isNaN(opIndex) || isNaN(opValue) || opIndex < 0 || opIndex >= bitRef.current.originalArraySize) {
-          toast({title: "Invalid Update Input", description: "Index out of bounds or invalid value.", variant: "destructive"}); return;
-        }
-        newSteps = generateBITSteps(bitRef.current, 'update', undefined, opIndex, opValue);
-        if (newSteps.length > 0) bitRef.current = { bitArray: [...newSteps[newSteps.length - 1].bitArray], originalArraySize: bitRef.current.originalArraySize };
-        break;
-      case 'query':
-        if (isNaN(opIndex) || opIndex < 0 || opIndex >= bitRef.current.originalArraySize) {
-          toast({title: "Invalid Query Index", description: "Index out of bounds.", variant: "destructive"}); return;
-        }
-        newSteps = generateBITSteps(bitRef.current, 'query', undefined, opIndex);
-        // No BIT modification, no need to update bitRef.current
-        break;
-      case 'queryRange':
-         if (isNaN(opIndex) || isNaN(qRangeEnd) || opIndex < 0 || qRangeEnd < opIndex || qRangeEnd >= bitRef.current.originalArraySize) {
-          toast({title: "Invalid Query Range", description: "Range indices out of bounds or invalid.", variant: "destructive"}); return;
-        }
-        newSteps = generateBITSteps(bitRef.current, 'queryRange', undefined, opIndex, undefined, qRangeEnd);
-        break;
+    if (operation === 'build') {
+      bitRef.current.originalArraySize = parsedInput.length;
+      bitRef.current.bitArray = createInitialBIT(parsedInput.length);
+      setOriginalArray(parsedInput);
     }
     
+    let newSteps: AlgorithmStep[] = [];
+    if (operation === 'build') {
+        newSteps = generateBITSteps(operation, parsedInput, [], parsedInput.length);
+    } else if(operation === 'update') {
+        const uIdx = parseInt(updateIndexInput, 10);
+        const uVal = parseInt(updateValueInput, 10);
+        if(isNaN(uIdx) || isNaN(uVal) || uIdx < 0 || uIdx >= bitRef.current.originalArraySize) {
+            toast({title: "Invalid Update Input", description: `Index must be between 0 and ${bitRef.current.originalArraySize - 1}.`, variant:"destructive"}); return;
+        }
+        const updatedOriginalArray = [...originalArray];
+        updatedOriginalArray[uIdx] = uVal;
+        setOriginalArray(updatedOriginalArray); // Update displayed original array
+        newSteps = generateBITSteps(operation, updatedOriginalArray, bitRef.current.bitArray, bitRef.current.originalArraySize, undefined, undefined, uIdx, uVal);
+    } else if (operation === 'queryRange') {
+        const qL = parseInt(queryLInput, 10);
+        const qR = parseInt(queryRInput, 10);
+        if(isNaN(qL) || isNaN(qR) || qL < 0 || qR < qL || qR >= bitRef.current.originalArraySize) {
+            toast({title: "Invalid Query Range", description: `Range [${qL},${qR}] is invalid for array size ${bitRef.current.originalArraySize}.`, variant:"destructive"}); return;
+        }
+        newSteps = generateBITSteps(operation, originalArray, bitRef.current.bitArray, bitRef.current.originalArraySize, qL, qR);
+    }
+
     setSteps(newSteps);
     setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) {
-        const lastStep = newSteps[newSteps.length-1];
-        if(lastStep.auxiliaryData?.queryResult !== undefined) {
-            toast({title: "Query Result", description: `${selectedOperation === 'queryRange' ? `Sum(${operationIndexInput}..${queryRangeEndInput})` : `PrefixSum(${operationIndexInput})`} = ${lastStep.auxiliaryData.queryResult}`})
-        }
+      const finalStep = newSteps[newSteps.length - 1];
+      if (finalStep.auxiliaryData?.finalTree) {
+          bitRef.current.bitArray = finalStep.auxiliaryData.finalTree;
+      }
+      if(finalStep.auxiliaryData?.finalResult !== undefined){
+          toast({title: "Query Result", description: `Sum for range [${queryLInput},${queryRInput}] is ${finalStep.auxiliaryData.finalResult}.`});
+      }
+      updateVisualStateFromStep(0);
+    } else {
+      setCurrentStep(null);
     }
+  }, [selectedOperation, inputValue, updateIndexInput, updateValueInput, queryLInput, queryRInput, parseInputArray, toast, updateVisualStateFromStep, originalArray]);
 
-  }, [inputValue, selectedOperation, operationIndexInput, operationValueInput, queryRangeEndInput, parseInputArray, toast, updateStateFromStep]);
-  
-  useEffect(() => { handleExecuteOperation(); }, [selectedOperation, inputValue, operationIndexInput, operationValueInput, queryRangeEndInput, handleExecuteOperation]);
+  useEffect(() => { handleExecuteOperation('build'); }, [inputValue]); // Re-build if input value changes
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
-  const handleReset = () => { 
-    setIsPlaying(false); setIsFinished(false); 
-    setInputValue(DEFAULT_BIT_INPUT_ARRAY);
-    setSelectedOperation('build');
-    setOperationIndexInput("2");
-    setOperationValueInput("5");
-    setQueryRangeEndInput("4");
-    bitRef.current = createInitialBIT(0);
-  };
+  const handleReset = () => { setIsPlaying(false); setIsFinished(true); setInputValue(DEFAULT_BIT_INPUT_ARRAY); };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
-
-  const showOpValueInput = selectedOperation === 'update';
-  const showOpIndexInput = selectedOperation === 'update' || selectedOperation === 'query' || selectedOperation === 'queryRange';
-  const showQueryRangeEndInput = selectedOperation === 'queryRange';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -170,60 +161,47 @@ export default function BinaryIndexedTreePage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
           <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
-
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <BITVisualizationPanel step={currentStep} originalArray={parseInputArray(inputValue) || []} />
+            <BITVisualizationPanel data={currentStep?.array || []} activeIndices={currentStep?.activeIndices} originalInputArray={originalArray} originalArraySize={originalArraySizeRef.current} auxiliaryData={currentStep?.auxiliaryData} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <BITCodePanel currentLine={currentStep?.currentLine ?? null} selectedOperation={selectedOperation} />
           </div>
         </div>
-        
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Operations</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
               <div className="space-y-1">
-                <Label htmlFor="bitArrayInput">Input Array (for Build, max {MAX_BIT_ARRAY_SIZE})</Label>
-                <Input id="bitArrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying || selectedOperation !== 'build'}/>
+                <Label htmlFor="bitArrayInput">Initial Array (max {MAX_BIT_ARRAY_SIZE})</Label>
+                <Input id="bitArrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying}/>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="bitOperationSelect">Operation</Label>
-                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as BITOperationType)} disabled={isPlaying}>
+                <Select value={selectedOperation} onValueChange={v => setSelectedOperation(v as SegmentTreeOperation)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="build">Build BIT</SelectItem>
-                    <SelectItem value="update">Update (Index, Delta)</SelectItem>
-                    <SelectItem value="query">Query Prefix Sum (Index)</SelectItem>
-                    <SelectItem value="queryRange">Query Range Sum (Start, End)</SelectItem>
+                    <SelectItem value="build">Build Tree</SelectItem>
+                    <SelectItem value="update">Update Value</SelectItem>
+                    <SelectItem value="queryRange">Query Range Sum</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {showOpIndexInput && (
-                <div className="space-y-1">
-                  <Label htmlFor="opIndexInputBIT">{selectedOperation === 'queryRange' ? "Start Index" : "Index (0-based)"}</Label>
-                  <Input id="opIndexInputBIT" type="number" value={operationIndexInput} onChange={e => setOperationIndexInput(e.target.value)} disabled={isPlaying || selectedOperation === 'build'}/>
-                </div>
-              )}
-               {showOpValueInput && (
-                <div className="space-y-1">
-                  <Label htmlFor="opValueInputBIT">Value / Delta (for Update)</Label>
-                  <Input id="opValueInputBIT" type="number" value={operationValueInput} onChange={e => setOperationValueInput(e.target.value)} disabled={isPlaying || selectedOperation !== 'update'}/>
-                </div>
-              )}
-              {showQueryRangeEndInput && (
-                <div className="space-y-1">
-                  <Label htmlFor="queryRangeEndInputBIT">End Index (for Range Query, inclusive)</Label>
-                  <Input id="queryRangeEndInputBIT" type="number" value={queryRangeEndInput} onChange={e => setQueryRangeEndInput(e.target.value)} disabled={isPlaying || selectedOperation !== 'queryRange'}/>
-                </div>
-              )}
+              <Button onClick={() => handleExecuteOperation()} disabled={isPlaying} className="w-full md:w-auto">Execute</Button>
             </div>
-            <Button onClick={handleExecuteOperation} disabled={isPlaying || selectedOperation === 'build'} className="w-full md:w-auto">
-                {selectedOperation === 'update' ? <PlusCircle/> : <Sigma/> }
-                Execute {selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1)}
-            </Button>
-            
+            {selectedOperation === 'update' && (
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1"><Label htmlFor="updateIndexInput">Index (0-indexed)</Label><Input id="updateIndexInput" type="number" value={updateIndexInput} onChange={e=>setUpdateIndexInput(e.target.value)} disabled={isPlaying}/></div>
+                    <div className="space-y-1"><Label htmlFor="updateValueInput">New Value</Label><Input id="updateValueInput" type="number" value={updateValueInput} onChange={e=>setUpdateValueInput(e.target.value)} disabled={isPlaying}/></div>
+                </div>
+            )}
+            {selectedOperation === 'queryRange' && (
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1"><Label htmlFor="queryLInput">Left Index (0-indexed, inclusive)</Label><Input id="queryLInput" type="number" value={queryLInput} onChange={e=>setQueryLInput(e.target.value)} disabled={isPlaying}/></div>
+                    <div className="space-y-1"><Label htmlFor="queryRInput">Right Index (0-indexed, inclusive)</Label><Input id="queryRInput" type="number" value={queryRInput} onChange={e=>setQueryRInput(e.target.value)} disabled={isPlaying}/></div>
+                </div>
+            )}
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset All</Button>
             </div>
@@ -247,5 +225,3 @@ export default function BinaryIndexedTreePage() {
     </div>
   );
 }
-
-    

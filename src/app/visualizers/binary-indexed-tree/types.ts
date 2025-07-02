@@ -28,25 +28,43 @@ export interface AlgorithmDetailsProps {
 }
 
 // Specific types for Binary Indexed Tree
-export type BITOperationType = 'build' | 'update' | 'query' | 'queryRange';
+export type SegmentTreeOperation = 'build' | 'update' | 'query' | 'queryRange';
 
-export interface BITAlgorithmStep {
-  bitArray: number[];         // The BIT itself (1-indexed conceptually, stored 0-indexed with tree[0] unused)
-  originalArray?: number[];   // The original array (0-indexed) for context
-  operation: BITOperationType;
-  currentIndex?: number;      // 0-based index in originalArray or 1-based for BIT operations logic
-  currentValue?: number;      // Value being processed from original array (for build)
-  delta?: number;             // Value for update operation
-  queryResult?: number;       // Result of a query operation
-  range?: { start: number; end: number }; // For range query
-  message?: string;
-  currentLine: number | null;
-  activeBitIndices?: number[];// 1-based indices in BIT being accessed/modified
-  // Common AlgorithmStep fields (less relevant but for consistency if needed by generic panel)
-  activeIndices?: number[];     // Can map to original array index
-  swappingIndices?: number[];
-  sortedIndices?: number[];
-  auxiliaryData?: Record<string, any>; // For additional info like sum_so_far during query
+export interface AlgorithmStep {
+  array: number[]; // Main array being visualized (the BIT array)
+  activeIndices: number[];    
+  swappingIndices: number[]; // Not used
+  sortedIndices: number[];    // Not used
+  currentLine: number | null; 
+  message?: string;           
+  processingSubArrayRange?: [number, number] | null; 
+  pivotActualIndex?: number | null; 
+  auxiliaryData?: {
+    operation?: SegmentTreeOperation;
+    inputArray?: number[]; // Original input array
+    queryLeft?: number;
+    queryRight?: number;
+    queryResult?: number;
+    updateIndex?: number;
+    updateValue?: number;
+    currentL?: number; // For query internal state
+    currentR?: number; // For query internal state
+    currentQueryResult?: number;
+    // BIT specific
+    lsb?: number;
+    binaryString?: string;
+    bitIndex?: number; // The current 1-based index in the BIT being processed
+    finalTree?: number[];
+    [key: string]: any;
+  } | null;
 }
 
-    
+// Props for VisualizationPanel
+export interface VisualizationPanelProps {
+  data: number[];
+  activeIndices?: number[];
+  originalInputArray: number[];
+  originalArraySize: number;
+  processingSubArrayRange?: [number, number] | null;
+  auxiliaryData?: AlgorithmStep['auxiliaryData'];
+}

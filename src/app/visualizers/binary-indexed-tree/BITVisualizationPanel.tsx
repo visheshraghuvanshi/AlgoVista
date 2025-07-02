@@ -3,78 +3,101 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BITAlgorithmStep } from './types';
+import type { VisualizationPanelProps } from './types';
 import { Badge } from '@/components/ui/badge';
 
-interface BITVisualizationPanelProps {
-  step: BITAlgorithmStep | null;
-  originalArray: number[]; // To display alongside the BIT
-}
-
-const ELEMENT_BOX_SIZE = 35; 
+const ELEMENT_BOX_SIZE = 40; 
 const ELEMENT_MARGIN = 4;
 
-export function BITVisualizationPanel({ step, originalArray }: BITVisualizationPanelProps) {
-  if (!step) {
-    return (
-      <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-[400px] md:h-[500px] lg:h-[550px] flex flex-col">
-        <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Binary Indexed Tree</CardTitle></CardHeader>
-        <CardContent className="flex items-center justify-center flex-grow"><p className="text-muted-foreground">Initialize BIT or perform an operation.</p></CardContent>
-      </Card>
-    );
-  }
+const InputArrayElement = ({ value, index, isHighlighted }: { value: number, index: number, isHighlighted: boolean }) => (
+  <div
+    className={`flex flex-col items-center justify-center rounded border text-xs font-medium 
+                ${isHighlighted ? "bg-accent text-accent-foreground ring-2 ring-accent" : "bg-secondary text-secondary-foreground"}`}
+    style={{ width: `${ELEMENT_BOX_SIZE * 1.2}px`, height: `${ELEMENT_BOX_SIZE}px` }}
+    title={`Input[${index}] = ${value}`}
+  >
+    <span className="text-muted-foreground text-[9px]">{index}</span>
+    <span>{value}</span>
+  </div>
+);
 
-  const { bitArray, operation, currentIndex, currentValue, delta, queryResult, range, message, activeBitIndices } = step;
-  
-  const renderArray = (arr: number[], label: string, highlightIndices?: number[], isBitArray: boolean = false) => {
-    if (!arr) return null;
-    return (
-      <div className="mb-3">
-        <p className="font-semibold text-sm mb-1">{label}:</p>
-        <div className="flex flex-wrap gap-1 p-2 border rounded bg-background/50 min-h-[40px]">
-          {arr.map((val, idx) => {
-            const displayIndex = isBitArray ? idx + 1 : idx; // BIT is 1-indexed conceptually
-            const isHighlighted = highlightIndices?.includes(isBitArray ? idx + 1 : idx);
-            return (
-              <div
-                key={`${label}-${idx}`}
-                className={`flex flex-col items-center justify-center rounded border text-xs font-medium
-                            ${isHighlighted ? 'bg-accent text-accent-foreground ring-2 ring-accent scale-105' : 'bg-card text-card-foreground'}`}
-                style={{ width: `${ELEMENT_BOX_SIZE * 1.5}px`, minHeight: '30px', padding: '2px' }}
-                title={`${label}[${displayIndex}] = ${val}`}
-              >
-                <span className="text-muted-foreground text-[9px]">{displayIndex}</span>
-                <span>{val}</span>
-              </div>
-            );
-          })}
-          {arr.length === 0 && <span className="text-muted-foreground italic text-xs self-center">(empty)</span>}
-        </div>
-      </div>
-    );
-  };
+const BitArrayElement = ({ value, index, isHighlighted, lsb, binary }: { value: number, index: number, isHighlighted: boolean, lsb?: number, binary?: string }) => (
+  <div
+    className={`flex flex-col items-center justify-center rounded border-2 text-xs font-medium transition-all duration-150
+                ${isHighlighted ? "bg-primary text-primary-foreground scale-110 shadow-lg border-primary" : "bg-card text-card-foreground border-border"}`}
+    style={{ width: `${ELEMENT_BOX_SIZE * 1.5}px`, minHeight: `${ELEMENT_BOX_SIZE * 1.2}px`, padding: '2px' }}
+    title={`BIT[${index}] = ${value}\nBinary: ${binary}\nLSB: ${lsb}`}
+  >
+    <span className="text-muted-foreground text-[9px]">{index}</span>
+    <span className="font-bold text-sm">{value}</span>
+  </div>
+);
+
+
+export function BITVisualizationPanel({ 
+  data, 
+  activeIndices = [],
+  originalInputArray = [],
+  auxiliaryData,
+}: VisualizationPanelProps) {
+
+  const tree = data;
+  const n = originalInputArray.length;
 
   return (
     <Card className="flex-1 shadow-lg rounded-lg overflow-hidden h-auto md:h-[500px] lg:h-[550px] flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-headline text-xl text-primary dark:text-accent">Binary Indexed Tree (Fenwick Tree)</CardTitle>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        {operation && <Badge variant="outline" className="mt-1">Operation: {operation}</Badge>}
-        {currentIndex !== undefined && <Badge variant="secondary" className="mt-1 ml-1">Index: {currentIndex}</Badge>}
-        {(operation === 'update' && delta !== undefined) && <Badge variant="secondary" className="mt-1 ml-1">Delta: {delta}</Badge>}
-        {(operation === 'query' || operation === 'queryRange') && queryResult !== undefined && 
-          <p className="text-sm font-bold mt-1">Query Result: {queryResult}</p>
-        }
-         {operation === 'queryRange' && range && 
-          <p className="text-xs italic">Query Range: [{range.start}, {range.end}]</p>
-        }
+      <CardHeader>
+        <CardTitle className="font-headline text-xl text-primary dark:text-accent">BIT Visualization</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col p-2 md:p-4 bg-muted/10 dark:bg-muted/5 rounded-b-lg overflow-auto space-y-3">
-        {originalArray && originalArray.length > 0 && renderArray(originalArray, "Original Array (0-indexed)", currentIndex !== undefined ? [currentIndex] : [])}
-        {renderArray(bitArray, "BIT Array (1-indexed values, 0-indexed for display)", activeBitIndices, true)}
+      <CardContent className="flex flex-col flex-grow p-2 space-y-4 bg-muted/10 dark:bg-muted/5 overflow-auto">
+        <div>
+          <p className="font-semibold text-sm mb-1">Input Array (0-indexed):</p>
+          <div className="flex flex-wrap gap-1 p-1 border rounded bg-background/30">
+            {originalInputArray.map((val, idx) => (
+              <InputArrayElement 
+                key={`input-${idx}`} 
+                value={val} 
+                index={idx} 
+                isHighlighted={activeIndices.includes(idx) && auxiliaryData?.operation === 'update'}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div>
+          <p className="font-semibold text-sm mb-1">Binary Indexed Tree (1-indexed):</p>
+          <div className="flex flex-wrap gap-1 p-1 border rounded bg-background/30">
+            {tree.slice(1).map((val, idx) => {
+                const bitIndex = idx + 1;
+                return (
+                  <BitArrayElement 
+                    key={`bit-${bitIndex}`} 
+                    value={val} 
+                    index={bitIndex} 
+                    isHighlighted={activeIndices.includes(bitIndex)}
+                    binary={bitIndex.toString(2)}
+                    lsb={bitIndex & -bitIndex}
+                  />
+                )
+             })}
+          </div>
+        </div>
+        
+        {auxiliaryData?.bitIndex !== undefined && (
+          <Card className="p-3">
+             <CardHeader className="p-1 pb-2">
+                <CardTitle className="text-base">Bitwise Breakdown</CardTitle>
+             </CardHeader>
+             <CardContent className="text-sm font-mono flex flex-col md:flex-row md:items-center md:justify-around gap-2 p-1">
+                 <div><strong>Current Index:</strong> {auxiliaryData.bitIndex}</div>
+                 <div><strong>Binary:</strong> {auxiliaryData.binaryString}</div>
+                 <div><strong>LSB:</strong> {auxiliaryData.lsb}</div>
+                 {auxiliaryData.currentSum !== undefined && <div><strong>Current Sum:</strong> {auxiliaryData.currentSum}</div>}
+             </CardContent>
+          </Card>
+        )}
+
       </CardContent>
     </Card>
   );
 }
-
-    
