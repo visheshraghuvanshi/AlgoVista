@@ -12,10 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
 import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from './types';
+import type { LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Changed import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
 import { generateMergeSortedListsSteps } from './merge-sorted-linked-lists-logic';
-import { algorithmMetadata } from './metadata'; // Import local metadata
+import { algorithmMetadata } from './metadata';
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -42,11 +43,10 @@ export default function MergeSortedLinkedListsPage() {
   const [currentLine, setCurrentLine] = useState<number | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
       const currentS = steps[stepIndex];
@@ -151,7 +151,7 @@ export default function MergeSortedLinkedListsPage() {
                 </div>
                 <div>
                     <Label htmlFor="mergeTypeSelect">Merge Type</Label>
-                    <Select value={mergeType} onValueChange={(v) => setMergeType(v as MergeType)} disabled={isPlaying}>
+                    <Select value={mergeType} onValueChange={(val) => setMergeType(val as MergeType)} disabled={isPlaying}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="iterative">Iterative</SelectItem>

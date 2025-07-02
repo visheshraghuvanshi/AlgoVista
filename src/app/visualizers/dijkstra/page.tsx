@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -22,7 +23,7 @@ const DIJKSTRA_CODE_SNIPPETS = {
     "  dist[startNode] = 0;",                                           // 4
     "  pq.add(startNode, 0);",                                           // 5
     "  while (!pq.isEmpty()) {",                                        // 6
-    "    let u = pq.extractMin();",                                     // 7
+    "    let u = pq.extractMin().vertex;",                                     // 7
     "    // Mark u as processed (conceptually)",                       // 8
     "    for (let neighbor of graph[u]) { // {node, weight}",           // 9
     "      let v = neighbor.node; let weight = neighbor.weight;",
@@ -243,7 +244,8 @@ export default function DijkstraVisualizerPage() {
 
   useEffect(() => {
     generateNewSteps();
-  }, [generateNewSteps]); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graphInputValue, startNodeValue, generateNewSteps]); // Removed generateSteps from here to break cycle, now it's stable
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -264,7 +266,7 @@ export default function DijkstraVisualizerPage() {
 
   const handlePlay = () => {
     if (isFinished || steps.length <= 1 || currentStepIndex >= steps.length - 1) {
-      toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated. Check input.", variant: "default" });
+      toast({ title: "Cannot Play", description: isFinished ? "Algorithm finished. Reset to play." : "No steps generated or already at end. Check input.", variant: "default" });
       setIsPlaying(false); return;
     }
     setIsPlaying(true); setIsFinished(false);
@@ -276,7 +278,7 @@ export default function DijkstraVisualizerPage() {
   };
 
   const handleStep = () => {
-    if (isFinished || currentStepIndex >= steps.length - 1) { // Check currentStepIndex to prevent overshooting
+    if (isFinished || currentStepIndex >= steps.length - 1) {
       toast({ title: "Cannot Step", description: isFinished ? "Algorithm finished. Reset to step." : "No steps generated or already at end.", variant: "default" });
       return;
     }
@@ -289,7 +291,6 @@ export default function DijkstraVisualizerPage() {
       if (nextStepIndex === steps.length - 1) setIsFinished(true);
     }
   };
-  
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
@@ -299,7 +300,14 @@ export default function DijkstraVisualizerPage() {
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
 
-  if (!algorithmMetadata) { 
+  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+    title: algorithmMetadata.title,
+    description: algorithmMetadata.longDescription || algorithmMetadata.description,
+    timeComplexities: algorithmMetadata.timeComplexities!,
+    spaceComplexity: algorithmMetadata.spaceComplexity!,
+  } : null;
+
+  if (!algoDetails) { 
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -313,13 +321,6 @@ export default function DijkstraVisualizerPage() {
     );
   }
   
-  const algoDetails: AlgorithmDetailsProps = {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -372,4 +373,3 @@ export default function DijkstraVisualizerPage() {
     </div>
   );
 }
-

@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'; // Added Tabs
 
 export const MERGE_CODE_SNIPPETS: Record<string, Record<string, string[]>> = {
   JavaScript : {
@@ -54,7 +54,7 @@ export const MERGE_CODE_SNIPPETS: Record<string, Record<string, string[]>> = {
   Python: {
     iterative: [
       "# Iterative Merge",
-      "# class Node: def __init__(self, data=0, next_node=None): self.data = data; self.next = next_node", # Renamed next to next_node
+      "# class Node: def __init__(self, data=0, next_node=None): self.data = data; self.next = next_node",
       "def merge_two_lists_iterative(l1, l2):",
       "    dummy = Node(0)",
       "    tail = dummy",
