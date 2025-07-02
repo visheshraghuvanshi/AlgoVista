@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, SudokuStep } from './types'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, SudokuStep } from './types';
 import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, BrainCircuit } from 'lucide-react';
@@ -15,10 +15,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { SudokuVisualizationPanel } from './SudokuVisualizationPanel';
-import { SudokuCodePanel, SUDOKU_SOLVER_CODE_SNIPPETS } from './SudokuCodePanel'; 
-import { generateSudokuSteps, SUDOKU_LINE_MAP } from './sudoku-solver-logic'; 
+import { SudokuCodePanel } from './SudokuCodePanel';
+import { generateSudokuSteps } from './sudoku-solver-logic';
 
-const DEFAULT_ANIMATION_SPEED = 100; 
+const DEFAULT_ANIMATION_SPEED = 100;
 const MIN_SPEED = 10;
 const MAX_SPEED = 1000;
 const DEFAULT_SUDOKU_PUZZLE = 
@@ -37,7 +37,6 @@ export default function SudokuSolverVisualizerPage() {
   const [isClient, setIsClient] = useState(false);
 
   const [sudokuInput, setSudokuInput] = useState(DEFAULT_SUDOKU_PUZZLE);
-  const [initialBoardState, setInitialBoardState] = useState<number[][] | null>(null);
   
   const [steps, setSteps] = useState<SudokuStep[]>([]);
   const [currentStep, setCurrentStep] = useState<SudokuStep | null>(null);
@@ -67,15 +66,14 @@ export default function SudokuSolverVisualizerPage() {
       }
       return rows;
     } catch (e: any) {
-      toast({ title: "Invalid Board Format", description: e.message || "Use numbers 0-9, comma-separated, rows on new lines.", variant: "destructive"});
+      toast({ title: "Invalid Board Format", description: e.message || "Use numbers 0-9, comma-separated, with each row on a new line.", variant: "destructive"});
       return null;
     }
   }, [toast]);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentStep(currentS);
+      setCurrentStep(steps[stepIndex]);
     }
   }, [steps]); 
   
@@ -86,7 +84,6 @@ export default function SudokuSolverVisualizerPage() {
     if (!boardArray) {
       setSteps([]); setCurrentStep(null); setIsFinished(true); return;
     }
-    setInitialBoardState(boardArray.map(row => [...row])); 
 
     const newSteps = generateSudokuSteps(boardArray);
     setSteps(newSteps);
@@ -97,7 +94,7 @@ export default function SudokuSolverVisualizerPage() {
         const lastStep = newSteps[newSteps.length - 1];
         if (lastStep.solutionFound) {
             toast({title: "Sudoku Solved!", description: "A solution has been found."});
-        } else if (lastStep.message?.includes("No solution exists")) {
+        } else if (lastStep.message?.includes("No solution")) {
             toast({title: "No Solution", description: "This Sudoku puzzle has no solution.", variant: "default"});
         }
     } else {
@@ -106,7 +103,7 @@ export default function SudokuSolverVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [sudokuInput, parseSudokuInput, toast, setCurrentStep, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setInitialBoardState]);
+  }, [sudokuInput, parseSudokuInput, toast]);
   
   useEffect(() => { handleGenerateSteps(); }, [sudokuInput, handleGenerateSteps]);
 
@@ -128,7 +125,7 @@ export default function SudokuSolverVisualizerPage() {
     setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
-  const handleReset = () => { setIsPlaying(false); setIsFinished(false); setSudokuInput(DEFAULT_SUDOKU_PUZZLE); };
+  const handleReset = () => { setIsPlaying(false); setIsFinished(true); setSudokuInput(DEFAULT_SUDOKU_PUZZLE); };
   
   const algoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
@@ -145,8 +142,8 @@ export default function SudokuSolverVisualizerPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3">
-            <SudokuVisualizationPanel step={currentStep ? {...currentStep, initialBoard: initialBoardState} : null} />
+          <div className="lg:w-3/5 xl:w-2/3 flex flex-col items-center">
+            <SudokuVisualizationPanel step={currentStep} />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
             <SudokuCodePanel currentLine={currentStep?.currentLine ?? null} />
@@ -154,7 +151,7 @@ export default function SudokuSolverVisualizerPage() {
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
-          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls &amp;amp; Puzzle Input</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Puzzle Input</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> 
               <div className="space-y-1">
@@ -166,7 +163,7 @@ export default function SudokuSolverVisualizerPage() {
                     disabled={isPlaying}
                     rows={9}
                     className="font-mono text-sm !leading-tight tracking-wider"
-                    placeholder={"Enter comma-separated numbers, new line for each row.\nExample:\n5,3,0,0,7,0,0,0,0\n6,0,0,1,9,5,0,0,0\n..."} 
+                    placeholder={"Enter comma-separated numbers, new line for each row.\nExample:\n5,3,0,...\n6,0,0,...\n..."} 
                 />
               </div>
               <div className="flex flex-col justify-end h-full pt-6"> 

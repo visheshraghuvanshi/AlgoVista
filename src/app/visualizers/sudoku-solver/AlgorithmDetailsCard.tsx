@@ -1,4 +1,3 @@
-
 // src/app/visualizers/sudoku-solver/AlgorithmDetailsCard.tsx
 "use client";
 

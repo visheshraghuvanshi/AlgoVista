@@ -31,12 +31,12 @@ export interface AlgorithmDetailsProps {
 // Sudoku specific step type
 export interface SudokuStep {
   board: number[][]; // 9x9 Sudoku board
-  initialBoard?: number[][] | null; // To distinguish original numbers
+  initialBoard: number[][] | null; // To distinguish original numbers from algorithm-placed numbers
   currentCell?: {
     row: number;
     col: number;
     num?: number; // Number being tried
-    action: 'find_empty' | 'try_num' | 'place_num' | 'backtrack_remove' | 'check_safe' | 'solution_found' | 'no_solution';
+    action: 'find_empty' | 'try_num' | 'place_num' | 'backtrack_remove' | 'check_safe';
   };
   isSafe?: boolean; // Result of isSafe check for currentCell.num
   solutionFound?: boolean;
@@ -47,3 +47,4 @@ export interface SudokuStep {
   swappingIndices?: number[];
   sortedIndices?: number[];
 }
+
