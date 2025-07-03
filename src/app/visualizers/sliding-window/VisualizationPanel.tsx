@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { VisualizationPanelProps } from './types'; // Local import
+import type { VisualizationPanelProps } from './types';
 
 const BAR_MAX_HEIGHT_BASE = 200; 
 const BAR_WIDTH = 20; 
@@ -14,8 +14,8 @@ export function VisualizationPanel({
   data, 
   activeIndices = [], 
   swappingIndices = [], 
-  sortedIndices = [], // For sliding window, 'sortedIndices' can highlight the found subarray
-  processingSubArrayRange = null, // This is the key prop for the window
+  sortedIndices = [],
+  processingSubArrayRange = null,
   pivotActualIndex = null 
 }: VisualizationPanelProps) {
   const [maxVal, setMaxVal] = useState(1);
@@ -36,7 +36,7 @@ export function VisualizationPanel({
   }, [data]);
 
   const getBarColor = (index: number) => {
-    if (sortedIndices.includes(index)) return "bg-green-500"; // Highlights the final result subarray
+    if (sortedIndices.includes(index)) return "bg-green-500"; // Final found subarray
     if (processingSubArrayRange && index >= processingSubArrayRange[0] && index <= processingSubArrayRange[1]) {
       return "bg-primary"; // Current window
     }
@@ -83,4 +83,3 @@ export function VisualizationPanel({
     </Card>
   );
 }
-

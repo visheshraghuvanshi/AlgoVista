@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { VisualizationPanelProps } from './types'; // Local import
+import type { VisualizationPanelProps } from './types';
 
 const BAR_MAX_HEIGHT_BASE = 200; 
 const BAR_WIDTH = 20; 
@@ -12,10 +12,10 @@ const MIN_NON_ZERO_BAR_HEIGHT = 10;
 
 export function VisualizationPanel({ 
   data, 
-  activeIndices = [], // For current window pointers: [start, end]
+  activeIndices = [], 
   swappingIndices = [], 
-  sortedIndices = [], // For highlighting the found subarray
-  processingSubArrayRange = null, // Use activeIndices as the primary window visual
+  sortedIndices = [],
+  processingSubArrayRange = null,
   pivotActualIndex = null 
 }: VisualizationPanelProps) {
   const [maxVal, setMaxVal] = useState(1);
@@ -84,4 +84,3 @@ export function VisualizationPanel({
     </Card>
   );
 }
-

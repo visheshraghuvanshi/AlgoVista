@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
-import { algorithmMetadata } from './metadata'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types';
+import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Sigma } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { VisualizationPanel } from './VisualizationPanel'; // Local import
+import { VisualizationPanel } from './VisualizationPanel';
 import { SubarraySumCodePanel } from './SubarraySumCodePanel';
 import { generateFindSubarraySumPositiveSteps, generateFindSubarraySumAnySteps, SUBARRAY_SUM_LINE_MAPS } from './subarray-sum-logic';
 import type { SubarraySumProblemType } from './subarray-sum-logic';
@@ -246,18 +246,12 @@ export default function SubarraySumProblemsVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) {
-        const firstStep = newSteps[0];
-        setDisplayedData(firstStep.array);
-        setActiveIndices(firstStep.activeIndices);
-        setSortedIndices(firstStep.sortedIndices);
-        setCurrentLine(firstStep.currentLine);
-        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
-        setAuxiliaryData(firstStep.auxiliaryData || null);
+        updateStateFromStep(0);
     } else { 
         setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); 
     }
 
-  }, [inputValue, targetSumValue, problemType, parseInputArray, parseTargetSum, toast, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
+  }, [inputValue, targetSumValue, problemType, parseInputArray, parseTargetSum, toast, updateStateFromStep]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -300,15 +294,17 @@ export default function SubarraySumProblemsVisualizerPage() {
             <VisualizationPanel data={displayedData} activeIndices={activeIndices} sortedIndices={sortedIndices} processingSubArrayRange={processingSubArrayRange} />
             {auxiliaryData && (
                 <Card className="mt-4">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2">
-                        {Object.entries(auxiliaryData).map(([key, value]) => {
-                             if (key === 'prefixSums') {
-                                const mapEntries = Object.entries(value as Record<string,number>);
-                                return <p key={key}><strong>Prefix Sums Map:</strong> {mapEntries.length > 0 ? mapEntries.map(([s,i]) => `${s}:${i}`).join(', ') : '(empty)'}</p>;
-                            }
-                            return <p key={key}><strong>{key.replace(/([A-Z])/g, ' $1').trim()}:</strong> {value?.toString()}</p>;
+                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
+                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
+                        {Object.entries(auxiliaryData).filter(([key]) => !key.includes('prefixSums')).map(([key, value]) => {
+                             const readableKey = key.replace(/([A-Z])/g, ' $1').trim().replace(/\b\w/g, l => l.toUpperCase());
+                            return (
+                                <p key={key}><strong>{readableKey}:</strong> {value?.toString()}</p>
+                            )
                         })}
+                        {auxiliaryData.prefixSums && (
+                             <p><strong>Prefix Sums Map:</strong> {Object.entries(auxiliaryData.prefixSums as Record<string,number>).map(([s,i]) => `${s}:${i}`).join(', ') || '(empty)'}</p>
+                        )}
                     </CardContent>
                 </Card>
             )}
@@ -321,27 +317,29 @@ export default function SubarraySumProblemsVisualizerPage() {
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Problem Setup</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <div className="space-y-2">
-                <Label htmlFor="arrayInput">Input Array</Label>
-                <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="targetSumInputSub">Target Sum</Label>
-                <Input id="targetSumInputSub" type="number" value={targetSumValue} onChange={e => setTargetSumValue(e.target.value)} disabled={isPlaying}/>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
                 <Label htmlFor="problemTypeSelectSub">Problem Variant</Label>
                 <Select value={problemType} onValueChange={v => setProblemType(v as SubarraySumProblemType)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="positiveOnly">Given Sum (Positive Nums Only)</SelectItem>
-                    <SelectItem value="anyNumbers">Given Sum (Any Numbers)</SelectItem>
+                    <SelectItem value="positiveOnly">Find Subarray with Sum (Positive Nums)</SelectItem>
+                    <SelectItem value="anyNumbers">Find Subarray with Sum (Any Nums)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="arrayInputSub">Input Array</Label>
+                <Input id="arrayInputSub" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying} />
+              </div>
             </div>
-            <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto">Run Algorithm</Button>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                 <div className="space-y-2">
+                    <Label htmlFor="targetSumInputSub">Target Sum</Label>
+                    <Input id="targetSumInputSub" type="number" value={targetSumValue} onChange={e => setTargetSumValue(e.target.value)} disabled={isPlaying}/>
+                </div>
+                 <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Run Algorithm</Button>
+            </div>
              <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Problem</Button>
             </div>
@@ -365,4 +363,3 @@ export default function SubarraySumProblemsVisualizerPage() {
     </div>
   );
 }
-

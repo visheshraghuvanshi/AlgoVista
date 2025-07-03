@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SlidingWindowProblemType } from './sliding-window-logic';
 
 interface SlidingWindowCodePanelProps {
-  codeSnippets: Record<SlidingWindowProblemType, Record<string, string[]>>; // Language -> Snippet Array
+  codeSnippets: Record<SlidingWindowProblemType, Record<string, string[]>>;
   currentLine: number | null;
   selectedProblem: SlidingWindowProblemType;
 }
@@ -69,10 +70,10 @@ export function SlidingWindowCodePanel({ codeSnippets, currentLine, selectedProb
             ))}
           </TabsList>
             <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap">
                 {codeToDisplay.map((line, index) => (
                   <div key={`${selectedProblem}-${selectedLanguage}-line-${index}`}
-                    className={`px-2 py-0.5 rounded whitespace-pre-wrap ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
+                    className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                     <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">{index + 1}</span>
                     {line}
                   </div>
@@ -83,7 +84,7 @@ export function SlidingWindowCodePanel({ codeSnippets, currentLine, selectedProb
          ) : (
           <div className="flex-grow overflow-hidden flex flex-col">
             <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
-              <pre className="font-code text-sm p-4">
+              <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
                  <p className="text-muted-foreground p-4">No code snippets available for this problem type/language.</p>
               </pre>
             </ScrollArea>

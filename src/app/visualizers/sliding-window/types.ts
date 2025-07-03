@@ -30,17 +30,26 @@ export interface AlgorithmDetailsProps {
 
 export interface AlgorithmStep {
   array: number[];
-  activeIndices: number[];    
-  swappingIndices: number[];  
-  sortedIndices: number[];    // Used to highlight the found subarray
+  activeIndices: number[];    // Can be used for start/end pointers
+  swappingIndices: number[];  // Not used
+  sortedIndices: number[];    // Used to highlight the final result subarray
   currentLine: number | null; 
   message?: string;           
-  processingSubArrayRange?: [number, number] | null; // To highlight the current window
-  pivotActualIndex?: number | null; 
-  auxiliaryData?: Record<string, any> | null;
+  processingSubArrayRange?: [number, number] | null; // This is the primary window highlight
+  pivotActualIndex?: number | null; // Not used
+  auxiliaryData?: {
+    windowStart?: number;
+    windowEnd?: number;
+    currentSum?: number;
+    maxSum?: number;
+    minLength?: number | string;
+    targetSum?: number;
+    k?: number;
+    foundSubarrayIndices?: number[];
+    [key: string]: any;
+  } | null;
 }
 
-// Props for VisualizationPanel
 export interface VisualizationPanelProps {
   data: number[];
   activeIndices?: number[];
@@ -49,4 +58,3 @@ export interface VisualizationPanelProps {
   processingSubArrayRange?: [number, number] | null;
   pivotActualIndex?: number | null;
 }
-

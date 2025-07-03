@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; // Local import
-import { algorithmMetadata } from './metadata'; // Local import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types';
+import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, BoxSelect } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,28 +15,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { VisualizationPanel } from './VisualizationPanel'; // Local import
+import { VisualizationPanel } from './VisualizationPanel';
 import { SlidingWindowCodePanel } from './SlidingWindowCodePanel';
-import { generateMaxSumFixedKSteps, generateMinLengthSumTargetSteps, SLIDING_WINDOW_LINE_MAPS } from './sliding-window-logic';
+import { generateMaxSumFixedKSteps, generateMinLengthSumTargetSteps, SUBARRAY_SUM_LINE_MAPS } from './sliding-window-logic';
 import type { SlidingWindowProblemType } from './sliding-window-logic';
 
 const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<string, string[]>> = {
   maxSumFixedK: {
     JavaScript: [
-      "function maxSumSubarrayFixedK(arr, k) {",        // 1
-      "  if (k <= 0 || k > arr.length) return 0;",      // 2
-      "  let maxSum = -Infinity;",                       // 3
-      "  let windowSum = 0;",                            // 4
-      "  for (let i = 0; i < k; i++) {",                 // 5
-      "    windowSum += arr[i];",                         // 6
+      "function maxSumSubarrayFixedK(arr, k) {",                   // 1
+      "  if (k <= 0 || k > arr.length) return 0;",                // 2
+      "  let maxSum = -Infinity;",                                 // 3
+      "  let windowSum = 0;",                                      // 4
+      "  for (let i = 0; i < k; i++) {",                           // 5
+      "    windowSum += arr[i];",                                 // 6
       "  }",
-      "  maxSum = windowSum;",                           // 7
-      "  for (let i = k; i < arr.length; i++) {",        // 8
-      "    windowSum += arr[i] - arr[i - k];",          // 9
-      "    maxSum = Math.max(maxSum, windowSum);",       // 10
+      "  maxSum = windowSum;",                                     // 8
+      "  for (let i = k; i < arr.length; i++) {",                  // 9
+      "    windowSum += arr[i] - arr[i - k];",                      // 10
+      "    maxSum = Math.max(maxSum, windowSum);",                  // 11
       "  }",
-      "  return maxSum;",                                 // 11
-      "}",                                               // 12
+      "  return maxSum;",                                          // 13
+      "}",                                                         // 14
     ],
     Python: [
       "def max_sum_subarray_fixed_k(arr, k):",
@@ -71,9 +71,9 @@ const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<stri
     ],
     "C++": [
       "#include <vector>",
-      "#include <numeric>      // std::accumulate",
-      "#include <algorithm>    // std::max",
-      "#include <limits>       // std::numeric_limits",
+      "#include <numeric>",
+      "#include <algorithm>",
+      "#include <limits>",
       "int maxSumSubarrayFixedK(const std::vector<int>& arr, int k) {",
       "    if (k <= 0 || k > arr.size()) return 0;",
       "    int maxSum = std::numeric_limits<int>::min();",
@@ -104,8 +104,8 @@ const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<stri
       "      windowStart++;",                              // 10
       "    }",
       "  }",
-      "  return minLength === Infinity ? 0 : minLength;", // 11
-      "}",                                                // 12
+      "  return minLength === Infinity ? 0 : minLength;", // 13
+      "}",                                                // 14
     ],
     Python: [
       "def min_length_subarray_sum_target(arr, target):",
@@ -140,8 +140,8 @@ const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<stri
     ],
     "C++": [
       "#include <vector>",
-      "#include <algorithm> // std::min",
-      "#include <limits>    // std::numeric_limits",
+      "#include <algorithm>",
+      "#include <limits>",
       "int minLengthSubarraySumTarget(const std::vector<int>& arr, int target) {",
       "    int minLength = std::numeric_limits<int>::max();",
       "    int windowSum = 0;",
@@ -160,7 +160,6 @@ const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<stri
   },
 };
 
-
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -171,8 +170,8 @@ export default function SlidingWindowVisualizerPage() {
 
   const [inputValue, setInputValue] = useState('2,1,5,2,3,2');
   const [problemType, setProblemType] = useState<SlidingWindowProblemType>('maxSumFixedK');
-  const [kValue, setKValue] = useState('3'); // For maxSumFixedK
-  const [targetSumValue, setTargetSumValue] = useState('7'); // For minLengthSumTarget
+  const [kValue, setKValue] = useState('3');
+  const [targetSumValue, setTargetSumValue] = useState('7');
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -198,8 +197,22 @@ export default function SlidingWindowVisualizerPage() {
       toast({ title: "Invalid Array Input", description: "Please enter comma-separated numbers.", variant: "destructive" });
       return null;
     }
+    if (problemType === 'minLengthSumTarget' && parsed.some(n => n < 0)) {
+        toast({ title: "Invalid Input", description: "The 'Min Length Subarray' variant currently requires non-negative numbers for simpler logic.", variant: "default" });
+        return null;
+    }
     return parsed;
+  }, [toast, problemType]);
+  
+  const parseTargetValue = useCallback((value: string): number | null => {
+    const num = parseInt(value, 10);
+    if (isNaN(num)) {
+      toast({ title: "Invalid Target/K Value", description: "Target/K must be a number.", variant: "destructive" });
+      return null;
+    }
+    return num;
   }, [toast]);
+
 
   const updateStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) {
@@ -226,16 +239,16 @@ export default function SlidingWindowVisualizerPage() {
 
     let newSteps: AlgorithmStep[] = [];
     if (problemType === 'maxSumFixedK') {
-      const k = parseInt(kValue, 10);
-      if (isNaN(k) || k <= 0) {
+      const k = parseTargetValue(kValue);
+      if (k === null || k <= 0) {
         toast({ title: "Invalid K Value", description: "K must be a positive integer.", variant: "destructive" });
         setSteps([]); setDisplayedData(arr); setIsFinished(true); return;
       }
       newSteps = generateMaxSumFixedKSteps(arr, k);
     } else if (problemType === 'minLengthSumTarget') {
-      const target = parseInt(targetSumValue, 10);
-      if (isNaN(target)) {
-        toast({ title: "Invalid Target Sum", description: "Target sum must be a number.", variant: "destructive" });
+      const target = parseTargetValue(targetSumValue);
+      if (target === null) {
+        toast({ title: "Invalid Target Sum", description: "Target sum must be a valid number.", variant: "destructive" });
         setSteps([]); setDisplayedData(arr); setIsFinished(true); return;
       }
       newSteps = generateMinLengthSumTargetSteps(arr, target);
@@ -246,18 +259,12 @@ export default function SlidingWindowVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) {
-        const firstStep = newSteps[0];
-        setDisplayedData(firstStep.array);
-        setActiveIndices(firstStep.activeIndices);
-        setSortedIndices(firstStep.sortedIndices);
-        setCurrentLine(firstStep.currentLine);
-        setProcessingSubArrayRange(firstStep.processingSubArrayRange || null);
-        setAuxiliaryData(firstStep.auxiliaryData || null);
+        updateStateFromStep(0);
     } else { 
         setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); 
     }
 
-  }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, toast, setDisplayedData, setActiveIndices, setSortedIndices, setCurrentLine, setProcessingSubArrayRange, setAuxiliaryData]);
+  }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, parseTargetValue, toast, updateStateFromStep]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -300,12 +307,12 @@ export default function SlidingWindowVisualizerPage() {
             <VisualizationPanel data={displayedData} activeIndices={activeIndices} sortedIndices={sortedIndices} processingSubArrayRange={processingSubArrayRange} />
             {auxiliaryData && (
                 <Card className="mt-4">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
-                    <CardContent className="text-sm flex flex-wrap justify-around gap-2">
-                        {Object.entries(auxiliaryData).map(([key, value]) => {
-                             if (key === 'foundSubarrayIndices') return null; 
+                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Window State</CardTitle></CardHeader>
+                    <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
+                        {Object.entries(auxiliaryData).filter(([key]) => !['inputArray', 'foundSubarrayIndices'].includes(key)).map(([key, value]) => {
+                             const readableKey = key.replace(/([A-Z])/g, ' $1').trim().replace(/\b\w/g, l => l.toUpperCase());
                             return (
-                                <p key={key}><strong>{key.replace(/([A-Z])/g, ' $1').trim()}:</strong> {value?.toString()}</p>
+                                <p key={key}><strong>{readableKey}:</strong> {value?.toString()}</p>
                             )
                         })}
                     </CardContent>
@@ -320,21 +327,23 @@ export default function SlidingWindowVisualizerPage() {
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Problem Setup</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="arrayInput">Input Array</Label>
-                <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="problemTypeSelect">Problem Type</Label>
+                <Label htmlFor="problemTypeSelect">Problem Variant</Label>
                 <Select value={problemType} onValueChange={v => setProblemType(v as SlidingWindowProblemType)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="maxSumFixedK">Max Sum Subarray (Fixed Size K)</SelectItem>
+                    <SelectItem value="maxSumFixedK">Max Sum of Subarray (Fixed Size K)</SelectItem>
                     <SelectItem value="minLengthSumTarget">Min Length Subarray (Sum &gt;= Target)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+               <div className="space-y-2">
+                <Label htmlFor="arrayInput">Input Array</Label>
+                <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               {problemType === 'maxSumFixedK' && (
                 <div className="space-y-2">
                   <Label htmlFor="kValueInput">Window Size (K)</Label>
@@ -347,8 +356,8 @@ export default function SlidingWindowVisualizerPage() {
                   <Input id="targetSumInputSW" type="number" value={targetSumValue} onChange={e => setTargetSumValue(e.target.value)} disabled={isPlaying}/>
                 </div>
               )}
+               <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto self-end">Run Algorithm</Button>
             </div>
-            <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto">Run Algorithm</Button>
              <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Problem</Button>
             </div>
@@ -372,4 +381,3 @@ export default function SlidingWindowVisualizerPage() {
     </div>
   );
 }
-

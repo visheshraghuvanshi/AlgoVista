@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AlgorithmDetailsProps } from './types'; // Local import
+import type { AlgorithmDetailsProps } from './types';
 
 export function AlgorithmDetailsCard({ title, description, timeComplexities, spaceComplexity }: AlgorithmDetailsProps) {
   return (
@@ -31,4 +31,3 @@ export function AlgorithmDetailsCard({ title, description, timeComplexities, spa
     </Card>
   );
 }
-
