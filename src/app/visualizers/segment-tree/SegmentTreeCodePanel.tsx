@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -220,20 +221,15 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
     const snippetsForOp = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
     const availableLangs = Object.keys(snippetsForOp);
-
-    let newLangToSet = "Info";
-    if (availableLangs.length > 0) {
-        newLangToSet = availableLangs.includes("JavaScript") ? "JavaScript" : availableLangs[0];
-    }
-
-    if (!availableLangs.includes(selectedLanguage) || selectedLanguage === "Info") {
-        if (selectedLanguage !== newLangToSet) {
-            setSelectedLanguage(newLangToSet);
-        }
+    
+    if (!availableLangs.includes(selectedLanguage)) {
+      const newLangToSet = availableLangs.includes("JavaScript") 
+        ? "JavaScript" 
+        : (availableLangs[0] || "Info");
+      setSelectedLanguage(newLangToSet);
     }
   }, [selectedOperation, selectedLanguage]);
-
-
+  
   const codeToDisplay = useMemo(() => {
     const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
     return (SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey]?.[selectedLanguage]) || [];
@@ -313,7 +309,7 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
               <div key={`${operationLabel}-${selectedLanguage}-line-${index}`}
                 className={`px-2 py-0.5 rounded ${index + 1 === currentLine ? "bg-accent text-accent-foreground" : "text-foreground"}`}>
                 <span className="select-none text-muted-foreground/50 w-8 inline-block mr-2 text-right">
-                  {index + 1 + (selectedOperation !== 'build' && structureCode.length > 0 ? structureCode.length +1 : 0)}
+                  {index + 1 + (selectedOperation !== 'build' && structureCode.length > 0 ? structureCode.length + 1 : 0) } 
                 </span>
                 {line}
               </div>
