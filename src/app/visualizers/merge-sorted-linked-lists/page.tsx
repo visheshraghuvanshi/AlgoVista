@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types';
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, GitMerge } from 'lucide-react';
 import { generateMergeSortedListsSteps } from './merge-sorted-linked-lists-logic';
@@ -35,76 +35,61 @@ export default function MergeSortedLinkedListsPage() {
   
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [currentNodes, setCurrentNodes] = useState<LinkedListNodeVisual[]>([]); 
-  const [currentHeadId, setCurrentHeadId] = useState<string | null>(null); 
-  const [currentAuxPointers, setCurrentAuxPointers] = useState<Record<string, string | null>>({});
-  const [currentMessage, setCurrentMessage] = useState<string | undefined>("");
-  const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentStep, setCurrentStep] = useState<LinkedListAlgorithmStep | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentNodes(currentS.nodes); 
-      setCurrentHeadId(currentS.headId ?? null);
-      setCurrentAuxPointers(currentS.auxiliaryPointers || {});
-      setCurrentMessage(currentS.message);
-      setCurrentLine(currentS.currentLine);
-    }
-  }, [steps]);
+
+  useEffect(() => { setIsClient(true); }, []);
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     if (mergeType === 'init') {
-        setCurrentNodes([]); 
-        setCurrentHeadId(null);
-        setCurrentAuxPointers({l1: 'L1_Head_Placeholder', l2: 'L2_Head_Placeholder'});
-        setCurrentMessage("Lists ready for merge. Select merge type and play/step.");
-        setCurrentLine(null);
-        setSteps([{ nodes: [], headId: null, currentLine: 0, message: "init" }]);
+        setSteps([]);
+        setCurrentStep(null);
         setIsPlaying(false); setIsFinished(true); 
         return;
     }
     if (list1Str.trim() === '' && list2Str.trim() === '') {
         toast({title: "Input Missing", description: "Please provide at least one list.", variant: "destructive"});
-        setCurrentNodes([]); setCurrentHeadId(null); setSteps([]); setIsFinished(true);
+        setSteps([]); setCurrentStep(null); setIsFinished(true);
         return;
     }
     const newSteps = generateMergeSortedListsSteps(list1Str, list2Str, mergeType);
     setSteps(newSteps);
+  }, [list1Str, list2Str, mergeType, toast]);
+
+  useEffect(() => { handleGenerateSteps(); }, [list1Str, list2Str, mergeType, handleGenerateSteps]);
+
+  useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) {
-      updateVisualStateFromStep(0);
-    } else {
-      setCurrentNodes([]); setCurrentHeadId(null); setCurrentAuxPointers({}); setCurrentMessage("No steps generated."); setCurrentLine(null);
-    }
-  }, [list1Str, list2Str, mergeType, toast, updateVisualStateFromStep]);
+    setIsFinished(steps.length <= 1);
+    if(steps.length > 0) setCurrentStep(steps[0]);
+  }, [steps]);
 
-  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+  useEffect(() => {
+    if (steps[currentStepIndex]) setCurrentStep(steps[currentStepIndex]);
+  }, [currentStepIndex, steps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1 && mergeType !== 'init') { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1 || mergeType === 'init') return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
@@ -112,16 +97,10 @@ export default function MergeSortedLinkedListsPage() {
     setList1Str('1,3,5,7'); setList2Str('2,4,6,8'); setMergeType('iterative');
   };
   
-  useEffect(() => { setIsClient(true); handleReset(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { handleReset(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
-
-  const algoDetails: AlgorithmDetailsProps = {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
-  };
+  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -129,8 +108,8 @@ export default function MergeSortedLinkedListsPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="singly" /></div>
-          <div className="lg:w-2/5 xl:w-1/3"><MergeSortedLinkedListsCodePanel currentLine={currentLine} mergeType={mergeType} /></div>
+          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" /></div>
+          <div className="lg:w-2/5 xl:w-1/3"><MergeSortedLinkedListsCodePanel currentLine={currentStep?.currentLine ?? null} mergeType={mergeType} /></div>
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
@@ -174,7 +153,7 @@ export default function MergeSortedLinkedListsPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>

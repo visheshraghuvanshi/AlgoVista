@@ -16,8 +16,8 @@ import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local copy
 import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types'; // Local types
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { generateCycleDetectionSteps, CYCLE_DETECTION_LINE_MAP } from './linked-list-cycle-detection-logic';
-import { algorithmMetadata } from './metadata';
+import { generateCycleDetectionSteps } from './linked-list-cycle-detection-logic';
+import { algorithmMetadata } from './metadata'; 
 
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
@@ -31,31 +31,14 @@ export default function LinkedListCycleDetectionPage() {
 
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [currentStep, setCurrentStep] = useState<LinkedListAlgorithmStep | null>(null);
   
-  const [currentNodes, setCurrentNodes] = useState<LinkedListNodeVisual[]>([]);
-  const [currentHeadId, setCurrentHeadId] = useState<string | null>(null);
-  const [currentAuxPointers, setCurrentAuxPointers] = useState<Record<string, string | null>>({});
-  const [currentMessage, setCurrentMessage] = useState<string | undefined>("");
-  const [currentLine, setCurrentLine] = useState<number | null>(null);
   const [isCycleActuallyDetected, setIsCycleActuallyDetected] = useState(false);
 
-
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentNodes(currentS.nodes);
-      setCurrentHeadId(currentS.headId ?? null);
-      setCurrentAuxPointers(currentS.auxiliaryPointers || {});
-      setCurrentMessage(currentS.message);
-      setCurrentLine(currentS.currentLine);
-      if (currentS.isCycleDetected !== undefined) setIsCycleActuallyDetected(currentS.isCycleDetected);
-    }
-  }, [steps, setCurrentNodes, setCurrentHeadId, setCurrentAuxPointers, setCurrentMessage, setCurrentLine, setIsCycleActuallyDetected]);
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -64,59 +47,63 @@ export default function LinkedListCycleDetectionPage() {
 
     const newSteps = generateCycleDetectionSteps(initialListStr, cycleTarget);
     setSteps(newSteps);
+  }, [initialListStr, cycleConnectsTo]);
+  
+  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+
+  useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
+    setIsFinished(steps.length <= 1);
     setIsCycleActuallyDetected(false); 
-    if (newSteps.length > 0) {
-        const firstStep = newSteps[0];
-        setCurrentNodes(firstStep.nodes);
-        setCurrentHeadId(firstStep.headId ?? null);
-        setCurrentAuxPointers(firstStep.auxiliaryPointers || {});
-        setCurrentMessage(firstStep.message);
-        setCurrentLine(firstStep.currentLine);
-        if (firstStep.isCycleDetected !== undefined) setIsCycleActuallyDetected(firstStep.isCycleDetected);
-    } else {
-        setCurrentNodes([]);
-        setCurrentHeadId(null);
-        setCurrentAuxPointers({});
-        setCurrentMessage("Error generating steps or empty list.");
-        setCurrentLine(null);
+    if (steps.length > 0) {
+      const lastStep = steps[steps.length - 1];
+      setCurrentStep(steps[0]);
+       if (lastStep.isCycleDetected !== undefined) {
+         setIsCycleActuallyDetected(lastStep.isCycleDetected);
+       }
     }
-  }, [initialListStr, cycleConnectsTo, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished, setIsCycleActuallyDetected, setCurrentNodes, setCurrentHeadId, setCurrentAuxPointers, setCurrentMessage, setCurrentLine]);
-
-  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+  }, [steps]);
+  
+  useEffect(() => {
+     if(steps[currentStepIndex]) {
+        setCurrentStep(steps[currentStepIndex]);
+     }
+  }, [currentStepIndex, steps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4,5,6'); setCycleConnectsTo('3');
+    setIsPlaying(false); setIsFinished(true); setInitialListStr('1,2,3,4,5,6'); setCycleConnectsTo('3');
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? { 
+  useEffect(() => { handleReset(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;
+  
+  const localAlgoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
-  } : null;
-
-  if (!localAlgoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -124,8 +111,8 @@ export default function LinkedListCycleDetectionPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="singly" /></div>
-          <div className="lg:w-2/5 xl:w-1/3"><LinkedListCycleDetectionCodePanel currentLine={currentLine} /></div>
+          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" /></div>
+          <div className="lg:w-2/5 xl:w-1/3"><LinkedListCycleDetectionCodePanel currentLine={currentStep?.currentLine ?? null} /></div>
         </div>
         <Card className="shadow-xl rounded-xl mb-6">
           <CardHeader><CardTitle className="font-headline text-xl text-primary dark:text-accent">Controls & Setup</CardTitle></CardHeader>
@@ -167,4 +154,3 @@ export default function LinkedListCycleDetectionPage() {
     </div>
   );
 }
-

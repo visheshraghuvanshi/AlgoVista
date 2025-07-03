@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel';
-import { MorrisTraversalCodePanel, MORRIS_TRAVERSAL_CODE_SNIPPETS } from './MorrisTraversalCodePanel';
+import { MorrisTraversalCodePanel } from './MorrisTraversalCodePanel';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
 import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AlgorithmMetadata } from './types';
 import { useToast } from "@/hooks/use-toast";
@@ -15,10 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
-import { generateMorrisInorderSteps, MORRIS_INORDER_LINE_MAP } from './morris-traversal-logic';
+import { generateMorrisInorderSteps } from './morris-traversal-logic';
 import { algorithmMetadata } from './metadata';
-import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic'; // Re-use parser
-
+import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
 
 const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
@@ -44,56 +43,73 @@ export default function MorrisTraversalPage() {
 
   useEffect(() => { setIsClient(true); }, []);
 
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      setCurrentStep(steps[stepIndex]);
-    }
-  }, [steps]); 
-  
-  const handleGenerateSteps = useCallback(() => {
+  // Effect to generate steps when the user input changes
+  useEffect(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const parsedInput = parseTreeInput(treeInputValue);
     if (!parsedInput) {
-        toast({title: "Invalid Tree Input", description: "Format: comma-sep, level-order, 'null' for empty.", variant: "destructive"});
-        setSteps([]); setCurrentStep(null); setIsFinished(true);
-        setInitialDisplayTree({nodes: [], edges: []});
-        return;
+      toast({title: "Invalid Tree Input", description: "Format: comma-sep, level-order, 'null' for empty.", variant: "destructive"});
+      setSteps([]);
+      setInitialDisplayTree({nodes: [], edges: []});
+      return;
     }
     const { nodes: iNodes, edges: iEdges } = initialBuildTreeForDisplay(parsedInput);
     setInitialDisplayTree({nodes: iNodes, edges: iEdges});
 
     const newSteps = generateMorrisInorderSteps(treeInputValue);
     setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setCurrentStep(newSteps[0] || null);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-  }, [treeInputValue, toast, updateVisualStateFromStep]);
-  
-  useEffect(() => { handleGenerateSteps(); }, [treeInputValue, handleGenerateSteps]);
+  }, [treeInputValue, toast]);
 
+  // Effect to reset animation state when steps are regenerated
+  useEffect(() => {
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(steps.length <= 1);
+    if (steps.length > 0) {
+      setCurrentStep(steps[0]);
+    } else {
+      setCurrentStep(null);
+    }
+  }, [steps]);
+
+  // Effect to update the displayed step when index changes
+  useEffect(() => {
+    if (steps[currentStepIndex]) {
+        setCurrentStep(steps[currentStepIndex]);
+    }
+  }, [currentStepIndex, steps]);
+
+  // Effect for animation playback
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
-    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+    } else if (isPlaying) {
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
-    if (nextIdx === steps.length - 1) setIsFinished(true);
+    setIsPlaying(false);
+    setCurrentStepIndex(prevIndex => {
+      const nextIdx = prevIndex + 1;
+      if (nextIdx === steps.length - 1) setIsFinished(true);
+      return nextIdx;
+    });
   };
   const handleReset = () => { 
-    setIsPlaying(false); setIsFinished(true); 
-    setTreeInputValue(DEFAULT_MORRIS_TREE_INPUT);
+    setIsPlaying(false);
+    setIsFinished(true);
+    setTreeInputValue(DEFAULT_MORRIS_TREE_INPUT); 
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    // The useEffect watching treeInputValue will regenerate steps
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -143,8 +159,7 @@ export default function MorrisTraversalPage() {
                 <Input id="morrisTreeInput" value={treeInputValue} onChange={e => setTreeInputValue(e.target.value)} disabled={isPlaying}/>
               </div>
             </div>
-             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto">Run / Reset Traversal</Button>
-            
+             
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Default Tree</Button>
             </div>

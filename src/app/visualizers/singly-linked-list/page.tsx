@@ -8,10 +8,11 @@ import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; /
 import { SinglyLinkedListCodePanel } from './SinglyLinkedListCodePanel'; 
 import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmMetadata, AlgorithmDetailsProps, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Local import
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmMetadata, AlgorithmDetailsProps, LinkedListOperation } from './types'; // Local import
+import { ALL_OPERATIONS_LOCAL } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { SINGLY_LL_LINE_MAPS, generateSinglyLinkedListSteps } from './singly-linked-list-logic';
+import { generateSinglyLinkedListSteps } from './singly-linked-list-logic';
 import { algorithmMetadata } from './metadata';
 
 const DEFAULT_ANIMATION_SPEED = 800;
@@ -31,11 +32,7 @@ export default function SinglyLinkedListPage() {
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
-  const [currentNodes, setCurrentNodes] = useState<LinkedListNodeVisual[]>([]);
-  const [currentHeadId, setCurrentHeadId] = useState<string | null>(null);
-  const [currentAuxPointers, setCurrentAuxPointers] = useState<Record<string, string | null>>({});
-  const [currentMessage, setCurrentMessage] = useState<string | undefined>("");
-  const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentStep, setCurrentStep] = useState<LinkedListAlgorithmStep | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true); 
@@ -44,18 +41,6 @@ export default function SinglyLinkedListPage() {
   
   const listStringForLogicRef = useRef<string>(initialListStr);
 
-
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentNodes(currentS.nodes);
-      setCurrentHeadId(currentS.headId ?? null);
-      setCurrentAuxPointers(currentS.auxiliaryPointers || {});
-      setCurrentMessage(currentS.message);
-      setCurrentLine(currentS.currentLine);
-    }
-  }, [steps]);
-  
   const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string, posOrSecondList?: string | number) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
@@ -71,7 +56,6 @@ export default function SinglyLinkedListPage() {
         positionToUse = Number(posOrSecondList);
     }
 
-    // Using ALL_OPERATIONS_LOCAL from local types.ts
     const currentOpDetails = ALL_OPERATIONS_LOCAL.find(details => details.value === op);
     if (currentOpDetails?.needsValue && (operationValueToUse === undefined || String(operationValueToUse).trim() === '')) {
         toast({ title: "Input Required", description: `Please enter a value for ${op}.`, variant: "destructive" });
@@ -91,12 +75,8 @@ export default function SinglyLinkedListPage() {
 
     const newSteps = generateSinglyLinkedListSteps(listStringToUse, op, operationValueToUse, positionToUse);
     setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
 
     if (newSteps.length > 0) {
-      updateVisualStateFromStep(0);
       const lastStep = newSteps[newSteps.length - 1];
       listStringForLogicRef.current = lastStep.nodes.map(n => n.value).join(',');
 
@@ -106,32 +86,45 @@ export default function SinglyLinkedListPage() {
         toast({ title: op.charAt(0).toUpperCase() + op.slice(1), description: lastStep.message });
       }
     } else {
-      setCurrentNodes([]); setCurrentHeadId(null); setCurrentAuxPointers({}); setCurrentMessage("Error or no steps generated."); setCurrentLine(null);
+      setCurrentStep(null);
     }
-  }, [toast, updateVisualStateFromStep, initialListStr]);
+  }, [toast, initialListStr]);
 
   useEffect(() => { 
     listStringForLogicRef.current = initialListStr; 
-    if (selectedOperation === 'init') {
-      handleOperationExecution('init', initialListStr);
+    handleOperationExecution('init', initialListStr);
+  }, [initialListStr, handleOperationExecution]);
+
+  // Effect to reset animation state when steps change
+  useEffect(() => {
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(steps.length <= 1);
+    if (steps.length > 0) {
+      setCurrentStep(steps[0]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialListStr]); 
+  }, [steps]);
 
+  // Effect to update displayed step when index changes
+  useEffect(() => {
+    if (steps[currentStepIndex]) {
+      setCurrentStep(steps[currentStepIndex]);
+    }
+  }, [currentStepIndex, steps]);
 
+  // Main animation timer effect
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextStepIndex = currentStepIndex + 1;
-        setCurrentStepIndex(nextStepIndex);
-        updateVisualStateFromStep(nextStepIndex);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
       setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
+
 
   const handlePlay = () => {
     if (isFinished || steps.length <= 1) {
@@ -149,29 +142,22 @@ export default function SinglyLinkedListPage() {
     setIsPlaying(false);
     const nextStepIndex = currentStepIndex + 1;
     setCurrentStepIndex(nextStepIndex);
-    updateVisualStateFromStep(nextStepIndex);
     if (nextStepIndex === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(true); 
+    setIsPlaying(false);
+    setIsFinished(true); 
     const defaultInitial = '10,20,30';
     setInitialListStr(defaultInitial); 
     listStringForLogicRef.current = defaultInitial;
     setInputValue('5');
     setPositionValue('1');
     setSelectedOperation('init');
-    const initSteps = generateSinglyLinkedListSteps(defaultInitial, 'init');
-    setSteps(initSteps);
-    setCurrentStepIndex(0);
-    if (initSteps.length > 0) updateVisualStateFromStep(0); else setCurrentNodes([]);
-    setCurrentMessage("Visualizer Reset. List initialized with default values."); 
-    setCurrentLine(null);
   };
   
   useEffect(() => { 
     handleReset(); 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   if (!algorithmMetadata) {
@@ -179,7 +165,7 @@ export default function SinglyLinkedListPage() {
       <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container mx-auto p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>
     );
   }
-  const localAlgoDetails: AlgorithmDetailsProps = { // Use local type
+  const localAlgoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -195,10 +181,10 @@ export default function SinglyLinkedListPage() {
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="singly" />
+            <LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId ?? null} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" />
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <SinglyLinkedListCodePanel currentLine={currentLine} currentOperation={selectedOperation} />
+            <SinglyLinkedListCodePanel currentLine={currentStep?.currentLine ?? null} currentOperation={selectedOperation} />
           </div>
         </div>
         <LinkedListControlsPanel
@@ -214,12 +200,8 @@ export default function SinglyLinkedListPage() {
               setSelectedOperation(op);
               if (op === 'init') handleOperationExecution('init', initialListStr);
               else if (op === 'traverse') handleOperationExecution('traverse'); 
-              else { 
+              else {
                   setSteps([]); 
-                  setCurrentStepIndex(0);
-                  // Potentially update visual state to current list if an op is selected but not yet executed
-                  const currentVisuals = createVisualNodesFromCurrentState(new Map(Object.entries(actualListNodes.current || {})), headId.current); // This logic needs actualListNodes access
-                  setCurrentNodes(currentVisuals);
                   setIsFinished(true);
               }
           }}
@@ -232,10 +214,4 @@ export default function SinglyLinkedListPage() {
       <Footer />
     </div>
   );
-}
-// Helper to recreate visual nodes from Map (not used directly in page but shows how logic might manage it)
-// This would ideally be part of the logic file or a shared utility if needed by page for interim states
-const createVisualNodesFromActualMap = (actualMap: Map<string, {value:string|number, nextId:string|null}>, headId: string|null): LinkedListNodeVisual[] => {
-    // ... implementation similar to createVisualNodesFromCurrentState in logic ...
-    return [];
 }

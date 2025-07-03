@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { VisualizationPanel } from './VisualizationPanel';
 import { SlidingWindowCodePanel } from './SlidingWindowCodePanel';
-import { generateMaxSumFixedKSteps, generateMinLengthSumTargetSteps, SUBARRAY_SUM_LINE_MAPS } from './sliding-window-logic';
+import { generateMaxSumFixedKSteps, generateMinLengthSumTargetSteps } from './sliding-window-logic';
 import type { SlidingWindowProblemType } from './sliding-window-logic';
 
 const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<string, string[]>> = {
@@ -160,7 +160,6 @@ const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<stri
   },
 };
 
-
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -176,13 +175,7 @@ export default function SlidingWindowVisualizerPage() {
 
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [displayedData, setDisplayedData] = useState<number[]>([]);
-  const [activeIndices, setActiveIndices] = useState<number[]>([]);
-  const [sortedIndices, setSortedIndices] = useState<number[]>([]);
-  const [currentLine, setCurrentLine] = useState<number | null>(null);
-  const [processingSubArrayRange, setProcessingSubArrayRange] = useState<[number, number] | null>(null);
-  const [auxiliaryData, setAuxiliaryData] = useState<AlgorithmStep['auxiliaryData']>(null);
+  const [currentStep, setCurrentStep] = useState<AlgorithmStep | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true);
@@ -213,32 +206,17 @@ export default function SlidingWindowVisualizerPage() {
     }
     return num;
   }, [toast]);
-  
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps && steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setDisplayedData(currentS.array);
-      setActiveIndices(currentS.activeIndices);
-      setSortedIndices(currentS.sortedIndices);
-      setCurrentLine(currentS.currentLine);
-      setProcessingSubArrayRange(currentS.processingSubArrayRange || null);
-      setAuxiliaryData(currentS.auxiliaryData || null);
-    }
-  }, [steps]);
-  
+
   const handleGenerateSteps = useCallback(() => {
-    if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
-    }
+    if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
     const arr = parseInputArray(inputValue);
     if (!arr) {
-      setSteps([]); setDisplayedData([]); setIsFinished(true); return;
+      setSteps([]); setIsFinished(true); return;
     }
     const target = parseTargetValue(problemType === 'maxSumFixedK' ? kValue : targetSumValue);
     if (target === null) {
-       setSteps([]); setDisplayedData(arr); setIsFinished(true); return;
+       setSteps([]); setIsFinished(true); return;
     }
 
     let newSteps: AlgorithmStep[] = [];
@@ -249,39 +227,40 @@ export default function SlidingWindowVisualizerPage() {
     }
     
     setSteps(newSteps);
-
   }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, parseTargetValue]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+
+  useEffect(() => {
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(steps.length <= 1);
+    if(steps.length > 0) setCurrentStep(steps[0]);
+  }, [steps]);
   
   useEffect(() => {
-    if (steps.length > 0) {
-        updateVisualStateFromStep(0);
-        setCurrentStepIndex(0);
-        setIsPlaying(false);
-        setIsFinished(steps.length <= 1);
-    }
-  }, [steps, updateVisualStateFromStep]);
+    if(steps[currentStepIndex]) setCurrentStep(steps[currentStepIndex]);
+  }, [currentStepIndex, steps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextStepIndex = currentStepIndex + 1;
-        setCurrentStepIndex(nextStepIndex);
-        updateVisualStateFromStep(nextStepIndex);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
       setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false);
+    const nextIdx = currentStepIndex + 1;
+    setCurrentStepIndex(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { setIsPlaying(false); setIsFinished(false); handleGenerateSteps(); };
@@ -297,28 +276,31 @@ export default function SlidingWindowVisualizerPage() {
         <div className="mb-8 text-center">
           <BoxSelect className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{steps[currentStepIndex]?.message || algorithmMetadata.description}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
-            <VisualizationPanel data={displayedData} activeIndices={activeIndices} sortedIndices={sortedIndices} processingSubArrayRange={processingSubArrayRange} />
-            {auxiliaryData && (
+            <VisualizationPanel data={currentStep?.array || []} activeIndices={currentStep?.activeIndices} sortedIndices={currentStep?.sortedIndices} processingSubArrayRange={currentStep?.processingSubArrayRange} />
+            {currentStep?.auxiliaryData && (
                 <Card className="mt-4">
                     <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Window State</CardTitle></CardHeader>
                     <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
-                        {Object.entries(auxiliaryData).filter(([key]) => !['inputArray', 'foundSubarrayIndices', 'problemType'].includes(key)).map(([key, value]) => {
+                        {Object.entries(currentStep.auxiliaryData).filter(([key]) => !['inputArray', 'foundSubarrayIndices', 'problemType'].includes(key)).map(([key, value]) => {
                              const readableKey = key.replace(/([A-Z])/g, ' $1').trim().replace(/\b\w/g, l => l.toUpperCase());
                             return (
                                 <p key={key}><strong>{readableKey}:</strong> {value?.toString()}</p>
                             )
                         })}
+                        {currentStep.auxiliaryData.prefixSums && (
+                             <p><strong>Prefix Sums Map:</strong> {Object.entries(currentStep.auxiliaryData.prefixSums as Record<string,number>).map(([s,i]) => `${s}:${i}`).join(', ') || '(empty)'}</p>
+                        )}
                     </CardContent>
                 </Card>
             )}
           </div>
           <div className="lg:w-2/5 xl:w-1/3">
-            <SlidingWindowCodePanel codeSnippets={SLIDING_WINDOW_CODE_SNIPPETS} currentLine={currentLine} selectedProblem={problemType} />
+            <SlidingWindowCodePanel codeSnippets={SUBARRAY_SUM_CODE_SNIPPETS} currentLine={currentStep?.currentLine ?? null} selectedProblem={problemType} />
           </div>
         </div>
         

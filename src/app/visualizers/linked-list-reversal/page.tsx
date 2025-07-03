@@ -1,5 +1,4 @@
 
-// src/app/visualizers/linked-list-reversal/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from './types'; // Local import
 import type { ReversalTypeInternal as ReversalType } from './types'; // Renamed for clarity in this file
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
-import { generateLinkedListReversalSteps, REVERSAL_ITERATIVE_LINE_MAP, REVERSAL_RECURSIVE_LINE_MAP } from './linked-list-reversal-logic';
+import { generateLinkedListReversalSteps } from './linked-list-reversal-logic';
 import { algorithmMetadata } from './metadata'; 
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,29 +32,12 @@ export default function LinkedListReversalPage() {
   
   const [steps, setSteps] = useState<LinkedListAlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const [currentNodes, setCurrentNodes] = useState<LinkedListNodeVisual[]>([]);
-  const [currentHeadId, setCurrentHeadId] = useState<string | null>(null);
-  const [currentAuxPointers, setCurrentAuxPointers] = useState<Record<string, string | null>>({});
-  const [currentMessage, setCurrentMessage] = useState<string | undefined>("");
-  const [currentLine, setCurrentLine] = useState<number | null>(null);
+  const [currentStep, setCurrentStep] = useState<LinkedListAlgorithmStep | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [isFinished, setIsFinished] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentNodes(currentS.nodes);
-      setCurrentHeadId(currentS.headId ?? null);
-      setCurrentAuxPointers(currentS.auxiliaryPointers || {});
-      setCurrentMessage(currentS.message);
-      setCurrentLine(currentS.currentLine);
-    }
-  }, [steps]);
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -64,9 +46,9 @@ export default function LinkedListReversalPage() {
         if (initSteps.length > 0) {
             const firstStep = initSteps[0];
              setSteps([firstStep]); 
-             updateVisualStateFromStep(0);
+             if(steps[0]) setCurrentStep(steps[0]);
         } else {
-             setSteps([]); setCurrentNodes([]); setCurrentHeadId(null); setCurrentMessage("Could not initialize list.");
+             setSteps([]); setCurrentStep(null);
         }
         setIsPlaying(false); setIsFinished(true); 
         return;
@@ -74,35 +56,41 @@ export default function LinkedListReversalPage() {
 
     const newSteps = generateLinkedListReversalSteps(initialListStr, reversalType);
     setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) updateVisualStateFromStep(0);
-    else setCurrentNodes([]);
-  }, [initialListStr, reversalType, updateVisualStateFromStep]);
+  }, [initialListStr, reversalType]);
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
   useEffect(() => {
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(steps.length <= 1);
+    if(steps.length > 0) setCurrentStep(steps[0]);
+  }, [steps]);
+
+  useEffect(() => {
+    if (steps[currentStepIndex]) setCurrentStep(steps[currentStepIndex]);
+  }, [currentStepIndex, steps]);
+
+  useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1 && reversalType !== 'init') { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1 || reversalType === 'init') return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(false); setInitialListStr('1,2,3,4'); setReversalType('iterative');
+    setIsPlaying(false); setIsFinished(true); setInitialListStr('1,2,3,4'); setReversalType('iterative');
   };
   
   const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
@@ -120,8 +108,8 @@ export default function LinkedListReversalPage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentNodes} headId={currentHeadId} auxiliaryPointers={currentAuxPointers} message={currentMessage} listType="singly" /></div>
-          <div className="lg:w-2/5 xl:w-1/3"><LinkedListReversalCodePanel currentLine={currentLine} reversalType={reversalType} /></div>
+          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" /></div>
+          <div className="lg:w-2/5 xl:w-1/3"><LinkedListReversalCodePanel currentLine={currentStep?.currentLine ?? null} reversalType={reversalType} /></div>
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
