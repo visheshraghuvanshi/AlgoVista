@@ -49,8 +49,8 @@ export const generateCocktailSortSteps = (arrToSort: number[]): AlgorithmStep[] 
   ) => {
     localSteps.push({
       array: [...currentArrState],
-      activeIndices,
-      swappingIndices,
+      activeIndices: active,
+      swappingIndices: swapping,
       sortedIndices: [...localSortedIndices].sort((a, b) => a - b),
       currentLine: line,
       message,
