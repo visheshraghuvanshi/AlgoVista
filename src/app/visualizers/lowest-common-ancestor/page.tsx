@@ -41,6 +41,7 @@ export default function LCAVisualizerPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const [pathFoundResult, setPathFoundResult] = useState<boolean | null>(null);
+  const [lcaResult, setLcaResult] = useState<string | number | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true);
@@ -51,6 +52,12 @@ export default function LCAVisualizerPage() {
 
 
   useEffect(() => { setIsClient(true); }, []);
+
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+    if (steps[stepIndex]) {
+      setCurrentStep(steps[stepIndex]);
+    }
+  }, [steps]);
 
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -94,6 +101,7 @@ export default function LCAVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(steps.length <= 1);
     setLcaResult(null); 
+    setPathFoundResult(null);
     if (steps.length > 0) {
       setCurrentStep(steps[0]);
     }
@@ -103,7 +111,7 @@ export default function LCAVisualizerPage() {
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        setCurrentStepIndex(prevIndex => prevIndex + 1);
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
@@ -120,10 +128,12 @@ export default function LCAVisualizerPage() {
       const isLastStep = currentStepIndex === steps.length - 1;
       if (isLastStep) {
         if (currentS.auxiliaryData?.pathFound !== undefined) {
-          setPathFoundResult(currentS.auxiliaryData.pathFound as boolean);
-           if (currentS.message?.toLowerCase().includes("lca found")) {
+          const found = currentS.auxiliaryData.pathFound as boolean;
+          setPathFoundResult(found);
+           if (found) {
             const finalLcaValue = currentS.auxiliaryData?.lcaValue;
-            if (finalLcaValue !== undefined) {
+            if (finalLcaValue !== undefined && finalLcaValue !== null) {
+              setLcaResult(finalLcaValue);
               toast({ title: "LCA Process Complete", description: `LCA is ${finalLcaValue}.` });
             }
            } else if(currentS.message?.toLowerCase().includes("not found")) {
@@ -193,8 +203,8 @@ export default function LCAVisualizerPage() {
                  <Card className="mt-4">
                     <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
                     <CardContent className="text-xs flex justify-around p-2">
-                        <p><strong>Target P:</strong> {currentStep.auxiliaryData.targetP}</p>
-                        <p><strong>Target Q:</strong> {currentStep.auxiliaryData.targetQ}</p>
+                        <p><strong>Target P:</strong> {currentStep.auxiliaryData.targetP || nodePValue}</p>
+                        <p><strong>Target Q:</strong> {currentStep.auxiliaryData.targetQ || nodeQValue}</p>
                     </CardContent>
                  </Card>
                )}
@@ -222,10 +232,14 @@ export default function LCAVisualizerPage() {
                 </div>
             </div>
             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto"><LocateFixed className="mr-2 h-4 w-4"/>Find LCA & Generate Steps</Button>
+            
             {isFinished && pathFoundResult !== null && (
                 <p className={`text-center font-semibold text-lg mt-2 ${pathFoundResult ? 'text-green-500' : 'text-red-500'}`}>
                     {pathFoundResult ? `LCA Found: ${lcaResult}` : "LCA could not be determined (or nodes not found)."}
                 </p>
+            )}
+            {isFinished && pathFoundResult === null && steps.length > 1 && !steps[steps.length-1].message?.toLowerCase().includes("error") && currentStep?.message && !currentStep.message.toLowerCase().includes("error") &&(
+                 <p className="text-center font-semibold text-lg mt-2 text-red-500">Could not determine path (or nodes not found).</p>
             )}
             
             <div className="flex items-center justify-start pt-4 border-t">
