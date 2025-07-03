@@ -345,4 +345,3 @@ export const generateSinglyLinkedListSteps = (
   }
   return localSteps;
 };
-

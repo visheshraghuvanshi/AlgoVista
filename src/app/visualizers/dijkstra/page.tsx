@@ -11,8 +11,8 @@ import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { DIJKSTRA_LINE_MAP, generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic';
-import { algorithmMetadata } from './metadata'; 
+import { generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic'; // Local import
+import { algorithmMetadata } from './metadata'; // Local import
 
 const DIJKSTRA_CODE_SNIPPETS = {
   JavaScript: [
@@ -229,13 +229,13 @@ export default function DijkstraVisualizerPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
 
-  }, [graphInputValue, startNodeValue, toast, setCurrentNodes, setCurrentEdges, setCurrentAuxiliaryData, setCurrentLine, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished]);
+  }, [graphInputValue, startNodeValue, toast]);
 
 
   useEffect(() => {
     generateNewSteps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graphInputValue, startNodeValue, generateNewSteps]); // Removed generateSteps from here to break cycle, now it's stable
+  }, [graphInputValue, startNodeValue]); // Rerun when inputs change
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -284,8 +284,10 @@ export default function DijkstraVisualizerPage() {
 
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
+    setGraphInputValue('0:1(4),2(1);1:3(1);2:1(2),3(5);3:'); 
+    setStartNodeValue('0');
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
-    generateNewSteps();
+    // generateNewSteps will be called by the useEffect watching the inputs
   };
 
   const handleSpeedChange = (speedValue: number) => setAnimationSpeed(speedValue);
@@ -363,3 +365,4 @@ export default function DijkstraVisualizerPage() {
     </div>
   );
 }
+
