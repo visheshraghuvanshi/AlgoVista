@@ -4,8 +4,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; 
-import type { AlgorithmMetadata, AlgorithmStep, AlgorithmDetailsProps } from './types'; 
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, AlgorithmStep } from './types';
+import { algorithmMetadata } from './metadata';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Sigma } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SegmentTreeVisualizationPanel } from './SegmentTreeVisualizationPanel'; 
 import { SegmentTreeCodePanel } from './SegmentTreeCodePanel'; 
 import { generateSegmentTreeSteps, type SegmentTreeOperation } from './segment-tree-logic'; 
-import { algorithmMetadata } from './metadata'; 
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -45,6 +45,7 @@ export default function SegmentTreeVisualizerPage() {
   
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
   const [displayedData, setDisplayedData] = useState<number[]>([]); // This will be the segment tree array
   const [activeIndices, setActiveIndices] = useState<number[]>([]);
   const [currentLine, setCurrentLine] = useState<number | null>(null);
@@ -63,7 +64,7 @@ export default function SegmentTreeVisualizerPage() {
 
   useEffect(() => {
     setIsClient(true);
-    handleExecuteOperation('build'); // Initial build
+    handleExecuteOperation('build');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const parseInput = useCallback((value: string): number[] | null => {
@@ -75,39 +76,29 @@ export default function SegmentTreeVisualizerPage() {
     }
     if (parsed.length > MAX_INPUT_SIZE) { 
         toast({ title: "Input Too Long", description: `Max ${MAX_INPUT_SIZE} numbers for optimal visualization.`, variant: "default"});
-        return parsed.slice(0, MAX_INPUT_SIZE); // Truncate for now
+        return parsed.slice(0, MAX_INPUT_SIZE);
     }
     if (parsed.some(n => n > 999 || n < -999)) {
       toast({ title: "Input out of range", description: "Numbers must be between -999 and 999.", variant: "destructive" });
       return null;
     }
-    setOriginalInputForDisplay(parsed); // Keep a copy of the original input for display
     return parsed;
   }, [toast]);
 
-  const updateStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setDisplayedData(currentS.array); 
-      setActiveIndices(currentS.activeIndices);
-      setCurrentLine(currentS.currentLine);
-      setAuxiliaryDisplay(currentS.auxiliaryData || null);
-      setMessage(currentS.message || "");
-      setCurrentProcessingRange(currentS.processingSubArrayRange || null);
-    }
-  }, [steps]);
-
+  // This function generates steps and updates the state. It does not depend on animation state setters.
   const handleExecuteOperation = useCallback((opToExecute?: SegmentTreeOperation) => {
-    const operationToRun = opToExecute || selectedOperation;
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+    
+    const operationToRun = opToExecute || selectedOperation;
     
     let newSteps: AlgorithmStep[] = [];
     const parsedInitialArray = parseInput(inputValue);
+    setOriginalInputForDisplay(parsedInitialArray || []);
 
     if (operationToRun === 'build') {
-        if (!parsedInitialArray) { 
-            setSteps([]); setDisplayedData([]); setIsFinished(true); setMessage("Error: Invalid input array for build."); 
-            return; 
+        if (!parsedInitialArray) {
+            setSteps([]); setDisplayedData([]); setIsFinished(true); setMessage("Error: Invalid input array for build.");
+            return;
         }
         if (parsedInitialArray.length === 0) {
             toast({title: "Input Empty", description: "Provide array for build.", variant: "default"});
@@ -119,7 +110,7 @@ export default function SegmentTreeVisualizerPage() {
         newSteps = generateSegmentTreeSteps('build', parsedInitialArray, [], originalArraySizeRef.current);
         if (newSteps.length > 0) segmentTreeArrayRef.current = [...newSteps[newSteps.length -1].array];
          toast({title: "Segment Tree Build", description: "Steps generated for building."});
-    } else { 
+    } else {
         if (segmentTreeArrayRef.current.length === 0 || originalArraySizeRef.current === 0) {
             toast({title: "Build Tree First", description: "Please build the segment tree before querying or updating.", variant: "destructive"});
             setSteps([]); setDisplayedData([]); setIsFinished(true);
@@ -128,14 +119,14 @@ export default function SegmentTreeVisualizerPage() {
         }
         if (operationToRun === 'query') {
             const qL = parseInt(queryLeft, 10);
-            const qR = parseInt(queryRight, 10); // User inputs exclusive right, logic expects exclusive
+            const qR = parseInt(queryRight, 10);
             if (isNaN(qL) || isNaN(qR) || qL < 0 || qR <= qL || qR > originalArraySizeRef.current) {
                 toast({title: "Invalid Query Range", description: `Range [${qL}, ${qR}) is invalid for original array size ${originalArraySizeRef.current}.`, variant: "destructive"});
                 setSteps([]); setDisplayedData(segmentTreeArrayRef.current); setIsFinished(true);
                 setMessage(`Error: Invalid query range [${qL}, ${qR}).`);
                 return;
             }
-            newSteps = generateSegmentTreeSteps('query', [], segmentTreeArrayRef.current, originalArraySizeRef.current, qL, qR);
+            newSteps = generateSegmentTreeSteps('query', parsedInitialArray || [], segmentTreeArrayRef.current, originalArraySizeRef.current, qL, qR);
             toast({title: "Query Operation", description: "Steps generated for query."});
         } else if (operationToRun === 'update') {
             const uIdx = parseInt(updateIndex, 10);
@@ -146,58 +137,67 @@ export default function SegmentTreeVisualizerPage() {
                  setMessage(`Error: Invalid update input. Index: ${uIdx}, Value: ${uVal}.`);
                 return;
             }
-            newSteps = generateSegmentTreeSteps('update', [], segmentTreeArrayRef.current, originalArraySizeRef.current, undefined, undefined, uIdx, uVal);
+            newSteps = generateSegmentTreeSteps('update', parsedInitialArray || [], segmentTreeArrayRef.current, originalArraySizeRef.current, undefined, undefined, uIdx, uVal);
              if (newSteps.length > 0) segmentTreeArrayRef.current = [...newSteps[newSteps.length-1].array]; 
             toast({title: "Update Operation", description: "Steps generated for update."});
         }
     }
-
     setSteps(newSteps);
+  }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast]);
+
+  // This effect reacts to new steps being generated
+  useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) {
-        updateStateFromStep(0);
-    } else { 
-        setDisplayedData(operationToRun === 'build' && parsedInitialArray ? [] : segmentTreeArrayRef.current); 
-        setActiveIndices([]); 
-        setCurrentLine(null); 
-        setAuxiliaryDisplay(null); 
-        setIsFinished(true); 
-        setMessage(operationToRun === 'build' && !parsedInitialArray ? "Error: Could not build tree." : "No steps to visualize for this operation.");
+    setIsFinished(steps.length <= 1);
+    if (steps.length > 0) {
+      const firstStep = steps[0];
+      setDisplayedData(firstStep.array);
+      setActiveIndices(firstStep.activeIndices);
+      setCurrentLine(firstStep.currentLine);
+      setAuxiliaryDisplay(firstStep.auxiliaryData || null);
+      setMessage(firstStep.message || "");
+      setCurrentProcessingRange(firstStep.processingSubArrayRange || null);
+    } else {
+      setDisplayedData(segmentTreeArrayRef.current);
     }
-
-  }, [inputValue, selectedOperation, queryLeft, queryRight, updateIndex, updateValue, parseInput, toast, updateStateFromStep]);
+  }, [steps]);
   
-  useEffect(() => { 
-    if (selectedOperation === 'build') {
-      handleExecuteOperation('build');
-    }
-  }, [selectedOperation, inputValue, handleExecuteOperation]); 
-
+  // This effect runs the animation
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
-        updateStateFromStep(nextStepIndex);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false);
       setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed]);
+  
+  // This effect updates the visual state when the step index changes
+  useEffect(() => {
+    if (steps[currentStepIndex]) {
+      const currentS = steps[currentStepIndex];
+      setDisplayedData(currentS.array); 
+      setActiveIndices(currentS.activeIndices);
+      setCurrentLine(currentS.currentLine);
+      setAuxiliaryDisplay(currentS.auxiliaryData || null);
+      setMessage(currentS.message || "");
+      setCurrentProcessingRange(currentS.processingSubArrayRange || null);
+    }
+  }, [currentStepIndex, steps]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
     setIsPlaying(false);
-    const nextStepIndex = currentStepIndex + 1;
-    setCurrentStepIndex(nextStepIndex);
-    updateStateFromStep(nextStepIndex);
-    if (nextStepIndex === steps.length - 1) setIsFinished(true);
+    const nextIdx = currentStepIndex + 1;
+    setCurrentStepIndex(nextIdx);
+    if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
     setIsPlaying(false); setIsFinished(false);
@@ -269,7 +269,7 @@ export default function SegmentTreeVisualizerPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
                 <Label htmlFor="arrayInput">Initial Array (comma-sep, max {MAX_INPUT_SIZE})</Label>
-                <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="e.g., 1,3,5,7" disabled={isPlaying && selectedOperation !== 'build'} />
+                <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="e.g., 1,3,5,7" disabled={isPlaying} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operationSelect">Operation</Label>
@@ -321,4 +321,3 @@ export default function SegmentTreeVisualizerPage() {
     </div>
   );
 }
-
