@@ -5,8 +5,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps, EuclideanGcdStep } from './types'; // Local import
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import type { AlgorithmMetadata, EuclideanGcdStep } from './types'; // Local import
 import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Calculator } from 'lucide-react';
@@ -73,11 +73,11 @@ export default function EuclideanGcdVisualizerPage() {
     setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-  }, [numberAInput, numberBInput, toast, updateVisualStateFromStep]); // Added updateVisualStateFromStep
+  }, [numberAInput, numberBInput, toast]);
   
   useEffect(() => { 
     handleCalculateGcd();
-  }, [handleCalculateGcd]); // Dependency on handleCalculateGcd
+  }, [handleCalculateGcd]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -108,12 +108,9 @@ export default function EuclideanGcdVisualizerPage() {
     setIsFinished(true);
     setNumberAInput(DEFAULT_BASE);
     setNumberBInput(DEFAULT_EXPONENT);
-    // handleCalculateGcd will be called by useEffect due to input changes if they are dependencies
-    // Or call it directly if only resetting the simulation for current inputs:
-    // handleCalculateGcd(); 
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps = { // Changed name to avoid conflict
+  const localAlgoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
@@ -175,7 +172,7 @@ export default function EuclideanGcdVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...localAlgoDetails} />
+        <AlgorithmDetailsCard {...algoDetails} />
       </main>
       <Footer />
     </div>
