@@ -68,7 +68,7 @@ function addStep(
     edges: visualEdges,
     operation, currentWord, currentCharIndex, currentNodeId, pathTakenIds, message, found,
     currentLine: line,
-    auxiliaryData,
+    auxiliaryData: auxData,
   });
 }
 
@@ -223,3 +223,5 @@ export const createInitialTrie = (): { rootId: string; nodesMap: Map<string, Tri
   nodesMap.set(rootId, { id: rootId, char: null, isEndOfWord: false, children: new Map(), depth: 0 });
   return { rootId, nodesMap };
 };
+
+    
