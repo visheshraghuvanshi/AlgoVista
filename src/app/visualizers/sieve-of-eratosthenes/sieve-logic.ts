@@ -45,6 +45,12 @@ export const generateSieveSteps = (limitN: number): SieveAlgorithmStep[] => {
   const localSteps: SieveAlgorithmStep[] = [];
   const lm = SIEVE_LINE_MAP;
 
+  if (limitN < 2) {
+      const emptyState: number[] = Array(limitN + 1).fill(0);
+      addStep(localSteps, emptyState, null, "Limit must be at least 2 to find primes.", limitN, undefined, undefined, []);
+      return localSteps;
+  }
+  
   let isPrime = new Array(limitN + 1).fill(1); // Using numbers for state: 1=true, 0=false
   
   addStep(localSteps, isPrime, lm.funcDeclare, `Starting Sieve for n = ${limitN}.`, limitN);
@@ -54,14 +60,16 @@ export const generateSieveSteps = (limitN: number): SieveAlgorithmStep[] => {
   addStep(localSteps, isPrime, lm.mark01NotPrime, "Mark 0 and 1 as not prime.", limitN);
 
   for (let p = 2; p * p <= limitN; p++) {
-    addStep(localSteps, isPrime, lm.outerLoopP, `Outer loop: p = ${p}.`, limitN, p);
+    addStep(localSteps, isPrime, lm.outerLoopP, `Outer loop: checking p = ${p}.`, limitN, p);
     
     if (isPrime[p] === 1) {
-      addStep(localSteps, isPrime, lm.checkIfPrimeP, `p=${p} is prime. Marking its multiples starting from p*p.`, limitN, p);
+      addStep(localSteps, isPrime, lm.checkIfPrimeP, `p=${p} is prime. Marking its multiples starting from p*p (${p*p}).`, limitN, p);
       for (let i = p * p; i <= limitN; i += p) {
-        addStep(localSteps, isPrime, lm.innerLoopMarkMultiples, `Marking multiple of ${p}: ${i}.`, limitN, p, i);
-        isPrime[i] = 0;
-        addStep(localSteps, isPrime, lm.markComposite, `${i} marked as not prime.`, limitN, p, i);
+        if (isPrime[i] === 1) { // Only add step if we are actually changing it
+            addStep(localSteps, isPrime, lm.innerLoopMarkMultiples, `Marking multiple of ${p}: ${i}.`, limitN, p, i);
+            isPrime[i] = 0;
+            addStep(localSteps, isPrime, lm.markComposite, `${i} marked as not prime.`, limitN, p, i);
+        }
       }
       addStep(localSteps, isPrime, lm.innerLoopMarkMultiples, `Finished marking multiples of ${p}.`, limitN, p);
     } else {
@@ -69,7 +77,7 @@ export const generateSieveSteps = (limitN: number): SieveAlgorithmStep[] => {
     }
   }
 
-  addStep(localSteps, lm.outerLoopP, isPrime, `Finished marking multiples up to sqrt(${limitN}).`, limitN);
+  addStep(localSteps, isPrime, lm.outerLoopP, `Finished marking multiples up to sqrt(${limitN}).`, limitN);
 
   const primesFound: number[] = [];
   addStep(localSteps, isPrime, lm.collectPrimesLoop, "Collecting all remaining marked primes...", limitN, undefined, undefined, primesFound);
@@ -80,6 +88,5 @@ export const generateSieveSteps = (limitN: number): SieveAlgorithmStep[] => {
     }
   }
   addStep(localSteps, isPrime, lm.returnPrimes, `Sieve complete. Found ${primesFound.length} primes.`, limitN, undefined, undefined, primesFound);
-
   return localSteps;
 };
