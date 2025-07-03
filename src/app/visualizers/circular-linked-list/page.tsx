@@ -8,9 +8,10 @@ import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; /
 import { CircularLinkedListCodePanel } from './CircularLinkedListCodePanel'; 
 import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Local import
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation } from './types'; // Local import
+import { ALL_OPERATIONS_LOCAL } from './types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Shuffle } from 'lucide-react';
 import { generateCircularLinkedListSteps } from './circular-linked-list-logic';
 import { algorithmMetadata } from './metadata'; 
 
