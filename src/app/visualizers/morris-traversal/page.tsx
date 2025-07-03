@@ -4,11 +4,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
+import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel';
 import { MorrisTraversalCodePanel, MORRIS_TRAVERSAL_CODE_SNIPPETS } from './MorrisTraversalCodePanel';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AlgorithmDetailsProps } from './types'; // Local import
-import { algorithmMetadata } from './metadata'; 
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { TreeAlgorithmStep, BinaryTreeNodeVisual, BinaryTreeEdgeVisual, AlgorithmMetadata } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 import { generateMorrisInorderSteps, MORRIS_INORDER_LINE_MAP } from './morris-traversal-logic';
+import { algorithmMetadata } from './metadata';
 import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic'; // Re-use parser
 
 
@@ -101,7 +101,7 @@ export default function MorrisTraversalPage() {
     spaceComplexity: algorithmMetadata.spaceComplexity!,
   } : null;
 
-  if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>; }
+  if (!isClient) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>;}
   if (!algoDetails) { return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;}
   
   const displayNodes = currentStep?.nodes && currentStep.nodes.length > 0 ? currentStep.nodes : initialDisplayTree.nodes;

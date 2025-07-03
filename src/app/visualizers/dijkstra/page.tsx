@@ -4,15 +4,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { GraphVisualizationPanel } from './GraphVisualizationPanel'; // Local import
+import { GraphVisualizationPanel } from './GraphVisualizationPanel';
 import { DijkstraCodePanel } from './DijkstraCodePanel'; 
-import { GraphControlsPanel } from './GraphControlsPanel'; // Local import
-import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types'; // Local import
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
+import { GraphControlsPanel } from './GraphControlsPanel';
+import type { AlgorithmMetadata, GraphNode, GraphEdge, GraphAlgorithmStep } from './types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
-import { generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic'; // Local import
-import { algorithmMetadata } from './metadata'; // Local import
+import { generateDijkstraSteps, parseWeightedGraphInput } from './dijkstra-logic'; 
+import { algorithmMetadata } from './metadata'; 
 
 const DIJKSTRA_CODE_SNIPPETS = {
   JavaScript: [
@@ -321,7 +321,9 @@ export default function DijkstraVisualizerPage() {
           <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">
             {algorithmMetadata.title}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentMessage}</p>
+          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            {currentMessage}
+          </p>
         </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3">
@@ -365,4 +367,3 @@ export default function DijkstraVisualizerPage() {
     </div>
   );
 }
-

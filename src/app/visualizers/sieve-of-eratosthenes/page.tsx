@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
 import type { AlgorithmMetadata } from './types';
+import { algorithmMetadata } from './metadata'; 
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
 
-import { algorithmMetadata } from './metadata'; 
 import { SieveCodePanel } from './SieveCodePanel';
 import { SieveVisualizationPanel } from './SieveVisualizationPanel';
 import { generateSieveSteps, type SieveAlgorithmStep } from './sieve-logic';
@@ -173,4 +173,3 @@ export default function SieveVisualizerPage() {
     </div>
   );
 }
-

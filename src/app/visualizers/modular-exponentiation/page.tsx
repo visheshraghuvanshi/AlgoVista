@@ -1,5 +1,3 @@
-
-
 // src/app/visualizers/modular-exponentiation/page.tsx
 "use client";
 
@@ -195,4 +193,3 @@ export default function ModularExponentiationVisualizerPage() {
     </div>
   );
 }
-    

@@ -10,9 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from './types';
-import type { LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Changed import
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
 import { generateMergeSortedListsSteps } from './merge-sorted-linked-lists-logic';
@@ -91,7 +90,7 @@ export default function MergeSortedLinkedListsPage() {
     } else {
         setCurrentNodes([]); setCurrentHeadId(null); setCurrentAuxPointers({}); setCurrentMessage("No steps generated."); setCurrentLine(null);
     }
-  }, [list1Str, list2Str, mergeType, toast, setCurrentNodes, setCurrentHeadId, setCurrentAuxPointers, setCurrentMessage, setCurrentLine, setSteps, setCurrentStepIndex, setIsPlaying, setIsFinished ]);
+  }, [list1Str, list2Str, mergeType, toast]);
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
