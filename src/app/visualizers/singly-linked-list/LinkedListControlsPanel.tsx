@@ -23,6 +23,7 @@ export function LinkedListControlsPanel({
   availableOperations,
   isPlaying, isFinished, currentSpeed, onSpeedChange,
   isAlgoImplemented, minSpeed, maxSpeed,
+  steps, // Add steps to props to fix error
 }: LinkedListControlsPanelProps) {
 
   const currentOpDetails = ALL_OPERATIONS_LOCAL.find(op => op.value === selectedOperation);
@@ -36,7 +37,7 @@ export function LinkedListControlsPanel({
       if (showPositionInput && positionValue !== undefined) {
         const pos = parseInt(positionValue, 10);
         if (isNaN(pos)) {
-          alert("Position must be a number."); 
+          alert("Position must be a number."); // Replace with toast if available
           return;
         }
         secondaryArg = pos;

@@ -41,8 +41,8 @@ export interface LinkedListNodeVisual {
   textColor?: string;
   isHead?: boolean;
   isTail?: boolean; // Optional for doubly linked list tail pointer
-  isSlow?: boolean; // For Floyd's cycle detection
-  isFast?: boolean; // For Floyd's cycle detection
+  isSlow?: boolean; 
+  isFast?: boolean; 
   x?: number;
   y?: number;
 }
@@ -112,4 +112,6 @@ export interface LinkedListControlsPanelProps {
   isAlgoImplemented: boolean; 
   minSpeed: number;
   maxSpeed: number;
+  steps: LinkedListAlgorithmStep[]; // Added to fix ReferenceError
 }
+

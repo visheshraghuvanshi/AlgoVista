@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, ListPlus, Trash2, SearchCode, Shuffle, GitMerge, LocateFixed, ListOrdered, CornerDownLeft, CornerUpRight, Milestone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import type { LinkedListAlgorithmStep } from '@/types'; // Import a compatible step type
 
 export type LinkedListOperation = 
   | 'init'
@@ -25,15 +26,10 @@ export const ALL_OPERATIONS: { value: LinkedListOperation; label: string; icon?:
   { value: 'insertHead', label: 'Insert Head', icon: CornerUpRight, needsValue: true },
   { value: 'insertTail', label: 'Insert Tail', icon: CornerDownLeft, needsValue: true },
   { value: 'insertAtPosition', label: 'Insert At Position', icon: Milestone, needsValue: true, needsPosition: true },
-  // { value: 'deleteHead', label: 'Delete Head', icon: Trash2 }, 
-  // { value: 'deleteTail', label: 'Delete Tail', icon: Trash2 },
   { value: 'deleteByValue', label: 'Delete by Value', icon: Trash2, needsValue: true },
   { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
   { value: 'search', label: 'Search Value', icon: SearchCode, needsValue: true },
   { value: 'traverse', label: 'Traverse List', icon: FastForward },
-  // { value: 'reverse', label: 'Reverse List', icon: Shuffle }, // Example for future
-  // { value: 'detectCycle', label: 'Detect Cycle', icon: LocateFixed },  // Example for future
-  // { value: 'merge', label: 'Merge Two Lists', icon: GitMerge, needsSecondList: true }, // Example for future
 ];
 
 interface LinkedListControlsPanelProps {
@@ -49,7 +45,7 @@ interface LinkedListControlsPanelProps {
   inputValue: string; 
   onInputValueChange: (value: string) => void;
 
-  positionValue?: string; // For insert/delete at position
+  positionValue?: string;
   onPositionValueChange?: (value: string) => void;
   
   secondListValue?: string; 
@@ -67,6 +63,7 @@ interface LinkedListControlsPanelProps {
   isAlgoImplemented: boolean; 
   minSpeed: number;
   maxSpeed: number;
+  steps: LinkedListAlgorithmStep[]; // Added steps prop
 }
 
 export function LinkedListControlsPanel({
@@ -79,6 +76,7 @@ export function LinkedListControlsPanel({
   availableOperations,
   isPlaying, isFinished, currentSpeed, onSpeedChange,
   isAlgoImplemented, minSpeed, maxSpeed,
+  steps, // Receive steps
 }: LinkedListControlsPanelProps) {
 
   const currentOpDetails = ALL_OPERATIONS.find(op => op.value === selectedOperation);
@@ -210,7 +208,7 @@ export function LinkedListControlsPanel({
         <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {!isPlaying ? (
-              <Button onClick={onPlay} disabled={isFinished || !isAlgoImplemented || !selectedOperation || steps.length <=1} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
+              <Button onClick={onPlay} disabled={isFinished || !isAlgoImplemented || !selectedOperation || (steps && steps.length <=1)} className="bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-accent dark:text-accent-foreground dark:hover:bg-accent/90" size="lg">
                 <Play className="mr-2 h-5 w-5" /> Play Steps
               </Button>
             ) : (
@@ -218,7 +216,7 @@ export function LinkedListControlsPanel({
                 <Pause className="mr-2 h-5 w-5" /> Pause
               </Button>
             )}
-            <Button onClick={onStep} variant="outline" disabled={isPlaying || isFinished || !isAlgoImplemented || !selectedOperation || steps.length <=1} size="lg">
+            <Button onClick={onStep} variant="outline" disabled={isPlaying || isFinished || !isAlgoImplemented || !selectedOperation || (steps && steps.length <=1)} size="lg">
               <SkipForward className="mr-2 h-5 w-5" /> Step
             </Button>
           </div>
@@ -248,4 +246,3 @@ export function LinkedListControlsPanel({
     </Card>
   );
 }
-
