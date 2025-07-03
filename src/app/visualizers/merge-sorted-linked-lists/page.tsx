@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation } from './types';
+import type { AlgorithmMetadata, LinkedListAlgorithmStep } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, GitMerge } from 'lucide-react';
 import { generateMergeSortedListsSteps } from './merge-sorted-linked-lists-logic';
@@ -41,7 +41,7 @@ export default function MergeSortedLinkedListsPage() {
   const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  
   useEffect(() => { setIsClient(true); }, []);
   
   const handleGenerateSteps = useCallback(() => {
@@ -61,8 +61,9 @@ export default function MergeSortedLinkedListsPage() {
     setSteps(newSteps);
   }, [list1Str, list2Str, mergeType, toast]);
 
-  useEffect(() => { handleGenerateSteps(); }, [list1Str, list2Str, mergeType, handleGenerateSteps]);
+  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
+  // Effect to reset animation state when steps change
   useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -70,10 +71,12 @@ export default function MergeSortedLinkedListsPage() {
     if(steps.length > 0) setCurrentStep(steps[0]);
   }, [steps]);
 
+  // Effect to update displayed step when index changes
   useEffect(() => {
     if (steps[currentStepIndex]) setCurrentStep(steps[currentStepIndex]);
   }, [currentStepIndex, steps]);
 
+  // Main animation timer effect
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {

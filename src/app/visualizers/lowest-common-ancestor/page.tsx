@@ -17,7 +17,7 @@ import { Slider } from "@/components/ui/slider";
 
 import { BinaryTreeVisualizationPanel } from './BinaryTreeVisualizationPanel'; // Local import
 import { LowestCommonAncestorCodePanel } from './LowestCommonAncestorCodePanel'; 
-import { generateLCASteps, LCA_LINE_MAP } from './lca-logic'; 
+import { generateLCASteps } from './lca-logic'; 
 import { parseTreeInput, buildTreeNodesAndEdges as initialBuildTreeForDisplay } from '@/app/visualizers/binary-tree-traversal/binary-tree-traversal-logic';
 
 const DEFAULT_ANIMATION_SPEED = 700;
@@ -40,7 +40,7 @@ export default function LCAVisualizerPage() {
   const [currentStep, setCurrentStep] = useState<TreeAlgorithmStep | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
-  const [lcaResult, setLcaResult] = useState<string | number | null>(null);
+  const [pathFoundResult, setPathFoundResult] = useState<boolean | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(true);
@@ -51,19 +51,6 @@ export default function LCAVisualizerPage() {
 
 
   useEffect(() => { setIsClient(true); }, []);
-
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentStep(currentS);
-      if (stepIndex === steps.length - 1 && currentS.message?.toLowerCase().includes("lca found")) {
-         const lcaVal = currentS.auxiliaryData?.lcaValue;
-         setLcaResult(lcaVal !== undefined ? lcaVal : "Error");
-      } else if (stepIndex === steps.length - 1 && !currentS.message?.toLowerCase().includes("lca found")) {
-         setLcaResult(null); 
-      }
-    }
-  }, [steps]);
 
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -96,47 +83,63 @@ export default function LCAVisualizerPage() {
 
     const newSteps = generateLCASteps(treeInputValue, pVal, qVal);
     setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    setLcaResult(null); 
 
-    if (newSteps.length > 0) {
-        updateVisualStateFromStep(0);
-        const lastStep = newSteps[newSteps.length-1];
-        if (lastStep.message?.toLowerCase().includes("lca found")) {
-            const finalLcaValue = lastStep.auxiliaryData?.lcaValue;
-            setLcaResult(finalLcaValue !== undefined ? finalLcaValue : "Error");
-            if (finalLcaValue !== undefined) {
-                toast({ title: "LCA Process Complete", description: `LCA of P='${pVal}' and Q='${qVal}' is ${finalLcaValue}.` });
-            }
-        } else if (lastStep.message?.toLowerCase().includes("not found") || lastStep.message?.toLowerCase().includes("error")) {
-            toast({ title: "LCA Error", description: lastStep.message, variant: "destructive" });
-        }
-    } else {
-        setCurrentStep(null);
-    }
-  }, [treeInputValue, nodePValue, nodeQValue, toast, updateVisualStateFromStep]);
+  }, [treeInputValue, nodePValue, nodeQValue, toast]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
+  // Effect to reset animation state when steps change
+  useEffect(() => {
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    setIsFinished(steps.length <= 1);
+    setLcaResult(null); 
+    if (steps.length > 0) {
+      setCurrentStep(steps[0]);
+    }
+  }, [steps]);
 
+  // Main animation timer effect
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
+
+  // Effect to update the displayed step when index changes
+  useEffect(() => {
+    if (steps[currentStepIndex]) {
+      const currentS = steps[currentStepIndex];
+      setCurrentStep(currentS);
+      const isLastStep = currentStepIndex === steps.length - 1;
+      if (isLastStep) {
+        if (currentS.auxiliaryData?.pathFound !== undefined) {
+          setPathFoundResult(currentS.auxiliaryData.pathFound as boolean);
+           if (currentS.message?.toLowerCase().includes("lca found")) {
+            const finalLcaValue = currentS.auxiliaryData?.lcaValue;
+            if (finalLcaValue !== undefined) {
+              toast({ title: "LCA Process Complete", description: `LCA is ${finalLcaValue}.` });
+            }
+           } else if(currentS.message?.toLowerCase().includes("not found")) {
+             toast({ title: "LCA Error", description: currentS.message, variant: "destructive" });
+           }
+        }
+      }
+    }
+  }, [currentStepIndex, steps, toast]);
+
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
@@ -186,6 +189,15 @@ export default function LCAVisualizerPage() {
                 traversalPath={currentStep?.traversalPath || []} 
                 currentProcessingNodeId={currentStep?.currentProcessingNodeId}
               />
+               {currentStep?.auxiliaryData && (
+                 <Card className="mt-4">
+                    <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Current State</CardTitle></CardHeader>
+                    <CardContent className="text-xs flex justify-around p-2">
+                        <p><strong>Target P:</strong> {currentStep.auxiliaryData.targetP}</p>
+                        <p><strong>Target Q:</strong> {currentStep.auxiliaryData.targetQ}</p>
+                    </CardContent>
+                 </Card>
+               )}
             </div>
             <div className="lg:w-2/5 xl:w-1/3">
                 <LowestCommonAncestorCodePanel currentLine={currentStep?.currentLine ?? null} />
@@ -210,11 +222,10 @@ export default function LCAVisualizerPage() {
                 </div>
             </div>
             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto"><LocateFixed className="mr-2 h-4 w-4"/>Find LCA & Generate Steps</Button>
-            {isFinished && lcaResult !== null && (
-                <p className="text-center font-semibold text-lg mt-2">LCA Result: <span className="text-green-500">{lcaResult.toString()}</span></p>
-            )}
-             {isFinished && lcaResult === null && steps.length > 1 && !steps[steps.length-1].message?.toLowerCase().includes("error") && currentStep?.message && !currentStep.message.toLowerCase().includes("error") &&(
-                 <p className="text-center font-semibold text-lg mt-2 text-red-500">LCA could not be determined (or nodes not found).</p>
+            {isFinished && pathFoundResult !== null && (
+                <p className={`text-center font-semibold text-lg mt-2 ${pathFoundResult ? 'text-green-500' : 'text-red-500'}`}>
+                    {pathFoundResult ? `LCA Found: ${lcaResult}` : "LCA could not be determined (or nodes not found)."}
+                </p>
             )}
             
             <div className="flex items-center justify-start pt-4 border-t">

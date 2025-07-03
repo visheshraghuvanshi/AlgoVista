@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual } from './types'; // Local import
+import type { AlgorithmMetadata, LinkedListAlgorithmStep } from './types'; // Local import
 import type { ReversalTypeInternal as ReversalType } from './types'; // Renamed for clarity in this file
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function LinkedListReversalPage() {
   const [currentStep, setCurrentStep] = useState<LinkedListAlgorithmStep | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFinished, setIsFinished] = useState(true);
+  const [isFinished, setIsFinished] = useState(true); 
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -60,24 +60,34 @@ export default function LinkedListReversalPage() {
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
+  // Effect to reset animation state when steps change
   useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(steps.length <= 1);
-    if(steps.length > 0) setCurrentStep(steps[0]);
+    if(steps.length > 0) {
+      setCurrentStep(steps[0]);
+    } else {
+      setCurrentStep(null);
+    }
   }, [steps]);
 
+  // Effect to update displayed step when index changes
   useEffect(() => {
-    if (steps[currentStepIndex]) setCurrentStep(steps[currentStepIndex]);
+    if (steps[currentStepIndex]) {
+      setCurrentStep(steps[currentStepIndex]);
+    }
   }, [currentStepIndex, steps]);
 
+  // Main animation timer effect
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
         setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
@@ -93,14 +103,15 @@ export default function LinkedListReversalPage() {
     setIsPlaying(false); setIsFinished(true); setInitialListStr('1,2,3,4'); setReversalType('iterative');
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  useEffect(() => { handleReset(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;
+  const localAlgoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
-  } : null;
-
-  if (!algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -151,7 +162,7 @@ export default function LinkedListReversalPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
