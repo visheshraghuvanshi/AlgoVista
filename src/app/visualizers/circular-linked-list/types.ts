@@ -1,5 +1,7 @@
 
 // src/app/visualizers/circular-linked-list/types.ts
+import type { LucideIcon } from 'lucide-react';
+import { ListPlus, Trash2, SearchCode, CornerDownLeft, CornerUpRight, Milestone, FastForward } from "lucide-react";
 
 // Common metadata types
 export type AlgorithmCategory = 'Sorting' | 'Searching' | 'Graph' | 'Tree' | 'Recursion' | 'Dynamic Programming' | 'Data Structures' | 'Other' | 'Fundamentals' | 'Arrays & Search' | 'Linked List' | 'Trees' | 'Graphs' | 'Backtracking' | 'Math & Number Theory';
@@ -63,17 +65,9 @@ export interface LinkedListAlgorithmStep {
 // Operations for LinkedListControlsPanel
 export type LinkedListOperation = 
   | 'init'
-  | 'insertHead' | 'insertTail' | 'insertAtPosition' 
-  | 'deleteHead' | 'deleteTail' | 'deleteByValue' | 'deleteAtPosition'
-  | 'search' 
-  | 'reverse'
-  | 'detectCycle'
-  | 'merge' 
+  | 'insertHead' | 'insertAtPosition' 
+  | 'deleteAtPosition'
   | 'traverse';
-
-import type { LucideIcon } from 'lucide-react';
-import { ListPlus, Trash2, SearchCode, CornerDownLeft, CornerUpRight, Milestone, FastForward } from "lucide-react";
-
 
 export const ALL_OPERATIONS_LOCAL: { value: LinkedListOperation; label: string; icon?: LucideIcon, needsValue?: boolean, needsSecondList?: boolean, needsPosition?: boolean }[] = [
   { value: 'init', label: 'Initialize/Set List', icon: ListPlus },

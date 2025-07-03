@@ -4,14 +4,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local import
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel';
 import { CircularLinkedListCodePanel } from './CircularLinkedListCodePanel'; 
-import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation } from './types'; // Local import
+import { LinkedListControlsPanel } from './LinkedListControlsPanel'; 
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListOperation, AlgorithmDetailsProps } from './types';
 import { ALL_OPERATIONS_LOCAL } from './types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Shuffle } from 'lucide-react';
+import { AlertTriangle, Repeat } from 'lucide-react';
 import { generateCircularLinkedListSteps } from './circular-linked-list-logic';
 import { algorithmMetadata } from './metadata'; 
 
@@ -19,10 +19,11 @@ const DEFAULT_ANIMATION_SPEED = 900;
 const MIN_SPEED = 150;
 const MAX_SPEED = 2200;
 
-const CLL_AVAILABLE_OPS_LOCAL: LinkedListOperation[] = ['init', 'insertHead', 'insertAtPosition', 'deleteAtPosition', 'traverse'];
+const CLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertAtPosition', 'deleteAtPosition', 'traverse'];
 
 export default function CircularLinkedListPage() {
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
 
   const [initialListStr, setInitialListStr] = useState('10,20,30');
   const [inputValue, setInputValue] = useState('5');
@@ -40,6 +41,8 @@ export default function CircularLinkedListPage() {
   
   const listStringForLogicRef = useRef<string>(initialListStr);
 
+  useEffect(() => { setIsClient(true); }, []);
+  
   const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string, posOrSecondList?: string | number) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
@@ -154,9 +157,12 @@ export default function CircularLinkedListPage() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1></div>
+        <div className="mb-8 text-center">
+            <Repeat className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
+            <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1>
+        </div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="circular" /></div>
+          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId} tailId={currentStep?.tailId} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="circular" /></div>
           <div className="lg:w-2/5 xl:w-1/3"><CircularLinkedListCodePanel currentLine={currentStep?.currentLine ?? null} currentOperation={selectedOperation} /></div>
         </div>
         <LinkedListControlsPanel
@@ -170,7 +176,7 @@ export default function CircularLinkedListPage() {
           inputValue={inputValue} onInputValueChange={setInputValue}
           positionValue={positionValue} onPositionValueChange={setPositionValue}
           selectedOperation={selectedOperation} onSelectedOperationChange={setSelectedOperation}
-          availableOperations={CLL_AVAILABLE_OPS_LOCAL}
+          availableOperations={CLL_AVAILABLE_OPS}
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
           isAlgoImplemented={true} minSpeed={MIN_SPEED} maxSpeed={MAX_SPEED}
         />
