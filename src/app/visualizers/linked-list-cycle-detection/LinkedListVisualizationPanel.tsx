@@ -20,7 +20,7 @@ const NODE_COLORS = {
   head: "hsl(var(--ring))",
   slow: "hsl(var(--accent))",
   fast: "hsl(var(--destructive))",
-  meet: "hsl(var(--green-500))", // Added success color from globals
+  meet: "bg-green-500", 
 };
 const TEXT_COLORS = {
   default: "hsl(var(--secondary-foreground))",
@@ -120,7 +120,7 @@ export function LinkedListVisualizationPanel({ step }: LinkedListVisualizationPa
                 
                 return (
                   <g key={`g-${node.id}`} transform={`translate(${node.x! - NODE_WIDTH / 2}, ${node.y! - NODE_HEIGHT / 2})`}>
-                    <rect width={NODE_WIDTH} height={NODE_HEIGHT} fill={nodeFill} stroke="hsl(var(--border))" strokeWidth="1" rx="3"/>
+                    <rect width={NODE_WIDTH} height={NODE_HEIGHT} fill={nodeFill} stroke="hsl(var(--border))" strokeWidth={isSlow && isFast ? "2" : "1"} className={isSlow && isFast ? "ring-4 ring-green-500 animate-pulse" : ""} rx="3"/>
                     <text x={NODE_WIDTH / 2} y={NODE_HEIGHT / 2} textAnchor="middle" dy=".3em" fontSize="12" fill={textFill} fontWeight="bold">
                       {String(node.value)}
                     </text>

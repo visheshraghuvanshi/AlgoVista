@@ -1,4 +1,3 @@
-
 import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from './types';
 
 export const CYCLE_DETECTION_LINE_MAP = {
@@ -45,7 +44,7 @@ function createVisualNodes(
 ): LinkedListNodeVisual[] {
   const visualNodes: LinkedListNodeVisual[] = [];
   let currentId = headId;
-  const visited = new Set<string>();
+  const visited = new Set<string>(); 
 
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId);

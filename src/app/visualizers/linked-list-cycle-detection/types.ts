@@ -42,7 +42,7 @@ export interface LinkedListNodeVisual {
   isFast?: boolean;
   isMeetingPoint?: boolean;
   isHead?: boolean;
-  color?: string; // General color override if needed
+  color?: string;
 }
 
 export interface LinkedListAlgorithmStep {
