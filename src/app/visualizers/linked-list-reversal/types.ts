@@ -1,4 +1,3 @@
-
 // src/app/visualizers/linked-list-reversal/types.ts
 
 // Common metadata types
@@ -23,7 +22,6 @@ export interface AlgorithmMetadata {
   tags?: string[];
 }
 
-// Props for the locally copied AlgorithmDetailsCard
 export interface AlgorithmDetailsProps {
   title: string;
   description: string;
@@ -36,30 +34,27 @@ export interface LinkedListNodeVisual {
   id: string;
   value: string | number;
   nextId: string | null;
-  prevId?: string | null; // For potential future DLL reversal
-  color?: string;
-  textColor?: string;
-  isHead?: boolean;
-  isTail?: boolean; 
-  isSlow?: boolean; 
-  isFast?: boolean; 
+  // Make x/y optional as they are calculated during rendering
   x?: number;
   y?: number;
+  color?: string;
+  isHead?: boolean;
 }
-
-export type LinkedListType = 'singly' | 'doubly' | 'circular';
 
 export interface LinkedListAlgorithmStep {
   nodes: LinkedListNodeVisual[];
   headId: string | null;
-  tailId?: string | null; 
   currentLine: number | null;
-  message?: string;
-  auxiliaryPointers?: Record<string, string | null | undefined>; 
-  operation?: string;
-  isCycleDetected?: boolean;
+  message: string;
+  auxiliaryPointers: {
+    prev: string | null;
+    current: string | null;
+    nextNode: string | null;
+    // For recursive viz
+    currentRecHead?: string | null;
+    restOfListHead?: string | null;
+  };
   status?: 'success' | 'failure' | 'info';
 }
 
-// For controls (though Reversal page has embedded controls)
-export type ReversalTypeInternal = 'iterative' | 'recursive' | 'init';
+export type ReversalType = 'iterative' | 'recursive' | 'init';

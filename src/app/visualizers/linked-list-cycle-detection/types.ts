@@ -22,7 +22,6 @@ export interface AlgorithmMetadata {
   tags?: string[];
 }
 
-// Props for the locally copied AlgorithmDetailsCard
 export interface AlgorithmDetailsProps {
   title: string;
   description: string;
@@ -35,38 +34,26 @@ export interface LinkedListNodeVisual {
   id: string;
   value: string | number;
   nextId: string | null;
-  prevId?: string | null; 
-  color?: string;
-  textColor?: string;
-  isHead?: boolean;
-  isTail?: boolean; 
-  isSlow?: boolean; // Specific for Floyd's cycle detection (tortoise)
-  isFast?: boolean; // Specific for Floyd's cycle detection (hare)
+  // Make x/y optional as they are calculated during rendering
   x?: number;
   y?: number;
+  // Specific for this visualizer
+  isSlow?: boolean;
+  isFast?: boolean;
+  isMeetingPoint?: boolean;
+  isHead?: boolean;
+  color?: string; // General color override if needed
 }
-
-export type LinkedListType = 'singly' | 'doubly' | 'circular';
 
 export interface LinkedListAlgorithmStep {
   nodes: LinkedListNodeVisual[];
   headId: string | null;
-  tailId?: string | null; 
+  actualCycleNodeId: string | null; // The node the tail points to
   currentLine: number | null;
-  message?: string;
-  auxiliaryPointers?: Record<string, string | null | undefined>; // e.g., { slow: 'node-id', fast: 'node-id-2' }
-  operation?: string; 
-  isCycleDetected?: boolean; // Result of the cycle detection
-  status?: 'success' | 'failure' | 'info';
+  message: string;
+  auxiliaryPointers: {
+    slow: string | null;
+    fast: string | null;
+  };
+  isCycleDetected?: boolean;
 }
-
-// For LinkedListControlsPanel if it were used (not directly for this page's custom controls)
-export type LinkedListOperation = 
-  | 'init'
-  | 'insertHead' | 'insertTail' | 'insertAtPosition' 
-  | 'deleteHead' | 'deleteTail' | 'deleteByValue' | 'deleteAtPosition'
-  | 'search' 
-  | 'reverse'
-  | 'detectCycle'
-  | 'merge' 
-  | 'traverse';

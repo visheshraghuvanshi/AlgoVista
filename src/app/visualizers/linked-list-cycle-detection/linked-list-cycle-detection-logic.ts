@@ -1,5 +1,5 @@
 
-import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from '@/types';
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual } from './types';
 
 export const CYCLE_DETECTION_LINE_MAP = {
   funcDeclare: 1,
@@ -36,60 +36,44 @@ export function parseListStringWithCycle(input: string, cycleConnectsToValue?: s
     return { nodes: parsedNodes, headId: parsedNodes.length > 0 ? parsedNodes[0].id : null, actualCycleNodeId };
 }
 
-function createVisualNodesForCycleDetection(
-  parsedNodes: { value: string | number, id: string }[],
-  actualList: Map<string, { value: string | number, nextId: string | null }>, // The true list structure
-  currentHeadId: string | null,
+function createVisualNodes(
+  listMap: Map<string, { value: string | number, nextId: string | null }>,
+  headId: string | null,
   slowId: string | null,
-  fastId: string | null
+  fastId: string | null,
+  isMeetingPoint: boolean = false
 ): LinkedListNodeVisual[] {
   const visualNodes: LinkedListNodeVisual[] = [];
-  let currentRenderId = currentHeadId;
-  const visited = new Set<string>(); // For rendering to avoid infinite loop if cycle
-  let positionX = 0;
+  let currentId = headId;
+  const visited = new Set<string>();
 
-  while(currentRenderId && !visited.has(currentRenderId) && positionX < parsedNodes.length * 2) { // Limit rendering length for safety
-    visited.add(currentRenderId);
-    const nodeData = actualList.get(currentRenderId);
-    if(!nodeData) break;
+  while (currentId && !visited.has(currentId)) {
+    visited.add(currentId);
+    const nodeData = listMap.get(currentId);
+    if (!nodeData) break;
 
     visualNodes.push({
-      id: currentRenderId,
+      id: currentId,
       value: nodeData.value,
       nextId: nodeData.nextId,
-      color: "hsl(var(--secondary))", // Base color, will be overridden by isSlow/isFast/isHead
-      isHead: currentRenderId === currentHeadId,
-      isSlow: currentRenderId === slowId,
-      isFast: currentRenderId === fastId,
-      x: 20 + positionX * 80, 
-      y: 100,
+      isHead: currentId === headId,
+      isSlow: currentId === slowId,
+      isFast: currentId === fastId,
+      isMeetingPoint: isMeetingPoint && currentId === slowId,
     });
-    currentRenderId = nodeData.nextId;
-    positionX++;
-  }
-  
-  // If fast pointer is part of a cycle and not yet rendered (can happen if cycle is short)
-  if (fastId && !visited.has(fastId) && actualList.has(fastId)) {
-     const fastNodeData = actualList.get(fastId)!;
-      visualNodes.push({
-        id: fastId, value: fastNodeData.value, nextId: fastNodeData.nextId,
-        color: "hsl(var(--secondary))", isFast: true,
-        x: 20 + positionX * 80, y: 100
-      });
+    currentId = nodeData.nextId;
   }
   return visualNodes;
 }
-
 
 export const generateCycleDetectionSteps = (
   listString: string,
   cycleConnectsToValue?: string | number
 ): LinkedListAlgorithmStep[] => {
   const localSteps: LinkedListAlgorithmStep[] = [];
-  nodeIdCounter = 4000; // Reset ID counter for this generation
+  nodeIdCounter = 4000;
   const { nodes: parsedNodes, headId: initialHeadId, actualCycleNodeId } = parseListStringWithCycle(listString, cycleConnectsToValue);
 
-  // Build the actual list structure in a map for easy pointer manipulation
   const listNodesMap = new Map<string, { value: string | number, nextId: string | null }>();
   parsedNodes.forEach((pNode, index) => {
     listNodesMap.set(pNode.id, {
@@ -98,61 +82,60 @@ export const generateCycleDetectionSteps = (
     });
   });
   
-  let headId = initialHeadId;
+  const headId = initialHeadId;
 
-  const addStep = (line: number, message: string, slowId: string | null, fastId: string | null, cycleDetected?: boolean) => {
+  const addStep = (line: number | null, message: string, slowId: string | null, fastId: string | null, cycleDetected?: boolean) => {
     localSteps.push({
-      nodes: createVisualNodesForCycleDetection(parsedNodes, listNodesMap, headId, slowId, fastId),
-      headId, currentLine: line, message,
+      nodes: createVisualNodes(listNodesMap, headId, slowId, fastId, cycleDetected),
+      headId,
+      actualCycleNodeId,
+      currentLine: line,
+      message,
       auxiliaryPointers: { slow: slowId, fast: fastId },
       isCycleDetected: cycleDetected,
-      operation: 'detectCycle',
     });
   };
 
   const lm = CYCLE_DETECTION_LINE_MAP;
-  addStep(lm.funcDeclare, "Start Cycle Detection (Floyd's)", headId, headId);
+  addStep(lm.funcDeclare, "Start Cycle Detection (Floyd's Algorithm).", null, null);
 
   if (!headId || !listNodesMap.get(headId)?.nextId) {
-    addStep(lm.emptyOrSingleCheck, "List is empty or has only one node.", null, null);
+    addStep(lm.emptyOrSingleCheck, "List is empty or has only one node.", null, null, false);
     addStep(lm.returnFalseEmpty, "No cycle possible. Return false.", null, null, false);
     return localSteps;
   }
 
   let slow = headId;
   let fast = headId;
-  addStep(lm.initSlow, "Initialize slow pointer to head.", slow, fast);
-  addStep(lm.initFast, "Initialize fast pointer to head.", slow, fast);
+  addStep(lm.initSlow, "Initialize 'slow' pointer to head.", slow, fast);
+  addStep(lm.initFast, "Initialize 'fast' pointer to head.", slow, fast);
 
-  let iterations = 0; 
-  const maxIterations = parsedNodes.length * 3 + 5; // Safety break increased slightly
+  let iterations = 0;
+  const maxIterations = parsedNodes.length * 2 + 5;
 
   while (fast !== null && listNodesMap.get(fast)?.nextId !== null && iterations < maxIterations) {
+    iterations++;
     const fastNodeData = listNodesMap.get(fast)!;
-    const fastNextNodeData = listNodesMap.get(fastNodeData.nextId!)
+    const fastNextNodeData = listNodesMap.get(fastNodeData.nextId!);
+    addStep(lm.whileLoop, `Loop continues: fast is at ${fastNodeData.value}, fast.next is at ${fastNextNodeData?.value ?? 'null'}.`, slow, fast);
     
-    addStep(lm.whileLoop, `Loop: Fast is ${fastNodeData.value}, Fast.next is ${fastNextNodeData ? fastNextNodeData.value : 'null'}`, slow, fast);
-    
-    const slowNodeData = listNodesMap.get(slow!)!;
-    slow = slowNodeData.nextId;
-    addStep(lm.moveSlow, `Move slow to ${slow ? listNodesMap.get(slow)?.value : 'null'}`, slow, fast);
+    slow = listNodesMap.get(slow!)!.nextId;
+    addStep(lm.moveSlow, `Move slow by 1 step to ${slow ? listNodesMap.get(slow)?.value : 'null'}.`, slow, fast);
 
-    fast = fastNextNodeData ? fastNextNodeData.nextId : null; // fast moves two steps
-    addStep(lm.moveFast, `Move fast to ${fast ? listNodesMap.get(fast)?.value : 'null'}`, slow, fast);
+    fast = fastNextNodeData ? fastNextNodeData.nextId : null;
+    addStep(lm.moveFast, `Move fast by 2 steps to ${fast ? listNodesMap.get(fast)?.value : 'null'}.`, slow, fast);
 
+    addStep(lm.checkMeet, `Check if slow (${slow ? listNodesMap.get(slow)?.value : 'null'}) == fast (${fast ? listNodesMap.get(fast)?.value : 'null'}).`, slow, fast);
     if (slow !== null && slow === fast) {
-      addStep(lm.checkMeet, "Slow and Fast pointers met!", slow, fast);
-      addStep(lm.returnTrueCycle, "Cycle detected! Return true.", slow, fast, true);
+      addStep(lm.returnTrueCycle, "Pointers met! Cycle detected.", slow, fast, true);
       return localSteps;
     }
-    addStep(lm.checkMeet, "Pointers did not meet yet.", slow, fast);
-    iterations++;
   }
   
   if (iterations >= maxIterations) {
-     addStep(lm.returnFalseNoCycle, "Max iterations reached. Assuming no cycle or very complex list.", slow, fast, false);
+    addStep(lm.returnFalseNoCycle, "Max iterations reached. Assuming no cycle or error.", slow, fast, false);
   } else {
-     addStep(lm.returnFalseNoCycle, "Fast pointer reached end of list. No cycle found. Return false.", slow, fast, false);
+    addStep(lm.returnFalseNoCycle, "Fast pointer reached the end of the list. No cycle found.", slow, fast, false);
   }
   return localSteps;
 };

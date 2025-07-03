@@ -7,15 +7,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Added Tabs
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export const CYCLE_DETECTION_CODE_SNIPPETS: Record<string, string[]> = {
   JavaScript: [
     "// Floyd's Tortoise and Hare Algorithm",
-    "// Assumes Node class: { data, next }",
     "function hasCycle(head) {",                 // 1
     "  if (!head || !head.next) {",             // 2
-    "    return false; // No cycle",           // 3
+    "    return false;",                       // 3
     "  }",
     "  let slow = head;",                       // 4
     "  let fast = head;",                       // 5
@@ -31,7 +30,6 @@ export const CYCLE_DETECTION_CODE_SNIPPETS: Record<string, string[]> = {
   ],
   Python: [
     "# Floyd's Tortoise and Hare Algorithm",
-    "# Assumes Node class: self.data, self.next",
     "def has_cycle(head):",
     "    if not head or not head.next:",
     "        return False",
@@ -97,7 +95,7 @@ export function LinkedListCycleDetectionCodePanel({ currentLine }: LinkedListCyc
   const { toast } = useToast();
   const [selectedLanguage, setSelectedLanguage] = React.useState('JavaScript');
   const languages = Object.keys(CYCLE_DETECTION_CODE_SNIPPETS);
-  const codeToDisplay = CYCLE_DETECTION_CODE_SNIPPETS[selectedLanguage] || [];
+  const codeToDisplay = CYCLE_DETECTION_CODE_SNIPPETS[selectedLanguage as keyof typeof CYCLE_DETECTION_CODE_SNIPPETS] || [];
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');
@@ -145,5 +143,3 @@ export function LinkedListCycleDetectionCodePanel({ currentLine }: LinkedListCyc
     </Card>
   );
 }
-
-  

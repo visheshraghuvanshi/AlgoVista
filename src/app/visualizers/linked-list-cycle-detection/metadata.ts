@@ -28,13 +28,6 @@ The algorithm uses two pointers that traverse the list at different speeds:
 **Checking for Empty or Single-Node List**:
 -   If the list is empty (\\\`head\\\` is \\\`null\\\`) or has only one node (\\\`head.next\\\` is \\\`null\\\`), it cannot have a cycle. These are base cases that should be handled, typically by returning \\\`false\\\` (no cycle).
 
-### Example: List \`1 -> 2 -> 3 -> 4 -> 5 -> 3\` (cycle from 5 back to 3)
--   **Init**: \`slow = 1\`, \`fast = 1\`
--   **Step 1**: \`slow = 2\`, \`fast = 3\`
--   **Step 2**: \`slow = 3\`, \`fast = 5\`
--   **Step 3**: \`slow = 4\`, \`fast = 3\` (fast jumps from 5 to 3 via cycle)
--   **Step 4**: \`slow = 5\`, \`fast = 5\` (fast jumps from 3 to 5 via cycle) -> **Meet! Cycle detected.**
-
 ### Why it Works:
 -   If there's no cycle, the fast pointer reaches the end first.
 -   If there's a cycle, imagine the fast pointer is some distance \`k\` behind the slow pointer within the cycle of length \`L\`. In each step, the fast pointer gains one position on the slow pointer (fast moves 2, slow moves 1). So, the fast pointer will catch the slow pointer in \`L-k\` (or \`k\` depending on how you measure) steps within the cycle.
@@ -54,7 +47,7 @@ The algorithm uses two pointers that traverse the list at different speeds:
 -   Finding the starting point of a cycle in a linked list (a variation of this algorithm).
 -   Problems involving sequences where a repeating pattern or loop needs to be identified.
 
-The AlgoVista visualizer for Linked List Cycle Detection demonstrates the movement of the slow and fast pointers and highlights when they meet if a cycle exists.`,
+The AlgoVista visualizer demonstrates the movement of the slow and fast pointers and highlights when they meet if a cycle exists.`,
   timeComplexities: {
     best: "O(N)", // N is the number of nodes
     average: "O(N)",
@@ -62,4 +55,3 @@ The AlgoVista visualizer for Linked List Cycle Detection demonstrates the moveme
   },
   spaceComplexity: "O(1)",
 };
-

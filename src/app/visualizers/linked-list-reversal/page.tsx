@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel';
+import { LinkedListVisualizationPanel } from '../singly-linked-list/LinkedListVisualizationPanel';
 import { LinkedListReversalCodePanel } from './LinkedListReversalCodePanel'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
 import type { AlgorithmMetadata, LinkedListAlgorithmStep } from './types';
-import type { ReversalTypeInternal as ReversalType } from './types';
+import type { ReversalType } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, Shuffle } from 'lucide-react';
 import { generateLinkedListReversalSteps } from './linked-list-reversal-logic';
@@ -46,7 +46,7 @@ export default function LinkedListReversalPage() {
         if (initSteps.length > 0) {
             const firstStep = { ...initSteps[0], message: "Initial list state. Select a reversal method." };
             setSteps([firstStep]); 
-            if(steps[0]) setCurrentStep(steps[0]);
+            setCurrentStep(firstStep);
         } else {
              setSteps([]); setCurrentStep(null);
         }
@@ -112,13 +112,10 @@ export default function LinkedListReversalPage() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 text-center">
-            <Shuffle className="mx-auto h-16 w-16 text-primary dark:text-accent mb-4" />
-            <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1>
-        </div>
+        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1><p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{currentStep?.message || algorithmMetadata.description}</p></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" /></div>
-          <div className="lg:w-2/s xl:w-1/3"><LinkedListReversalCodePanel currentLine={currentStep?.currentLine ?? null} reversalType={reversalType} /></div>
+          <div className="lg:w-2/5 xl:w-1/3"><LinkedListReversalCodePanel currentLine={currentStep?.currentLine ?? null} reversalType={reversalType} /></div>
         </div>
         
         <Card className="shadow-xl rounded-xl mb-6">
@@ -140,7 +137,7 @@ export default function LinkedListReversalPage() {
                     </Select>
                 </div>
             </div>
-             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto mt-2"><RotateCcw className="mr-2 h-4 w-4"/>Reverse List / Reset Steps</Button>
+             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto mt-2"><RotateCcw className="mr-2 h-4 w-4"/>Reverse List</Button>
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset To Default</Button>
             </div>
