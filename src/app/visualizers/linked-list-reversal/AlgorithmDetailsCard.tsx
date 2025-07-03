@@ -1,5 +1,4 @@
 
-// src/app/visualizers/linked-list-reversal/AlgorithmDetailsCard.tsx
 "use client";
 
 import React from 'react';

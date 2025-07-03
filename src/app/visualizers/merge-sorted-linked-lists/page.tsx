@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmDetailsProps } from './types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types';
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Play, Pause, SkipForward, RotateCcw, FastForward, Gauge, GitMerge } from 'lucide-react';
 import { generateMergeSortedListsSteps } from './merge-sorted-linked-lists-logic';
 import { algorithmMetadata } from './metadata';
 import { Slider } from "@/components/ui/slider";
@@ -27,6 +27,7 @@ type MergeType = 'iterative' | 'recursive' | 'init';
 
 export default function MergeSortedLinkedListsPage() {
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
 
   const [list1Str, setList1Str] = useState('1,3,5,7');
   const [list2Str, setList2Str] = useState('2,4,6,8');
@@ -60,13 +61,12 @@ export default function MergeSortedLinkedListsPage() {
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     if (mergeType === 'init') {
-        const initialMessage = "Lists ready for merge. Select merge type and play/step.";
         setCurrentNodes([]); 
         setCurrentHeadId(null);
         setCurrentAuxPointers({l1: 'L1_Head_Placeholder', l2: 'L2_Head_Placeholder'});
-        setCurrentMessage(initialMessage);
+        setCurrentMessage("Lists ready for merge. Select merge type and play/step.");
         setCurrentLine(null);
-        setSteps([{ nodes: [], headId: null, currentLine: 0, message: initialMessage }]);
+        setSteps([{ nodes: [], headId: null, currentLine: 0, message: "init" }]);
         setIsPlaying(false); setIsFinished(true); 
         return;
     }
@@ -81,16 +81,11 @@ export default function MergeSortedLinkedListsPage() {
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
     if (newSteps.length > 0) {
-        const firstStep = newSteps[0];
-        setCurrentNodes(firstStep.nodes);
-        setCurrentHeadId(firstStep.headId ?? null);
-        setCurrentAuxPointers(firstStep.auxiliaryPointers || {});
-        setCurrentMessage(firstStep.message);
-        setCurrentLine(firstStep.currentLine);
+      updateVisualStateFromStep(0);
     } else {
-        setCurrentNodes([]); setCurrentHeadId(null); setCurrentAuxPointers({}); setCurrentMessage("No steps generated."); setCurrentLine(null);
+      setCurrentNodes([]); setCurrentHeadId(null); setCurrentAuxPointers({}); setCurrentMessage("No steps generated."); setCurrentLine(null);
     }
-  }, [list1Str, list2Str, mergeType, toast]);
+  }, [list1Str, list2Str, mergeType, toast, updateVisualStateFromStep]);
 
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
 
@@ -113,18 +108,20 @@ export default function MergeSortedLinkedListsPage() {
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => {
-    setIsPlaying(false); setIsFinished(false); 
+    setIsPlaying(false); setIsFinished(true); 
     setList1Str('1,3,5,7'); setList2Str('2,4,6,8'); setMergeType('iterative');
   };
   
-  const algoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
+  useEffect(() => { setIsClient(true); handleReset(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+
+  const algoDetails: AlgorithmDetailsProps = {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
-  } : null;
-
-  if (!algoDetails) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -159,9 +156,9 @@ export default function MergeSortedLinkedListsPage() {
                     </Select>
                 </div>
             </div>
-             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto mt-2">Merge Lists / Reset Steps</Button>
+             <Button onClick={handleGenerateSteps} disabled={isPlaying} className="w-full md:w-auto mt-2"><GitMerge className="mr-2 h-4 w-4"/>Merge Lists / Reset Steps</Button>
             <div className="flex items-center justify-start pt-4 border-t">
-                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset All</Button>
+                <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset Defaults</Button>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex gap-2">

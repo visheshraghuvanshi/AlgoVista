@@ -1,4 +1,4 @@
-// src/app/visualizers/dijkstra/AlgorithmDetailsCard.tsx
+
 "use client";
 
 import React from 'react';

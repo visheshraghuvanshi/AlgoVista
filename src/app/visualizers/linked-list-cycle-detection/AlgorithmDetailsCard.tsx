@@ -1,4 +1,4 @@
-// src/app/visualizers/linked-list-cycle-detection/AlgorithmDetailsCard.tsx
+
 "use client";
 
 import React from 'react';

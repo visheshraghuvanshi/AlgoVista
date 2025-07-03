@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
-import type { AlgorithmMetadata, DPAlgorithmStep, AlgorithmDetailsProps } from './types';
+import { AlgorithmDetailsCard, type AlgorithmDetailsProps } from './AlgorithmDetailsCard';
+import type { AlgorithmMetadata, DPAlgorithmStep } from './types';
 import { algorithmMetadata } from './metadata';
 import { MCMVisualizationPanel } from './MCMVisualizationPanel';
 import { MCMCodePanel, MCM_CODE_SNIPPETS } from './MCMCodePanel'; 
@@ -61,7 +61,7 @@ export default function MCMVisualizerPage() {
     }
   }, [toast]);
 
-  const updateStateFromStep = useCallback((stepIndex: number) => {
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
     if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
   }, [steps]);
   
@@ -92,19 +92,19 @@ export default function MCMVisualizerPage() {
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
       setIsPlaying(false); setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
@@ -169,5 +169,3 @@ export default function MCMVisualizerPage() {
     </div>
   );
 }
-
-    

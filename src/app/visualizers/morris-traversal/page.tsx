@@ -45,8 +45,10 @@ export default function MorrisTraversalPage() {
   useEffect(() => { setIsClient(true); }, []);
 
   const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) setCurrentStep(steps[stepIndex]);
-  }, [steps]);
+    if (steps[stepIndex]) {
+      setCurrentStep(steps[stepIndex]);
+    }
+  }, [steps]); 
   
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -54,7 +56,8 @@ export default function MorrisTraversalPage() {
     const parsedInput = parseTreeInput(treeInputValue);
     if (!parsedInput) {
         toast({title: "Invalid Tree Input", description: "Format: comma-sep, level-order, 'null' for empty.", variant: "destructive"});
-        setSteps([]); setCurrentStep(null); setIsFinished(true); setInitialDisplayTree({nodes: [], edges: []});
+        setSteps([]); setCurrentStep(null); setIsFinished(true);
+        setInitialDisplayTree({nodes: [], edges: []});
         return;
     }
     const { nodes: iNodes, edges: iEdges } = initialBuildTreeForDisplay(parsedInput);
@@ -66,7 +69,6 @@ export default function MorrisTraversalPage() {
     setCurrentStep(newSteps[0] || null);
     setIsPlaying(false);
     setIsFinished(newSteps.length <= 1);
-
   }, [treeInputValue, toast, updateVisualStateFromStep]);
   
   useEffect(() => { handleGenerateSteps(); }, [treeInputValue, handleGenerateSteps]);
@@ -106,7 +108,6 @@ export default function MorrisTraversalPage() {
   
   const displayNodes = currentStep?.nodes && currentStep.nodes.length > 0 ? currentStep.nodes : initialDisplayTree.nodes;
   const displayEdges = currentStep?.edges && currentStep.edges.length > 0 ? currentStep.edges : initialDisplayTree.edges;
-
 
   return (
     <div className="flex flex-col min-h-screen">
