@@ -34,17 +34,13 @@ const TEXT_COLORS = {
 };
 
 export function LinkedListVisualizationPanel({
-  nodes = [], // Default to empty array if undefined
+  nodes = [],
   listType = 'singly',
   headId,
   auxiliaryPointers = {},
   message,
 }: LinkedListVisualizationPanelProps) {
     
-  // This component will need to render multiple lists for the merge visualizer.
-  // The logic in the page will need to combine the nodes from both lists and the merged list into a single `nodes` array with different y positions.
-  // The y-position can be used to separate the lists visually.
-
   const positionedNodes = nodes.map((node, index) => ({
     ...node,
     x: node.x ?? SVG_PADDING + (index % 10) * NODE_SPACING_X, // Simple wrap for now
@@ -53,9 +49,8 @@ export function LinkedListVisualizationPanel({
   
   const getNodeById = (id: string | null | undefined) => positionedNodes.find(n => n.id === id);
 
-
   const svgWidth = Math.max(600, SVG_PADDING * 2 + 10 * NODE_SPACING_X);
-  const svgHeight = Math.max(300, positionedNodes.reduce((max, n) => Math.max(max, n.y + NODE_HEIGHT), 0) + SVG_PADDING);
+  const svgHeight = Math.max(300, positionedNodes.reduce((max, n) => Math.max(max, n.y! + NODE_HEIGHT), 0) + SVG_PADDING);
   const viewBox = `0 0 ${svgWidth} ${svgHeight}`;
 
   return (
@@ -91,7 +86,7 @@ export function LinkedListVisualizationPanel({
               {positionedNodes.map((node) => {
                 const nextNode = getNodeById(node.nextId);
                 if (nextNode) {
-                  const isNextActive = auxiliaryPointers.l1 === node.id || auxiliaryPointers.l2 === node.id || auxiliaryPointers.tail === node.id;
+                  const isNextActive = auxiliaryPointers?.l1 === node.id || auxiliaryPointers?.l2 === node.id || auxiliaryPointers?.tail === node.id;
                   return (
                     <line
                       key={`next-${node.id}`}
@@ -112,9 +107,9 @@ export function LinkedListVisualizationPanel({
                 let nodeFill = node.color || NODE_COLORS.default;
                 let textFill = TEXT_COLORS.default;
 
-                if (auxiliaryPointers.l1 === node.id) { nodeFill = "hsl(var(--chart-1))"; textFill = "white"; }
-                else if (auxiliaryPointers.l2 === node.id) { nodeFill = "hsl(var(--chart-2))"; textFill = "white"; }
-                else if (auxiliaryPointers.tail === node.id) { nodeFill = NODE_COLORS.active; textFill = TEXT_COLORS.active; }
+                if (auxiliaryPointers?.l1 === node.id) { nodeFill = "hsl(var(--chart-1))"; textFill = "white"; }
+                else if (auxiliaryPointers?.l2 === node.id) { nodeFill = "hsl(var(--chart-2))"; textFill = "white"; }
+                else if (auxiliaryPointers?.tail === node.id) { nodeFill = NODE_COLORS.active; textFill = TEXT_COLORS.active; }
 
                 return (
                   <g key={node.id} transform={`translate(${node.x! - NODE_WIDTH / 2}, ${node.y! - NODE_HEIGHT / 2})`}>

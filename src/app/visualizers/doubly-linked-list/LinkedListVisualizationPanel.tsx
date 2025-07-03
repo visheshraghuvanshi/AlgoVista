@@ -53,7 +53,7 @@ export function LinkedListVisualizationPanel({
 
   const getNodeById = (id: string | null | undefined) => positionedNodes.find(n => n.id === id);
 
-  const svgWidth = Math.max(300, SVG_PADDING * 2 + nodes.length * NODE_SPACING_X - (nodes.length > 0 ? (NODE_SPACING_X - NODE_WIDTH) : 0));
+  const svgWidth = Math.max(300, SVG_PADDING * 2 + positionedNodes.length * NODE_SPACING_X - (positionedNodes.length > 0 ? (NODE_SPACING_X - NODE_WIDTH) : 0));
   const svgHeight = Math.max(150, SVG_PADDING * 2 + NODE_HEIGHT * 2.5 + Object.keys(auxiliaryPointers).length * 25 + (message ? 30: 0) ); // Increased height
   const viewBox = `0 0 ${svgWidth} ${svgHeight}`;
 
@@ -84,7 +84,7 @@ export function LinkedListVisualizationPanel({
               {positionedNodes.map((node) => {
                 const nextNode = getNodeById(node.nextId);
                 if (nextNode) {
-                  const isNextActive = auxiliaryPointers.current === node.id || auxiliaryPointers.prev === node.id || node.color === NODE_COLORS.active;
+                  const isNextActive = auxiliaryPointers?.current === node.id || auxiliaryPointers?.prev === node.id || node.color === NODE_COLORS.active;
                   return (
                     <line
                       key={`next-${node.id}`} x1={node.x! + NODE_WIDTH / 2} y1={node.y! - POINTER_OFFSET / 2}
@@ -94,23 +94,13 @@ export function LinkedListVisualizationPanel({
                     />
                   );
                 }
-                if (listType === 'circular' && node.nextId === headId && headId) {
-                  const headNodeObj = getNodeById(headId);
-                  if(headNodeObj) {
-                    return (
-                       <path key={`circ-${node.id}`}
-                          d={`M ${node.x! + NODE_WIDTH/2},${node.y!} Q ${node.x! + NODE_WIDTH/2 + 20},${node.y! - NODE_HEIGHT*0.75} ${headNodeObj.x! - NODE_WIDTH/2 - 5},${headNodeObj.y! - NODE_HEIGHT*0.3}`}
-                          stroke="hsl(var(--muted-foreground))" strokeWidth="1.5" fill="none" markerEnd="url(#ll-arrowhead)" />
-                    );
-                  }
-                }
                 return null;
               })}
 
               {listType === 'doubly' && positionedNodes.map((node) => {
                 const prevNode = getNodeById(node.prevId);
                 if (prevNode) {
-                   const isPrevActive = auxiliaryPointers.current === node.id || node.color === NODE_COLORS.active;
+                   const isPrevActive = auxiliaryPointers?.current === node.id || node.color === NODE_COLORS.active;
                   return (
                     <line
                       key={`prev-${node.id}`} x1={node.x! - NODE_WIDTH / 2} y1={node.y! + POINTER_OFFSET / 2}
@@ -134,9 +124,8 @@ export function LinkedListVisualizationPanel({
                      nodeFill = NODE_COLORS.tail; textFill = TEXT_COLORS.tail; 
                 }
                 
-                if (node.isSlow || node.isFast) { nodeFill = NODE_COLORS.highlight; textFill = TEXT_COLORS.highlight; }
                 const isAuxPointed = Object.values(auxiliaryPointers).some(val => val === node.id);
-                if (isAuxPointed && !node.isHead && !node.isTail && !node.isSlow && !node.isFast) {
+                if (isAuxPointed && !node.isHead && !node.isTail) {
                     nodeFill = NODE_COLORS.active; textFill = TEXT_COLORS.active;
                 }
 
@@ -147,24 +136,24 @@ export function LinkedListVisualizationPanel({
                     <text x={NODE_WIDTH / 2} y={NODE_HEIGHT / 2} textAnchor="middle" dy=".3em" fontSize="12" fill={textFill} fontWeight="bold">
                       {String(node.value)}
                     </text>
-                    {node.isSlow && <text x={NODE_WIDTH/2} y={NODE_HEIGHT + 12} fontSize="10" textAnchor="middle" fill={TEXT_COLORS.highlight}>S</text>}
-                    {node.isFast && <text x={NODE_WIDTH/2} y={NODE_HEIGHT + (node.isSlow ? 24 : 12)} fontSize="10" textAnchor="middle" fill={TEXT_COLORS.highlight}>F</text>}
                   </g>
                 );
               })}
               
-              {Object.entries(auxiliaryPointers).map(([key, nodeIdStr], index) => {
-                if (!nodeIdStr || key === 'slow' || key === 'fast') return null;
+              {Object.entries(auxiliaryPointers).map(([key, nodeIdStr]) => {
+                if (!nodeIdStr) return null;
                 const targetNode = positionedNodes.find(n => n.id === nodeIdStr);
                 if (!targetNode) return null;
-                if (key === 'current' && (targetNode.isSlow || targetNode.isFast || targetNode.isHead || targetNode.isTail)) return null;
+
+                if (key === 'current' && (targetNode.isHead || targetNode.isTail)) return null;
+
                 return (
                   <g key={`aux-${key}-${nodeIdStr}`}>
-                    <text x={targetNode.x!} y={targetNode.y! - NODE_HEIGHT / 2 - 10 - (Object.keys(auxiliaryPointers).filter(k => k !== 'slow' && k !== 'fast').indexOf(key) * 12)} 
+                    <text x={targetNode.x!} y={targetNode.y! - NODE_HEIGHT / 2 - 10} 
                           textAnchor="middle" fontSize="10" fill="hsl(var(--foreground))" className="font-mono">
-                      {key} ({auxiliaryPointers[key+'_val'] || targetNode.value})
+                      {key}
                     </text>
-                    <line x1={targetNode.x!} y1={targetNode.y! - NODE_HEIGHT / 2 - 7 - (Object.keys(auxiliaryPointers).filter(k => k !== 'slow' && k !== 'fast').indexOf(key) * 12)} 
+                    <line x1={targetNode.x!} y1={targetNode.y! - NODE_HEIGHT / 2 - 7} 
                           x2={targetNode.x!} y2={targetNode.y! - NODE_HEIGHT / 2 + 2}
                           stroke="hsl(var(--foreground))" strokeWidth="1" markerEnd="url(#ll-arrowhead)" />
                   </g>

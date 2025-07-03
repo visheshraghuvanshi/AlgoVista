@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, Pause, SkipForward, RotateCcw, FastForward, Gauge } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import type { LinkedListOperation, ALL_OPERATIONS_LOCAL as ALL_OPERATIONS_TYPE, LinkedListControlsPanelProps } from './types'; // Local import
+import type { LinkedListAlgorithmStep, LinkedListOperation, ALL_OPERATIONS_LOCAL as ALL_OPERATIONS_TYPE, LinkedListControlsPanelProps } from './types'; // Local import
 import { ALL_OPERATIONS_LOCAL } from './types'; // Local import
 
 
@@ -193,3 +193,4 @@ export function LinkedListControlsPanel({
     </Card>
   );
 }
+

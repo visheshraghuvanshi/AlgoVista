@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; // Local import
+import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel';
 import { SinglyLinkedListCodePanel } from './SinglyLinkedListCodePanel'; 
-import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
-import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmMetadata, AlgorithmDetailsProps, LinkedListOperation } from './types'; // Local import
+import { LinkedListControlsPanel } from './LinkedListControlsPanel';
+import { AlgorithmDetailsCard } from './AlgorithmDetailsCard';
+import type { LinkedListAlgorithmStep, LinkedListNodeVisual, AlgorithmMetadata, AlgorithmDetailsProps, LinkedListOperation } from './types';
 import { ALL_OPERATIONS_LOCAL } from './types';
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
@@ -18,11 +18,11 @@ import { algorithmMetadata } from './metadata';
 const DEFAULT_ANIMATION_SPEED = 800;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
-
 const SLL_AVAILABLE_OPS: LinkedListOperation[] = ['init', 'insertHead', 'insertTail', 'insertAtPosition', 'deleteByValue', 'deleteAtPosition', 'search', 'traverse'];
 
 export default function SinglyLinkedListPage() {
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
 
   const [initialListStr, setInitialListStr] = useState('10,20,30');
   const [inputValue, setInputValue] = useState('5'); 
@@ -40,6 +40,8 @@ export default function SinglyLinkedListPage() {
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const listStringForLogicRef = useRef<string>(initialListStr);
+  
+  useEffect(() => { setIsClient(true); }, []);
 
   const handleOperationExecution = useCallback((op: LinkedListOperation, val?: string, posOrSecondList?: string | number) => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
@@ -66,12 +68,10 @@ export default function SinglyLinkedListPage() {
         return;
     }
 
-
     let listStringToUse = listStringForLogicRef.current;
     if (op === 'init') {
         listStringToUse = initialListStr;
     }
-
 
     const newSteps = generateSinglyLinkedListSteps(listStringToUse, op, operationValueToUse, positionToUse);
     setSteps(newSteps);
@@ -89,13 +89,16 @@ export default function SinglyLinkedListPage() {
       setCurrentStep(null);
     }
   }, [toast, initialListStr]);
-
-  useEffect(() => { 
-    listStringForLogicRef.current = initialListStr; 
+  
+  const resetToInitialState = useCallback(() => {
     handleOperationExecution('init', initialListStr);
   }, [initialListStr, handleOperationExecution]);
 
-  // Effect to reset animation state when steps change
+  useEffect(() => { 
+    listStringForLogicRef.current = initialListStr;
+    resetToInitialState();
+  }, [initialListStr, resetToInitialState]);
+  
   useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -105,14 +108,12 @@ export default function SinglyLinkedListPage() {
     }
   }, [steps]);
 
-  // Effect to update displayed step when index changes
   useEffect(() => {
     if (steps[currentStepIndex]) {
       setCurrentStep(steps[currentStepIndex]);
     }
   }, [currentStepIndex, steps]);
 
-  // Main animation timer effect
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
@@ -124,7 +125,6 @@ export default function SinglyLinkedListPage() {
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
   }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
-
 
   const handlePlay = () => {
     if (isFinished || steps.length <= 1) {
@@ -157,42 +157,26 @@ export default function SinglyLinkedListPage() {
   
   useEffect(() => { 
     handleReset(); 
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
+  }, []); 
 
   if (!algorithmMetadata) {
-    return (
-      <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container mx-auto p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>
-    );
+    return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow container mx-auto p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main><Footer /></div>;
   }
-  const localAlgoDetails: AlgorithmDetailsProps = {
-    title: algorithmMetadata.title,
-    description: algorithmMetadata.longDescription || algorithmMetadata.description,
-    timeComplexities: algorithmMetadata.timeComplexities!,
-    spaceComplexity: algorithmMetadata.spaceComplexity!,
-  };
+  const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold tracking-tight text-primary dark:text-accent">{algorithmMetadata.title}</h1>
-          <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p>
-        </div>
+        <div className="mb-8 text-center"><h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary dark:text-accent">{algorithmMetadata.title}</h1><p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">{algorithmMetadata.description}</p></div>
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="lg:w-3/5 xl:w-2/3">
-            <LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId ?? null} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" />
-          </div>
-          <div className="lg:w-2/5 xl:w-1/3">
-            <SinglyLinkedListCodePanel currentLine={currentStep?.currentLine ?? null} currentOperation={selectedOperation} />
-          </div>
+          <div className="lg:w-3/5 xl:w-2/3"><LinkedListVisualizationPanel nodes={currentStep?.nodes || []} headId={currentStep?.headId ?? null} auxiliaryPointers={currentStep?.auxiliaryPointers} message={currentStep?.message} listType="singly" /></div>
+          <div className="lg:w-2/5 xl:w-1/3"><SinglyLinkedListCodePanel currentLine={currentStep?.currentLine ?? null} currentOperation={selectedOperation} /></div>
         </div>
         <LinkedListControlsPanel
+          steps={steps}
           onPlay={handlePlay} onPause={handlePause} onStep={handleStep} onReset={handleReset}
-          onOperationChange={(op, val, posOrSecondList) => {
-             setSelectedOperation(op); 
-             handleOperationExecution(op, val, posOrSecondList);
-          }}
+          onOperationChange={(op, val, posOrSecondList) => { handleOperationExecution(op, val, posOrSecondList); }}
           initialListValue={initialListStr} onInitialListValueChange={setInitialListStr}
           inputValue={inputValue} onInputValueChange={setInputValue}
           positionValue={positionValue} onPositionValueChange={setPositionValue}
@@ -200,10 +184,7 @@ export default function SinglyLinkedListPage() {
               setSelectedOperation(op);
               if (op === 'init') handleOperationExecution('init', initialListStr);
               else if (op === 'traverse') handleOperationExecution('traverse'); 
-              else {
-                  setSteps([]); 
-                  setIsFinished(true);
-              }
+              else { setSteps([]); setIsFinished(true); }
           }}
           availableOperations={SLL_AVAILABLE_OPS}
           isPlaying={isPlaying} isFinished={isFinished} currentSpeed={animationSpeed} onSpeedChange={setAnimationSpeed}
@@ -215,3 +196,4 @@ export default function SinglyLinkedListPage() {
     </div>
   );
 }
+

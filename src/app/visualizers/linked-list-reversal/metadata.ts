@@ -7,7 +7,7 @@ export const algorithmMetadata: AlgorithmMetadata = {
   title: 'Linked List Reversal',
   category: 'Linked List',
   difficulty: 'Easy',
-  description: "Reverses a linked list, typically using iterative or recursive methods. Interactive visualization available.",
+  description: "Reverses a linked list by re-routing pointers, not by swapping data. Both iterative and recursive methods are visualized.",
   longDescription: `Reversing a linked list is a common and fundamental operation. It involves changing the direction of the \`next\` pointers of the nodes in the list so that the original tail becomes the new head, and the original head becomes the new tail (pointing to \`null\`). This can be achieved using iterative or recursive approaches. This visualizer demonstrates both for a singly linked list.
 
 ### How it Works:
