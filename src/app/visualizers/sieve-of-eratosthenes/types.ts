@@ -30,12 +30,17 @@ export interface AlgorithmDetailsProps {
   spaceComplexity: string;
 }
 
+// Sieve specific step type
 export interface SieveAlgorithmStep extends GlobalAlgorithmStep {
+  // 'array' will represent the boolean prime markings:
+  // 0: not prime (initially or marked composite)
+  // 1: prime (initially)
+  // We can use auxiliaryData to be more explicit about state
   auxiliaryData: {
     limitN: number;
     currentP?: number;
     currentMultiple?: number;
-    primesFound?: number[];
+    primesFound: number[];
     message?: string;
   };
 }

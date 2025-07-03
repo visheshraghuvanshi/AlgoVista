@@ -1,14 +1,15 @@
 
 "use client";
 
-import React from 'react';
+import React, {useState} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { ClipboardCopy, Code2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SIEVE_LINE_MAP } from './sieve-logic';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+
 
 const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
   JavaScript: [
@@ -32,8 +33,8 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
   Python: [
     "def sieve_of_eratosthenes(n):",
     "    prime = [True for _ in range(n + 1)]",
-    "    if n >= 0: prime[0] = False # Ensure index safety",
-    "    if n >= 1: prime[1] = False # Ensure index safety",
+    "    if n >= 0: prime[0] = False",
+    "    if n >= 1: prime[1] = False",
     "    p = 2",
     "    while (p * p <= n):",
     "        if (prime[p] == True):",
@@ -64,7 +65,7 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
     "            }",
     "        }",
     "        List<Integer> primesList = new ArrayList<>();",
-    "        for (int p_num = 2; p_num <= n; p_num++) {", 
+    "        for (int p_num = 2; p_num <= n; p_num++) {",
     "            if (prime[p_num]) { primesList.add(p_num); }",
     "        }",
     "        return primesList;",
@@ -86,7 +87,7 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
     "        }",
     "    }",
     "    std::vector<int> primes_list;",
-    "    for (int p_num = 2; p_num <= n; p_num++) {", 
+    "    for (int p_num = 2; p_num <= n; p_num++) {",
     "        if (prime[p_num]) { primes_list.push_back(p_num); }",
     "    }",
     "    return primes_list;",
@@ -94,17 +95,15 @@ const SIEVE_CODE_SNIPPETS: Record<string, string[]> = {
   ],
 };
 
-
 interface SieveCodePanelProps {
   currentLine: number | null;
 }
 
 export function SieveCodePanel({ currentLine }: SieveCodePanelProps) {
   const { toast } = useToast();
-  const [selectedLanguage, setSelectedLanguage] = React.useState('JavaScript');
+  const [selectedLanguage, setSelectedLanguage] = useState('JavaScript');
   const languages = Object.keys(SIEVE_CODE_SNIPPETS);
   const codeToDisplay = SIEVE_CODE_SNIPPETS[selectedLanguage] || [];
-
 
   const handleCopyCode = () => {
     const codeString = codeToDisplay.join('\n');

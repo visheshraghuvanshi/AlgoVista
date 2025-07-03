@@ -1,5 +1,5 @@
 
-import type { AlgorithmMetadata } from '@/types';
+import type { AlgorithmMetadata } from './types'; // Local import
 
 export const algorithmMetadata: AlgorithmMetadata = {
   slug: 'sieve-of-eratosthenes',
@@ -7,7 +7,32 @@ export const algorithmMetadata: AlgorithmMetadata = {
   category: 'Math & Number Theory',
   difficulty: 'Medium',
   description: 'An ancient algorithm for finding all prime numbers up to a specified integer.',
-  longDescription: 'The Sieve of Eratosthenes is a highly efficient ancient algorithm for finding all prime numbers up to any given limit. It does so by iteratively marking as composite (i.e., not prime) the multiples of each prime, starting with the first prime number, 2.\n\nAlgorithm Steps:\n1. Create a list of consecutive integers from 2 through n: (2, 3, 4, ..., n).\n2. Initially, let p equal 2, the smallest prime number.\n3. Enumerate the multiples of p by counting in increments of p from 2p to n, and mark them in the list (e.g., 2p, 3p, 4p, ...; these are 4, 6, 8,... for p=2). These will be composite numbers.\n4. Find the first number greater than p in the list that is not marked. If there was no such number, stop. Otherwise, let p now equal this new number (which is the next prime), and repeat from step 3.\n\nWhen the algorithm terminates, the numbers remaining not marked in the list are all the primes below n. The optimization is that one only needs to start marking multiples from p*p, because smaller multiples of p would have already been marked by smaller primes.\n\nExample: Find primes up to 10.\nList: 2, 3, 4, 5, 6, 7, 8, 9, 10\n- p = 2: Mark 4, 6, 8, 10. List: 2, 3, (4), 5, (6), 7, (8), (10)\n- Next unmarked > 2 is p = 3: Mark 6 (already marked), 9. List: 2, 3, (4), 5, (6), 7, (8), (9), (10)\n- Next unmarked > 5 is p = 5: Mark 10 (already marked). p*p = 25 > 10, so stop for multiples of 5.\n- Next unmarked > 5 is p = 7: p*p = 49 > 10, so stop for multiples of 7.\nPrimes: 2, 3, 5, 7.',
+  longDescription: `The Sieve of Eratosthenes is a highly efficient ancient algorithm for finding all prime numbers up to any given limit. It does so by iteratively marking as composite (i.e., not prime) the multiples of each prime, starting with the first prime number, 2.
+
+### How it Works (Optimized):
+1.  **Create a Boolean Array**: Create a list, \`isPrime\`, of size \`n + 1\`, where all entries are initially set to \`true\`. \`isPrime[i]\` will be false if \`i\` is not prime, and true otherwise. Mark 0 and 1 as not prime.
+2.  **Iterate and Mark**:
+    *   Start with \`p = 2\`, the first prime.
+    *   While \`p*p <= n\`:
+        *   If \`isPrime[p]\` is still \`true\`, then \`p\` is a prime number.
+        *   Mark all multiples of \`p\` from \`p*p\` up to \`n\` as not prime (set \`isPrime[i] = false\`). The reason we start from \`p*p\` is that smaller multiples of \`p\` (like \`2*p\`, \`3*p\`, ...) would have already been marked by smaller primes (like 2, 3, ...).
+        *   Find the next number greater than \`p\` that is still marked as \`true\`. This is the next prime to process.
+
+3.  **Collect Primes**: After the loop finishes, all indices \`i\` for which \`isPrime[i]\` is \`true\` are the prime numbers up to \`n\`.
+
+### Example: Find primes up to 10
+1.  \`isPrime\` = [F, F, T, T, T, T, T, T, T, T, T] (indices 0-10)
+2.  **p = 2**: It's prime. Start marking from \`2*2=4\`. Mark 4, 6, 8, 10 as false.
+    \`isPrime\` = [F, F, T, T, F, T, F, T, F, T, F]
+3.  **p = 3**: It's prime. Start marking from \`3*3=9\`. Mark 9 as false.
+    \`isPrime\` = [F, F, T, T, F, T, F, T, F, F, F]
+4.  **Next p is 4**, but \`isPrime[4]\` is false. Skip.
+5.  **Next p is 5**. But \`5*5 = 25 > 10\`. The outer loop condition \`p*p <= n\` fails. Stop.
+6.  **Result**: The indices that are still true are 2, 3, 5, 7. These are the primes.
+
+### Time and Space Complexity:
+-   **Time Complexity**: O(N log log N). This is a significant improvement over testing each number for primality.
+-   **Space Complexity**: O(N) to store the boolean array.`,
   timeComplexities: {
     best: "O(n log log n)",
     average: "O(n log log n)",
@@ -15,4 +40,3 @@ export const algorithmMetadata: AlgorithmMetadata = {
   },
   spaceComplexity: "O(n) for storing the boolean array of markings.",
 };
-    

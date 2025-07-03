@@ -19,8 +19,8 @@ import { SieveCodePanel } from './SieveCodePanel';
 import { SieveVisualizationPanel } from './SieveVisualizationPanel';
 import { generateSieveSteps, type SieveAlgorithmStep } from './sieve-logic';
 
-const DEFAULT_ANIMATION_SPEED = 300; // Faster for sieve
-const MIN_SPEED = 50;
+const DEFAULT_ANIMATION_SPEED = 300;
+const MIN_SPEED = 20;
 const MAX_SPEED = 1000;
 const DEFAULT_LIMIT_N = 50;
 const MAX_LIMIT_N = 200;
@@ -55,6 +55,7 @@ export default function SieveVisualizerPage() {
     const n = parseInt(limitNInput, 10);
     if (isNaN(n) || n < 2 || n > MAX_LIMIT_N) {
       toast({ title: "Invalid Limit", description: `Please enter a number between 2 and ${MAX_LIMIT_N}.`, variant: "destructive" });
+      setSteps([]); setCurrentStep(null); setIsFinished(true);
       return;
     }
 
@@ -68,7 +69,7 @@ export default function SieveVisualizerPage() {
   
   useEffect(() => { 
     handleGeneratePrimes();
-  }, [handleGeneratePrimes]);
+  }, [limitNInput, handleGeneratePrimes]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
