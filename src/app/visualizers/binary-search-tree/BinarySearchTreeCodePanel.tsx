@@ -342,6 +342,9 @@ export function BinarySearchTreeCodePanel({ currentLine, selectedOperation }: Bi
   
   const operationTitle = selectedOperation.charAt(0).toUpperCase() + selectedOperation.slice(1).replace(/([A-Z])/g, ' $1');
 
+  const structureLength = structureSnippets.length;
+  const separatorLines = (operationSnippets.length > 0 && selectedOperation !== 'structure') ? 2 : 0;
+
   return (
     <Card className="shadow-lg rounded-lg h-[400px] md:h-[500px] lg:h-[600px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
@@ -367,24 +370,13 @@ export function BinarySearchTreeCodePanel({ currentLine, selectedOperation }: Bi
         <ScrollArea className="flex-1 overflow-auto border-t bg-muted/20 dark:bg-muted/5">
           <pre className="font-code text-sm p-4 whitespace-pre-wrap overflow-x-auto">
             {codeToDisplay.map((line, index) => {
-              // Determine if this line is part of the structure or the operation for highlighting
               let lineIsHighlighted = false;
               if (currentLine !== null) {
                 if (selectedOperation === 'structure' && index + 1 === currentLine) {
                   lineIsHighlighted = true;
                 } else if (selectedOperation !== 'structure') {
-                  // Adjust currentLine if it's for an operation snippet
-                  const structureLength = structureSnippets.length;
-                  const separatorLines = 2; // For "" and "// --- METHOD ---"
-                  const operationLineNumber = currentLine; // Assuming currentLine maps directly to operation line map
-                  
-                  // Check if the 'line' is from the structure part
-                  if (index < structureLength) {
-                    // No highlight for structure when an operation is selected, unless currentLine points to structure part
-                    // This logic can be refined if lineMap covers structure too.
-                  } 
-                  // Check if the 'line' is from the operation part
-                  else if (index >= structureLength + separatorLines) {
+                  const operationLineNumber = currentLine;
+                  if (index >= structureLength + separatorLines) {
                     const relativeOpLineIndex = index - (structureLength + separatorLines);
                     if (relativeOpLineIndex + 1 === operationLineNumber) {
                        lineIsHighlighted = true;
@@ -399,7 +391,7 @@ export function BinarySearchTreeCodePanel({ currentLine, selectedOperation }: Bi
                     {index + 1}
                   </span>
                   {/* Indent operation methods for non-JS/Python languages like Java/C++ if they were part of a class block */}
-                  {selectedOperation !== 'structure' && index >= structureSnippets.length + separatorLines && (selectedLanguage === 'Java' || selectedLanguage === 'C++') && !line.startsWith("//") ? `    ${line}` : line}
+                  {selectedOperation !== 'structure' && index >= structureLength + separatorLines && (selectedLanguage === 'Java' || selectedLanguage === 'C++') && !line.startsWith("//") ? `    ${line}` : line}
                 </div>
               );
             })}
@@ -410,5 +402,4 @@ export function BinarySearchTreeCodePanel({ currentLine, selectedOperation }: Bi
     </Card>
   );
 }
-
     
