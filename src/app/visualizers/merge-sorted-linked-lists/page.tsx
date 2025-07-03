@@ -42,8 +42,6 @@ export default function MergeSortedLinkedListsPage() {
   const [animationSpeed, setAnimationSpeed] = useState(DEFAULT_ANIMATION_SPEED);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  useEffect(() => { setIsClient(true); }, []);
-  
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     if (mergeType === 'init') {

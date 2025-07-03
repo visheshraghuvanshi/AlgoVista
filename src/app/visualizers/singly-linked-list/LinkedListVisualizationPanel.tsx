@@ -41,14 +41,14 @@ export function LinkedListVisualizationPanel({
   message,
 }: LinkedListVisualizationPanelProps) {
     
-  const getNodeById = (id: string | null | undefined) => nodes.find(n => n.id === id);
-
   // Calculate positions if not provided (simple horizontal layout)
   const positionedNodes = nodes.map((node, index) => ({
     ...node,
     x: node.x ?? SVG_PADDING + index * NODE_SPACING_X,
     y: node.y ?? SVG_PADDING + NODE_HEIGHT, // Center vertically for now
   }));
+
+  const getNodeById = (id: string | null | undefined) => positionedNodes.find(n => n.id === id);
 
   const svgWidth = Math.max(300, SVG_PADDING * 2 + nodes.length * NODE_SPACING_X - (nodes.length > 0 ? (NODE_SPACING_X - NODE_WIDTH) : 0));
   const svgHeight = Math.max(150, SVG_PADDING * 2 + NODE_HEIGHT * 2 + Object.keys(auxiliaryPointers).length * 20 + (message ? 30: 0) );

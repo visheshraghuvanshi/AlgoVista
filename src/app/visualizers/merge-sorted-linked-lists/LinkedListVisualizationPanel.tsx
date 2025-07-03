@@ -41,8 +41,6 @@ export function LinkedListVisualizationPanel({
   message,
 }: LinkedListVisualizationPanelProps) {
     
-  const getNodeById = (id: string | null | undefined) => nodes.find(n => n.id === id);
-
   // This component will need to render multiple lists for the merge visualizer.
   // The logic in the page will need to combine the nodes from both lists and the merged list into a single `nodes` array with different y positions.
   // The y-position can be used to separate the lists visually.
@@ -52,6 +50,9 @@ export function LinkedListVisualizationPanel({
     x: node.x ?? SVG_PADDING + (index % 10) * NODE_SPACING_X, // Simple wrap for now
     y: node.y ?? SVG_PADDING + 50 + Math.floor(index / 10) * 80, 
   }));
+  
+  const getNodeById = (id: string | null | undefined) => positionedNodes.find(n => n.id === id);
+
 
   const svgWidth = Math.max(600, SVG_PADDING * 2 + 10 * NODE_SPACING_X);
   const svgHeight = Math.max(300, positionedNodes.reduce((max, n) => Math.max(max, n.y + NODE_HEIGHT), 0) + SVG_PADDING);

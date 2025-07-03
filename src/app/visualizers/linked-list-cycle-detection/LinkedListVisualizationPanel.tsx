@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -40,14 +41,14 @@ export function LinkedListVisualizationPanel({
   message,
 }: LinkedListVisualizationPanelProps) {
     
-  const getNodeById = (id: string | null | undefined) => nodes.find(n => n.id === id);
-
   // Calculate positions if not provided (simple horizontal layout)
   const positionedNodes = nodes.map((node, index) => ({
     ...node,
     x: node.x ?? SVG_PADDING + index * NODE_SPACING_X,
     y: node.y ?? SVG_PADDING + NODE_HEIGHT, 
   }));
+
+  const getNodeById = (id: string | null | undefined) => positionedNodes.find(n => n.id === id);
 
   const svgWidth = Math.max(300, SVG_PADDING * 2 + nodes.length * NODE_SPACING_X - (nodes.length > 0 ? (NODE_SPACING_X - NODE_WIDTH) : 0));
   const svgHeight = Math.max(150, SVG_PADDING * 2 + NODE_HEIGHT * 2 + Object.keys(auxiliaryPointers).length * 20 + (message ? 30: 0) );
@@ -118,26 +119,6 @@ export function LinkedListVisualizationPanel({
                         />
                     );
                   }
-                }
-                return null;
-              })}
-
-              {listType === 'doubly' && positionedNodes.map((node) => {
-                const prevNode = getNodeById(node.prevId);
-                if (prevNode) {
-                   const isPrevActive = auxiliaryPointers.current === node.id || node.color === NODE_COLORS.active;
-                  return (
-                    <line
-                      key={`prev-${node.id}`}
-                      x1={node.x! - NODE_WIDTH / 2}
-                      y1={node.y! + POINTER_OFFSET*0.7} // Slightly below 'next' pointer
-                      x2={prevNode.x! + NODE_WIDTH / 2 + 5}
-                      y2={prevNode.y! + POINTER_OFFSET*0.7}
-                      stroke={isPrevActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))"}
-                      strokeWidth="1.5"
-                      markerEnd={isPrevActive ? "url(#ll-arrowhead-active)" : "url(#ll-arrowhead)"} // Arrow points from current to prev
-                    />
-                  );
                 }
                 return null;
               })}
