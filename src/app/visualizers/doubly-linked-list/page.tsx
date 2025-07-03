@@ -8,7 +8,8 @@ import { LinkedListVisualizationPanel } from './LinkedListVisualizationPanel'; /
 import { DoublyLinkedListCodePanel } from './DoublyLinkedListCodePanel'; 
 import { LinkedListControlsPanel } from './LinkedListControlsPanel'; // Local import
 import { AlgorithmDetailsCard } from './AlgorithmDetailsCard'; // Local import
-import type { AlgorithmMetadata, AlgorithmDetailsProps, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation, ALL_OPERATIONS_LOCAL } from './types'; // Local import
+import type { AlgorithmMetadata, AlgorithmDetailsProps, LinkedListAlgorithmStep, LinkedListNodeVisual, LinkedListOperation } from './types'; // Local import
+import { ALL_OPERATIONS_LOCAL } from './types'; // Local import for value
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from 'lucide-react';
 import { generateDoublyLinkedListSteps } from './doubly-linked-list-logic';
@@ -88,11 +89,15 @@ export default function DoublyLinkedListPage() {
     }
   }, [toast, initialListStr]);
   
-  useEffect(() => { 
-    listStringForLogicRef.current = initialListStr; 
+  const resetToInitialState = useCallback(() => {
     handleOperationExecution('init', initialListStr);
-  }, [initialListStr, handleOperationExecution]); 
+  }, [initialListStr, handleOperationExecution]);
 
+  useEffect(() => { 
+    listStringForLogicRef.current = initialListStr;
+    resetToInitialState();
+  }, [initialListStr, resetToInitialState]);
+  
   // Effect to reset animation state when steps change
   useEffect(() => {
     setCurrentStepIndex(0);
@@ -157,6 +162,7 @@ export default function DoublyLinkedListPage() {
           <div className="lg:w-2/5 xl:w-1/3"><DoublyLinkedListCodePanel currentLine={currentStep?.currentLine ?? null} currentOperation={selectedOperation} /></div>
         </div>
         <LinkedListControlsPanel
+          steps={steps}
           onPlay={handlePlay} onPause={handlePause} onStep={handleStep} onReset={handleReset}
           onOperationChange={(op, val, posOrSecondList) => {
              setSelectedOperation(op); 
