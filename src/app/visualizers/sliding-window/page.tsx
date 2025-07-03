@@ -160,6 +160,7 @@ const SLIDING_WINDOW_CODE_SNIPPETS: Record<SlidingWindowProblemType, Record<stri
   },
 };
 
+
 const DEFAULT_ANIMATION_SPEED = 700;
 const MIN_SPEED = 100;
 const MAX_SPEED = 2000;
@@ -212,10 +213,9 @@ export default function SlidingWindowVisualizerPage() {
     }
     return num;
   }, [toast]);
-
-
-  const updateStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
+  
+  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
+    if (steps && steps[stepIndex]) {
       const currentS = steps[stepIndex];
       setDisplayedData(currentS.array);
       setActiveIndices(currentS.activeIndices);
@@ -236,54 +236,52 @@ export default function SlidingWindowVisualizerPage() {
     if (!arr) {
       setSteps([]); setDisplayedData([]); setIsFinished(true); return;
     }
+    const target = parseTargetValue(problemType === 'maxSumFixedK' ? kValue : targetSumValue);
+    if (target === null) {
+       setSteps([]); setDisplayedData(arr); setIsFinished(true); return;
+    }
 
     let newSteps: AlgorithmStep[] = [];
     if (problemType === 'maxSumFixedK') {
-      const k = parseTargetValue(kValue);
-      if (k === null || k <= 0) {
-        toast({ title: "Invalid K Value", description: "K must be a positive integer.", variant: "destructive" });
-        setSteps([]); setDisplayedData(arr); setIsFinished(true); return;
-      }
-      newSteps = generateMaxSumFixedKSteps(arr, k);
+      newSteps = generateMaxSumFixedKSteps(arr, target);
     } else if (problemType === 'minLengthSumTarget') {
-      const target = parseTargetValue(targetSumValue);
-      if (target === null) {
-        toast({ title: "Invalid Target Sum", description: "Target sum must be a valid number.", variant: "destructive" });
-        setSteps([]); setDisplayedData(arr); setIsFinished(true); return;
-      }
       newSteps = generateMinLengthSumTargetSteps(arr, target);
     }
     
     setSteps(newSteps);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
-    if (newSteps.length > 0) {
-        updateStateFromStep(0);
-    } else { 
-        setDisplayedData(arr); setActiveIndices([]); setCurrentLine(null); setAuxiliaryData(null); 
-    }
 
-  }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, parseTargetValue, toast, updateStateFromStep]);
+  }, [inputValue, problemType, kValue, targetSumValue, parseInputArray, parseTargetValue]);
   
   useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+  
+  useEffect(() => {
+    if (steps.length > 0) {
+        updateVisualStateFromStep(0);
+        setCurrentStepIndex(0);
+        setIsPlaying(false);
+        setIsFinished(steps.length <= 1);
+    }
+  }, [steps, updateVisualStateFromStep]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+        const nextStepIndex = currentStepIndex + 1;
+        setCurrentStepIndex(nextStepIndex);
+        updateVisualStateFromStep(nextStepIndex);
       }, animationSpeed);
     } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { setIsPlaying(false); setIsFinished(false); handleGenerateSteps(); };
@@ -309,7 +307,7 @@ export default function SlidingWindowVisualizerPage() {
                 <Card className="mt-4">
                     <CardHeader className="pb-2 pt-3"><CardTitle className="text-sm font-medium text-center">Window State</CardTitle></CardHeader>
                     <CardContent className="text-sm flex flex-wrap justify-around gap-2 p-3">
-                        {Object.entries(auxiliaryData).filter(([key]) => !['inputArray', 'foundSubarrayIndices'].includes(key)).map(([key, value]) => {
+                        {Object.entries(auxiliaryData).filter(([key]) => !['inputArray', 'foundSubarrayIndices', 'problemType'].includes(key)).map(([key, value]) => {
                              const readableKey = key.replace(/([A-Z])/g, ' $1').trim().replace(/\b\w/g, l => l.toUpperCase());
                             return (
                                 <p key={key}><strong>{readableKey}:</strong> {value?.toString()}</p>
@@ -329,7 +327,7 @@ export default function SlidingWindowVisualizerPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="problemTypeSelect">Problem Variant</Label>
+                <Label htmlFor="problemTypeSelectSW">Problem Variant</Label>
                 <Select value={problemType} onValueChange={v => setProblemType(v as SlidingWindowProblemType)} disabled={isPlaying}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -339,15 +337,15 @@ export default function SlidingWindowVisualizerPage() {
                 </Select>
               </div>
                <div className="space-y-2">
-                <Label htmlFor="arrayInput">Input Array</Label>
-                <Input id="arrayInput" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying} />
+                <Label htmlFor="arrayInputSW">Input Array</Label>
+                <Input id="arrayInputSW" value={inputValue} onChange={e => setInputValue(e.target.value)} disabled={isPlaying} />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               {problemType === 'maxSumFixedK' && (
                 <div className="space-y-2">
-                  <Label htmlFor="kValueInput">Window Size (K)</Label>
-                  <Input id="kValueInput" type="number" value={kValue} onChange={e => setKValue(e.target.value)} disabled={isPlaying} />
+                  <Label htmlFor="kValueInputSW">Window Size (K)</Label>
+                  <Input id="kValueInputSW" type="number" value={kValue} onChange={e => setKValue(e.target.value)} disabled={isPlaying} />
                 </div>
               )}
               {problemType === 'minLengthSumTarget' && (
