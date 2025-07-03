@@ -34,11 +34,11 @@ export const SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG: Record<SegmentTreeOperation, R
                                                                  // 11 (map.classEndBuild - conceptual)
     ],
     Python: [
-        "# Iterative Segment Tree Build (Sum Query)",
+        "// Iterative Segment Tree Build (Sum Query)",
         "class SegmentTree:",
         "  def __init__(self, input_array):",
         "    self.n = len(input_array)",
-        "    self.tree = [0] * (2 * self.n) # Initialize with appropriate identity",
+        "    self.tree = [0] * (2 * self.n) // Initialize with appropriate identity",
         "    self._build(input_array)",
         "",
         "  def _build(self, input_array):",
@@ -222,13 +222,16 @@ export function SegmentTreeCodePanel({ currentLine, selectedOperation }: Segment
     const snippetsForOp = SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG[opKey] || {};
     const availableLangs = Object.keys(snippetsForOp);
     
+    // This effect ensures that if the selected operation changes,
+    // the language resets to a valid one for the new operation if the current one isn't available.
+    // It *only* depends on selectedOperation.
     if (!availableLangs.includes(selectedLanguage)) {
       const newLangToSet = availableLangs.includes("JavaScript") 
         ? "JavaScript" 
         : (availableLangs[0] || "Info");
       setSelectedLanguage(newLangToSet);
     }
-  }, [selectedOperation, selectedLanguage]);
+  }, [selectedOperation]);
   
   const codeToDisplay = useMemo(() => {
     const opKey = selectedOperation as keyof typeof SEGMENT_TREE_CODE_SNIPPETS_ALL_LANG;
