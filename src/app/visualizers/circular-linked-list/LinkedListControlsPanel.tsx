@@ -24,8 +24,9 @@ export function LinkedListControlsPanel({
   availableOperations,
   isPlaying, isFinished, currentSpeed, onSpeedChange,
   isAlgoImplemented, minSpeed, maxSpeed,
+  steps,
 }: LinkedListControlsPanelProps) {
-
+  
   const currentOpDetails = ALL_OPERATIONS_LOCAL.find(op => op.value === selectedOperation);
   const showValueInput = currentOpDetails?.needsValue;
   const showPositionInput = currentOpDetails?.needsPosition;

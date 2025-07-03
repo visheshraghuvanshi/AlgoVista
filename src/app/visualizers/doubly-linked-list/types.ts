@@ -72,7 +72,7 @@ export type LinkedListOperation =
   | 'merge' 
   | 'traverse';
 
-import type { LucideIcon } from 'lucide-react'; // Ensure LucideIcon type is available
+import type { LucideIcon } from 'lucide-react';
 import { ListPlus, Trash2, SearchCode, CornerDownLeft, CornerUpRight, Milestone, FastForward } from "lucide-react";
 
 
@@ -84,7 +84,7 @@ export const ALL_OPERATIONS_LOCAL: { value: LinkedListOperation; label: string; 
   { value: 'deleteByValue', label: 'Delete by Value', icon: Trash2, needsValue: true },
   { value: 'deleteAtPosition', label: 'Delete At Position', icon: Trash2, needsPosition: true },
   // Add other DLL-specific operations if needed, or filter in the panel itself
-  // For now, keeping it same as SLL available ops as the panel is generic
+  // For now, keeping it same as SLL available ops
 ];
 
 // Props for LinkedListControlsPanel
@@ -112,4 +112,5 @@ export interface LinkedListControlsPanelProps {
   isAlgoImplemented: boolean; 
   minSpeed: number;
   maxSpeed: number;
+  steps: LinkedListAlgorithmStep[];
 }

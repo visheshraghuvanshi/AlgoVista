@@ -86,22 +86,33 @@ export default function CircularLinkedListPage() {
     }
   }, [toast, initialListStr]);
   
-  useEffect(() => { 
-    listStringForLogicRef.current = initialListStr; 
+  const resetToInitialState = useCallback(() => {
     handleOperationExecution('init', initialListStr);
-  }, [initialListStr, handleOperationExecution]); 
+  }, [initialListStr, handleOperationExecution]);
 
+  useEffect(() => { 
+    listStringForLogicRef.current = initialListStr;
+    resetToInitialState();
+  }, [initialListStr, resetToInitialState]); 
+  
+  // Effect to reset animation state when steps change
   useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setIsFinished(steps.length <= 1);
-    if (steps.length > 0) setCurrentStep(steps[0]);
+    if (steps.length > 0) {
+      setCurrentStep(steps[0]);
+    }
   }, [steps]);
 
+  // Effect to update displayed step when index changes
   useEffect(() => {
-    if (steps[currentStepIndex]) setCurrentStep(steps[currentStepIndex]);
+    if (steps[currentStepIndex]) {
+      setCurrentStep(steps[currentStepIndex]);
+    }
   }, [currentStepIndex, steps]);
 
+  // Main animation timer effect
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
@@ -131,7 +142,9 @@ export default function CircularLinkedListPage() {
     setSelectedOperation('init');
   };
   
-  useEffect(() => { handleReset(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { 
+    handleReset(); 
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!algorithmMetadata) return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle /></main><Footer /></div>;
   const localAlgoDetails: AlgorithmDetailsProps = { ...algorithmMetadata };
@@ -146,6 +159,7 @@ export default function CircularLinkedListPage() {
           <div className="lg:w-2/5 xl:w-1/3"><CircularLinkedListCodePanel currentLine={currentStep?.currentLine ?? null} currentOperation={selectedOperation} /></div>
         </div>
         <LinkedListControlsPanel
+          steps={steps}
           onPlay={handlePlay} onPause={handlePause} onStep={handleStep} onReset={handleReset}
           onOperationChange={(op, val, posOrSecondList) => {
              setSelectedOperation(op); 

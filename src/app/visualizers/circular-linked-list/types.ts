@@ -108,5 +108,5 @@ export interface LinkedListControlsPanelProps {
   isAlgoImplemented: boolean; 
   minSpeed: number;
   maxSpeed: number;
+  steps: LinkedListAlgorithmStep[];
 }
-

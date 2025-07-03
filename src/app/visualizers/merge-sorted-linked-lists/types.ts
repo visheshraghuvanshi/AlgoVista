@@ -61,7 +61,7 @@ export interface LinkedListAlgorithmStep {
   status?: 'success' | 'failure' | 'info';
 }
 
-// For LinkedListControlsPanel
+// Operations for LinkedListControlsPanel
 export type LinkedListOperation = 
   | 'init'
   | 'insertHead' | 'insertTail' | 'insertAtPosition' 
@@ -106,4 +106,5 @@ export interface LinkedListControlsPanelProps {
   isAlgoImplemented: boolean; 
   minSpeed: number;
   maxSpeed: number;
+  steps: LinkedListAlgorithmStep[];
 }
