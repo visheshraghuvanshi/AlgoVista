@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider";
+import { AlertTriangle } from 'lucide-react';
 
 import { EuclideanGcdCodePanel } from './EuclideanGcdCodePanel';
 import { EuclideanGcdVisualizationPanel } from './EuclideanGcdVisualizationPanel';
@@ -110,15 +111,25 @@ export default function EuclideanGcdVisualizerPage() {
     setNumberBInput(DEFAULT_EXPONENT);
   };
   
-  const localAlgoDetails: AlgorithmDetailsProps = {
+  const localAlgoDetails: AlgorithmDetailsProps | null = algorithmMetadata ? {
     title: algorithmMetadata.title,
     description: algorithmMetadata.longDescription || algorithmMetadata.description,
     timeComplexities: algorithmMetadata.timeComplexities!,
     spaceComplexity: algorithmMetadata.spaceComplexity!,
-  };
+  } : null;
 
   if (!isClient) { 
     return <div className="flex flex-col min-h-screen"><Header /><main className="flex-grow p-4"><p>Loading...</p></main><Footer /></div>;
+  }
+
+  if (!localAlgoDetails) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow p-4 flex justify-center items-center"><AlertTriangle className="w-16 h-16 text-destructive" /></main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -153,7 +164,7 @@ export default function EuclideanGcdVisualizerPage() {
                     <Label htmlFor="numberBInput">Number B</Label>
                     <Input id="numberBInput" type="number" value={numberBInput} onChange={e => setNumberBInput(e.target.value)} placeholder="e.g., 18" disabled={isPlaying} />
                 </div>
-                <Button onClick={handleCalculateGcd} disabled={isPlaying} className="w-full self-end">Calculate GCD</Button>
+                <Button onClick={handleCalculateGcd} disabled={isPlaying} className="w-full md:w-auto self-end">Calculate GCD</Button>
             </div>
             <div className="flex items-center justify-start pt-4 border-t">
                 <Button onClick={handleReset} variant="outline" disabled={isPlaying}><RotateCcw className="mr-2 h-4 w-4" /> Reset</Button>
@@ -172,7 +183,7 @@ export default function EuclideanGcdVisualizerPage() {
             </div>
           </CardContent>
         </Card>
-        <AlgorithmDetailsCard {...algoDetails} />
+        <AlgorithmDetailsCard {...localAlgoDetails} />
       </main>
       <Footer />
     </div>
