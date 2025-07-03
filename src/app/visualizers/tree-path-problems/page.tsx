@@ -49,16 +49,6 @@ export default function TreePathProblemsVisualizerPage() {
 
   useEffect(() => { setIsClient(true); }, []);
 
-  const updateVisualStateFromStep = useCallback((stepIndex: number) => {
-    if (steps[stepIndex]) {
-      const currentS = steps[stepIndex];
-      setCurrentStep(currentS);
-      if (stepIndex === steps.length - 1 && currentS.auxiliaryData?.pathFound !== undefined) {
-         setPathFoundResult(currentS.auxiliaryData.pathFound as boolean);
-      }
-    }
-  }, [steps]);
-
   const handleGenerateSteps = useCallback(() => {
     if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
     
@@ -79,46 +69,53 @@ export default function TreePathProblemsVisualizerPage() {
     const { nodes: iNodes, edges: iEdges } = initialBuildTreeForDisplay(parsedInput);
     setInitialDisplayTree({nodes: iNodes, edges: iEdges});
 
-
     const newSteps = generatePathSumSteps(treeInputValue, target);
     setSteps(newSteps);
+  }, [treeInputValue, targetSumInput, toast]);
+  
+  useEffect(() => { handleGenerateSteps(); }, [handleGenerateSteps]);
+
+  useEffect(() => {
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    setIsFinished(newSteps.length <= 1);
+    setIsFinished(steps.length <= 1);
     setPathFoundResult(null); 
 
-    if (newSteps.length > 0) {
-        updateVisualStateFromStep(0);
-        const lastStep = newSteps[newSteps.length-1];
-        if (lastStep.auxiliaryData?.pathFound !== undefined) {
-            setPathFoundResult(lastStep.auxiliaryData.pathFound as boolean);
-            const pathMessage = lastStep.auxiliaryData.pathFound ? "Path with target sum found!" : "No path with target sum found.";
-            toast({ title: "Path Sum Result", description: pathMessage });
-        }
+    if (steps.length > 0) {
+      setCurrentStep(steps[0]);
+      const lastStep = steps[steps.length - 1];
+      if (lastStep.auxiliaryData?.pathFound !== undefined) {
+        const found = lastStep.auxiliaryData.pathFound as boolean;
+        setPathFoundResult(found);
+      }
     } else {
-        setCurrentStep(null);
+      setCurrentStep(null);
     }
-  }, [treeInputValue, targetSumInput, toast, updateVisualStateFromStep]);
-  
-  useEffect(() => { handleGenerateSteps(); }, [treeInputValue, targetSumInput, handleGenerateSteps]);
+  }, [steps]);
 
+  useEffect(() => {
+    if (steps[currentStepIndex]) {
+      setCurrentStep(steps[currentStepIndex]);
+    }
+  }, [currentStepIndex, steps]);
 
   useEffect(() => {
     if (isPlaying && currentStepIndex < steps.length - 1) {
       animationTimeoutRef.current = setTimeout(() => {
-        const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+        setCurrentStepIndex(prevIndex => prevIndex + 1);
       }, animationSpeed);
-    } else if (isPlaying && currentStepIndex >= steps.length - 1) {
-      setIsPlaying(false); setIsFinished(true);
+    } else if (isPlaying) {
+      setIsPlaying(false);
+      setIsFinished(true);
     }
     return () => { if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current); };
-  }, [isPlaying, currentStepIndex, steps, animationSpeed, updateVisualStateFromStep]);
+  }, [isPlaying, currentStepIndex, steps.length, animationSpeed]);
 
   const handlePlay = () => { if (!isFinished && steps.length > 1) { setIsPlaying(true); setIsFinished(false); }};
   const handlePause = () => setIsPlaying(false);
   const handleStep = () => {
     if (isFinished || currentStepIndex >= steps.length - 1) return;
-    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx); updateVisualStateFromStep(nextIdx);
+    setIsPlaying(false); const nextIdx = currentStepIndex + 1; setCurrentStepIndex(nextIdx);
     if (nextIdx === steps.length - 1) setIsFinished(true);
   };
   const handleReset = () => { 
@@ -200,11 +197,8 @@ export default function TreePathProblemsVisualizerPage() {
             
             {isFinished && pathFoundResult !== null && (
                 <p className={`text-center font-semibold text-lg mt-2 ${pathFoundResult ? 'text-green-500' : 'text-red-500'}`}>
-                    {pathFoundResult ? `Path Found! Sum: ${currentStep?.auxiliaryData?.currentSum}, Target: ${currentStep?.auxiliaryData?.targetSum}` : "No path with the target sum found."}
+                    {pathFoundResult ? `Path Found! Final Sum: ${currentStep?.auxiliaryData?.currentSum}` : "No path with the target sum found."}
                 </p>
-            )}
-             {isFinished && pathFoundResult === null && steps.length > 1 && !steps[steps.length-1].message?.toLowerCase().includes("error") && currentStep?.message && !currentStep.message.toLowerCase().includes("error") &&(
-                 <p className="text-center font-semibold text-lg mt-2 text-red-500">Could not determine path (or nodes not found).</p>
             )}
             
             <div className="flex items-center justify-start pt-4 border-t">
